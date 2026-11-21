@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.screenA
+package com.example.hackapp.scaffold.screens.planning
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -6,13 +6,13 @@ import androidx.compose.runtime.Composable
 import kotlinx.serialization.Serializable
 
 @Serializable
-object ScreenADestination
+object ScreenBDestination
 
 @Composable
-fun ScreenA(onNavigateB: () -> Unit) {
+fun PlanningScreen(onNavigateA: () -> Unit) {
     Button(onClick = {
-        onNavigateB()
+        onNavigateA()
     }) {
-        Text("To B")
+        Text("Planning screen")
     }
 }

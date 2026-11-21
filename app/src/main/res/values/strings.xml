@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">AndroidTemplate</string>
+    <string name="app_name">Plan Montreal</string>
     <string name="app_widget_description">A simple widget</string>
+    <string name="text_sign_in_with_google">Sign in with Google</string>
 </resources>
