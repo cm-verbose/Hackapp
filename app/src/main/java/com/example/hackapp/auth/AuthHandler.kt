@@ -14,6 +14,7 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
@@ -26,7 +27,7 @@ class AuthHandler(context: Context, val activity: Activity) {
         "1009330576567-gai095q1he8i1dqdd71nkvsdm42k2236.apps.googleusercontent.com"
     private val auth = FirebaseAuth.getInstance()
 
-    suspend fun signIn() {
+    suspend fun signIn(onSignIn: (FirebaseUser) -> Unit) {
         val googleIdOption = GetSignInWithGoogleOption.Builder(webClientId)
             .setNonce(generateSecureRandomNonce())
             .build()
@@ -42,14 +43,17 @@ class AuthHandler(context: Context, val activity: Activity) {
                     request = request,
                     context = mutableContext
                 )
-                handleSignIn(result)
+                handleSignIn(result, onSignIn)
             } catch (err: GetCredentialException) {
                 Log.e(AUTH_TAG, "Sign in Error: ${err.message}")
             }
         }
     }
 
-    private suspend fun handleSignIn(result: GetCredentialResponse) {
+    private suspend fun handleSignIn(
+        result: GetCredentialResponse,
+        onSignIn: (FirebaseUser) -> Unit
+    ) {
         when (val credential = result.credential) {
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
@@ -61,7 +65,11 @@ class AuthHandler(context: Context, val activity: Activity) {
                             GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
                         val authResult = auth.signInWithCredential(firebaseCredential).await()
                         val user = authResult.user
-                        user?.displayName?.let { Log.d(AUTH_TAG, it) }
+                        if (user != null) {
+                            onSignIn(user)
+                        } else {
+                            Log.e(AUTH_TAG, "No user provided")
+                        }
                     } catch (e: GoogleIdTokenParsingException) {
                         Log.e(AUTH_TAG, "Received an invalid google id token response", e)
                     }
