@@ -1,4 +1,4 @@
-# Restaurant Data Design (v3)
+# Restaurant Data Design (v3.1)
 **Montréal Trip Planner (Hackathon, sponsored by the City of Montréal)**
 
 > Status: Data design only. The database engine and the backend stack will be chosen later.
@@ -143,22 +143,19 @@ Two different questions, kept separate:
 | `decision` | `ALLOW` / `BLOCK` |
 | `note` | why it was decided this way |
 
-**Allow criterion:** a chain founded in Québec that still operates mainly in Québec.
+**Allow criterion:** a chain founded in Québec that still operates mainly in Québec **and is not part of a large franchise network**.
 
-**Proposed `ALLOW` list:** La Belle Province, St-Hubert, Restaurants Lafleur, Valentine, Café Dépôt, Allô! Mon Coco, Poutineville, Frite Alors!, Benny & Co., L'Oeufrier, La Cage, Scores, Pacini, Cultures, Boustan, Marius, Mikes, Jack Le Coq.
+**Proposed `ALLOW` list:** La Belle Province, Restaurants Lafleur, Café Dépôt, Allô! Mon Coco, Poutineville, Frite Alors!, Benny & Co., L'Oeufrier, La Cage, Scores, Pacini, Cultures, Boustan, Marius, Jack Le Coq.
 
 **`BLOCK` covers everything else**, including:
 - international chains (McDonald's, Subway, Starbucks, …);
 - Canadian national chains (Tim Hortons, A&W, Pizza Pizza, Second Cup, Harvey's, …);
-- **Thaï Express** and **Sushi Shop**, by team decision;
+- **Thaï Express**, **Sushi Shop**, **Mikes**, **Valentine** and **St-Hubert** (large franchise networks), by team decision;
 - Cora and 3 Brasseurs.
 
-On the sample data this rule removes about **530 places** (Subway 85, Tim Hortons 74, McDonald's 42, A&W 30, Starbucks 22, Pizza Hut 21, Domino's 20, Pizza Pizza 19, Sushi Shop 19, …). About **50** Québec-chain locations remain.
+On the sample data this rule removes about **530 places** (Subway 85, Tim Hortons 74, McDonald's 42, A&W 30, Starbucks 22, Pizza Hut 21, Domino's 20, Pizza Pizza 19, Sushi Shop 19, …). Fewer than 50 Québec-chain locations remain.
 
-> ⚠️ **To confirm:**
-> - Thaï Express and Sushi Shop were both founded in Montréal. The team has blocked them, which suggests the real criterion is "not part of a large franchise network".
-> - If so, **Mikes, Valentine and St-Hubert** (also large franchise networks) may need to be blocked too, for consistency.
-> - Either way, it is a `decision` change in the `brand` table only.
+> Decided: the criterion is "Québec-founded **and** not part of a large franchise network". Changing it later is a `decision` edit in the `brand` table only.
 
 ---
 
@@ -225,8 +222,8 @@ Google's `priceRange` is per person. Its **start price is inclusive** and its **
 
 | `priceLevel` | estimated `price_min` – `price_max` |
 |---|---|
-| `INEXPENSIVE` | 0 – 25 |
-| `MODERATE` | 25 – 50 |
+| `INEXPENSIVE` | 0 – 20 |
+| `MODERATE` | 20 – 50 |
 | `EXPENSIVE` | 50 – 100 |
 | `VERY_EXPENSIVE` | 100 – null |
 
@@ -234,17 +231,17 @@ Google's `priceRange` is per person. Its **start price is inclusive** and its **
 
 | Bracket | Label | `max` (exclusive) |
 |---|---|---|
-| `UNDER_25` | < $25 | 25 |
+| `UNDER_20` | < $20 | 20 |
 | `UNDER_50` | < $50 | 50 |
 | `UNDER_100` | < $100 | 100 |
 | `ANY` | $100+ | none |
 
 **Matching rule (upper bound):** a place fits bracket *B* if `price_max` is not null **and** `price_max ≤ B.max`.
-- Example: Google "$20–30" → `price_max = 30` → fits `UNDER_50`, not `UNDER_25`.
+- Example: Google "$20–30" → `price_max = 30` → fits `UNDER_50`, not `UNDER_20`.
 - `ANY` matches everything, including `price_max = null` ("$100+").
 - Places with `price_source = NONE` fit every bracket, with a small ranking penalty.
 
-> **To verify on real data:** which range values Google actually returns for Montréal (e.g. 10–20, 20–30, 30–50, 50–100, 100+). If no Google range ends at 25, `UNDER_25` effectively means "ends at 20 or less". In that case the team may prefer brackets at 20 / 50 / 100 so they line up exactly with Google's steps. Only the reference table changes.
+> Brackets are aligned to Google's range steps (10–20, 20–30, 30–50, 50–100, 100+). Confirm these steps on the first enrichment sample; if they differ, only the `price_bracket` table changes.
 
 ---
 
@@ -392,9 +389,12 @@ Boundary file ┘          │
 | — | Thaï Express, Sushi Shop | **Block** |
 | — | Price unit | **Per person**, Google-compatible range |
 | — | Description | **Add**, bilingual, with fallbacks |
+| — | Mikes, Valentine, St-Hubert | **Block** (large franchise networks) |
+| — | Price brackets | **< $20 / < $50 / < $100 / $100+**, aligned with Google's range steps |
+| — | Cuisine fallback | **Google types**, confirmed |
+| — | Custom `ZONE`s | **Deferred**; decided at the end of the project |
 
 ## 13. Still Open
-1. Confirm the chain criterion: Québec-founded, or Québec-founded **and** not a large franchise network? This affects Mikes, Valentine and St-Hubert.
-2. Check Google's actual range steps for Montréal; maybe align the brackets to 20 / 50 / 100.
-3. After enrichment: Google-type coverage for places without OSM cuisine.
-4. Custom `ZONE` list for tourist districts (Vieux-Montréal, Quartier des spectacles, Mile End, Petite-Italie, …).
+1. Confirm Google's actual range steps for Montréal on the first enrichment sample (the brackets assume 20 / 50 / 100).
+2. After enrichment: measure Google-type coverage for places without OSM cuisine.
+3. Custom `ZONE` list for tourist districts (deferred).
