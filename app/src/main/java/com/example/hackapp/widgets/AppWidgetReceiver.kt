@@ -1,4 +1,4 @@
-package com.example.androidtemplate.widgets
+package com.example.hackapp.widgets
 
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 

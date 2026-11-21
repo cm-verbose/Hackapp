@@ -1,4 +1,4 @@
-package com.example.androidtemplate
+package com.example.hackapp
 
 import android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN
 import android.os.Build
@@ -9,9 +9,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.collection.intSetOf
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
-import com.example.androidtemplate.scaffold.AppScaffold
-import com.example.androidtemplate.ui.theme.AndroidTemplateTheme
-import com.example.androidtemplate.widgets.AppWidgetReceiver
+import com.example.hackapp.scaffold.AppScaffold
+import com.example.hackapp.ui.theme.AndroidTemplateTheme
+import com.example.hackapp.widgets.AppWidgetReceiver
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {

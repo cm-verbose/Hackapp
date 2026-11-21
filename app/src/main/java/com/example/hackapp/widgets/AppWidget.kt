@@ -1,4 +1,4 @@
-package com.example.androidtemplate.widgets
+package com.example.hackapp.widgets
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -15,7 +15,7 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
-import com.example.androidtemplate.MainActivity
+import com.example.hackapp.MainActivity
 
 class AppWidget: GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {

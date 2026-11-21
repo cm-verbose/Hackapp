@@ -1,13 +1,13 @@
-package com.example.androidtemplate.scaffold.navigation
+package com.example.hackapp.scaffold.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.androidtemplate.scaffold.screens.screenA.ScreenA
-import com.example.androidtemplate.scaffold.screens.screenA.ScreenADestination
-import com.example.androidtemplate.scaffold.screens.screenB.ScreenB
-import com.example.androidtemplate.scaffold.screens.screenB.ScreenBDestination
+import com.example.hackapp.scaffold.screens.screenA.ScreenA
+import com.example.hackapp.scaffold.screens.screenA.ScreenADestination
+import com.example.hackapp.scaffold.screens.screenB.ScreenB
+import com.example.hackapp.scaffold.screens.screenB.ScreenBDestination
 
 /**
  * Handles the navigation between screens which allows for dividing content

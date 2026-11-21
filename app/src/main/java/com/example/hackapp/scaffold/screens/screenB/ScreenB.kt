@@ -1,4 +1,4 @@
-package com.example.androidtemplate.scaffold.screens.screenB
+package com.example.hackapp.scaffold.screens.screenB
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text

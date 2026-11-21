@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.androidtemplate"
+    namespace = "com.example.hackapp"
     compileSdk {
         version = release(37) {
             minorApiLevel = 1
