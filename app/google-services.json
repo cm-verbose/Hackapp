@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1009330576567",
+    "project_id": "hackapp-515418",
+    "storage_bucket": "hackapp-515418.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1009330576567:android:77b03ba2750d1399ba8132",
+        "android_client_info": {
+          "package_name": "com.example.hackapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1009330576567-gai095q1he8i1dqdd71nkvsdm42k2236.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHDWmmJUc1zfRwr1vROm4ZTAp-or9nTPE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1009330576567-gai095q1he8i1dqdd71nkvsdm42k2236.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
