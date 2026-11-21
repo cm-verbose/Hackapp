@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.example.hackapp.auth.AuthHandler
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,14 +28,17 @@ fun ScreenA(onNavigateB: () -> Unit) {
     val scope = CoroutineScope(Dispatchers.Main)
     val authHandler = AuthHandler(context, activity!!)
 
-    Column() {
-        Button(onClick = {
-            scope.launch {
-                authHandler.signIn()
+    Column {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            Button(onClick = {
+                scope.launch {
+                    authHandler.signIn()
+                }
+            }) {
+                Text("Login")
             }
-        }) {
-            Text("Login")
         }
+
 
         Button(onClick = {
             onNavigateB()

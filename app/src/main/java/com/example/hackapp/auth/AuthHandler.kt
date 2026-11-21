@@ -21,7 +21,6 @@ import java.security.SecureRandom
 
 /** Handles authentification using Google. */
 class AuthHandler(context: Context, val activity: Activity) {
-    private val tag = "GoogleAuth"
     private val credentialManager = CredentialManager.create(context)
     private val webClientId: String =
         "1009330576567-gai095q1he8i1dqdd71nkvsdm42k2236.apps.googleusercontent.com"
@@ -45,7 +44,7 @@ class AuthHandler(context: Context, val activity: Activity) {
                 )
                 handleSignIn(result)
             } catch (err: GetCredentialException) {
-                Log.e(tag, "Sign in Error: ${err.message}")
+                Log.e(AUTH_TAG, "Sign in Error: ${err.message}")
             }
         }
     }
@@ -62,17 +61,17 @@ class AuthHandler(context: Context, val activity: Activity) {
                             GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
                         val authResult = auth.signInWithCredential(firebaseCredential).await()
                         val user = authResult.user
-                        user?.displayName?.let { Log.d(tag, it) }
+                        user?.displayName?.let { Log.d(AUTH_TAG, it) }
                     } catch (e: GoogleIdTokenParsingException) {
-                        Log.e(tag, "Received an invalid google id token response", e)
+                        Log.e(AUTH_TAG, "Received an invalid google id token response", e)
                     }
                 } else {
-                    Log.e(tag, "Unexpected type of credential")
+                    Log.e(AUTH_TAG, "Unexpected type of credential")
                 }
             }
 
             else -> {
-                Log.e(tag, "Unexpected type of credential")
+                Log.e(AUTH_TAG, "Unexpected type of credential")
             }
         }
     }
