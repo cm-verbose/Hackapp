@@ -6,8 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hackapp.scaffold.screens.login.ScreenLogin
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
-import com.example.hackapp.scaffold.screens.planning.PlanningScreen
-import com.example.hackapp.scaffold.screens.planning.ScreenBDestination
+import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
+import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
 
 /**
  * Handles the navigation between screens which allows for dividing content
@@ -18,11 +18,11 @@ fun AppNavigation(controller: NavHostController) {
     NavHost(navController = controller, startDestination = ScreenLoginDestination) {
         composable<ScreenLoginDestination> {
             ScreenLogin(onNavigateNext = {
-                controller.navigate(ScreenBDestination)
+                controller.navigate(PlanningScreenDestination)
             })
         }
-        composable<ScreenBDestination> {
-            PlanningScreen(onNavigateA = {
+        composable<PlanningScreenDestination> {
+            ScreenPlanning(onLogOff = {
                 controller.navigate(ScreenLoginDestination)
             })
         }
