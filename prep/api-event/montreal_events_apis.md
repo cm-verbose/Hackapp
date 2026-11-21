@@ -3,7 +3,7 @@
 Research date: November 21, 2026  
 Purpose: Find public events happening in Montréal and collect the information needed by a concert/event finder.
 
-## What we want / need
+## What we need
 
 The app should represent each event with the following information:
 
@@ -11,9 +11,9 @@ The app should represent each event with the following information:
 |---|---|---|
 | **Event type** | A category such as concert, festival, workshop, exhibition, sports event, market, comedy or public activity. | **Festival du Jeu** is listed in the City of Montréal event calendar for November 21, 2026. |
 | **Target demographic** | Intended audience or age restriction (children, adults, all ages, families, etc.). | **Matinée des tout-petits (0 à 3 ans)**, listed at Bibliothèque Saul-Bellow on November 21, 2026, explicitly targets children aged 0–3. |
-| **Where** | Venue name, street address, borough/neighbourhood and, if possible, latitude/longitude. | The City calendar lists **Bibliothèque Saul-Bellow** for the toddler activity and **Bibliothèque de Saint-Léonard** for Festival du Jeu. |
+| **Where** | Venue name, street address, borough/neighbourhood and, if possible, latitude/longitude. If no information is supplied directly from the api, we need to derive this information from somewhere else. | The City calendar lists **Bibliothèque Saul-Bellow** for the toddler activity and **Bibliothèque de Saint-Léonard** for Festival du Jeu. |
 | **When** | Local start and end date/time. Prefer exact times, normalized to 15-minute increments where necessary. Keep the original time too; do not invent an end time if the source does not provide one. | The City calendar lists Matinée des tout-petits at **10:15 on November 21, 2026** and Festival du Jeu at **10:00 on November 21, 2026**. |
-| **Cost** | Free, paid, or unknown; include the amount and currency when supplied. | The City of Montréal dataset has a `cout` field whose documented examples include “gratuit” and “payant”. The event listing itself does not show an amount in the search result, so the price for these two examples should be treated as **unconfirmed**, not assumed free. |
+| **Cost** | Free, paid, or unknown; include the amount and currency when supplied. If the cost is not directly supplied by the api, we need to derive the cost from the provided link if it exists. Otherwise, we need to ask the user to navigate to the event web page to consult its pricing, and add it to the app.| The City of Montréal dataset has a `cout` field whose documented examples include “gratuit” and “payant”. The event listing itself does not show an amount in the search result, so the price for these two examples should be treated as **unconfirmed**, not assumed free. |
 
 **Important data rule:** Store missing values as `unknown`/`null`. A date-only event must not be assigned a made-up start time, and an event with no published end time must not be given an estimated end time.
 
