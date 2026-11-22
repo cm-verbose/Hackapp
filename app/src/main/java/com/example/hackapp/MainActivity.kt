@@ -26,7 +26,7 @@ import com.example.hackapp.passport.LocalStampPhotoStore
 import com.example.hackapp.passport.LocalStampRepository
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.AppScaffold
-import com.example.hackapp.scaffold.screens.splash.CitySplashScreen
+import com.example.hackapp.scaffold.screens.splash.CityLoadingScreen
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
 import com.google.firebase.FirebaseApp
@@ -55,8 +55,8 @@ class MainActivity : ComponentActivity() {
                 LocalKeepsakeStore provides app.keepsakes,
             ) {
                 HackappTheme {
-                    // The City Pack splash stays briefly on app open (not after a rotation or a
-                    // restored process), while the start screen composes underneath.
+                    // The City Pack loading screen stays briefly on app open (not after a rotation
+                    // or a restored process), while the start screen composes underneath.
                     var showSplash by rememberSaveable { mutableStateOf(savedInstanceState == null) }
                     LaunchedEffect(Unit) {
                         delay(SPLASH_MILLIS)
@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                     Box {
                         AppScaffold()
                         AnimatedVisibility(visible = showSplash, enter = EnterTransition.None, exit = fadeOut(tween(300))) {
-                            CitySplashScreen()
+                            CityLoadingScreen()
                         }
                     }
                 }

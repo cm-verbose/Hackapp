@@ -54,7 +54,7 @@ data class CityPack(
     val id: String,
     val displayName: LocalizedText,
     /**
-     * The city's logo, shown after "Plan" on the Welcome screen and in the splash screen. A vector
+     * The city's logo, shown after "Plan" on the Welcome screen and on the loading screen. A vector
      * cropped to the mark itself (no padding), so layouts centre what is visible.
      */
     @DrawableRes val logo: Int,
