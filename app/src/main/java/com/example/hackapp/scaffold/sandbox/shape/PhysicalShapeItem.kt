@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.passport.sandbox.shape
+package com.example.hackapp.scaffold.sandbox.shape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,7 @@ fun PhysicalShapeItem(
     physicalShape: PhysicalShape,
     color: Color,
     shadowElevation: Dp = 4.dp,
+    scale: () -> Float = { 1f },
     content: @Composable BoxScope.() -> Unit = {},
 ) {
     val density = LocalDensity.current
@@ -31,6 +32,10 @@ fun PhysicalShapeItem(
                 translationX = physicalShape.pX - (physicalShape.widthPx / 2f)
                 translationY = physicalShape.pY - (physicalShape.heightPx / 2f)
                 rotationZ = physicalShape.rotationDegrees
+                scale().let {
+                    scaleX = it
+                    scaleY = it
+                }
             },
         shape = physicalShape.shape,
         color = color,

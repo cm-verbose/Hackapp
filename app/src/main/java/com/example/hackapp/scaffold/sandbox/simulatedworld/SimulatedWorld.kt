@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.passport.sandbox.simulatedworld
+package com.example.hackapp.scaffold.sandbox.simulatedworld
 
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.geometry.Size
@@ -8,8 +8,8 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-import com.example.hackapp.scaffold.screens.passport.sandbox.shape.PhysicalShape
-import com.example.hackapp.scaffold.screens.passport.sandbox.shape.toMeters
+import com.example.hackapp.scaffold.sandbox.shape.PhysicalShape
+import com.example.hackapp.scaffold.sandbox.shape.toMeters
 import org.jbox2d.common.Vec2
 import org.jbox2d.collision.shapes.CircleShape as Box2DCircle
 import org.jbox2d.collision.shapes.PolygonShape
@@ -19,6 +19,7 @@ import org.jbox2d.dynamics.BodyDef
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.World
+import kotlin.math.abs
 
 /**
  * Creates a [PhysicalShape] backed by a Box2D [Body] whose collision geometry
@@ -151,7 +152,7 @@ private fun ensureCCW(polygon: List<Vec2>): List<Vec2> {
  * Calculates the area of the triangle formed by points A, B, and C.
  */
 private fun triangleArea(a: Vec2, b: Vec2, c: Vec2): Float {
-    return kotlin.math.abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2f)
+    return abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2f)
 }
 
 /**

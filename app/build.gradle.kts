@@ -110,4 +110,8 @@ dependencies {
 
     /* Physics */
     implementation(libs.jbox2d.library)
+
+    /* Nearby device sharing */
+    implementation(libs.play.services.nearby)
+    implementation(libs.androidx.core.uwb)
 }

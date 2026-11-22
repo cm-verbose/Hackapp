@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.passport.sandbox
+package com.example.hackapp.scaffold.sandbox
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -189,14 +189,17 @@ fun defaultSandboxItems(): List<SandboxItem> {
  *
  * @param modifier The modifier to be applied to the sandbox layout.
  * @param items List of [SandboxItem]s containing composable UI content and physical parameters.
+ * @param gravityLocked When `true`, device-tilt gravity no longer applies to the items.
  */
 @Composable
 fun PassportSandbox(
     modifier: Modifier = Modifier,
     items: List<SandboxItem> = defaultSandboxItems(),
+    gravityLocked: Boolean = false,
 ) {
     PhysicsScreen(
         modifier = modifier,
         items = items,
+        gravityLocked = gravityLocked,
     )
 }

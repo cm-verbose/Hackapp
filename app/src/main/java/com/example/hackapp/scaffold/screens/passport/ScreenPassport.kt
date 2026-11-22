@@ -2,16 +2,19 @@ package com.example.hackapp.scaffold.screens.passport
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import com.example.hackapp.scaffold.composables.mainbottombar.MainBottomBar
-import com.example.hackapp.scaffold.screens.passport.sandbox.PassportSandbox
+import com.example.hackapp.scaffold.screens.passport.gravityLock.SimulationGravityLockButton
+import com.example.hackapp.scaffold.sandbox.PassportSandbox
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,9 +22,22 @@ object ScreenPassportDestination
 
 @Composable
 fun ScreenPassport(controller: NavHostController, outerPaddingValues: PaddingValues) {
-    Scaffold(bottomBar = { MainBottomBar(controller, outerPaddingValues) }) { paddingValues ->
+    var isGravityLocked by rememberSaveable { mutableStateOf(true) }
+
+    Scaffold(
+        bottomBar = { MainBottomBar(controller, outerPaddingValues) },
+        floatingActionButton = {
+            SimulationGravityLockButton(
+                isLocked = isGravityLocked,
+                onLockedChange = { isGravityLocked = it },
+            )
+        }
+    ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            PassportSandbox(modifier = Modifier.fillMaxSize())
+            PassportSandbox(
+                modifier = Modifier.fillMaxSize(),
+                gravityLocked = isGravityLocked,
+            )
         }
     }
 }

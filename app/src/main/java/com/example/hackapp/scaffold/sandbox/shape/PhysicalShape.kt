@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.passport.sandbox.shape
+package com.example.hackapp.scaffold.sandbox.shape
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf

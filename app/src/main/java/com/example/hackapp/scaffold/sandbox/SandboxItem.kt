@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.passport.sandbox
+package com.example.hackapp.scaffold.sandbox
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
