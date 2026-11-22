@@ -11,7 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -70,8 +69,6 @@ fun PlannedDepartureContent(
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
-    // The typical stay is the prefill. It is remembered here because the state only flags it while it is current.
-    val typicalStayMinutes = remember(state.eventId) { state.stayMinutes }
     val shown = state.rejectedTime ?: state.departure.toLocalTime()
 
     Column(
@@ -95,7 +92,7 @@ fun PlannedDepartureContent(
         }
 
         Text(
-            stringResource(R.string.planned_departure_no_end, formatDurationMinutes(typicalStayMinutes)),
+            stringResource(R.string.planned_departure_no_end, formatDurationMinutes(state.typicalStayMinutes)),
             style = MaterialTheme.typography.bodyMedium,
             color = scheme.onSurface,
         )
@@ -113,7 +110,7 @@ fun PlannedDepartureContent(
                 when (error) {
                     DepartureError.OutsideWindow -> stringResource(
                         R.string.planned_departure_error_outside_window,
-                        formatSentenceTime(state.windowEnd.toLocalTime()),
+                        formatSentenceTime(state.latestDeparture.toLocalTime()),
                     )
                     DepartureError.NotAfterStart -> stringResource(R.string.planned_departure_error_not_after_start)
                 },
@@ -125,11 +122,20 @@ fun PlannedDepartureContent(
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             HackappIconView(HackappIcon.Schedule, tint = scheme.onSurfaceVariant)
-            Text(
-                stringResource(R.string.planned_departure_duration, formatDurationMinutes(state.stayMinutes)),
-                style = MaterialTheme.typography.bodyMedium,
-                color = scheme.onSurfaceVariant,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    stringResource(R.string.planned_departure_duration, formatDurationMinutes(state.stayMinutes)),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+                if (state.crossesMidnight) {
+                    Text(
+                        stringResource(R.string.planned_departure_next_day),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
 
         HackappPrimaryButton(
@@ -163,7 +169,8 @@ private fun previewState(
         eventTitle = "Exposition Monet",
         eventType = "exhibition",
         start = start,
-        windowEnd = windowEnd,
+        latestDeparture = windowEnd,
+        typicalStayMinutes = 120,
         departure = departure,
         stayMinutes = stayMinutes,
         hasPublishedEnd = false,
@@ -198,6 +205,16 @@ private fun PlannedDepartureChangedPreview() = PlannedDeparturePreview(previewSt
 @Composable
 private fun PlannedDepartureOutsideWindowPreview() =
     PlannedDeparturePreview(previewState(error = DepartureError.OutsideWindow, rejectedTime = LocalTime.of(23, 45)))
+
+@Preview(name = "PlannedDeparture · after midnight", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun PlannedDepartureAfterMidnightPreview() = PlannedDeparturePreview(
+    previewState(
+        stayMinutes = 150,
+        start = ZonedDateTime.of(2026, 11, 28, 23, 0, 0, 0, PreviewZone),
+        windowEnd = ZonedDateTime.of(2026, 11, 29, 3, 0, 0, 0, PreviewZone),
+    ),
+)
 
 @Preview(name = "PlannedDeparture · not after start", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable

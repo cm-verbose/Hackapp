@@ -109,7 +109,9 @@ fun MealPickerContent(
                         tab,
                         when (tab) {
                             MealTab.Here -> stringResource(R.string.meal_tab_here)
-                            MealTab.NextDistrict -> stringResource(R.string.meal_tab_in_district, nextDistrictName.orEmpty())
+                            MealTab.NextDistrict -> nextDistrictName
+                                ?.let { stringResource(R.string.meal_tab_in_district, it) }
+                                ?: stringResource(R.string.meal_tab_next)
                         },
                     )
                 },
@@ -123,7 +125,9 @@ fun MealPickerContent(
             state.isEmpty -> EmptyState(
                 title = when (state.selectedTab) {
                     MealTab.Here -> stringResource(R.string.meal_picker_empty_here)
-                    MealTab.NextDistrict -> stringResource(R.string.meal_picker_empty_next, nextDistrictName.orEmpty())
+                    MealTab.NextDistrict -> nextDistrictName
+                        ?.let { stringResource(R.string.meal_picker_empty_next, it) }
+                        ?: stringResource(R.string.state_empty_title)
                 },
             )
             else -> MealOptionList(state.options, onChoose)
@@ -149,7 +153,21 @@ private fun ColumnScope.MealOptionList(options: List<MealOptionRow>, onChoose: (
     }
 }
 
-/** One Meal option: name, walking distance when known, and the price range or "Price unknown" muted. */
+/** Localized label of a venue type (strings.xml `venue_type_*`). */
+@Composable
+fun venueTypeLabel(type: VenueType): String = stringResource(
+    when (type) {
+        VenueType.RESTAURANT -> R.string.venue_type_restaurant
+        VenueType.FAST_FOOD -> R.string.venue_type_fast_food
+        VenueType.CAFE -> R.string.venue_type_cafe
+        VenueType.BAKERY -> R.string.venue_type_bakery
+        VenueType.DESSERT -> R.string.venue_type_dessert
+        VenueType.FOOD_TRUCK -> R.string.venue_type_food_truck
+        VenueType.BAR -> R.string.venue_type_bar
+    },
+)
+
+/** One Meal option: name, venue type, walking distance when known, and the price range or "Price unknown" muted. */
 @Composable
 private fun MealOptionRow(row: MealOptionRow, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
@@ -164,6 +182,7 @@ private fun MealOptionRow(row: MealOptionRow, onClick: () -> Unit) {
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(row.name, style = MaterialTheme.typography.titleSmall, color = scheme.onSurface)
+                Text(venueTypeLabel(row.venueType), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
                 val metres = row.distanceMeters
                 val minutes = row.walkingMinutes
                 if (metres != null && minutes != null) {
@@ -209,11 +228,19 @@ private fun mealPickerTitle(kind: MealKind): String = stringResource(
 
 private val PreviewZone: ZoneId = ZoneId.of("America/Toronto")
 
-private fun previewRow(id: Long, name: String, metres: Int?, minutes: Int?, price: MealPrice, next: Boolean = false) =
+private fun previewRow(
+    id: Long,
+    name: String,
+    metres: Int?,
+    minutes: Int?,
+    price: MealPrice,
+    next: Boolean = false,
+    venueType: VenueType = VenueType.RESTAURANT,
+) =
     MealOptionRow(
         placeId = id,
         name = name,
-        venueType = VenueType.RESTAURANT,
+        venueType = venueType,
         distanceMeters = metres,
         walkingMinutes = minutes,
         price = price,
@@ -223,7 +250,7 @@ private fun previewRow(id: Long, name: String, metres: Int?, minutes: Int?, pric
 
 private val PreviewHere = listOf(
     previewRow(1, "Le Cartet", 120, 2, MealPrice.Range(PriceRange(10, 20, false), 20)),
-    previewRow(2, "Café Olimpico", 300, 4, MealPrice.Range(PriceRange(10, 20, false), 20)),
+    previewRow(2, "Café Olimpico", 300, 4, MealPrice.Range(PriceRange(10, 20, false), 20), venueType = VenueType.CAFE),
     previewRow(3, "Schwartz’s Deli", 450, 6, MealPrice.Range(PriceRange(20, 30, false), 30)),
     previewRow(4, "Chez Tousignant", 520, 7, MealPrice.Unknown),
     previewRow(5, "Toqué! Restaurant gastronomique", null, null, MealPrice.Range(PriceRange(100, null, false), null)),
@@ -247,10 +274,14 @@ private fun previewState(
 )
 
 @Composable
-private fun MealPickerPreview(state: MealPickerUiState, budgetLabel: String? = stringResource(R.string.budget_under_50)) = HackappTheme {
+private fun MealPickerPreview(
+    state: MealPickerUiState,
+    budgetLabel: String? = stringResource(R.string.budget_under_50),
+    nextDistrictName: String? = "Ville-Marie",
+) = HackappTheme {
     MealPickerContent(
         state = state,
-        nextDistrictName = "Ville-Marie",
+        nextDistrictName = nextDistrictName,
         budgetLabel = budgetLabel,
         onSelectTab = {},
         onChoose = {},
@@ -266,6 +297,10 @@ private fun MealPickerTwoTabsPreview() = MealPickerPreview(previewState())
 @Preview(name = "MealPicker · one tab, no budget", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
 @Composable
 private fun MealPickerOneTabPreview() = MealPickerPreview(previewState(nextDistrictId = null), budgetLabel = null)
+
+@Preview(name = "MealPicker · next District name unknown", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
+@Composable
+private fun MealPickerUnknownDistrictPreview() = MealPickerPreview(previewState(), nextDistrictName = null)
 
 @Preview(name = "MealPicker · empty next tab", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 400)
 @Composable

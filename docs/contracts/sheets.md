@@ -115,7 +115,8 @@ MealPickerSheet(state: MealPickerUiState, onSelectTab: (MealTab) -> Unit, onChoo
 MealPickerContent(state, nextDistrictName: String?, budgetLabel: String?, onSelectTab, onChoose, onSkip, modifier)
 ```
 
-- The sheet looks up `nextDistrictName` from the City Pack (`rememberDistrictMap()`) by `state.nextDistrictId`.
+- The sheet looks up `nextDistrictName` from the City Pack (`rememberDistrictMap()`) by `state.nextDistrictId`; while it is unknown the tab says `meal_tab_next`.
+- Each row shows the venue type (`venueTypeLabel`, strings `venue_type_*`) under the name.
 - `budgetLabel` is the Meal budget bracket label Selection already shows (for example `budget_under_50`); null drops the budget part of the subtitle.
 - Tabs render only when `state.tabs.size > 1`. **Skip this Meal** is a text button, or the primary button when `hasNoOptions`.
 - `onChoose` receives the row's `placeId`; Selection calls `holder.choose(placeId)` and applies the outcome.
@@ -130,6 +131,7 @@ PlannedDepartureContent(state, venueName, onTimeChange, onConfirm, onCancel, mod
 
 - Uses `HackappTimeWheels`; every wheel move calls `onTimeChange` (wire it to `holder.setTime`). The wheels show `rejectedTime` while there is an error, else `departure`.
 - `venueName` fills the subtitle's middle part; the Event type label stands in when null. The state has no venue field.
+- The note uses `state.typicalStayMinutes`; the duration row adds `planned_departure_next_day` when `crossesMidnight`.
 - **Confirm** is disabled while `!canConfirm`. **Cancel** dismisses.
 
 ### `EventDetailsSheet.kt`
@@ -140,7 +142,7 @@ EventDetailsSheet(state: EventDetailsUiState, onSelectShowtime: (eventId: String
 EventDetailsContent(state, onSelectShowtime, onTicketPriceChange, onRetryLoad, onSignIn, onAddToItinerary, onClose, modifier)
 ```
 
-- The ticket link opens `ticketUrl` with `LocalUriHandler`. The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper.
-- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while saving.
-- `onRetryLoad` wires to `holder.load()`. `onSignIn` is shown only when `ticketPrice.signedIn` is false.
-- Audience label: `minAge >= 18` is adults, a `maxAge` is family, otherwise all audiences.
+- The ticket link opens `ticketUrl` with `LocalUriHandler` (an `IllegalArgumentException` from a device with no browser is swallowed). The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper, and is disabled while `ticketPrice.isBusy`.
+- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while `ticketPrice.isBusy`.
+- `onRetryLoad` wires to `holder.load()`; the `LoadFailed` text and Retry show for signed-out people too. `onSignIn` is shown only when `ticketPrice.signedIn` is false.
+- Audience label: `audience.description` when non-blank; otherwise `minAge >= 18` is adults, a `maxAge` is family, else all audiences.

@@ -145,7 +145,7 @@ fun EventDetailsContent(
         HackappPrimaryButton(
             text = stringResource(R.string.event_add),
             onClick = onAddToItinerary,
-            enabled = state.canAdd && field.inputError == null && field.status != TicketPriceStatus.Saving,
+            enabled = state.canAdd && field.inputError == null && !field.isBusy,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
     }
@@ -235,7 +235,13 @@ private fun TicketLink(url: String) {
     val uriHandler = LocalUriHandler.current
     val scheme = MaterialTheme.colorScheme
     Row(
-        Modifier.clickable(role = Role.Button) { uriHandler.openUri(url) },
+        Modifier.clickable(role = Role.Button) {
+            // A device without a browser throws instead of opening the link.
+            try {
+                uriHandler.openUri(url)
+            } catch (_: IllegalArgumentException) {
+            }
+        },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -277,7 +283,7 @@ private fun ColumnScope.TicketPriceSection(
             label = stringResource(R.string.event_ticket_price_label),
             keyboardType = KeyboardType.Decimal,
             imeAction = ImeAction.Done,
-            enabled = field.status != TicketPriceStatus.Loading,
+            enabled = !field.isBusy,
             errorText = when (field.inputError) {
                 null -> null
                 TicketPriceInputError.NotANumber -> stringResource(R.string.event_ticket_price_error_format)
@@ -285,8 +291,9 @@ private fun ColumnScope.TicketPriceSection(
             },
             supportingText = stringResource(R.string.event_ticket_price_range, min, max),
         )
-        TicketPriceStatus(field.status, onRetryLoad)
     }
+    // The shared median loads for everyone, so its failure and Retry show when signed out too.
+    TicketPriceStatus(field.status, onRetryLoad)
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         HackappIconView(HackappIcon.Info, size = 16.dp, tint = scheme.onSurfaceVariant)
@@ -340,12 +347,19 @@ private fun TicketPriceStatus(status: TicketPriceStatus, onRetryLoad: () -> Unit
     }
 }
 
-/** Adults when the minimum age is 18 or more, family when a maximum age exists, else all audiences. */
+/**
+ * The source's own audience text when it has one. Otherwise adults when the minimum age is 18 or
+ * more, family when a maximum age exists, else all audiences.
+ */
 @Composable
-private fun audienceLabel(audience: EventAudience): String = when {
-    (audience.minAge ?: 0) >= 18 -> stringResource(R.string.event_audience_adults)
-    audience.maxAge != null -> stringResource(R.string.event_audience_family)
-    else -> stringResource(R.string.event_audience_all)
+private fun audienceLabel(audience: EventAudience): String {
+    val description = audience.description?.takeIf { it.isNotBlank() }
+    return when {
+        description != null -> description
+        (audience.minAge ?: 0) >= 18 -> stringResource(R.string.event_audience_adults)
+        audience.maxAge != null -> stringResource(R.string.event_audience_family)
+        else -> stringResource(R.string.event_audience_all)
+    }
 }
 
 // Previews
@@ -444,6 +458,16 @@ private fun EventDetailsLoadingPreview() = EventDetailsPreview(
 @Composable
 private fun EventDetailsLoadFailedPreview() = EventDetailsPreview(
     previewState(price = EventPrice.Unknown, ticketPrice = TicketPriceFieldState(signedIn = true, status = TicketPriceStatus.LoadFailed)),
+)
+
+@Preview(name = "EventDetails · load failed, signed out", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun EventDetailsLoadFailedSignedOutPreview() = EventDetailsPreview(
+    previewState(
+        price = EventPrice.Unknown,
+        audience = EventAudience("Pour les 16 ans et plus", null, null),
+        ticketPrice = TicketPriceFieldState(signedIn = false, status = TicketPriceStatus.LoadFailed),
+    ),
 )
 
 @Preview(name = "EventDetails · save failed", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
