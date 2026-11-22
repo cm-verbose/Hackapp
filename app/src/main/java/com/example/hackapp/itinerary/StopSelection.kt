@@ -8,6 +8,9 @@ import java.time.ZoneId
 /** A published stay of at least this long makes an Event drop-in. */
 const val DROP_IN_MIN_MINUTES = 240L
 
+/** A drop-in Event already running is offered only with at least this much stay left. */
+const val MIN_DROP_IN_STAY_MINUTES = 60L
+
 /**
  * A drop-in Event can be joined at any time during its run, such as an exhibition or a festival day.
  * It must have published an end, because without one its stay is only a guess, and it must last at

@@ -253,7 +253,7 @@ class EventDetailsHolder(
         val event = selected.event
         val ticketPrice = field.ownReportCad
         if (event.publishedEnd() == null) return AddToItineraryAction.ChooseDeparture(event, ticketPrice)
-        val stop = eventStop(event, selected.suggestedDeparture.plannedDeparture, ticketPrice) ?: return null
+        val stop = eventStop(event, selected.suggestedDeparture.plannedDeparture, ticketPrice, selected.arrivalAt) ?: return null
         return AddToItineraryAction.Add(stop)
     }
 
@@ -281,7 +281,7 @@ class EventDetailsHolder(
             description = event.description,
             ticketUrl = event.url,
             ticketPrice = field,
-            canAdd = !field.isBusy && eventStop(event, selected.suggestedDeparture.plannedDeparture) != null,
+            canAdd = !field.isBusy && eventStop(event, selected.suggestedDeparture.plannedDeparture, arrival = selected.arrivalAt) != null,
         )
     }
 

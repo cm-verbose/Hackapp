@@ -65,8 +65,14 @@ fun leaveBy(itinerary: Itinerary, stopId: String, estimator: LegEstimator): Offs
 }
 
 /** Builds an Event Stop. [plannedDeparture] comes from the Planned Departure sheet. */
-fun eventStop(event: Event, plannedDeparture: ZonedDateTime, ticketPriceCad: Double? = null): Stop? {
-    val start = event.startTime() ?: return null
+/** [arrival] replaces the Event start for a drop-in joined while it is already running. */
+fun eventStop(
+    event: Event,
+    plannedDeparture: ZonedDateTime,
+    ticketPriceCad: Double? = null,
+    arrival: ZonedDateTime? = null,
+): Stop? {
+    val start = arrival?.toOffsetDateTime() ?: event.startTime() ?: return null
     val latitude = event.location.latitude ?: return null
     val longitude = event.location.longitude ?: return null
     val districtId = event.districtId ?: return null

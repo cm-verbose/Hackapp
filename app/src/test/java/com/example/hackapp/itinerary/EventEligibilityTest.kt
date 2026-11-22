@@ -117,7 +117,7 @@ class EventEligibilityTest {
 
     @Test
     fun `District count leaves out an Event already in progress`() {
-        val running = event("a", start = at(Nov28, 18).toString(), end = at(Nov28, 22).toString())
+        val running = event("a", start = at(Nov28, 18).toString(), end = at(Nov28, 21).toString())
         val window = night().planningWindow(Toronto)
         val during = context(now = instant(Nov28, 19))
         assertTrue(isEligible(running, during))

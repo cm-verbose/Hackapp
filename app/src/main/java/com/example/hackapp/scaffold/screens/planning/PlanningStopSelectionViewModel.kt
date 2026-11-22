@@ -160,7 +160,8 @@ class StopSelectionSession(
             }
             events = eventRepository.search(
                 EventQuery(
-                    startsAtOrAfter = saved.windowStart(zone).toOffsetDateTime(),
+                    // No lower bound: a drop-in that began before the window can still be joined.
+                    startsAtOrAfter = null,
                     startsBefore = saved.windowEnd(zone).toOffsetDateTime(),
                 ),
             )

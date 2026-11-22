@@ -65,7 +65,7 @@ class EventSelectionTest {
 
     @Test
     fun `an Event already in progress cannot be added`() {
-        val running = event("a", start = at(Nov28, 18).toString(), end = at(Nov28, 22).toString())
+        val running = event("a", start = at(Nov28, 18).toString(), end = at(Nov28, 21).toString())
         val during = context(now = instant(Nov28, 19))
         assertTrue(reachableShowtimes(EventSearch(night(), listOf(running), during, HERE), legs).isEmpty())
     }

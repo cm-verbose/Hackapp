@@ -7,6 +7,7 @@ import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Interest
 import com.example.hackapp.services.LegEstimate
 import com.example.hackapp.services.LegEstimator
+import java.time.Duration
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -45,10 +46,16 @@ data class EventSearch(
 
 data class ReachableShowtime(
     val event: Event,
+    /** The Event's own published start, for display. */
     val start: ZonedDateTime,
     val suggestedDeparture: DepartureSuggestion,
     /** Null when the Leg's origin is unknown. */
     val leg: LegEstimate?,
+    /**
+     * When the person starts this Event: [start], or for a drop-in already in progress the earliest
+     * reachable arrival. It becomes the Stop's `start`.
+     */
+    val arrivalAt: ZonedDateTime = start,
 )
 
 /** One title at one venue on one day, with its selectable times in order. */
@@ -66,7 +73,7 @@ data class EventCard(
     /** A long Event with a published end that may be joined at any time, see [isDropIn]. */
     val isDropIn: Boolean = false,
 ) {
-    val firstStart: ZonedDateTime get() = showtimes.first().start
+    val firstStart: ZonedDateTime get() = showtimes.first().arrivalAt
 }
 
 data class EventTypeGroup(val type: String, val cards: List<EventCard>)
@@ -109,27 +116,35 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
         .filter { isEligible(it, context) }
         .mapNotNull { event ->
             val start = event.startTime()?.atZoneSameInstant(zone) ?: return@mapNotNull null
-            if (start.toInstant() !in window || start.toInstant().isBefore(context.now)) return@mapNotNull null
+            val dropIn = event.isDropIn()
             val target = event.latLng() ?: return@mapNotNull null
             val leg = legOrigin?.let { estimator.transit(it, target) }
 
+            // Earliest moment the person can be there: the window, now, and the Leg from the previous Stop.
             val previous = search.gap.previous
+            var floor = maxOf(window.start, context.now)
             if (previous != null && leg != null) {
-                val earliest = previous.plannedDeparture.toInstant().plusSeconds(leg.totalMinutes * 60L)
-                if (start.toInstant().isBefore(earliest)) return@mapNotNull null
+                floor = maxOf(floor, previous.plannedDeparture.toInstant().plusSeconds(leg.totalMinutes * 60L))
             }
-
-            if (search.until != null && !start.toInstant().isBefore(search.until)) return@mapNotNull null
+            // A fixed showtime must start at or after that moment. A drop-in already in progress is joined on arrival.
+            if (!dropIn && (start.toInstant() !in window || start.toInstant().isBefore(floor))) return@mapNotNull null
+            val arrival = if (dropIn) maxOf(start.toInstant(), floor) else start.toInstant()
+            if (arrival !in window) return@mapNotNull null
+            if (search.until != null && !arrival.isBefore(search.until)) return@mapNotNull null
 
             var departure = suggestDeparture(event, itinerary, zone) ?: return@mapNotNull null
             var leaves = departure.plannedDeparture.toInstant()
-            if (blocks.any { it.overlaps(start.toInstant(), leaves) }) {
+            if (blocks.any { it.overlaps(arrival, leaves) }) {
                 // A drop-in Event stays on the list, but its stay stops when the first Meal Block it crosses starts.
-                if (!event.isDropIn()) return@mapNotNull null
-                val stopsAt = blocks.filter { it.overlaps(start.toInstant(), leaves) }.minOf { it.start }
-                if (!stopsAt.isAfter(start.toInstant())) return@mapNotNull null
+                if (!dropIn) return@mapNotNull null
+                val stopsAt = blocks.filter { it.overlaps(arrival, leaves) }.minOf { it.start }
+                if (!stopsAt.isAfter(arrival)) return@mapNotNull null
                 departure = departure.copy(plannedDeparture = stopsAt.atZone(zone))
                 leaves = stopsAt
+            }
+            // Joining late needs a meaningful stay left.
+            if (arrival.isAfter(start.toInstant()) && Duration.between(arrival, leaves).toMinutes() < MIN_DROP_IN_STAY_MINUTES) {
+                return@mapNotNull null
             }
 
             val next = search.gap.next
@@ -137,9 +152,9 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
                 val toNext = estimator.transit(target, next.latLng).totalMinutes * 60L
                 if (leaves.plusSeconds(toNext).isAfter(next.start.toInstant())) return@mapNotNull null
             }
-            ReachableShowtime(event, start, departure, leg)
+            ReachableShowtime(event, start, departure, leg, arrivalAt = arrival.atZone(zone))
         }
-        .sortedBy { it.start.toInstant() }
+        .sortedBy { it.arrivalAt.toInstant() }
         .toList()
 }
 
