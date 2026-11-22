@@ -18,7 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -124,12 +126,11 @@ fun PlanningMealChoicePage(
         step = MEAL_STEP,
         totalSteps = PLANNING_STEPS,
         bottomActions = {
+            if (state.planMeals && state.options.any { it.selected && it.error != null }) {
+                BottomNotice(stringResource(R.string.meal_error_summary))
+            }
             if (state.saveFailed) {
-                Text(
-                    stringResource(R.string.planning_save_error),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
+                BottomNotice(stringResource(R.string.planning_save_error))
             }
             HackappPrimaryButton(
                 text = stringResource(R.string.action_continue),
@@ -168,14 +169,25 @@ fun PlanningMealChoicePage(
                     else -> {
                         hours?.let { ItineraryRange(it) }
                         MealChips(state.options, onToggleMeal)
-                        state.options.filter { it.selected }.forEach { option ->
-                            MealCard(option, onStartChange, onBudgetChange)
-                        }
+                        val selected = state.options.filter { it.selected }
+                        if (selected.isEmpty()) InfoCallout(stringResource(R.string.meal_none_selected))
+                        selected.forEach { option -> MealCard(option, onStartChange, onBudgetChange) }
                     }
                 }
             }
         }
     }
+}
+
+/** An error line above the actions. TalkBack announces it when it appears. */
+@Composable
+private fun BottomNotice(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 @Composable
@@ -206,6 +218,7 @@ private fun MealCard(
     onBudgetChange: (MealKind, BudgetBracket?) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val name = mealLabel(option.kind)
     val range = "${option.start.controlText()} – ${option.endTime.controlText()}"
     Surface(
         color = scheme.surfaceContainerLow,
@@ -222,38 +235,44 @@ private fun MealCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(mealLabel(option.kind), style = MaterialTheme.typography.titleSmall, color = scheme.onSurface)
+                    Text(name, style = MaterialTheme.typography.titleSmall, color = scheme.onSurface)
                     Text(
                         stringResource(R.string.meal_block_note, option.kind.blockMinutes),
                         style = MaterialTheme.typography.bodySmall,
                         color = scheme.onSurfaceVariant,
                     )
                     // The reserved range turns the error colour when the block leaves the window or
-                    // overlaps another Meal, and the sentence below carries the error for TalkBack.
+                    // overlaps another Meal; the sentence under the row carries the error for TalkBack.
                     Text(
                         range,
                         style = MaterialTheme.typography.bodySmall,
                         color = if (option.error != null) scheme.error else scheme.onSurfaceVariant,
                     )
-                    option.error?.let { timeError ->
-                        val message = mealTimeErrorText(timeError)
-                        Text(
-                            message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.error,
-                            modifier = Modifier.semantics { error(message) },
-                        )
-                    }
                 }
                 HackappTimeField(
                     value = option.start,
                     onValueChange = { onStartChange(option.kind, it) },
-                    label = stringResource(R.string.planning_start),
+                    label = name,
                     modifier = Modifier.width(TimeFieldWidth),
+                    contentDescription = stringResource(R.string.meal_start_description, name),
+                )
+            }
+            // Full width, so a long sentence wraps here instead of squeezing the time field.
+            option.error?.let { timeError ->
+                val message = mealTimeErrorText(timeError)
+                Text(
+                    message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { error(message) },
                 )
             }
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .semantics(mergeDescendants = true) {},
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

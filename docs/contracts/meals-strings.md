@@ -25,7 +25,7 @@ Maquettes: `29:687` (plan Meals), `141:3340` (user handles food), `141:3485` (no
 | Meal time error, overlaps another Meal | `meal_error_overlaps` | Chevauche un autre repas. Changez l’heure. | Overlaps another meal. Change the time. | New, approved by the product owner |
 | Meal time errors, summary | `meal_error_summary` | Corrigez l’heure d’un repas. | Fix a meal time. | New, from the UX review. One line when any Meal card shows an error |
 | Nothing selected | `meal_none_selected` | Choisissez un repas ou « Je m’en occupe ». | Choose a meal or “I’ll handle it”. | New, from the UX review. Quoted label must match `meal_plan_no` |
-| Accessibility label, start time | `meal_start_description` | %1$s, début | %1$s, start | New. Not visible. Arg is the time, such as `12:00` |
+| Accessibility label, start time | `meal_start_description` | %1$s, début | %1$s, start | New. Not visible. Arg is the Meal name, such as `Dîner`; TalkBack then reads the field's time value as its state |
 
 ## Removed from the maquette copy
 

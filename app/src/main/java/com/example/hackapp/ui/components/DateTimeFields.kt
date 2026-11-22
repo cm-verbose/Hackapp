@@ -89,16 +89,26 @@ fun HackappDateField(
     }
 }
 
-/** 24-hour time field. Its dialog uses flickable hour and minute boxes. */
+/**
+ * 24-hour time field. Its dialog, titled [label], uses flickable hour and minute boxes.
+ * [contentDescription] names the field for TalkBack when the label alone is ambiguous.
+ */
 @Composable
 fun HackappTimeField(
     value: LocalTime,
     onValueChange: (LocalTime) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    contentDescription: String = label,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
-    HackappPickerField(value.format(TimeFormat), label, onClick = { open = true }, modifier = modifier)
+    HackappPickerField(
+        value.format(TimeFormat),
+        label,
+        onClick = { open = true },
+        modifier = modifier,
+        contentDescription = contentDescription,
+    )
 
     if (open) {
         var hour by rememberSaveable { mutableIntStateOf(value.hour) }
