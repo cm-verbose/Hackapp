@@ -23,7 +23,7 @@ enum class OutingKind { Day, Night }
 
 /** The Planning step a draft resumes on. */
 @Serializable
-enum class PlanningStep { DateTime, Districts, Meals, Stops, Review }
+enum class PlanningStep { DateTime, Budget, Districts, Meals, Stops, Review }
 
 /** [blockMinutes] is the whole Meal Block, including its margins. */
 @Serializable
@@ -48,6 +48,20 @@ data class MealBlock(
     val budget: BudgetBracket? = null,
     val skipped: Boolean = false,
 )
+
+/** Meal budgets chosen for one Itinerary. A null [lateNight] means the add-on is off. */
+@Serializable
+data class MealBudgets(
+    val lunch: BudgetBracket? = null,
+    val dinner: BudgetBracket? = null,
+    val lateNight: BudgetBracket? = null,
+) {
+    fun forKind(kind: MealKind): BudgetBracket? = when (kind) {
+        MealKind.Lunch -> lunch
+        MealKind.Dinner -> dinner
+        MealKind.LateBite -> lateNight
+    }
+}
 
 /** A place on an Itinerary. [sourceId] is the Event id, or the Place id as text. */
 @Serializable
@@ -89,6 +103,8 @@ data class Itinerary(
     val planMeals: Boolean? = null,
     val mealBlocks: List<MealBlock> = emptyList(),
     val eventBudget: BudgetBracket? = null,
+    /** Null means this Itinerary uses the Meal budgets from the Profile. */
+    val mealBudgets: MealBudgets? = null,
     /** Stops in visit order. */
     val stops: List<Stop> = emptyList(),
     val createdAtMillis: Long,

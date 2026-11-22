@@ -32,7 +32,7 @@ data class BudgetSummary(
 fun budgetSummary(itinerary: Itinerary, context: PlanningContext, prices: BudgetPrices): BudgetSummary {
     val eventBudget = (itinerary.eventBudget ?: context.defaultEventBudget)?.maxPrice
     val mealLimits = itinerary.activeMealBlocks.map {
-        (it.budget ?: context.defaultMealBudgets[it.kind])?.maxPrice
+        (it.budget ?: itinerary.mealBudget(it.kind, context))?.maxPrice
     }
     val mealBudget = if (mealLimits.any { it == null }) null else mealLimits.sumOf { it ?: 0 }
     val total = if (eventBudget != null && mealBudget != null) eventBudget + mealBudget else null

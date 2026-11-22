@@ -11,6 +11,7 @@ import com.example.hackapp.language.AppLanguage
 import com.example.hackapp.scaffold.navigation.ArchivedItineraryRoute
 import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
 import com.example.hackapp.scaffold.navigation.PastItineraryRoute
+import com.example.hackapp.scaffold.navigation.PlanningBudgetRoute
 import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
@@ -75,6 +76,7 @@ class ItineraryPresentationTest {
         fun route(step: PlanningStep) = itinerary("a", ItineraryPhase.Planning, step).openRoute()
 
         assertEquals(PlanningDateTimeRoute("a"), route(PlanningStep.DateTime))
+        assertEquals(PlanningBudgetRoute("a"), route(PlanningStep.Budget))
         assertEquals(PlanningDistrictPickRoute("a"), route(PlanningStep.Districts))
         assertEquals(PlanningMealChoiceRoute("a"), route(PlanningStep.Meals))
         assertEquals(PlanningStopSelectionRoute("a"), route(PlanningStep.Stops))

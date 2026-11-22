@@ -36,7 +36,7 @@ fun defaultMealBlocks(itinerary: Itinerary, context: PlanningContext): List<Meal
                 id = "meal-${kind.name.lowercase(Locale.ROOT)}",
                 kind = kind,
                 start = kind.defaultStart,
-                budget = context.defaultMealBudgets[kind],
+                budget = itinerary.mealBudget(kind, context),
             )
         }
         .filter { it.fitsWindow(itinerary, context.zone) }
@@ -84,7 +84,7 @@ fun mealOptions(search: MealSearch, estimator: LegEstimator): MealOptions {
     val interval = search.block.interval(search.itinerary, zone)
     val previous = previousStopBefore(search.itinerary, search.block, zone)
     val origin = previous?.latLng ?: search.origin
-    val budget = search.block.budget ?: search.context.defaultMealBudgets[search.block.kind]
+    val budget = search.block.budget ?: search.itinerary.mealBudget(search.block.kind, search.context)
     val barsAllowed = barsAllowed(search)
     val preferred = search.cuisineCatalog.filter { it.code in search.context.cuisineGroups }
 

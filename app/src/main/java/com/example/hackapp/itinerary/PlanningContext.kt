@@ -57,6 +57,10 @@ data class PlanningWindow(val start: Instant, val end: Instant) {
 fun Itinerary.planningWindow(zone: ZoneId) =
     PlanningWindow(windowStart(zone).toInstant(), windowEnd(zone).toInstant())
 
+/** This Itinerary's budget for a Meal, falling back to the Profile when it has no override. */
+fun Itinerary.mealBudget(kind: MealKind, context: PlanningContext): BudgetBracket? =
+    mealBudgets?.forKind(kind) ?: context.defaultMealBudgets[kind].takeIf { mealBudgets == null }
+
 /** Stops that still count: everything except those marked Skipped, in visit order. */
 val Itinerary.activeStops: List<Stop> get() = stops.filter { it.status != StopStatus.Skipped }
 

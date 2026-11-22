@@ -14,6 +14,7 @@ import com.example.hackapp.itinerary.StopStatus
 import com.example.hackapp.scaffold.navigation.ArchivedItineraryRoute
 import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
 import com.example.hackapp.scaffold.navigation.PastItineraryRoute
+import com.example.hackapp.scaffold.navigation.PlanningBudgetRoute
 import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
@@ -48,6 +49,7 @@ val Itinerary.canDelete: Boolean
 fun Itinerary.openRoute(): Any = when (phase) {
     ItineraryPhase.Planning -> when (step) {
         PlanningStep.DateTime -> PlanningDateTimeRoute(id)
+        PlanningStep.Budget -> PlanningBudgetRoute(id)
         PlanningStep.Districts -> PlanningDistrictPickRoute(id)
         PlanningStep.Meals -> PlanningMealChoiceRoute(id)
         PlanningStep.Stops -> PlanningStopSelectionRoute(id)
