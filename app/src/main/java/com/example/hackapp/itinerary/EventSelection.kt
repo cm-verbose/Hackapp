@@ -7,6 +7,7 @@ import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Interest
 import com.example.hackapp.services.LegEstimate
 import com.example.hackapp.services.LegEstimator
+import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
@@ -38,6 +39,8 @@ data class EventSearch(
     val origin: LatLng? = null,
     /** Shared median of user-reported prices per Event key. */
     val medianPrices: Map<ShowtimeKey, Double> = emptyMap(),
+    /** Showtimes must start before this instant. Selection sets it to the next Meal Block start. */
+    val until: Instant? = null,
 )
 
 data class ReachableShowtime(
@@ -60,6 +63,8 @@ data class EventCard(
     /** Null when unknown. Free is 0. */
     val priceCad: Double?,
     val travelMinutes: Int?,
+    /** A long Event with a published end that may be joined at any time, see [isDropIn]. */
+    val isDropIn: Boolean = false,
 ) {
     val firstStart: ZonedDateTime get() = showtimes.first().start
 }
@@ -114,9 +119,18 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
                 if (start.toInstant().isBefore(earliest)) return@mapNotNull null
             }
 
-            val departure = suggestDeparture(event, itinerary, zone) ?: return@mapNotNull null
-            val leaves = departure.plannedDeparture.toInstant()
-            if (blocks.any { it.overlaps(start.toInstant(), leaves) }) return@mapNotNull null
+            if (search.until != null && !start.toInstant().isBefore(search.until)) return@mapNotNull null
+
+            var departure = suggestDeparture(event, itinerary, zone) ?: return@mapNotNull null
+            var leaves = departure.plannedDeparture.toInstant()
+            if (blocks.any { it.overlaps(start.toInstant(), leaves) }) {
+                // A drop-in Event stays on the list, but its stay stops when the first Meal Block it crosses starts.
+                if (!event.isDropIn()) return@mapNotNull null
+                val stopsAt = blocks.filter { it.overlaps(start.toInstant(), leaves) }.minOf { it.start }
+                if (!stopsAt.isAfter(start.toInstant())) return@mapNotNull null
+                departure = departure.copy(plannedDeparture = stopsAt.atZone(zone))
+                leaves = stopsAt
+            }
 
             val next = search.gap.next
             if (next != null) {
@@ -143,6 +157,7 @@ fun rankedEventCards(search: EventSearch, estimator: LegEstimator): List<EventCa
                 venueName = first.location.venueName,
                 type = first.type,
                 showtimes = showtimes,
+                isDropIn = first.isDropIn(),
                 matchesInterest = interestOf(first.type) in search.context.interests,
                 priceRank = priceRank(price, budget),
                 priceCad = price,
