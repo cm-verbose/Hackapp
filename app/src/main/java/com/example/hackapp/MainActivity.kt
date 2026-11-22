@@ -1,6 +1,7 @@
 package com.example.hackapp
 
 import android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -13,6 +14,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
 import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.language.AppLanguageStore
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.AppScaffold
 import com.example.hackapp.services.LocalCityServices
@@ -22,6 +24,10 @@ import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguageStore.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
