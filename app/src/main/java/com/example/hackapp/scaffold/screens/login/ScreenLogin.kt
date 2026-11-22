@@ -141,7 +141,6 @@ private fun WelcomeContent(
                 enabled = !busy,
             )
             HackappTextActionButton(stringResource(R.string.auth_forgot_password), onForgotPassword, enabled = !busy)
-            AuthErrorMessage(error)
         }
 
         Column(
@@ -151,6 +150,7 @@ private fun WelcomeContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            AuthErrorMessage(error)
             HackappPrimaryButton(
                 text = stringResource(R.string.auth_sign_in),
                 enabled = !busy && email.isNotBlank() && password.isNotEmpty(),

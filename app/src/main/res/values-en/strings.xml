@@ -37,6 +37,7 @@
         <item quantity="other">%d boroughs</item>
     </plurals>
     <!-- Qindong 2 components -->
+    <string name="data_licences">Licences: Has Things and OpenStreetMap, ODbL 1.0 · Ville de Montréal, CC BY 4.0</string>
     <string name="data_attribution">Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors</string>
     <string name="district_add_as_position">Add as #%1$d</string>
     <string name="district_choose_another">Choose another</string>
@@ -139,7 +140,7 @@
     <string name="audience_no_alcohol">No alcohol</string>
     <string name="audience_bars_hidden_note">Bars hidden</string>
     <string name="interests_title">Interests and cuisines</string>
-    <string name="interests_subtitle">Used to rank results, not hide them</string>
+    <string name="interests_subtitle">Ranks results without hiding any</string>
     <string name="interests_event_types">Event types</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Event</string>

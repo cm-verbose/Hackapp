@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -135,16 +136,20 @@ fun HackappPage(
     ) {
         HackappTopBar(title, onBack = onBack, containerColor = containerColor, contentColor = contentColor)
         if (step != null && totalSteps != null) StepProgress(step, totalSteps)
+        val scrollState = rememberScrollState()
         Column(
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             content = content,
         )
-        if (bottomActions != null) BottomActions(content = bottomActions)
+        if (bottomActions != null) {
+            if (scrollState.canScrollForward) HorizontalDivider()
+            BottomActions(content = bottomActions)
+        }
     }
 }
 
