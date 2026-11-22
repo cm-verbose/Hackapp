@@ -29,6 +29,10 @@ class DemoControlsViewModel(
     /** Why the last [enable] was refused, if it was. */
     val lastResult: StateFlow<DemoEnableResult?> = _lastResult.asStateFlow()
 
+    private val _exitFailed = MutableStateFlow(false)
+    /** The last [exit] failed: demo mode is still on and it can be tried again. */
+    val exitFailed: StateFlow<Boolean> = _exitFailed.asStateFlow()
+
     private var canAdvance = false
 
     init {
@@ -48,7 +52,20 @@ class DemoControlsViewModel(
 
     fun enable() = act { _lastResult.value = controller.enable(uid) }
 
-    fun disable() = act { controller.disable() }
+    /** Exit demo mode. An unfinished run ends and moves to Past with its Stamps. */
+    fun exit() {
+        viewModelScope.launch {
+            _exitFailed.value = false
+            try {
+                controller.exit(uid)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _exitFailed.value = true
+            }
+            _state.value = controller.status(canAdvance)
+        }
+    }
 
     fun nextMoment() = act { controller.nextMoment(uid) }
 

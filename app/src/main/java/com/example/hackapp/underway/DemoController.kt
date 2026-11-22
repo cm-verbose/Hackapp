@@ -33,8 +33,11 @@ class DemoController(
 
     suspend fun enable(uid: String): DemoEnableResult = coordinator.enableDemo(uid)
 
-    /** Ends unfinished demo runs, then returns to real time. Throws on a storage failure: retry. */
-    suspend fun disable() = coordinator.disableDemo()
+    /**
+     * Exit demo mode: an unfinished run ends now at its simulated time and moves to Past, keeping
+     * the Stamps it earned, and the clock returns to real time. Throws on a storage failure: retry.
+     */
+    suspend fun exit(uid: String) = coordinator.disableDemo(uid)
 
     /** Starts [itineraryId] whatever its date and jumps to it. Off demo mode, the normal rule applies. */
     suspend fun startFor(
@@ -42,7 +45,8 @@ class DemoController(
         itineraryId: String,
         origin: LatLng?,
         confirmEndCurrent: Boolean = false,
-    ): UnderwayStartResult = coordinator.start(uid, itineraryId, origin, enabled, confirmEndCurrent)
+        originDistrictId: String? = null,
+    ): UnderwayStartResult = coordinator.start(uid, itineraryId, origin, enabled, confirmEndCurrent, originDistrictId)
 
     /** Jumps to the next meaningful time and fires what is due at once. */
     suspend fun nextMoment(uid: String): DemoAdvance = coordinator.advanceDemo(uid)

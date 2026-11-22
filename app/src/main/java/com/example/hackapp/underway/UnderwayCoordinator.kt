@@ -6,6 +6,8 @@ import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.StartBlock
 import com.example.hackapp.itinerary.StartResult
+import com.example.hackapp.itinerary.archiveExpiredDrafts
+import com.example.hackapp.itinerary.reopenArchivedDrafts
 import com.example.hackapp.itinerary.startBlock
 import com.example.hackapp.itinerary.startItinerary
 import com.example.hackapp.passport.PassportUnavailableException
@@ -69,8 +71,8 @@ class UnderwayCoordinator(
         others.forEach { endCurrent(uid, it, UnderwayEvent.EndForReplacement) }
         // Only now, after any confirmation: the old Itinerary has ended at its own time.
         val now = demoClock?.let { demo ->
-            val at = demoStartInstant(draft, origin, estimator, clock.zone) ?: current
-            demo.jumpTo(at)
+            val at = demoStartInstant(draft, origin, originDistrictId, estimator, clock.zone) ?: current
+            demo.moveTo(at)
             at
         } ?: current
         val started = when (val r = startItinerary(itineraries, uid, itineraryId, now, clock.zone, demoMode, true)) {
@@ -168,21 +170,30 @@ class UnderwayCoordinator(
 
     // ---- demo mode (see docs/contracts/demo.md) ----
 
-    /** Opens demo mode on its pinned date. Refused while a real Itinerary is Underway. */
+    /** Opens demo mode on its pinned date and reopens archived drafts. Refused while an Itinerary is Underway. */
     suspend fun enableDemo(uid: String): DemoEnableResult = lock.withLock {
         val demo = demoClock()
         if (demo.isSimulated) return DemoEnableResult.Enabled
         underwayItineraries(uid).firstOrNull()?.let { return DemoEnableResult.RealItineraryUnderway(it) }
-        demo.jumpTo(demo.pinnedStart())
+        reopenArchivedDrafts(itineraries, uid)
+        demo.moveTo(demo.pinnedStart())
         DemoEnableResult.Enabled
     }
 
     /** Ends every unfinished demo run at its simulated time, then returns to real time. */
-    suspend fun disableDemo(): Unit = lock.withLock {
+    suspend fun disableDemo(uid: String): Unit = lock.withLock {
         val demo = demoClock()
         states.all().filter { it.demoRun && it.phase != UnderwayPhase.Ended }.forEach { state ->
             val itinerary = itineraries.getItinerary(state.ownerUid, state.itineraryId) ?: return@forEach
             run(state.ownerUid, itinerary, state, UnderwayEvent.EndItinerary(confirmed = true))
+        }
+        // Reopened drafts whose date has passed go back. This also runs on the next launch.
+        try {
+            archiveExpiredDrafts(itineraries, uid, clock.realNow(), clock.zone)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            Unit
         }
         demo.stop()
     }
@@ -194,7 +205,7 @@ class UnderwayCoordinator(
         val state = states.get(uid, itinerary.id)?.takeIf { it.demoRun && it.phase != UnderwayPhase.Ended }
             ?: return DemoAdvance.NothingUnderway
         // Null only past the automatic end: the Tick below then ends the day.
-        UnderwayEngine.nextMomentAfter(ctx(itinerary), state, clock.now())?.let { demo.jumpTo(it) }
+        UnderwayEngine.nextMomentAfter(ctx(itinerary), state, clock.now())?.let { demo.advanceTo(it) }
         val t = run(uid, itinerary, state, UnderwayEvent.Tick)
         DemoAdvance.Moved(clock.now(), t.state.phase == UnderwayPhase.Ended)
     }
@@ -248,6 +259,8 @@ class UnderwayCoordinator(
 
     private suspend fun run(uid: String, itinerary: Itinerary, state: UnderwayState, event: UnderwayEvent): Transition {
         val now = nowFor(state)
+        // Saved at or after every recorded time, so a killed process never restarts before them.
+        if (state.demoRun) (clock as? DemoClock)?.checkpoint()
         val t = UnderwayEngine.reduce(ctx(itinerary), state, event, now)
         // State first: it is the source of truth. The Itinerary is re-synced by [reconcile] if we die here.
         if (t.state != state) states.save(t.state)

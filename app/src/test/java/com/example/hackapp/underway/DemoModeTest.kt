@@ -11,6 +11,7 @@ import com.example.hackapp.itinerary.UID
 import com.example.hackapp.itinerary.at
 import com.example.hackapp.itinerary.fixedLegs
 import com.example.hackapp.itinerary.night
+import com.example.hackapp.itinerary.startBlock
 import com.example.hackapp.itinerary.stop
 import com.example.hackapp.passport.InMemoryStampRepository
 import com.example.hackapp.passport.PlaceStampIdentityResolver
@@ -40,7 +41,8 @@ class DemoModeTest {
     private var coordinator = newCoordinator()
     private var demo = DemoController(coordinator, clock)
 
-    private fun newClock() = DemoClock(demoSettings, Toronto, Nov28, LocalDate.of(2026, 11, 21), real = { real })
+    private fun newClock() =
+        DemoClock(demoSettings, Toronto, Nov28, LocalDate.of(2026, 11, 21), real = { real }).apply { resume() }
 
     private fun newCoordinator() = UnderwayCoordinator(
         itineraries, states, stamps, { PlaceStampIdentityResolver({ null }) }, fixedLegs(20), clock, scheduler, notifier,
@@ -99,7 +101,7 @@ class DemoModeTest {
     fun `planning time stays before every Event while simulating`() = runBlocking {
         demo.enable(UID)
         assertEquals(LocalDate.of(2026, 11, 21).atStartOfDay(Toronto).toInstant(), clock.planningNow())
-        demo.disable()
+        demo.exit(UID)
         assertEquals(real, clock.planningNow())
     }
 
@@ -207,23 +209,107 @@ class DemoModeTest {
     }
 
     @Test
-    fun `the clock and the run survive a restart`() = runBlocking {
+    fun `the clock restarts paused at its saved time and the run survives`() = runBlocking {
         itineraries.saveItinerary(threeStops())
         demo.enable(UID)
         started()
         advanceTo(t(19))
         send(E.ConfirmArrival("a"))
-        val before = clock.now()
+        val arrived = states.get(UID, "it-1")!!.records["a"]!!.arrivedAtMillis!!
 
-        passTime(10)
-        restart()
+        passTime(600)
+        clock = DemoClock(demoSettings, Toronto, Nov28, LocalDate.of(2026, 11, 21), real = { real })
+        coordinator = newCoordinator()
+        demo = DemoController(coordinator, clock)
 
         assertTrue(demo.enabled)
-        assertEquals(before.plus(Duration.ofMinutes(10)), clock.now())
+        assertTrue("Never before a recorded time", clock.now().toEpochMilli() >= arrived)
+        assertEquals(t(19), clock.now())
+        passTime(600)
+        assertEquals("Paused until the app opens", t(19), clock.now())
+        clock.resume()
+        passTime(1)
+        assertEquals(t(19, 1), clock.now())
         coordinator.onAppOpen(UID)
         assertEquals(UnderwayPhase.AtStop, coordinator.view(UID, true)!!.phase)
-        assertTrue(demo.nextMoment(UID) is DemoAdvance.Moved)
         assertTrue(scheduler.alertsFor("it-1").isEmpty())
+    }
+
+    @Test
+    fun `a demo left overnight in the background does not end`() = runBlocking {
+        itineraries.saveItinerary(threeStops())
+        demo.enable(UID)
+        started()
+        val before = clock.now()
+        clock.pause()
+        clock.checkpoint()
+        passTime(60 * 24 * 3)
+        coordinator.onAlarm(UID, "it-1")
+        coordinator.onBoot(UID)
+        clock.resume()
+        coordinator.onAppOpen(UID)
+        assertEquals(before, clock.now())
+        assertEquals(ItineraryPhase.Underway, itineraries.getItinerary(UID, "it-1")!!.phase)
+    }
+
+    @Test
+    fun `Next moment never moves backward and visits Leave By, arrival and the next Stop`() = runBlocking {
+        itineraries.saveItinerary(threeStops())
+        demo.enable(UID)
+        started()
+        advanceTo(t(19))
+        send(E.ConfirmArrival("a"))
+        val seen = mutableListOf(clock.now())
+        repeat(3) {
+            demo.nextMoment(UID)
+            seen += clock.now()
+        }
+        assertEquals(seen.sorted(), seen)
+        assertEquals(seen.distinct(), seen)
+        assertTrue("Leave By", t(21) in seen || t(21, 10) in seen)
+        send(E.Leaving("a"))
+        send(E.OpenTransport(TransportChoice.Transit, "b"))
+        val handoff = clock.now()
+        val expected = coordinator.view(UID, true)!!.expectedArrival!!.toInstant()
+        demo.nextMoment(UID)
+        assertTrue(clock.now() > handoff)
+        assertTrue(clock.now() <= expected)
+    }
+
+    @Test
+    fun `the start time is one the Itinerary window accepts`() {
+        val dawn = night(
+            stops = listOf(stop("d", at(Nov28, 0, 10), at(Nov28, 1))),
+            start = java.time.LocalTime.of(0, 5),
+            end = java.time.LocalTime.of(3, 0),
+        )
+        val at = demoStartInstant(dawn, LatLng(45.5, -73.6), null, fixedLegs(20), Toronto)!!
+        assertEquals("Stays on its date", Nov28.atStartOfDay(Toronto).toInstant(), at)
+        assertEquals(null, startBlock(dawn, at, Toronto))
+        val evening = threeStops()
+        assertEquals(null, startBlock(evening, demoStartInstant(evening, null, null, fixedLegs(20), Toronto)!!, Toronto))
+    }
+
+    @Test
+    fun `the first Leg uses the default walking mode inside a District`() {
+        val legs = com.example.hackapp.services.LegEstimator { _, _, mode ->
+            val minutes = if (mode == com.example.hackapp.services.LegMode.WALK) 5 else 30
+            com.example.hackapp.services.LegEstimate(distanceMeters = 300.0, travelMinutes = minutes, bufferMinutes = 5)
+        }
+        val itinerary = threeStops()
+        val first = itinerary.stops.first()
+        val at = demoStartInstant(itinerary, LatLng(45.5, -73.6), first.districtId, legs, Toronto)!!
+        assertEquals(t(18, 50), at)
+    }
+
+    @Test
+    fun `enabling reopens archived drafts and exiting archives them again`() = runBlocking {
+        real = t(12, 0, Nov28.plusDays(5))
+        itineraries.saveItinerary(threeStops().copy(phase = ItineraryPhase.Archived))
+        demo.enable(UID)
+        assertEquals(ItineraryPhase.Planning, itineraries.getItinerary(UID, "it-1")!!.phase)
+        demo.exit(UID)
+        assertEquals(ItineraryPhase.Archived, itineraries.getItinerary(UID, "it-1")!!.phase)
     }
 
     @Test
@@ -262,7 +348,7 @@ class DemoModeTest {
         send(E.ConfirmArrival("a"))
         passTime(60)
 
-        demo.disable()
+        demo.exit(UID)
 
         assertFalse(demo.enabled)
         assertEquals(real, clock.now())
@@ -311,7 +397,7 @@ class DemoModeTest {
 
         assertEquals(ItineraryPhase.Underway, itineraries.getItinerary("u2", "real")!!.phase)
         assertTrue(scheduler.alertsFor("real").isNotEmpty())
-        demo.disable()
+        demo.exit(UID)
         assertEquals(ItineraryPhase.Underway, itineraries.getItinerary("u2", "real")!!.phase)
     }
 

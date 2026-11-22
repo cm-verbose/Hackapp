@@ -17,7 +17,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.passport.PlaceStampIdentityResolver
 import com.example.hackapp.passport.createStampRepository
@@ -28,9 +27,6 @@ import com.example.hackapp.underway.UnderwayCoordinator
 import com.example.hackapp.underway.android.AndroidUnderwayAlertScheduler
 import com.example.hackapp.underway.android.AndroidUnderwayNotifier
 import com.example.hackapp.underway.createUnderwayRepository
-
-/** The date demo mode pins: a Saturday with good seed data. */
-private val DEMO_DATE: LocalDate = LocalDate.of(2026, 11, 28)
 
 /** Owns the single [CityServices] container for this build's City Pack. */
 class HackappApplication : Application() {
@@ -46,7 +42,7 @@ class HackappApplication : Application() {
         DemoClock(
             repository = SharedPreferencesDemoModeRepository(this),
             zone = ActiveCityPack.timeZone,
-            pinnedDate = DEMO_DATE,
+            pinnedDate = ActiveCityPack.demoDate,
             planningFrom = ActiveCityPack.eventCoverage.firstDate,
         )
     }
@@ -85,6 +81,8 @@ class HackappApplication : Application() {
         null
     }
 
+    private var startedActivities = 0
+
     override fun onCreate() {
         super.onCreate()
         // Every time the app comes to the front counts as an app open: reschedule alerts, end a
@@ -92,12 +90,31 @@ class HackappApplication : Application() {
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityResumed(activity: Activity) = reconcileUnderway()
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
-            override fun onActivityStarted(activity: Activity) = Unit
+            override fun onActivityStarted(activity: Activity) {
+                if (startedActivities++ == 0) underwayClock.resume()
+            }
             override fun onActivityPaused(activity: Activity) = Unit
-            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) {
+                if (--startedActivities == 0) pauseDemoClock()
+            }
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
             override fun onActivityDestroyed(activity: Activity) = Unit
         })
+    }
+
+    /** Simulated time runs only in the foreground. Saved now, because the process may be killed next. */
+    private fun pauseDemoClock() {
+        underwayClock.pause()
+        if (!underwayClock.isSimulated) return
+        applicationScope.launch(Dispatchers.Default) {
+            try {
+                underwayClock.checkpoint()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("Underway", "Could not save the demo time", e)
+            }
+        }
     }
 
     private fun reconcileUnderway() {

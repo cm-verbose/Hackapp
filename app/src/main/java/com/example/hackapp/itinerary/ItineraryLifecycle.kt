@@ -118,3 +118,18 @@ suspend fun startItinerary(
     repository.saveItinerary(started)
     return StartResult.Started(started, ended.firstOrNull())
 }
+
+/**
+ * Demo mode: archived drafts return to Planning so any of them can start. [archiveExpiredDrafts]
+ * moves them back once demo mode is off.
+ */
+suspend fun reopenArchivedDrafts(repository: ItineraryRepository, uid: String): List<Itinerary> {
+    val reopened = repository.observeItineraries(uid).first()
+        .filter { it.phase == ItineraryPhase.Archived }
+        .map { draft ->
+            val step = if (draft.step == PlanningStep.Review && !canFinish(draft)) PlanningStep.Stops else draft.step
+            draft.copy(phase = ItineraryPhase.Planning, step = step)
+        }
+    reopened.forEach { repository.saveItinerary(it) }
+    return reopened
+}
