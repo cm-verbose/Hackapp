@@ -26,7 +26,19 @@ data class Event(
 
     // Cost
     val cost: Cost,
+
+    // Planning
+    /** City Pack District id (`area.code` in Montréal). Null until the Event is placed in a District. */
+    val districtId: String? = null,
+    val status: EventStatus = EventStatus.SCHEDULED,
 )
+
+@Serializable
+enum class EventStatus {
+    @SerialName("scheduled") SCHEDULED,
+    @SerialName("cancelled") CANCELLED,
+    @SerialName("sold_out") SOLD_OUT,
+}
 
 @Serializable
 data class TargetAudience(

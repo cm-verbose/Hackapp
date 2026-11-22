@@ -7,10 +7,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.collection.intSetOf
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.credentials.CredentialManager
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
+import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.scaffold.AppScaffold
+import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.widgets.AppWidgetReceiver
 import com.google.firebase.FirebaseApp
@@ -21,9 +24,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
+        val cityServices = (application as HackappApplication).cityServices
         setContent {
-            HackappTheme {
-                AppScaffold()
+            CompositionLocalProvider(
+                LocalCityPack provides cityServices.cityPack,
+                LocalCityServices provides cityServices,
+            ) {
+                HackappTheme {
+                    AppScaffold()
+                }
             }
         }
         this.instantiateWidgets()
