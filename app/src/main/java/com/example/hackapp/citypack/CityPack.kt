@@ -11,6 +11,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
 
@@ -38,6 +39,9 @@ data class LegEstimatorConfig(
     val rideHailBufferMinutes: Int = 8,
 )
 
+/** The inclusive range of dates covered by the pack's Event snapshot. */
+data class EventCoverage(val firstDate: LocalDate, val lastDate: LocalDate)
+
 /**
  * The complete set of city-specific content and options. It is data: services are built from it
  * by [com.example.hackapp.services.CityServicesFactory], so screens never name a city or provider.
@@ -49,6 +53,7 @@ data class CityPack(
     val defaultLocale: Locale,
     val districtMapAsset: String,
     val eventSnapshotAsset: String,
+    val eventCoverage: EventCoverage,
     val transitApp: TransitAppConfig,
     val fareTable: FareTable,
     val rideHail: RideHailConfig,
@@ -65,6 +70,7 @@ val MontrealCityPack = CityPack(
     defaultLocale = Locale.CANADA_FRENCH,
     districtMapAsset = "citypacks/mtl/districts.json",
     eventSnapshotAsset = "citypacks/mtl/events.json",
+    eventCoverage = EventCoverage(LocalDate.of(2026, 11, 21), LocalDate.of(2026, 12, 6)),
     transitApp = TransitAppConfig(displayName = "Chrono", packageName = "quebec.artm.chrono"),
     fareTable = FareTable(
         agencyName = "ARTM",
