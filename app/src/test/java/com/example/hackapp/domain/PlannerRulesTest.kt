@@ -52,7 +52,8 @@ class PlannerRulesTest {
     @Test fun minimumAgeAboveTheAgeBandHidesTheEvent() {
         val young = UserProfile(ageRange = AgeRange.A18_24)
         assertFalse(event(audience = TargetAudience(minAge = 30)).isEligible(young, Audience.ADULTS_ONLY))
-        assertTrue(event(audience = TargetAudience(minAge = 21)).isEligible(young, Audience.ADULTS_ONLY))
+        assertFalse(event(audience = TargetAudience(minAge = 21)).isEligible(young, Audience.ADULTS_ONLY))
+        assertTrue(event(audience = TargetAudience(minAge = 18)).isEligible(young, Audience.ADULTS_ONLY))
     }
 
     @Test fun childrenOnlyEventsNeedTheFamilyAudience() {

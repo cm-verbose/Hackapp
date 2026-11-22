@@ -37,7 +37,7 @@ fun Event.isEligible(profile: UserProfile, audience: Audience): Boolean {
     if (status != EventStatus.SCHEDULED || eventStopType(type) == null) return false
     val minAge = targetAudience?.minAge
     val age = profile.ageRange
-    if (minAge != null && age != null && minAge > age.max) return false
+    if (minAge != null && age != null && minAge > age.min) return false
     val childrenOnly = targetAudience?.maxAge?.let { it < 13 } == true
     if (childrenOnly && audience != Audience.FAMILY_FRIENDLY) return false
     return true

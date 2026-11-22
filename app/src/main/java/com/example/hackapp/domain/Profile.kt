@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 
 enum class VisitorType { VISITOR, RESIDENT }
 
-/** Age bands of the onboarding. Events whose minimum age is above [max] are hidden. */
+/** Age bands of the onboarding. Events whose minimum age is above [min] are hidden (an 18-24 person may be 18). */
 enum class AgeRange(val min: Int, val max: Int) { A18_24(18, 24), A25_34(25, 34), A35_44(35, 44), A45_54(45, 54), A55_PLUS(55, 120) }
 
 enum class Audience { ADULTS_ONLY, FAMILY_FRIENDLY, NO_ALCOHOL }
