@@ -48,6 +48,10 @@ class UnderwayChrome(
     val onEndItinerary: () -> Unit,
     val onOpenNotificationSettings: () -> Unit,
     val onDismissBanner: () -> Unit,
+    /** Demo mode only: the control under the app bar. */
+    val demoControl: (@Composable () -> Unit)? = null,
+    /** Demo mode only: the Quitter le mode démo menu item. */
+    val onExitDemo: (() -> Unit)? = null,
 )
 
 @Composable
@@ -67,7 +71,8 @@ internal fun UnderwayActivePage(
         onBack = chrome.onBack,
         containerColor = if (hero) colors.hero else scheme.surface,
         contentColor = if (hero) colors.onHeroCard else scheme.onSurface,
-        actions = { UnderwayOverflowMenu(chrome.onEndItinerary) },
+        actions = { UnderwayOverflowMenu(chrome.onEndItinerary, chrome.onExitDemo) },
+        belowTopBar = chrome.demoControl,
         bottomActions = bottomActions,
         content = {
             if (chrome.showNotificationBanner) {
@@ -79,7 +84,7 @@ internal fun UnderwayActivePage(
 }
 
 @Composable
-private fun UnderwayOverflowMenu(onEndItinerary: () -> Unit) {
+private fun UnderwayOverflowMenu(onEndItinerary: () -> Unit, onExitDemo: (() -> Unit)?) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
@@ -93,6 +98,15 @@ private fun UnderwayOverflowMenu(onEndItinerary: () -> Unit) {
                     onEndItinerary()
                 },
             )
+            if (onExitDemo != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.demo_exit)) },
+                    onClick = {
+                        expanded = false
+                        onExitDemo()
+                    },
+                )
+            }
         }
     }
 }
@@ -158,6 +172,18 @@ internal fun EndEarlyDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
         title = { Text(stringResource(R.string.underway_end_early_title)) },
         text = { Text(stringResource(R.string.underway_end_early_body)) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.underway_end_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
+}
+
+/** Asked only when leaving demo mode would end a run. */
+@Composable
+internal fun ExitDemoDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.demo_exit)) },
+        text = { Text(stringResource(R.string.demo_exit_body)) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.demo_exit_confirm)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

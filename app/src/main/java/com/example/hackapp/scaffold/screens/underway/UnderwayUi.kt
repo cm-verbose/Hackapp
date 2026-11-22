@@ -1,11 +1,15 @@
 package com.example.hackapp.scaffold.screens.underway
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.res.stringResource
+import com.example.hackapp.R
 import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.passport.PassportStamp
 import com.example.hackapp.passport.StopStampResult
+import com.example.hackapp.scaffold.screens.itinerary.appLocale
 import com.example.hackapp.services.LegEstimator
 import com.example.hackapp.services.LegMode
 import com.example.hackapp.ui.components.StripStop
@@ -194,3 +198,12 @@ internal fun endOfDayUi(day: EndOfDay, districtNames: Map<String, String>): EndO
 
 private fun PassportStamp.toUi(districtNames: Map<String, String>) =
     NewStampUi(key, name, date, districtNames[districtId].orEmpty())
+
+/** The simulated date and time on the demo control: `sam. 28 nov. · 18:42`. */
+@Composable
+internal fun demoDateTime(at: Instant, zone: ZoneId): String {
+    val local = at.atZone(zone)
+    val datePattern = "EEE ${stringResource(R.string.itinerary_date_pattern)}"
+    val date = local.format(DateTimeFormatter.ofPattern(datePattern, appLocale()))
+    return stringResource(R.string.demo_date_time, date, local.format(ValueTime))
+}

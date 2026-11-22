@@ -298,11 +298,17 @@ fun UnderwayAtStopPage(
 /** Figma Results `160:2756`. The day is over, so it has no overflow menu. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UnderwayEndOfDayPage(ui: EndOfDayUi, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun UnderwayEndOfDayPage(
+    ui: EndOfDayUi,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    demoControl: (@Composable () -> Unit)? = null,
+) {
     HackappPage(
         title = stringResource(R.string.end_of_day_title),
         modifier = modifier,
         onBack = onDone,
+        belowTopBar = demoControl,
         bottomActions = { HackappPrimaryButton(stringResource(R.string.end_of_day_done), onDone) },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

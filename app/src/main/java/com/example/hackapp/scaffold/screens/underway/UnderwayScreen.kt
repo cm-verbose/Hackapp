@@ -19,6 +19,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hackapp.HackappApplication
 import com.example.hackapp.R
 import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.LocalCityPack
@@ -35,6 +37,7 @@ import com.example.hackapp.services.CityServices
 import com.example.hackapp.services.HandoffDestination
 import com.example.hackapp.services.HandoffResult
 import com.example.hackapp.services.LocalCityServices
+import com.example.hackapp.ui.components.DemoControl
 import com.example.hackapp.ui.components.TransportChoice
 import com.example.hackapp.underway.EndOfDay
 import com.example.hackapp.underway.Rejection
@@ -72,6 +75,34 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
         clock = coordinator.clock,
         notificationsAllowed = { NotificationManagerCompat.from(appContext).areNotificationsEnabled() },
     )
+    val demo: DemoControlsViewModel = viewModel(
+        key = "demo-$uid",
+        factory = DemoControlsViewModel.factory(uid, (appContext as HackappApplication).demoController),
+    )
+    val demoState by demo.state.collectAsStateWithLifecycle()
+    val demoExitFailed by demo.exitFailed.collectAsStateWithLifecycle()
+    val demoActionFailed by demo.actionFailed.collectAsStateWithLifecycle()
+    var confirmDemoExit by rememberSaveable { mutableStateOf(false) }
+    val simulatedNow = demoState.simulatedNow.takeIf { demoState.enabled }
+    val demoControl: (@Composable () -> Unit)? = if (simulatedNow != null) {
+        {
+            DemoControl(
+                dateTime = demoDateTime(simulatedNow, cityPack.timeZone),
+                canAdvance = demoState.canAdvance,
+                onNextMoment = demo::nextMoment,
+                failed = demoExitFailed || demoActionFailed,
+                onRetry = demo::retry,
+            )
+        }
+    } else {
+        null
+    }
+    // Only a run in progress has something to lose, so only then is leaving confirmed.
+    val onExitDemo: (() -> Unit)? = if (simulatedNow != null) {
+        { if (demoState.canAdvance) confirmDemoExit = true else demo.exit() }
+    } else {
+        null
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val nothingUnderway by viewModel.nothingUnderway.collectAsStateWithLifecycle()
     LaunchedEffect(nothingUnderway) { if (nothingUnderway) onExitToHome() }
@@ -123,6 +154,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
             districtNames = (info as? LoadState.Ready)?.value?.stops?.districtNames.orEmpty(),
             onRetry = viewModel::retry,
             onDone = onExitToHome,
+            demoControl = demoControl,
         )
         state is LoadState.Failed -> UnderwayErrorPage(onRetry = viewModel::onResume, onBack = onExitToHome)
         data == null -> UnderwayLoadingPage(onBack = onExitToHome)
@@ -142,6 +174,8 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                         context.openNotificationSettings()
                     },
                     onDismissBanner = { viewModel.dispatch(UnderwayEvent.NotificationBannerHandled) },
+                    demoControl = demoControl,
+                    onExitDemo = onExitDemo,
                 )
                 // Same phase and Stop keeps the page in place; the content still gets each new view.
                 AnimatedContent(
@@ -192,6 +226,15 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                 }
             }
         }
+    }
+    if (confirmDemoExit) {
+        ExitDemoDialog(
+            onConfirm = {
+                confirmDemoExit = false
+                demo.exit()
+            },
+            onDismiss = { confirmDemoExit = false },
+        )
     }
 }
 
@@ -351,11 +394,16 @@ private fun EndOfDayContent(
     districtNames: Map<String, String>,
     onRetry: () -> Unit,
     onDone: () -> Unit,
+    demoControl: (@Composable () -> Unit)?,
 ) {
     when (endOfDay) {
         LoadState.Loading -> UnderwayLoadingPage(onBack = onDone)
         LoadState.Failed -> UnderwayErrorPage(onRetry = onRetry, onBack = onDone)
-        is LoadState.Ready -> UnderwayEndOfDayPage(endOfDayUi(endOfDay.value, districtNames), onDone)
+        is LoadState.Ready -> UnderwayEndOfDayPage(
+            endOfDayUi(endOfDay.value, districtNames),
+            onDone,
+            demoControl = demoControl,
+        )
     }
 }
 

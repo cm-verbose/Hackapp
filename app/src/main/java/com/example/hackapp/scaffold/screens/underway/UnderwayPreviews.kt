@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.hackapp.R
 import com.example.hackapp.citypack.MontrealCityPack
+import com.example.hackapp.ui.components.DemoControl
 import com.example.hackapp.ui.components.StripStop
 import com.example.hackapp.ui.components.TransportChoice
 import com.example.hackapp.ui.theme.HackappTheme
@@ -180,3 +181,56 @@ private fun ErrorPreview() = HackappTheme { UnderwayErrorPage({}, {}) }
 @Preview(name = "Error · back to Home", widthDp = 360, heightDp = 400)
 @Composable
 private fun ExitErrorPreview() = HackappTheme { UnderwayExitErrorPage({}) }
+
+private const val DemoTime = "sam. 28 nov. · 18:42"
+
+private fun demoChrome(canAdvance: Boolean = true, failed: Boolean = false) = UnderwayChrome(
+    showNotificationBanner = false,
+    onBack = {},
+    onEndItinerary = {},
+    onOpenNotificationSettings = {},
+    onDismissBanner = {},
+    demoControl = { DemoControl(DemoTime, canAdvance, {}, failed = failed) },
+    onExitDemo = {},
+)
+
+@Composable
+private fun DemoLeg(ui: LegUi, dark: Boolean = false) = HackappTheme(darkTheme = dark) {
+    UnderwayLegPage("Samedi sur le Plateau", ui, TransportChoice.Transit, labels(), null, demoChrome(), {}, {}, {}, {}, {})
+}
+
+@Preview(name = "Demo · Leg (186:2902)", widthDp = 412, heightDp = 917)
+@Composable
+private fun DemoLegPreview() = DemoLeg(FirstLeg)
+
+@Preview(name = "Demo · Leg, dark", widthDp = 412, heightDp = 917)
+@Composable
+private fun DemoLegDarkPreview() = DemoLeg(FirstLeg, dark = true)
+
+@Preview(name = "Demo · Leg, 360 dp at 1.3x (186:3098)", widthDp = 360, heightDp = 917, fontScale = 1.3f)
+@Composable
+private fun DemoLegLargeTextPreview() = DemoLeg(FirstLeg)
+
+@Preview(name = "Demo · hero Leg", widthDp = 412, heightDp = 917)
+@Composable
+private fun DemoHeroLegPreview() = DemoLeg(HeroLeg)
+
+@Preview(name = "Demo · At the Stop (186:2941)", widthDp = 412, heightDp = 917)
+@Composable
+private fun DemoAtStopPreview() = HackappTheme { UnderwayAtStopPage(AtJazz, demoChrome(), {}, {}, {}, {}) }
+
+@Preview(name = "Demo · exit failed", widthDp = 412, heightDp = 917)
+@Composable
+private fun DemoExitFailedPreview() = HackappTheme {
+    UnderwayAtStopPage(AtJazz, demoChrome(failed = true), {}, {}, {}, {})
+}
+
+@Preview(name = "Demo · End of day", widthDp = 412, heightDp = 917)
+@Composable
+private fun DemoEndOfDayPreview() = HackappTheme {
+    UnderwayEndOfDayPage(Day, {}, demoControl = { DemoControl(DemoTime, canAdvance = false, onNextMoment = {}) })
+}
+
+@Preview(name = "Demo · exit dialog", widthDp = 360, heightDp = 400)
+@Composable
+private fun DemoExitDialogPreview() = HackappTheme { ExitDemoDialog({}, {}) }
