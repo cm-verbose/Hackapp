@@ -184,7 +184,7 @@ fun PlanningStopSelectionScreen(
                 // Planning needs an account, so a lost session only closes the sheet.
                 onSignIn = viewModel::dismissSheet,
                 onAddToItinerary = viewModel::addToItinerary,
-                onAddWithoutPrice = viewModel::addToItinerary,
+                onAddWithoutPrice = viewModel::addWithoutPrice,
                 onDismiss = viewModel::dismissSheet,
             )
         }
