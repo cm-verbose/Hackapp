@@ -22,6 +22,7 @@ litertGpu = "2.4.0"
 navigationCompose = "2.10.2"
 navigationTesting = "2.10.2"
 retrofit = "3.0.0"
+foundationLayout = "1.13.0"
 room = "2.8.5"
 ksp = "2.3.14"
 googleidVersion = "1.2.1"
@@ -84,6 +85,8 @@ androidx-navigation-testing = { module = "androidx.navigation:navigation-testing
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 # Retrofit
 litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
