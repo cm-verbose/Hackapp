@@ -66,7 +66,7 @@ import java.time.Instant
 private const val OWN_KEY = "own-itinerary"
 
 /** What the last throw or receipt did, shown under the title. */
-private sealed interface ShareStatus {
+internal sealed interface ShareStatus {
     data class Sent(val to: String?) : ShareStatus
     data object NoPeers : ShareStatus
     data object NoTarget : ShareStatus
@@ -91,7 +91,6 @@ fun ItineraryShareScreen(
     val cityPack = LocalCityPack.current
     val uid = LocalAuthService.current.currentUser?.uid
     val itineraries = LocalItineraryRepository.current
-    val scope = rememberCoroutineScope()
     val share = rememberNearbyShare(enabled = true)
 
     val own by produceState<Itinerary?>(null, uid, itineraryId) {
@@ -185,41 +184,68 @@ fun ItineraryShareScreen(
     }
 
     incoming?.let { (shared, from) ->
-        val itinerary = shared.itinerary
-        AlertDialog(
-            onDismissRequest = { incoming = null },
-            title = {
-                Text(
-                    if (from != null) stringResource(R.string.share_received_from, from) else stringResource(R.string.share_received),
-                )
-            },
-            text = { Text(itineraryTitle(itinerary.date, itinerary.districtIds.firstOrNull()?.let(names::get))) },
-            confirmButton = {
-                TextButton(onClick = {
-                    incoming = null
-                    val owner = uid ?: return@TextButton
-                    scope.launch {
-                        val copy = importSharedItinerary(shared, owner, cityPack.id, Instant.now())
-                        if (copy == null) {
-                            status = ShareStatus.ReceiveFailed
-                            return@launch
-                        }
-                        try {
-                            itineraries.saveItinerary(copy)
-                            onOpenReceived(copy.openRoute())
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (_: Exception) {
-                            status = ShareStatus.SaveFailed
-                        }
-                    }
-                }) { Text(stringResource(R.string.share_add)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { incoming = null }) { Text(stringResource(R.string.share_decline)) }
-            },
+        IncomingItineraryDialog(
+            shared = shared,
+            fromName = from,
+            districtNames = names,
+            onDismiss = { incoming = null },
+            onStatus = { status = it },
+            onOpenReceived = onOpenReceived,
         )
     }
+}
+
+/**
+ * Asks whether to keep an Itinerary received from [fromName]. Adding saves the person's own copy
+ * and opens it; a failure is reported through [onStatus].
+ */
+@Composable
+internal fun IncomingItineraryDialog(
+    shared: SharedItinerary,
+    fromName: String?,
+    districtNames: Map<String, String>,
+    onDismiss: () -> Unit,
+    onStatus: (ShareStatus) -> Unit,
+    onOpenReceived: (Any) -> Unit,
+) {
+    val cityPack = LocalCityPack.current
+    val uid = LocalAuthService.current.currentUser?.uid
+    val itineraries = LocalItineraryRepository.current
+    val scope = rememberCoroutineScope()
+    val itinerary = shared.itinerary
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                if (fromName != null) stringResource(R.string.share_received_from, fromName) else stringResource(R.string.share_received),
+            )
+        },
+        text = { Text(itineraryTitle(itinerary.date, itinerary.districtIds.firstOrNull()?.let(districtNames::get))) },
+        confirmButton = {
+            TextButton(onClick = {
+                onDismiss()
+                val owner = uid ?: return@TextButton
+                scope.launch {
+                    val copy = importSharedItinerary(shared, owner, cityPack.id, Instant.now())
+                    if (copy == null) {
+                        onStatus(ShareStatus.ReceiveFailed)
+                        return@launch
+                    }
+                    try {
+                        itineraries.saveItinerary(copy)
+                        onOpenReceived(copy.openRoute())
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        onStatus(ShareStatus.SaveFailed)
+                    }
+                }
+            }) { Text(stringResource(R.string.share_add)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.share_decline)) }
+        },
+    )
 }
 
 /** The thrown card: the Itinerary title and its number of Stops. */
@@ -235,7 +261,8 @@ private fun ShareToken(title: String, stops: String) {
         Text(
             title,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimary,
+            // The light text of hero cards: onPrimary is dark red in the dark scheme.
+            color = colors.onHeroCard,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -245,7 +272,7 @@ private fun ShareToken(title: String, stops: String) {
 }
 
 @Composable
-private fun statusText(status: ShareStatus): String = when (status) {
+internal fun statusText(status: ShareStatus): String = when (status) {
     is ShareStatus.Sent -> status.to?.let { stringResource(R.string.share_sent_to, it) } ?: stringResource(R.string.share_sent)
     ShareStatus.NoPeers -> stringResource(R.string.share_no_peers)
     ShareStatus.NoTarget -> stringResource(R.string.share_no_target)
