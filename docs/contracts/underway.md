@@ -63,8 +63,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
 
 ## Rules
 
-- **Stamp rule.** Meal: arrival confirmed. Event: overlap of the stay with the expected period must be at least 20% of it (inclusive, in milliseconds). Expected period = start to Planned Departure, or arrival to Planned Departure for a drop-in. Time before the start does not count. Stay = arrived to `leftAt`. With no `leftAt` it runs to the next user action (any accepted event except Tick and NotificationBannerHandled), or the automatic end, capped by the expected end.
-- **Drop-in** (the spec gives no flag): an Event whose start to Planned Departure span is at least 4 hours.
+- **Stamp rule.** Meal: arrival confirmed. Event: overlap of the stay with the expected period must be at least 20% of it (inclusive, in milliseconds). Expected period = `Stop.start` to Planned Departure for every Event (Selection sets `start` to the arrival for a drop-in). Time before the start does not count. Stay = arrived to `leftAt`. With no `leftAt` it runs to the next user action (any accepted event except Tick and NotificationBannerHandled), or the automatic end, capped by the expected end.
 - **Award.** At End of day only, including automatic and replaced endings. The engine builds a Completed copy of the Itinerary where too-brief Events are `Skipped`, then calls `StampRepository.award`. `PassportUnavailableException` is caught and retried on the next `endOfDay`, `onAppOpen` or `onBoot`. The Place lookup behind `PlaceStampIdentityResolver` must include non-ACTIVE Places.
 - **Automatic end.** 2 hours after the Itinerary window closes (`windowEnd`), at that exact time, even if the app opens later. Hours after midnight belong to the Itinerary's date.
 - **Alerts** (ids `<kind>:<stopId>`, each fires once, tracked in state):
@@ -79,7 +78,7 @@ Manifest gets `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM` (max SDK 32 requestab
 
 ## Open items for the lead
 
-See the final report of the Domain Engineer: drop-in definition, first-Leg Leave By without an origin, arrival reminder due at Start, skipping the last Stop ends the day.
+See the final report of the Domain Engineer: first-Leg Leave By without an origin, arrival reminder due at Start, skipping the last Stop ends the day.
 
 ## Wiring Start and screens (integration)
 

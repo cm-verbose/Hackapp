@@ -195,8 +195,8 @@ class UnderwayEngineTest {
     }
 
     @Test
-    fun `a drop-in Event counts from the arrival`() {
-        val exhibition = stop("x", at(Nov28, 10), at(Nov28, 18))
+    fun `a drop-in Event, which starts at the arrival, uses the same 20 percent rule`() {
+        val exhibition = stop("x", at(Nov28, 14), at(Nov28, 18))
         val itinerary = day(stops = listOf(exhibition, stop("y", at(Nov28, 18), at(Nov28, 19))))
         val c = ctxOf(itinerary)
         fun outcome(leave: java.time.Instant): StopOutcome {
