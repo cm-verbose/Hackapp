@@ -2,8 +2,8 @@ package com.example.hackapp
 
 import android.app.Application
 import com.example.hackapp.citypack.ActiveCityPack
-import com.example.hackapp.itinerary.InMemoryItineraryRepository
 import com.example.hackapp.itinerary.ItineraryRepository
+import com.example.hackapp.itinerary.createItineraryRepository
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.profile.createProfileRepository
 import com.example.hackapp.services.CityServices
@@ -19,7 +19,7 @@ class HackappApplication : Application() {
     /** Lives outside [CityServices] because a Profile belongs to the account, not to a city. */
     val profileRepository: ProfileRepository by lazy { createProfileRepository(this) }
 
-    val itineraryRepository: ItineraryRepository by lazy { InMemoryItineraryRepository() }
+    val itineraryRepository: ItineraryRepository by lazy { createItineraryRepository(this) }
 
     /** For short background work that must finish even if the current screen closes. */
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
