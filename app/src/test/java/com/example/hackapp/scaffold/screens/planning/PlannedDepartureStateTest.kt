@@ -42,6 +42,15 @@ class PlannedDepartureStateTest {
     }
 
     @Test
+    fun `latest departure of a running drop-in ignores earlier Meals and stops at its end`() {
+        val ev = event("e", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), type = "exhibition")
+        val lunch = com.example.hackapp.itinerary.MealBlock("l", com.example.hackapp.itinerary.MealKind.Lunch, LocalTime.of(12, 0))
+        val arrival = at(Nov28, 18).atZoneSameInstant(Toronto)
+        val latest = latestDeparture(ev, night(blocks = listOf(lunch)), Toronto, com.example.hackapp.itinerary.fixedLegs(), arrival)!!
+        assertEquals(at(Nov28, 21).toInstant(), latest.toInstant())
+    }
+
+    @Test
     fun `no start gives no holder`() {
         assertNull(PlannedDepartureHolder.create(event("x", start = null), night(), Toronto, night().windowEnd(Toronto)))
     }

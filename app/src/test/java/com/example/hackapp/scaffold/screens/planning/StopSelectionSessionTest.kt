@@ -373,7 +373,34 @@ class StopSelectionSessionTest {
         val allDay = event("all-day", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), type = "exhibition")
         val s = failedPriceSession(listOf(allDay))
         s.addWithoutPrice()
-        assertEquals(at(Nov28, 18).toInstant(), s.state.value.stops.single().start.toInstant())
+        assertTrue(s.state.value.sheet is SelectionSheet.PlannedDeparture)
+        s.confirmDeparture()
+        val stop = s.state.value.stops.single()
+        assertEquals(at(Nov28, 18).toInstant(), stop.start.toInstant())
+        assertEquals(at(Nov28, 19).toInstant(), stop.plannedDeparture.toInstant())
+        assertTrue(stop.hasPublishedEnd)
+    }
+
+    @Test
+    fun `a drop-in opens Planned Departure from the arrival and can be adjusted up to its limit`() = runBlocking {
+        val allDay = event("all-day", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), type = "exhibition")
+        val s = session(night(blocks = listOf(dinner)), listOf(allDay))
+        s.load()
+        s.openEvent(s.state.value.groups.first().types.first().cards.first())
+        s.addToItinerary()
+        val sheet = s.state.value.sheet as SelectionSheet.PlannedDeparture
+        val departure = sheet.holder.state.value
+        assertEquals(at(Nov28, 18).toInstant(), departure.earliestDeparture.toInstant())
+        assertEquals(at(Nov28, 19).toInstant(), departure.departure.toInstant())
+        assertEquals(at(Nov28, 20).toInstant(), departure.latestDeparture.toInstant())
+        assertEquals(60, departure.stayMinutes)
+        assertTrue(departure.isTypicalStay)
+        assertTrue(departure.hasPublishedEnd)
+        s.setDeparture(LocalTime.of(19, 45))
+        s.confirmDeparture()
+        val stop = s.state.value.stops.single()
+        assertEquals(at(Nov28, 18).toInstant(), stop.start.toInstant())
+        assertEquals(at(Nov28, 19, 45).toInstant(), stop.plannedDeparture.toInstant())
     }
 
     @Test

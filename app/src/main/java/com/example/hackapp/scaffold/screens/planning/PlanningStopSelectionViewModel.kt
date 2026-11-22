@@ -78,6 +78,8 @@ sealed interface SelectionSheet {
         val holder: PlannedDepartureHolder,
         val event: Event,
         val ticketPriceCad: Double?,
+        /** When the person joins a drop-in. Null for other Events. */
+        val arrival: ZonedDateTime? = null,
     ) : SelectionSheet
 
     class MealPicker(val holder: MealPickerHolder, val block: MealBlock) : SelectionSheet
@@ -221,9 +223,11 @@ class StopSelectionSession(
             is AddToItineraryAction.Add -> addStop(action.stop)
             is AddToItineraryAction.ChooseDeparture -> {
                 val itinerary = draft ?: return
-                val latest = latestDeparture(action.event, itinerary, zone, estimator) ?: return
-                val holder = PlannedDepartureHolder.create(action.event, itinerary, zone, latest) ?: return
-                _state.update { it.copy(sheet = SelectionSheet.PlannedDeparture(holder, action.event, action.ticketPriceCad)) }
+                val latest = latestDeparture(action.event, itinerary, zone, estimator, action.arrival) ?: return
+                val holder = PlannedDepartureHolder.create(action.event, itinerary, zone, latest, action.arrival) ?: return
+                _state.update {
+                    it.copy(sheet = SelectionSheet.PlannedDeparture(holder, action.event, action.ticketPriceCad, action.arrival))
+                }
             }
         }
     }
@@ -233,7 +237,7 @@ class StopSelectionSession(
     suspend fun confirmDeparture() {
         val sheet = departureSheet() ?: return
         val departure = sheet.holder.confirm() ?: return
-        val stop = eventStop(sheet.event, departure, sheet.ticketPriceCad) ?: return
+        val stop = eventStop(sheet.event, departure, sheet.ticketPriceCad, sheet.arrival) ?: return
         addStop(stop)
     }
 

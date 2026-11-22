@@ -30,6 +30,45 @@ class StopSelectionTest {
     }
 
     @Test
+    fun `a run of a day or more is a recurring series, not a drop-in`() {
+        assertTrue(event("a", start = at(Nov28, 10).toString(), end = at(Nov28.plusDays(1), 9, 59).toString()).isDropIn())
+        assertFalse(event("b", start = at(Nov28, 10).toString(), end = at(Nov28.plusDays(1), 10).toString()).isDropIn())
+        assertFalse(event("c", start = at(Nov28, 10).toString(), end = at(Nov28.plusDays(21), 17).toString()).isDropIn())
+    }
+
+    @Test
+    fun `a drop-in lasts the typical stay, capped by its end, the next Meal and the window`() {
+        val exhibition = { end: Int -> event("x", start = at(Nov28, 10).toString(), end = at(Nov28, end).toString(), type = "exhibition") }
+        fun leaves(itinerary: Itinerary, e: com.example.hackapp.data.Event) =
+            found(itinerary, false, e).single().suggestedDeparture.plannedDeparture.toInstant()
+        assertEquals(instant(Nov28, 19), leaves(night(), exhibition(23)))
+        val theatre = event("t", start = at(Nov28, 10).toString(), end = at(Nov28, 19, 30).toString(), type = "theatre")
+        assertEquals(instant(Nov28, 19, 30), leaves(night(), theatre))
+        val concert = event("m", start = at(Nov28, 10).toString(), end = at(Nov28, 23).toString(), type = "music")
+        assertEquals(instant(Nov28, 19, 30), leaves(night(blocks = listOf(MealBlock("d", MealKind.Dinner, LocalTime.of(19, 30)))), concert))
+        val shortNight = night(end = LocalTime.of(19, 15))
+        assertEquals(shortNight.windowEnd(Toronto).toInstant(), leaves(shortNight, concert))
+    }
+
+    @Test
+    fun `every drop-in needs a 60 minute stay, even one starting inside the gap`() {
+        val itinerary = night(blocks = listOf(MealBlock("d", MealKind.Dinner, LocalTime.of(19, 0))))
+        val tooShort = event("short", start = at(Nov28, 18, 30).toString(), end = at(Nov28, 23).toString())
+        assertTrue(found(itinerary, true, tooShort).isEmpty())
+        val enough = event("ok", start = at(Nov28, 18).toString(), end = at(Nov28, 23).toString())
+        assertEquals(listOf("ok"), found(itinerary, true, enough).map { it.event.id })
+    }
+
+    @Test
+    fun `a drop-in leaves in time for the next Stop`() {
+        val next = stop("n", at(Nov28, 19, 40), at(Nov28, 20, 30))
+        val concert = event("m", start = at(Nov28, 10).toString(), end = at(Nov28, 23).toString())
+        val itinerary = night(stops = listOf(next))
+        val result = reachableShowtimes(EventSearch(itinerary, listOf(concert), context(now), HERE, gap = TimeGap(null, next)), legs).single()
+        assertEquals(instant(Nov28, 19, 20), result.suggestedDeparture.plannedDeparture.toInstant())
+    }
+
+    @Test
     fun `a drop-in Event crossing a block stays and leaves when the block starts`() {
         val itinerary = night(blocks = listOf(dinner))
         val longRun = event("long", start = at(Nov28, 18, 30).toString(), end = at(Nov28, 23).toString())
@@ -41,11 +80,11 @@ class StopSelectionTest {
     }
 
     @Test
-    fun `a drop-in Event is not hidden once its block is skipped, and keeps its own end`() {
+    fun `a drop-in Event is not hidden once its block is skipped, and keeps its typical stay`() {
         val skipped = night(blocks = listOf(dinner.copy(skipped = true)))
         val longRun = event("long", start = at(Nov28, 18, 30).toString(), end = at(Nov28, 23).toString())
         val result = found(skipped, true, longRun)
-        assertEquals(at(Nov28, 23).toInstant(), result.single().suggestedDeparture.plannedDeparture.toInstant())
+        assertEquals(at(Nov28, 20, 30).toInstant(), result.single().suggestedDeparture.plannedDeparture.toInstant())
     }
 
     @Test
@@ -119,7 +158,7 @@ class StopSelectionTest {
         val result = found(night(), false, allDay).single()
         assertEquals(at(Nov28, 10).toInstant(), result.start.toInstant())
         assertEquals(at(Nov28, 18).toInstant(), result.arrivalAt.toInstant())
-        assertEquals(at(Nov28, 21).toInstant(), result.suggestedDeparture.plannedDeparture.toInstant())
+        assertEquals(at(Nov28, 19).toInstant(), result.suggestedDeparture.plannedDeparture.toInstant())
         val after = night(stops = listOf(stop("e", at(Nov28, 18), at(Nov28, 19))))
         val later = reachableShowtimes(EventSearch(after, listOf(allDay), context(now), HERE), legs).single()
         assertEquals(at(Nov28, 19, 20).toInstant(), later.arrivalAt.toInstant())
@@ -149,7 +188,8 @@ class StopSelectionTest {
     @Test
     fun `a running drop-in crossing a Meal Block leaves when the block starts`() {
         val itinerary = night(blocks = listOf(dinner))
-        val result = found(itinerary, true, allDay).single()
+        val concert = allDay.copy(type = "theatre")
+        val result = found(itinerary, true, concert).single()
         assertEquals(at(Nov28, 18).toInstant(), result.arrivalAt.toInstant())
         assertEquals(at(Nov28, 20).toInstant(), result.suggestedDeparture.plannedDeparture.toInstant())
         val early = night(blocks = listOf(MealBlock("e", MealKind.Dinner, LocalTime.of(18, 30))))

@@ -6,7 +6,9 @@ import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.activeMealBlocks
 import com.example.hackapp.itinerary.activeStops
 import com.example.hackapp.itinerary.interval
+import com.example.hackapp.itinerary.isDropIn
 import com.example.hackapp.itinerary.latLng
+import com.example.hackapp.itinerary.publishedEnd
 import com.example.hackapp.itinerary.startTime
 import com.example.hackapp.itinerary.suggestDeparture
 import com.example.hackapp.itinerary.transit
@@ -34,7 +36,7 @@ data class PlannedDepartureUiState(
     val eventTitle: String,
     val eventType: String,
     val start: ZonedDateTime,
-    /** The earliest valid departure: the Event start. Picks must be after it. */
+    /** The earliest valid departure: the Event start, or the arrival at a drop-in. Picks must be after it. */
     val earliestDeparture: ZonedDateTime,
     /** The latest valid departure. Show one range error: "between [earliestDeparture] and [latestDeparture]". */
     val latestDeparture: ZonedDateTime,
@@ -44,9 +46,9 @@ data class PlannedDepartureUiState(
     val departure: ZonedDateTime,
     /** Minutes from [start] to [departure]. */
     val stayMinutes: Int,
-    /** The Event published an end time. The sheet then does not need to open. */
+    /** The Event published an end time. The sheet opens with one only for a drop-in. */
     val hasPublishedEnd: Boolean,
-    /** [stayMinutes] equals [typicalStayMinutes] and no end was published. False when clamped or edited. */
+    /** [stayMinutes] equals [typicalStayMinutes], with no published end or for a drop-in. False when clamped or edited. */
     val isTypicalStay: Boolean,
     /** [departure] is on a later calendar day than [start]. */
     val crossesMidnight: Boolean,
@@ -62,11 +64,21 @@ data class PlannedDepartureUiState(
 
 /**
  * The latest the person can leave the Event: the earliest of the window end, the start of the next
- * active Meal Block, and the next active Stop's start minus the transit Leg to it.
+ * active Meal Block, and the next active Stop's start minus the transit Leg to it. A drop-in also
+ * ends at its published end, and the Meals and Stops that count are those after [arrival].
  */
-fun latestDeparture(event: Event, itinerary: Itinerary, zone: ZoneId, estimator: LegEstimator): ZonedDateTime? {
-    val start = event.startTime()?.atZoneSameInstant(zone) ?: return null
+fun latestDeparture(
+    event: Event,
+    itinerary: Itinerary,
+    zone: ZoneId,
+    estimator: LegEstimator,
+    arrival: ZonedDateTime? = null,
+): ZonedDateTime? {
+    val start = arrival ?: event.startTime()?.atZoneSameInstant(zone) ?: return null
     var latest = itinerary.windowEnd(zone).toInstant()
+    if (event.isDropIn()) {
+        event.publishedEnd()?.toInstant()?.let { if (it.isBefore(latest)) latest = it }
+    }
     itinerary.activeMealBlocks
         .map { it.interval(itinerary, zone).start }
         .filter { it.isAfter(start.toInstant()) }
@@ -95,6 +107,7 @@ class PlannedDepartureHolder private constructor(
     private val latest: ZonedDateTime,
     private val start: ZonedDateTime,
     private val prefill: ZonedDateTime,
+    private val showsTypicalStay: Boolean,
     initial: PlannedDepartureUiState,
 ) {
     private val _state = MutableStateFlow(initial)
@@ -147,7 +160,7 @@ class PlannedDepartureHolder private constructor(
             it.copy(
                 departure = departure,
                 stayMinutes = minutes,
-                isTypicalStay = !it.hasPublishedEnd && minutes == it.typicalStayMinutes,
+                isTypicalStay = showsTypicalStay && minutes == it.typicalStayMinutes,
                 crossesMidnight = departure.toLocalDate() != start.toLocalDate(),
                 rejectedTime = null,
                 error = null,
@@ -156,15 +169,20 @@ class PlannedDepartureHolder private constructor(
     }
 
     companion object {
-        /** [latestDeparture] comes from the top-level `latestDeparture(...)`. */
+        /**
+         * [latestDeparture] comes from the top-level `latestDeparture(...)`. [arrival] is when the
+         * person joins a drop-in: the stay and the valid range then count from it.
+         */
         fun create(
             event: Event,
             itinerary: Itinerary,
             zone: ZoneId,
             latestDeparture: ZonedDateTime,
+            arrival: ZonedDateTime? = null,
         ): PlannedDepartureHolder? {
-            val start = event.startTime()?.atZoneSameInstant(zone) ?: return null
-            val suggestion = suggestDeparture(event, itinerary, zone) ?: return null
+            val start = arrival ?: event.startTime()?.atZoneSameInstant(zone) ?: return null
+            val suggestion = suggestDeparture(event, itinerary, zone, arrival) ?: return null
+            val showsTypicalStay = !suggestion.hasPublishedEnd || event.isDropIn()
             val suggested = suggestion.plannedDeparture
             val departure = if (suggested.isAfter(latestDeparture)) latestDeparture else suggested
             val stay = Duration.between(start, departure).toMinutes().toInt()
@@ -179,11 +197,11 @@ class PlannedDepartureHolder private constructor(
                 departure = departure,
                 stayMinutes = stay,
                 hasPublishedEnd = suggestion.hasPublishedEnd,
-                isTypicalStay = !suggestion.hasPublishedEnd && stay == typicalStayMinutes(event.type),
+                isTypicalStay = showsTypicalStay && stay == typicalStayMinutes(event.type),
                 crossesMidnight = departure.toLocalDate() != start.toLocalDate(),
                 error = if (!latestDeparture.isAfter(start)) DepartureError.NotAfterStart else null,
             )
-            return PlannedDepartureHolder(zone, latestDeparture, start, departure, state)
+            return PlannedDepartureHolder(zone, latestDeparture, start, departure, showsTypicalStay, state)
         }
     }
 }

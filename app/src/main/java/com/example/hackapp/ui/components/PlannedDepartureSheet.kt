@@ -34,7 +34,7 @@ private val ClockFormat = DateTimeFormatter.ofPattern("HH:mm")
 
 /**
  * Figma "PlannedDepartureSheet" (141:2614): asks when the person will leave an Event that
- * publishes no end time. Open it only when `!state.hasPublishedEnd`. [venueName] is the Event's
+ * publishes no end time, or a drop-in they can leave at any time. [venueName] is the Event's
  * venue for the subtitle; the Event type label stands in when it is unknown.
  * [onTimeChange] feeds `PlannedDepartureHolder.setTime`.
  */
@@ -97,11 +97,13 @@ fun PlannedDepartureContent(
             )
         }
 
-        Text(
-            stringResource(R.string.planned_departure_no_end),
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.onSurface,
-        )
+        if (!state.hasPublishedEnd) {
+            Text(
+                stringResource(R.string.planned_departure_no_end),
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurface,
+            )
+        }
 
         val error = state.error
         if (!state.hasValidTime) {

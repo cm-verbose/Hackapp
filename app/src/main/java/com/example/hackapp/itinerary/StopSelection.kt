@@ -8,18 +8,21 @@ import java.time.ZoneId
 /** A published stay of at least this long makes an Event drop-in. */
 const val DROP_IN_MIN_MINUTES = 240L
 
+/** A run this long is a recurring series with daily hours, so it is not open all day. */
+const val DROP_IN_MAX_MINUTES = 24 * 60L
+
 /** A drop-in Event already running is offered only with at least this much stay left. */
 const val MIN_DROP_IN_STAY_MINUTES = 60L
 
 /**
  * A drop-in Event can be joined at any time during its run, such as an exhibition or a festival day.
  * It must have published an end, because without one its stay is only a guess, and it must last at
- * least [DROP_IN_MIN_MINUTES] from start to end.
+ * least [DROP_IN_MIN_MINUTES] and less than [DROP_IN_MAX_MINUTES] from start to end.
  */
 fun Event.isDropIn(): Boolean {
     val start = startTime() ?: return false
     val end = publishedEnd() ?: return false
-    return Duration.between(start, end).toMinutes() >= DROP_IN_MIN_MINUTES
+    return Duration.between(start, end).toMinutes() in DROP_IN_MIN_MINUTES until DROP_IN_MAX_MINUTES
 }
 
 /** Where the open time gap starts: the last Stop's Planned Departure, else the later of window start and now. */

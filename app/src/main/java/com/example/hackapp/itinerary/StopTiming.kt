@@ -32,11 +32,24 @@ fun typicalStayMinutes(eventType: String): Int =
 /** A prefilled Planned Departure. The source end time is never invented. */
 data class DepartureSuggestion(val plannedDeparture: ZonedDateTime, val hasPublishedEnd: Boolean)
 
-/** The published end, or the typical stay when there is none, kept inside the time window. */
-fun suggestDeparture(event: Event, itinerary: Itinerary, zone: ZoneId): DepartureSuggestion? {
+/**
+ * The published end, or the typical stay when there is none, kept inside the time window. A drop-in
+ * lasts the typical stay from [arrival] (its start by default), and never past its published end.
+ */
+fun suggestDeparture(
+    event: Event,
+    itinerary: Itinerary,
+    zone: ZoneId,
+    arrival: ZonedDateTime? = null,
+): DepartureSuggestion? {
     val start = event.startTime()?.atZoneSameInstant(zone) ?: return null
     val published = event.publishedEnd()?.atZoneSameInstant(zone)
-    val departure = published ?: start.plusMinutes(typicalStayMinutes(event.type).toLong())
+    val typical = (arrival ?: start).plusMinutes(typicalStayMinutes(event.type).toLong())
+    val departure = when {
+        published == null -> typical
+        event.isDropIn() && typical.isBefore(published) -> typical
+        else -> published
+    }
     val windowEnd = itinerary.windowEnd(zone)
     return DepartureSuggestion(
         plannedDeparture = if (departure.isAfter(windowEnd)) windowEnd else departure,

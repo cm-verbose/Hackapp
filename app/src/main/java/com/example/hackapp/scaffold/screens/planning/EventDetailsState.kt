@@ -10,6 +10,7 @@ import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.TicketPriceRepository
 import com.example.hackapp.itinerary.TicketPriceSummary
 import com.example.hackapp.itinerary.eventStop
+import com.example.hackapp.itinerary.isDropIn
 import com.example.hackapp.itinerary.isValidTicketPrice
 import com.example.hackapp.itinerary.publishedEnd
 import com.example.hackapp.itinerary.showtimeKey
@@ -117,14 +118,18 @@ data class EventDetailsUiState(
 )
 
 sealed interface AddToItineraryAction {
-    /** The Event has a published end, so [stop] is ready for `Itinerary.withStop`. */
+    /** A fixed Event with a published end, so [stop] is ready for `Itinerary.withStop`. */
     data class Add(val stop: Stop) : AddToItineraryAction
 
     /**
-     * No published end: open the Planned Departure sheet for [event], then build the Stop with
-     * `eventStop(event, departure, ticketPriceCad)`.
+     * No published end, or a drop-in: open the Planned Departure sheet for [event], then build the
+     * Stop with `eventStop(event, departure, ticketPriceCad, arrival)`. [arrival] is set for a drop-in.
      */
-    data class ChooseDeparture(val event: Event, val ticketPriceCad: Double?) : AddToItineraryAction
+    data class ChooseDeparture(
+        val event: Event,
+        val ticketPriceCad: Double?,
+        val arrival: ZonedDateTime? = null,
+    ) : AddToItineraryAction
 }
 
 internal data class ParsedTicketPrice(val amount: Double?, val error: TicketPriceInputError?)
@@ -272,6 +277,7 @@ class EventDetailsHolder(
     private fun buildAction(): AddToItineraryAction? {
         val event = selected.event
         val ticketPrice = field.ownReportCad.takeIf { isApplicable() }
+        if (event.isDropIn()) return AddToItineraryAction.ChooseDeparture(event, ticketPrice, selected.arrivalAt)
         if (event.publishedEnd() == null) return AddToItineraryAction.ChooseDeparture(event, ticketPrice)
         val stop = eventStop(event, selected.suggestedDeparture.plannedDeparture, ticketPrice, selected.arrivalAt) ?: return null
         return AddToItineraryAction.Add(stop)

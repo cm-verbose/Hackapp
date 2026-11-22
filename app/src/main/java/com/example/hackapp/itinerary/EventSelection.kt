@@ -132,7 +132,7 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
             if (arrival !in window) return@mapNotNull null
             if (search.until != null && !arrival.isBefore(search.until)) return@mapNotNull null
 
-            var departure = suggestDeparture(event, itinerary, zone) ?: return@mapNotNull null
+            var departure = suggestDeparture(event, itinerary, zone, arrival.atZone(zone)) ?: return@mapNotNull null
             var leaves = departure.plannedDeparture.toInstant()
             if (blocks.any { it.overlaps(arrival, leaves) }) {
                 // A drop-in Event stays on the list, but its stay stops when the first Meal Block it crosses starts.
@@ -142,15 +142,19 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
                 departure = departure.copy(plannedDeparture = stopsAt.atZone(zone))
                 leaves = stopsAt
             }
-            // Joining late needs a meaningful stay left.
-            if (arrival.isAfter(start.toInstant()) && Duration.between(arrival, leaves).toMinutes() < MIN_DROP_IN_STAY_MINUTES) {
-                return@mapNotNull null
-            }
-
             val next = search.gap.next
             if (next != null) {
-                val toNext = estimator.transit(target, next.latLng).totalMinutes * 60L
-                if (leaves.plusSeconds(toNext).isAfter(next.start.toInstant())) return@mapNotNull null
+                val mustLeave = next.start.toInstant().minusSeconds(estimator.transit(target, next.latLng).totalMinutes * 60L)
+                if (leaves.isAfter(mustLeave)) {
+                    // A drop-in can be left early for the next Stop. A fixed showtime cannot.
+                    if (!dropIn) return@mapNotNull null
+                    departure = departure.copy(plannedDeparture = mustLeave.atZone(zone))
+                    leaves = mustLeave
+                }
+            }
+            // Every drop-in needs a meaningful stay once all the limits apply.
+            if (dropIn && Duration.between(arrival, leaves).toMinutes() < MIN_DROP_IN_STAY_MINUTES) {
+                return@mapNotNull null
             }
             ReachableShowtime(event, start, departure, leg, arrivalAt = arrival.atZone(zone))
         }
