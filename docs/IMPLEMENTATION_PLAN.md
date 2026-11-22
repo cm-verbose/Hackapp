@@ -35,6 +35,17 @@ Living checklist for the current implementation step. Update it in the same chan
 | City services | Manual `CityServices` container built from the City Pack |
 | Past Itinerary | Tapping one opens a read-only summary with route map, Stops and earned Stamps |
 | "Other" events | Show them in their own tab or group for now. If their label cannot be made clearer than "Other", hide them for the demo |
+| District map technology | Keep the custom Canvas map |
+| District map layout | Full-height map, selected boroughs as chips on top, details in a bottom sheet |
+| District map gestures | Pinch zoom 1x to 6x, one-finger drag, double-tap zoom, bounded edges, reset button |
+| District map badges | Fixed-size badges. Lower-count overlapping badges hide until zoomed in, and selected boroughs always show their order. **Revisit after the first iteration** |
+| District selection | Tap opens a sheet with Add as #N, or Remove if selected. Remaining boroughs renumber. Boroughs with no matching Events and linked cities are gray and untappable |
+| District count | Events starting in the time window that fit the audience, including unknown prices |
+| Itinerary drafts | Created after Date and time, autosaved after each step behind `ItineraryRepository`, local until Firestore is connected |
+| Stop selection | One time gap at a time, grouped by hour and type. Adding a Stop refreshes the list from its departure |
+| Missing end times | Planned Departure sheet opens prefilled with a typical stay for the Event type, and the user can change it |
+| Planning travel time | Public transit estimate plus buffer |
+| Editing earlier steps | Warn which Stops will be removed and keep those that still fit. **May change during implementation** |
 
 ## Checklist
 
