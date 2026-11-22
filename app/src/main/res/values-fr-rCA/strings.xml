@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Plan Montréal</string>
-    <string name="app_widget_description">Un widget simple</string>
-    <string name="text_sign_in_with_google">Se connecter avec Google</string>
-</resources>

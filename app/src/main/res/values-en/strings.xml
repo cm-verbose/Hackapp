@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Plan Montreal</string>
+    <!-- English. French (values/) is the default locale. Source: Figma page "strings.xml". -->
+    <string name="app_widget_description">A simple widget</string>
+    <!-- Design system: strings used by the Qindong components -->
+    <string name="stop_type_music">Music</string>
+    <string name="stop_type_festival">Festival</string>
+    <string name="stop_type_theatre">Theatre</string>
+    <string name="stop_type_comedy">Comedy</string>
+    <string name="stop_type_exhibition">Exhibition</string>
+    <string name="stop_type_sport">Sport</string>
+    <string name="stop_type_cinema">Cinema</string>
+    <string name="stop_type_family">Family</string>
+    <string name="stop_type_meal">Meal</string>
+    <string name="stop_type_bar">Bar</string>
+    <string name="home_underway_label">UNDERWAY</string>
+    <string name="home_next_stop">Next stop %1$s · %2$s</string>
+    <string name="home_resume_itinerary">Resume itinerary</string>
+    <string name="home_plan_title">Your outing, made to measure</string>
+    <string name="home_plan_body">A day or night out in %1$s, stop by stop.</string>
+    <string name="home_plan_action">Plan an itinerary</string>
+    <string name="home_suggestions">SUGGESTIONS</string>
+    <string name="selection_meal_block_title">Meal block %1$s – %2$s</string>
+    <string name="selection_meal_block_body">Choose a restaurant or bar (from 17:00).</string>
+    <string name="selection_choose_meal">Choose a meal</string>
+    <string name="leg_next_stop_label">Next stop</string>
+    <string name="leg_fare_required">Fare needed: %1$s</string>
+    <string name="leg_fare_single_ride">1 ride</string>
+    <string name="leg_depart">Depart</string>
+    <string name="leg_travel">Travel</string>
+    <string name="leg_arrive">Arrive</string>
+    <string name="leg_now">Now</string>
+    <string name="leg_walk_minutes">≈ %1$d min walk</string>
+    <plurals name="stamps_count">
+        <item quantity="one">%d stamp</item>
+        <item quantity="other">%d stamps</item>
+    </plurals>
+    <plurals name="districts_count">
+        <item quantity="one">%d borough</item>
+        <item quantity="other">%d boroughs</item>
+    </plurals>
+    <!-- Qindong 2 components -->
+    <string name="data_attribution">Data: Has Things (hasthings.com)</string>
+    <string name="map_district_boundaries">Map · borough boundaries</string>
+    <string name="district_add_as_position">Add as #%1$d</string>
+    <string name="district_choose_another">Choose another</string>
+    <string name="meal_plan_yes">Yes, plan my meals</string>
+    <string name="meal_plan_no">I’ll handle it</string>
+    <string name="meal_block_note">Each meal reserves a 90-min block: 1 h, plus 15 min before and after.</string>
+    <string name="leg_stop_progress">Next stop · %1$d of %2$d</string>
+    <string name="leg_start_from_location">Starts %1$s · leaving from your location</string>
+    <string name="arrival_en_route">On the way</string>
+    <string name="arrival_expected">Expected arrival %1$s</string>
+    <string name="arrival_not_detected_note">Arrival isn’t detected by GPS: please confirm it.</string>
+    <string name="action_skip_stop">Skip this stop</string>
+    <string name="action_go_anyway">Go anyway</string>
+    <string name="at_stop_leave_by">Leave by</string>
+    <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
+    <string name="late_warning">You may arrive late at %1$s.</string>
+    <string name="late_no_replanning">No automatic replanning.</string>
+    <!-- Authentication (layout branch) -->
+    <string name="text_sign_in_with_google">Sign in with Google</string>
+</resources>

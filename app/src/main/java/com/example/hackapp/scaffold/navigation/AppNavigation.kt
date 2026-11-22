@@ -6,12 +6,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hackapp.scaffold.screens.login.ScreenLogin
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
-import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
+import com.example.hackapp.scaffold.screens.places.PlacesDestination
+import com.example.hackapp.scaffold.screens.places.PlacesScreen
 import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
+import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
 
 /**
  * Handles the navigation between screens which allows for dividing content
  * across different screens.
+ *
+ * Flow: Login -> Planning. PlacesScreen (restaurant browse) stays registered as a route
+ * but is not the start destination.
  */
 @Composable
 fun AppNavigation(controller: NavHostController) {
@@ -26,5 +31,6 @@ fun AppNavigation(controller: NavHostController) {
                 controller.navigate(ScreenLoginDestination)
             })
         }
+        composable<PlacesDestination> { PlacesScreen() }
     }
 }

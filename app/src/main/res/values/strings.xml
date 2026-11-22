@@ -1,5 +1,62 @@
 <resources>
-    <string name="app_name">Plan Montreal</string>
-    <string name="app_widget_description">A simple widget</string>
-    <string name="text_sign_in_with_google">Sign in with Google</string>
+    <string name="app_name">Plan Montréal</string>
+    <string name="app_widget_description">Un widget simple</string>
+    <!-- Design system (Figma page "strings.xml"): strings used by the Qindong components -->
+    <string name="stop_type_music">Musique</string>
+    <string name="stop_type_festival">Festival</string>
+    <string name="stop_type_theatre">Théâtre</string>
+    <string name="stop_type_comedy">Humour</string>
+    <string name="stop_type_exhibition">Exposition</string>
+    <string name="stop_type_sport">Sport</string>
+    <string name="stop_type_cinema">Cinéma</string>
+    <string name="stop_type_family">Famille</string>
+    <string name="stop_type_meal">Repas</string>
+    <string name="stop_type_bar">Bar</string>
+    <string name="home_underway_label">EN COURS</string>
+    <string name="home_next_stop">Prochain arrêt %1$s · %2$s</string>
+    <string name="home_resume_itinerary">Reprendre l’itinéraire</string>
+    <string name="home_plan_title">Votre sortie, sur mesure</string>
+    <string name="home_plan_body">Une journée ou une soirée à %1$s, arrêt par arrêt.</string>
+    <string name="home_plan_action">Planifier un itinéraire</string>
+    <string name="home_suggestions">SUGGESTIONS</string>
+    <string name="selection_meal_block_title">Bloc repas %1$s – %2$s</string>
+    <string name="selection_meal_block_body">Choisissez un restaurant ou un bar (dès 17:00).</string>
+    <string name="selection_choose_meal">Choisir un repas</string>
+    <string name="leg_next_stop_label">Prochain arrêt</string>
+    <string name="leg_fare_required">Titre requis : %1$s</string>
+    <string name="leg_fare_single_ride">1 passage</string>
+    <string name="leg_depart">Départ</string>
+    <string name="leg_travel">Trajet</string>
+    <string name="leg_arrive">Arrivée</string>
+    <string name="leg_now">Maintenant</string>
+    <string name="leg_walk_minutes">≈ %1$d min à pied</string>
+    <plurals name="stamps_count">
+        <item quantity="one">%d timbre</item>
+        <item quantity="other">%d timbres</item>
+    </plurals>
+    <plurals name="districts_count">
+        <item quantity="one">%d arrondissement</item>
+        <item quantity="other">%d arrondissements</item>
+    </plurals>
+    <!-- Qindong 2 components -->
+    <string name="data_attribution">Données : Has Things (hasthings.com)</string>
+    <string name="map_district_boundaries">Carte · limites des arrondissements</string>
+    <string name="district_add_as_position">Ajouter en %1$de</string>
+    <string name="district_choose_another">Choisir un autre</string>
+    <string name="meal_plan_yes">Oui, planifiez mes repas</string>
+    <string name="meal_plan_no">Je m’en occupe</string>
+    <string name="meal_block_note">Chaque repas réserve un bloc de 90 min : 1 h, plus 15 min avant et après.</string>
+    <string name="leg_stop_progress">Prochain arrêt · %1$d sur %2$d</string>
+    <string name="leg_start_from_location">Début %1$s · départ depuis votre position</string>
+    <string name="arrival_en_route">En route</string>
+    <string name="arrival_expected">Arrivée prévue %1$s</string>
+    <string name="arrival_not_detected_note">L’arrivée n’est pas détectée par GPS : confirmez-la.</string>
+    <string name="action_skip_stop">Sauter cet arrêt</string>
+    <string name="action_go_anyway">Y aller quand même</string>
+    <string name="at_stop_leave_by">Partez avant</string>
+    <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
+    <string name="late_warning">Vous risquez d’arriver en retard à %1$s.</string>
+    <string name="late_no_replanning">Pas de replanification automatique.</string>
+    <!-- Authentication (layout branch) -->
+    <string name="text_sign_in_with_google">Se connecter avec Google</string>
 </resources>
