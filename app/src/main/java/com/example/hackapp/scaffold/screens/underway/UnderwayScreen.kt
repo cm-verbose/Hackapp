@@ -67,9 +67,10 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
     val appContext = context.applicationContext
     val cityPack = LocalCityPack.current
     val clock = (appContext as HackappApplication).underwayClock
+    val coordinator = currentUnderwayCoordinator()
     val viewModel = UnderwayViewModel.create(
         uid = uid,
-        coordinator = (appContext as HackappApplication).underwayCoordinator,
+        coordinator = coordinator,
         clock = clock,
         notificationsAllowed = { NotificationManagerCompat.from(appContext).areNotificationsEnabled() },
     )
@@ -159,7 +160,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                         chrome = chrome,
                         dispatch = viewModel::dispatch,
                         isOnLegTo = { id ->
-                            val fresh = appContext.underwayCoordinator.view(uid, notificationsAllowed = true)
+                            val fresh = coordinator.view(uid, notificationsAllowed = true)
                             fresh?.phase == UnderwayPhase.Leg && fresh.currentStop?.id == id
                         },
                         onAskSkip = { skipStopId = it },

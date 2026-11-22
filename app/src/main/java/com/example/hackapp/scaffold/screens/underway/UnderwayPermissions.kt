@@ -48,8 +48,11 @@ class UnderwayStartPermissions internal constructor(
         if (!granted) launchNotifications()
     }
 
-    fun offerExactAlarm() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) rationaleVisible = true
+    /** Shows the rationale. False when this Android version has no such permission to ask for. */
+    fun offerExactAlarm(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        rationaleVisible = true
+        return true
     }
 
     internal fun openExactAlarmSettings() {

@@ -1,5 +1,7 @@
 package com.example.hackapp
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
@@ -31,6 +33,8 @@ import com.example.hackapp.itinerary.OutingKind
 import com.example.hackapp.itinerary.PlanningStep
 import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.StopKind
+import com.example.hackapp.passport.InMemoryStampRepository
+import com.example.hackapp.passport.PlaceStampIdentityResolver
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
@@ -42,9 +46,15 @@ import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
+import com.example.hackapp.scaffold.screens.underway.LocalUnderwayCoordinator
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
+import com.example.hackapp.underway.FakeUnderwayAlertScheduler
+import com.example.hackapp.underway.FakeUnderwayNotifier
+import com.example.hackapp.underway.InMemoryUnderwayRepository
+import com.example.hackapp.underway.SystemUnderwayClock
+import com.example.hackapp.underway.UnderwayCoordinator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -64,10 +74,27 @@ class AppNavigationTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val cityServices = CityServicesFactory.create(context, ActiveCityPack)
     private val itineraries = InMemoryItineraryRepository()
+
+    /** The real coordinator over the test's Itineraries, with no real alarms or notifications. */
+    private val coordinator = UnderwayCoordinator(
+        itineraries = itineraries,
+        states = InMemoryUnderwayRepository(),
+        stamps = InMemoryStampRepository(),
+        resolverFor = { PlaceStampIdentityResolver(placeById = { null }) },
+        estimator = cityServices.legs,
+        clock = SystemUnderwayClock(ActiveCityPack.timeZone),
+        scheduler = FakeUnderwayAlertScheduler(),
+        notifier = FakeUnderwayNotifier(),
+    )
     private lateinit var controller: TestNavHostController
 
     @Before
     fun openHome() {
+        // Start asks for this permission, and the system dialog would cover the app under test.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation
+                .grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
+        }
         compose.setContent {
             controller = TestNavHostController(context).apply {
                 navigatorProvider.addNavigator(ComposeNavigator())
@@ -77,6 +104,7 @@ class AppNavigationTest {
                 LocalAuthService provides SignedInAuth,
                 LocalCityServices provides cityServices,
                 LocalItineraryRepository provides itineraries,
+                LocalUnderwayCoordinator provides coordinator,
             ) {
                 HackappTheme { AppNavigation(controller, PaddingValues()) }
             }
@@ -125,6 +153,43 @@ class AppNavigationTest {
 
     @Test
     fun startFromReviewOpensUnderwayAboveHome() {
+        startSeededDraft()
+        compose.onNodeWithText(firstLegLabel()).assertIsDisplayed()
+        compose.runOnIdle {
+            assertTrue(controller.previousBackStackEntry?.destination?.hasRoute<ScreenHomeDestination>() == true)
+        }
+        assertEquals(ItineraryPhase.Underway, savedDraft().phase)
+    }
+
+    @Test
+    fun systemBackKeepsItineraryUnderwayAndHomeResumesIt() {
+        startSeededDraft()
+        compose.onNodeWithText(firstLegLabel()).assertIsDisplayed()
+        Espresso.pressBack()
+        awaitHome()
+        assertEquals(ItineraryPhase.Underway, savedDraft().phase)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(context.getString(R.string.home_resume_itinerary)))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        click(R.string.home_resume_itinerary)
+        awaitUnderwayPage()
+        compose.onNodeWithText(firstLegLabel()).assertIsDisplayed()
+    }
+
+    private fun firstLegLabel() = context.getString(R.string.leg_stop_progress, 1, 1)
+
+    private fun awaitUnderwayPage() {
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            controller.currentBackStackEntry?.destination?.hasRoute<UnderwayLegRoute>() == true
+        }
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(firstLegLabel())).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /** Saves a draft for today and taps Start on its Review page. */
+    private fun startSeededDraft() {
         val zone = ActiveCityPack.timeZone
         val today = LocalDate.now(zone)
         // A night window ends after midnight, so it is still open at any time of the test day.
@@ -160,15 +225,7 @@ class AppNavigationTest {
         compose.runOnIdle { controller.navigate(ItineraryReviewRoute(draft.id)) }
         awaitEnabled(R.string.review_start)
         click(R.string.review_start)
-        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
-            controller.currentBackStackEntry?.destination?.hasRoute<UnderwayLegRoute>() == true
-        }
-        compose.waitForIdle()
-        compose.onNodeWithText(context.getString(R.string.leg_next_stop_label)).assertIsDisplayed()
-        compose.runOnIdle {
-            assertTrue(controller.previousBackStackEntry?.destination?.hasRoute<ScreenHomeDestination>() == true)
-        }
-        assertEquals(ItineraryPhase.Underway, savedDraft().phase)
+        awaitUnderwayPage()
     }
 
     /** The one draft of the test user, as last saved. */

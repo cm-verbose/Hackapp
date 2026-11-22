@@ -27,8 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,6 +76,10 @@ import com.example.hackapp.scaffold.screens.budgetBracketLabel
 import com.example.hackapp.scaffold.screens.itinerary.appLocale
 import com.example.hackapp.scaffold.screens.itinerary.itineraryTitle
 import com.example.hackapp.scaffold.screens.itinerary.stopTypesFor
+import com.example.hackapp.scaffold.screens.underway.UnderwayExactAlarmRationale
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayCoordinator
+import com.example.hackapp.scaffold.screens.underway.rememberUnderwayStartPermissions
+import com.example.hackapp.scaffold.screens.underway.reviewStarter
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappOutlineButton
@@ -119,6 +126,7 @@ fun ItineraryReviewScreen(
     val auth = LocalAuthService.current
     val profiles = LocalProfileRepository.current
     val zone = services.cityPack.timeZone
+    val coordinator = currentUnderwayCoordinator()
     // A missing or unreadable Profile only leaves the fallback budgets unset, as on Meal choice.
     val loadProfileContext: suspend () -> PlanningContext = {
         val profile = try {
@@ -157,7 +165,18 @@ fun ItineraryReviewScreen(
                     ),
                 )
             },
+            starter = coordinator.reviewStarter(),
         ),
+    )
+    val permissions = rememberUnderwayStartPermissions()
+    // Started, and waiting for an answer on exact alarms. Leaving earlier would hide the question.
+    var startedId by rememberSaveable { mutableStateOf<String?>(null) }
+    UnderwayExactAlarmRationale(
+        permissions,
+        onClosed = {
+            startedId?.let(onStarted)
+            startedId = null
+        },
     )
     val state by viewModel.state.collectAsState()
     LaunchedEffect(state.navigation) {
@@ -165,7 +184,11 @@ fun ItineraryReviewScreen(
             null -> Unit
             is ReviewNavigation.Started -> {
                 viewModel.onNavigated()
-                onStarted(target.itineraryId)
+                if (target.askExactAlarm && permissions.offerExactAlarm()) {
+                    startedId = target.itineraryId
+                } else {
+                    onStarted(target.itineraryId)
+                }
             }
             is ReviewNavigation.BackToSelection -> {
                 viewModel.onNavigated()
@@ -194,7 +217,11 @@ fun ItineraryReviewScreen(
         onRetry = viewModel::retry,
         onSelectStop = viewModel::selectStop,
         onRemove = viewModel::remove,
-        onStart = viewModel::start,
+        onStart = {
+            // Never waits for the answer: Start works with notifications off.
+            permissions.requestNotifications()
+            viewModel.start()
+        },
         onChangeDateTime = { onChangeDateTime(itineraryId) },
         onConfirmDialog = viewModel::confirmDialog,
         onDismissDialog = viewModel::dismissDialog,

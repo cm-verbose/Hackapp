@@ -8,6 +8,7 @@ import com.example.hackapp.itinerary.MealBlock
 import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.Nov28
 import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.StartResult
 import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.itinerary.StopStatus
@@ -19,6 +20,7 @@ import com.example.hackapp.itinerary.event
 import com.example.hackapp.itinerary.fixedLegs
 import com.example.hackapp.itinerary.instant
 import com.example.hackapp.itinerary.night
+import com.example.hackapp.itinerary.startItinerary
 import com.example.hackapp.itinerary.stop
 import com.example.hackapp.services.LegEstimator
 import com.example.hackapp.services.LegEstimate
@@ -65,6 +67,15 @@ class ItineraryReviewTest {
         loadContext = { context(now = now) },
         loadPrices = { if (failPrices) error("prices failed") else BudgetPrices() },
         loadEvents = { events },
+        // The rules the coordinator runs first, without its alerts and Underway state.
+        starter = { uid, id, demo, confirmEndCurrent ->
+            when (val result = startItinerary(repository, uid, id, now, Toronto, demo, confirmEndCurrent)) {
+                is StartResult.Started -> ReviewStartOutcome.Started(result.itinerary.id, askExactAlarm = false)
+                is StartResult.NeedsConfirmation -> ReviewStartOutcome.NeedsConfirmation(result.current)
+                is StartResult.Blocked -> ReviewStartOutcome.Blocked
+                StartResult.NotFound -> ReviewStartOutcome.NotFound
+            }
+        },
         demoMode = demoMode,
         clock = { now },
     )

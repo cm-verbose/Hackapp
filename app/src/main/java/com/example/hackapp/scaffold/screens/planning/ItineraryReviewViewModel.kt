@@ -15,7 +15,6 @@ import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.PlanningContext
 import com.example.hackapp.itinerary.StartBlock
-import com.example.hackapp.itinerary.StartResult
 import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.StopRemovalPlan
 import com.example.hackapp.itinerary.StopStatus
@@ -26,7 +25,6 @@ import com.example.hackapp.itinerary.planStopRemoval
 import com.example.hackapp.itinerary.rescheduleOptions
 import com.example.hackapp.itinerary.rescheduled
 import com.example.hackapp.itinerary.startBlock
-import com.example.hackapp.itinerary.startItinerary
 import com.example.hackapp.services.LegEstimator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -103,8 +101,25 @@ data class RescheduleStep(
     val affected: List<Stop> = emptyList(),
 )
 
+/** What Start returned. */
+sealed interface ReviewStartOutcome {
+    data class Started(val itineraryId: String, val askExactAlarm: Boolean) : ReviewStartOutcome
+    data class NeedsConfirmation(val current: Itinerary) : ReviewStartOutcome
+    data object Blocked : ReviewStartOutcome
+    data object NotFound : ReviewStartOutcome
+}
+
+/**
+ * Starts an Itinerary. The app passes `UnderwayCoordinator.start`, the only code path that moves an
+ * Itinerary to Underway, so its state and alerts always exist.
+ */
+fun interface ReviewStarter {
+    suspend fun start(uid: String, itineraryId: String, demoMode: Boolean, confirmEndCurrent: Boolean): ReviewStartOutcome
+}
+
 sealed interface ReviewNavigation {
-    data class Started(val itineraryId: String) : ReviewNavigation
+    /** [askExactAlarm]: offer the exact-alarm permission before leaving Review. */
+    data class Started(val itineraryId: String, val askExactAlarm: Boolean = false) : ReviewNavigation
 
     /** Selection for the gap after [afterStopId] (null = before the first Stop), in [districtId]. */
     data class BackToSelection(
@@ -173,6 +188,7 @@ class ItineraryReviewHolder(
     private val loadContext: suspend () -> PlanningContext,
     private val loadPrices: suspend (Itinerary) -> BudgetPrices,
     private val loadEvents: suspend (Itinerary) -> List<Event>,
+    private val starter: ReviewStarter,
     private val demoMode: Boolean = false,
     private val clock: () -> Instant = Instant::now,
 ) {
@@ -258,19 +274,18 @@ class ItineraryReviewHolder(
         val owner = uid() ?: return failed()
         _state.update { it.copy(busy = true, actionFailed = false) }
         try {
-            val result = startItinerary(itineraries, owner, itineraryId, clock(), zone, demoMode, confirmEndCurrent)
-            when (result) {
-                is StartResult.Started -> _state.update {
-                    it.copy(busy = false, navigation = ReviewNavigation.Started(result.itinerary.id))
+            when (val result = starter.start(owner, itineraryId, demoMode, confirmEndCurrent)) {
+                is ReviewStartOutcome.Started -> _state.update {
+                    it.copy(busy = false, navigation = ReviewNavigation.Started(result.itineraryId, result.askExactAlarm))
                 }
-                is StartResult.NeedsConfirmation -> _state.update {
+                is ReviewStartOutcome.NeedsConfirmation -> _state.update {
                     it.copy(busy = false, dialog = endCurrentWarning(result.current))
                 }
-                is StartResult.Blocked -> {
+                ReviewStartOutcome.Blocked -> {
                     itineraries.getItinerary(owner, itineraryId)?.let { publish(it) }
                     _state.update { it.copy(busy = false) }
                 }
-                StartResult.NotFound -> failed()
+                ReviewStartOutcome.NotFound -> failed()
             }
         } catch (e: CancellationException) {
             throw e
@@ -450,6 +465,7 @@ class ItineraryReviewViewModel(private val holder: ItineraryReviewHolder) : View
             loadContext: suspend () -> PlanningContext,
             loadPrices: suspend (Itinerary) -> BudgetPrices,
             loadEvents: suspend (Itinerary) -> List<Event>,
+            starter: ReviewStarter,
             demoMode: Boolean = false,
             clock: () -> Instant = Instant::now,
         ): ViewModelProvider.Factory = viewModelFactory {
@@ -457,7 +473,7 @@ class ItineraryReviewViewModel(private val holder: ItineraryReviewHolder) : View
                 ItineraryReviewViewModel(
                     ItineraryReviewHolder(
                         itineraryId, { auth.currentUser?.uid }, itineraries, estimator, zone,
-                        loadContext, loadPrices, loadEvents, demoMode, clock,
+                        loadContext, loadPrices, loadEvents, starter, demoMode, clock,
                     ),
                 )
             }
