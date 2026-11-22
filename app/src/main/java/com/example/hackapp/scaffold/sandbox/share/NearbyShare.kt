@@ -19,7 +19,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
@@ -80,6 +82,13 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
     private val localName = "${Build.MODEL} #${UUID.randomUUID().toString().take(4)}"
     private var running = false
     private var lastHeading: ShareMessage.Heading? = null
+
+    /**
+     * Why advertising or discovery isn't running, for display; `null` while both work.
+     * Without this, a failure (such as a missing permission) only shows up in logcat.
+     */
+    var error by mutableStateOf<String?>(null)
+        private set
 
     /** Connected peers by endpoint id. */
     val peers = mutableStateMapOf<String, SharePeer>()
@@ -167,12 +176,21 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
             SERVICE_ID,
             connectionCallback,
             AdvertisingOptions.Builder().setStrategy(strategy).build(),
-        ).addOnFailureListener { Log.w(TAG, "Advertising failed", it) }
+        ).addOnFailureListener { onStartFailed("Advertising", it) }
         client.startDiscovery(
             SERVICE_ID,
             discoveryCallback,
             DiscoveryOptions.Builder().setStrategy(strategy).build(),
-        ).addOnFailureListener { Log.w(TAG, "Discovery failed", it) }
+        ).addOnFailureListener { onStartFailed("Discovery", it) }
+    }
+
+    private fun onStartFailed(what: String, e: Exception) {
+        Log.w(TAG, "$what failed", e)
+        val reason = (e as? ApiException)
+            ?.let { ConnectionsStatusCodes.getStatusCodeString(it.statusCode) }
+            ?: e.message
+            ?: e.javaClass.simpleName
+        error = "$what failed: $reason"
     }
 
     fun stop() {
@@ -184,6 +202,7 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
         client.stopAllEndpoints()
         peers.clear()
         pendingNames.clear()
+        error = null
     }
 
     /** Shares this device's forward bearing, skipping updates too small to matter. */
@@ -219,13 +238,19 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 add(Manifest.permission.NEARBY_WIFI_DEVICES)
-            } else {
-                add(Manifest.permission.ACCESS_FINE_LOCATION)
             }
+            // Discovery still requires location on every Android version: Play services
+            // refuses it with MISSING_PERMISSION_ACCESS_COARSE_LOCATION (8034) otherwise,
+            // even on Android 13+ where NEARBY_WIFI_DEVICES exists. "Approximate" is enough.
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
 
-        /** Optional permissions: without them sharing still works, using the compass only. */
+        /** Optional permissions: sharing works without them. */
         fun optionalPermissions(): List<String> = buildList {
+            // Requested together with COARSE so the dialog offers precise or approximate
+            // (Android 12+ requires asking for both). Precise isn't needed.
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            // Without UWB, throws are aimed with the compass only.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(Manifest.permission.UWB_RANGING)
         }
 

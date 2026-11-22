@@ -350,6 +350,7 @@ private fun NearbyStatus(share: NearbyShare?, modifier: Modifier = Modifier) {
         Text(
             text = when {
                 share == null -> "Nearby sharing off (permission needed)"
+                share.error != null -> share.error!!
                 peers.isEmpty() -> "Searching for nearby devices…"
                 else -> buildString {
                     append("${peers.size} nearby: ")
