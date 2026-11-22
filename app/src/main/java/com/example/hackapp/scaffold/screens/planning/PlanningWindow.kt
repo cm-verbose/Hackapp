@@ -4,6 +4,7 @@ import com.example.hackapp.citypack.EventCoverage
 import com.example.hackapp.data.Event
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.OutingKind
+import com.example.hackapp.itinerary.PlanningChangePreview
 import com.example.hackapp.ui.theme.StopType
 import java.time.LocalDate
 import java.time.LocalTime
@@ -115,7 +116,11 @@ fun isDistrictPickable(groupId: String?, count: Int, selected: Boolean): Boolean
  */
 fun interface PlanningChangeReconciler {
     suspend fun reconcile(previous: Itinerary, updated: Itinerary): Itinerary
-}
 
-/** Placeholder until the Planning engine supplies the real rule: keeps every saved Stop. */
-val KeepSavedStops = PlanningChangeReconciler { _, updated -> updated }
+    /**
+     * Which Stops [reconcile] would remove, so the page can warn before saving. The default removes
+     * nothing, which suits reconcilers that apply their own rules silently.
+     */
+    suspend fun preview(previous: Itinerary, updated: Itinerary): PlanningChangePreview =
+        PlanningChangePreview.unchanged(previous, updated)
+}

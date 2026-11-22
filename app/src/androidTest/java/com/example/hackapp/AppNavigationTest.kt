@@ -3,6 +3,8 @@ package com.example.hackapp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
 import androidx.compose.ui.test.performClick
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,21 +23,38 @@ import com.example.hackapp.auth.AuthUser
 import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.ActiveCityPack
 import com.example.hackapp.itinerary.InMemoryItineraryRepository
+import com.example.hackapp.itinerary.Itinerary
+import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.itinerary.MealKind
+import com.example.hackapp.itinerary.OutingKind
+import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.Stop
+import com.example.hackapp.itinerary.StopKind
+import com.example.hackapp.profile.AgeRange
+import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
+import com.example.hackapp.profile.VisitorType
 import com.example.hackapp.scaffold.navigation.AppNavigation
+import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDate
+import java.time.LocalTime
 
 /** Walks the typed route graph, which can only fail at runtime. */
 @RunWith(AndroidJUnit4::class)
@@ -43,6 +63,7 @@ class AppNavigationTest {
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val cityServices = CityServicesFactory.create(context, ActiveCityPack)
+    private val itineraries = InMemoryItineraryRepository()
     private lateinit var controller: TestNavHostController
 
     @Before
@@ -52,10 +73,10 @@ class AppNavigationTest {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
             CompositionLocalProvider(
-                LocalProfileRepository provides NoProfiles,
+                LocalProfileRepository provides TestProfiles,
                 LocalAuthService provides SignedInAuth,
                 LocalCityServices provides cityServices,
-                LocalItineraryRepository provides InMemoryItineraryRepository(),
+                LocalItineraryRepository provides itineraries,
             ) {
                 HackappTheme { AppNavigation(controller, PaddingValues()) }
             }
@@ -72,27 +93,124 @@ class AppNavigationTest {
         awaitContinueEnabled()
         click(R.string.action_continue)
         keepBudgetAndAwaitDistrictPick()
-        // District pick needs a tap on the map, so the walk resumes at the next page.
-        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute("draft")) }
-        compose.waitForIdle()
-        repeat(PAGES_AFTER_DISTRICT_PICK) { click(R.string.action_continue) }
-        // The Review placeholder does not start the Itinerary, so Underway has nothing to show.
-        awaitUnderwayError()
-        compose.onNodeWithContentDescription(context.getString(R.string.action_back)).performClick()
+        // District pick needs a tap on the map, and Finish needs an Event Stop, so both are seeded.
+        val draftId = seedDistrictAndEventStop()
+        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute(draftId)) }
+        awaitContinueEnabled()
+        // A first open preselects every Meal that fits the default night window (18:00 to 02:00):
+        // Dinner fits, Lunch does not, and Late bite stays off because the Profile has no add-on.
+        compose.onNodeWithText(context.getString(R.string.meal_dinner_at, "18:30")).assertIsSelected()
+        click(R.string.action_continue)
+        awaitProgressLine()
+        val saved = savedDraft()
+        assertEquals(true, saved.planMeals)
+        assertEquals(listOf(MealKind.Dinner), saved.mealBlocks.map { it.kind })
+        assertEquals(PlanningStep.Stops, saved.step)
+        // One District, so the page offers only Finish, enabled by the seeded Event Stop.
+        awaitEnabled(R.string.action_finish)
+        click(R.string.action_finish)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(context.getString(R.string.review_start))).fetchSemanticsNodes().isNotEmpty()
+        }
+        assertEquals(PlanningStep.Review, savedDraft().step)
+        // This draft was not started, so the Underway route has nothing to show and returns Home.
+        compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
+        awaitHome()
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    private fun awaitHome() = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+        controller.currentBackStackEntry?.destination?.hasRoute<ScreenHomeDestination>() == true
     }
 
     @Test
-    fun systemBackLeavesUnderwayForHome() {
-        compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
-        awaitUnderwayError()
-        Espresso.pressBack()
+    fun startFromReviewOpensUnderwayAboveHome() {
+        val zone = ActiveCityPack.timeZone
+        val today = LocalDate.now(zone)
+        // A night window ends after midnight, so it is still open at any time of the test day.
+        val start = today.atTime(18, 0).atZone(zone).toOffsetDateTime()
+        val draft = Itinerary(
+            id = "start-draft",
+            ownerUid = TEST_UID,
+            cityId = ActiveCityPack.id,
+            step = PlanningStep.Review,
+            date = today,
+            outingKind = OutingKind.Night,
+            startTime = LocalTime.of(18, 0),
+            endTime = LocalTime.of(2, 0),
+            districtIds = listOf(TEST_DISTRICT),
+            stops = listOf(
+                Stop(
+                    id = "start-stop",
+                    kind = StopKind.Event,
+                    sourceId = "test-event",
+                    name = "Test",
+                    districtId = TEST_DISTRICT,
+                    latitude = 45.5075,
+                    longitude = -73.5540,
+                    start = start,
+                    plannedDeparture = start.plusMinutes(30),
+                    hasPublishedEnd = true,
+                ),
+            ),
+            createdAtMillis = 0,
+            updatedAtMillis = 0,
+        )
+        runBlocking { itineraries.saveItinerary(draft) }
+        compose.runOnIdle { controller.navigate(ItineraryReviewRoute(draft.id)) }
+        awaitEnabled(R.string.review_start)
+        click(R.string.review_start)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            controller.currentBackStackEntry?.destination?.hasRoute<UnderwayLegRoute>() == true
+        }
         compose.waitForIdle()
-        compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.leg_next_stop_label)).assertIsDisplayed()
+        compose.runOnIdle {
+            assertTrue(controller.previousBackStackEntry?.destination?.hasRoute<ScreenHomeDestination>() == true)
+        }
+        assertEquals(ItineraryPhase.Underway, savedDraft().phase)
     }
 
-    private fun awaitUnderwayError() = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
-        compose.onAllNodes(hasText(context.getString(R.string.action_retry))).fetchSemanticsNodes().isNotEmpty()
+    /** The one draft of the test user, as last saved. */
+    private fun savedDraft(): Itinerary = runBlocking {
+        itineraries.observeItineraries(TEST_UID).first().single()
+    }
+
+    /** Gives the draft one District and one Event Stop inside its window. Returns its id. */
+    private fun seedDistrictAndEventStop(): String = runBlocking {
+        val draft = savedDraft()
+        val start = draft.windowStart(ActiveCityPack.timeZone).toOffsetDateTime()
+        itineraries.saveItinerary(
+            draft.copy(
+                districtIds = listOf(TEST_DISTRICT),
+                stops = listOf(
+                    Stop(
+                        id = "test-stop",
+                        kind = StopKind.Event,
+                        sourceId = "test-event",
+                        name = "Test",
+                        districtId = TEST_DISTRICT,
+                        latitude = 45.5075,
+                        longitude = -73.5540,
+                        start = start,
+                        plannedDeparture = start.plusMinutes(30),
+                        hasPublishedEnd = true,
+                    ),
+                ),
+            ),
+        )
+        draft.id
+    }
+
+    private fun awaitProgressLine() {
+        val line = context.getString(R.string.selection_progress, 5, 6, 1, 1)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(line)).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun awaitEnabled(resId: Int) = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+        compose.onAllNodes(hasText(context.getString(resId)) and isEnabled()).fetchSemanticsNodes().isNotEmpty()
     }
 
     @Test
@@ -141,17 +259,28 @@ class AppNavigationTest {
     }
 
     private companion object {
-        /** Meal choice, Stop selection and Review. */
-        const val PAGES_AFTER_DISTRICT_PICK = 3
+        const val TEST_DISTRICT = "ville-marie"
         const val LOAD_TIMEOUT_MILLIS = 10_000L
+        const val TEST_UID = "test-user"
 
-        val NoProfiles = object : ProfileRepository {
-            override suspend fun getProfile(uid: String): Profile? = null
+        /** Meal choice needs a Profile for its budget defaults. */
+        val TestProfiles = object : ProfileRepository {
+            override suspend fun getProfile(uid: String): Profile? = Profile(
+                visitorType = VisitorType.Visitor,
+                name = "Test",
+                email = "test@example.com",
+                ageRange = AgeRange.From25To34,
+                districtOfStayId = "ville-marie",
+                lunchBudget = BudgetBracket.Under20,
+                dinnerBudget = BudgetBracket.Under50,
+                eventBudget = BudgetBracket.Under50,
+            )
+
             override suspend fun saveProfile(uid: String, profile: Profile) = Unit
         }
 
         val SignedInAuth = object : AuthService {
-            override val currentUser = AuthUser("test-user", null, null)
+            override val currentUser = AuthUser(TEST_UID, null, null)
             override suspend fun signIn(email: String, password: String) = AuthResult.Success
             override suspend fun register(email: String, password: String) = AuthResult.Success
             override suspend fun sendPasswordReset(email: String) = AuthResult.Success

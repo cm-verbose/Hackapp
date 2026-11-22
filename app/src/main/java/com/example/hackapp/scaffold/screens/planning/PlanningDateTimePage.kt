@@ -50,6 +50,7 @@ fun PlanningDateTimeScreen(
             profiles = LocalProfileRepository.current,
             events = services.events,
             cityPack = services.cityPack,
+            reconciler = services.stopFitReconciler(),
         ),
     )
     val state by viewModel.state.collectAsState()
@@ -59,6 +60,7 @@ fun PlanningDateTimeScreen(
             onContinue(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningDateTimePage(
         state = state,
         onBack = onBack,

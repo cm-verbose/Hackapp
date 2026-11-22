@@ -94,6 +94,7 @@ fun DistrictPickScreen(
             cityPack = services.cityPack,
             loadMap = { loadDistrictMap(context.applicationContext, services.cityPack) },
             profiles = LocalProfileRepository.current,
+            reconciler = services.stopFitReconciler(),
         ),
     )
     val state by viewModel.state.collectAsState()
@@ -104,6 +105,7 @@ fun DistrictPickScreen(
             onContinue(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     DistrictPickPage(
         state = state,
         onBack = onBack,

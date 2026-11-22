@@ -2,15 +2,11 @@ package com.example.hackapp.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -89,16 +84,26 @@ fun HackappDateField(
     }
 }
 
-/** 24-hour time field. Its dialog uses flickable hour and minute boxes. */
+/**
+ * 24-hour time field. Its dialog, titled [label], uses flickable hour and minute boxes.
+ * [contentDescription] names the field for TalkBack when the label alone is ambiguous.
+ */
 @Composable
 fun HackappTimeField(
     value: LocalTime,
     onValueChange: (LocalTime) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    contentDescription: String = label,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
-    HackappPickerField(value.format(TimeFormat), label, onClick = { open = true }, modifier = modifier)
+    HackappPickerField(
+        value.format(TimeFormat),
+        label,
+        onClick = { open = true },
+        modifier = modifier,
+        contentDescription = contentDescription,
+    )
 
     if (open) {
         var hour by rememberSaveable { mutableIntStateOf(value.hour) }
@@ -117,37 +122,6 @@ fun HackappTimeField(
                 TextButton(onClick = { open = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
-    }
-}
-
-/** Asks when a person will leave an Event that publishes no end time. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PlannedDepartureSheet(
-    eventTitle: String,
-    initialTime: LocalTime,
-    onConfirm: (LocalTime) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var hour by rememberSaveable { mutableIntStateOf(initialTime.hour) }
-    var minute by rememberSaveable { mutableIntStateOf(initialTime.minute) }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(stringResource(R.string.planned_departure_title), style = MaterialTheme.typography.titleLarge)
-            Text(eventTitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            HackappTimeWheels(hour, minute, { hour = it }, { minute = it })
-            HackappPrimaryButton(
-                text = stringResource(R.string.action_confirm),
-                onClick = { onConfirm(LocalTime.of(hour, minute)) },
-            )
-        }
     }
 }
 

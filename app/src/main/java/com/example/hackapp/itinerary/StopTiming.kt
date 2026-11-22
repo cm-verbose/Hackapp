@@ -32,11 +32,24 @@ fun typicalStayMinutes(eventType: String): Int =
 /** A prefilled Planned Departure. The source end time is never invented. */
 data class DepartureSuggestion(val plannedDeparture: ZonedDateTime, val hasPublishedEnd: Boolean)
 
-/** The published end, or the typical stay when there is none, kept inside the time window. */
-fun suggestDeparture(event: Event, itinerary: Itinerary, zone: ZoneId): DepartureSuggestion? {
+/**
+ * The published end, or the typical stay when there is none, kept inside the time window. A drop-in
+ * lasts the typical stay from [arrival] (its start by default), and never past its published end.
+ */
+fun suggestDeparture(
+    event: Event,
+    itinerary: Itinerary,
+    zone: ZoneId,
+    arrival: ZonedDateTime? = null,
+): DepartureSuggestion? {
     val start = event.startTime()?.atZoneSameInstant(zone) ?: return null
     val published = event.publishedEnd()?.atZoneSameInstant(zone)
-    val departure = published ?: start.plusMinutes(typicalStayMinutes(event.type).toLong())
+    val typical = (arrival ?: start).plusMinutes(typicalStayMinutes(event.type).toLong())
+    val departure = when {
+        published == null -> typical
+        event.isDropIn() && typical.isBefore(published) -> typical
+        else -> published
+    }
     val windowEnd = itinerary.windowEnd(zone)
     return DepartureSuggestion(
         plannedDeparture = if (departure.isAfter(windowEnd)) windowEnd else departure,
@@ -65,8 +78,14 @@ fun leaveBy(itinerary: Itinerary, stopId: String, estimator: LegEstimator): Offs
 }
 
 /** Builds an Event Stop. [plannedDeparture] comes from the Planned Departure sheet. */
-fun eventStop(event: Event, plannedDeparture: ZonedDateTime, ticketPriceCad: Double? = null): Stop? {
-    val start = event.startTime() ?: return null
+/** [arrival] replaces the Event start for a drop-in joined while it is already running. */
+fun eventStop(
+    event: Event,
+    plannedDeparture: ZonedDateTime,
+    ticketPriceCad: Double? = null,
+    arrival: ZonedDateTime? = null,
+): Stop? {
+    val start = arrival?.toOffsetDateTime() ?: event.startTime() ?: return null
     val latitude = event.location.latitude ?: return null
     val longitude = event.location.longitude ?: return null
     val districtId = event.districtId ?: return null
@@ -104,9 +123,9 @@ fun mealStop(place: Place, block: MealBlock, itinerary: Itinerary, zone: ZoneId)
     )
 }
 
-/** Adds [stop] in visit order. */
+/** Adds [stop] in visit order. A Meal Stop replaces any other Stop of the same Meal Block. */
 fun Itinerary.withStop(stop: Stop): Itinerary =
-    copy(stops = (stops.filterNot { it.id == stop.id } + stop).sortedBy { it.start.toInstant() })
+    copy(stops = (stops.filterNot { it.id == stop.id || (stop.mealBlockId != null && it.mealBlockId == stop.mealBlockId) } + stop).sortedBy { it.start.toInstant() })
 
 /** Finish rule: an Itinerary needs at least one Event. */
 fun canFinish(itinerary: Itinerary): Boolean = itinerary.activeStops.any { it.kind == StopKind.Event }

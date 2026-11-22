@@ -16,7 +16,9 @@ import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.OutingKind
+import com.example.hackapp.itinerary.PlanningChangePreview
 import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.withFittingMealBlocks
 import com.example.hackapp.profile.ProfileRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,8 @@ data class PlanningDateTimeUiState(
     val saveFailed: Boolean = false,
     /** Set once the draft is saved. The route navigates, then clears it. */
     val savedItineraryId: String? = null,
+    /** Stops that no longer fit the new date or time. Nothing is saved until [PlanningDateTimeViewModel.confirmChange]. */
+    val changeWarning: PlanningChangePreview? = null,
 ) {
     val windowError: TimeWindowError? get() = validateTimeWindow(start, end)
     val canContinue: Boolean get() = !loading && !loadFailed && !saving && windowError == null
@@ -55,7 +59,7 @@ class PlanningDateTimeViewModel(
     private val profiles: ProfileRepository,
     private val events: EventRepository,
     private val cityPack: CityPack,
-    private val reconciler: PlanningChangeReconciler = KeepSavedStops,
+    private val reconciler: PlanningChangeReconciler,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlanningDateTimeUiState(coverage = cityPack.eventCoverage))
@@ -83,7 +87,18 @@ class PlanningDateTimeViewModel(
 
     fun onNavigated() = _state.update { it.copy(savedItineraryId = null) }
 
-    fun save() {
+    fun save() = save(confirmed = false)
+
+    /** Saves the edit and the Stops that fit, after the person accepted the warning. */
+    fun confirmChange() {
+        _state.update { it.copy(changeWarning = null) }
+        save(confirmed = true)
+    }
+
+    /** Keeps the page as it is and saves nothing. */
+    fun cancelChange() = _state.update { it.copy(changeWarning = null) }
+
+    private fun save(confirmed: Boolean) {
         val current = _state.value
         if (!current.canContinue) return
         val uid = auth.currentUser?.uid
@@ -94,7 +109,11 @@ class PlanningDateTimeViewModel(
         _state.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
             try {
-                val saved = persist(uid, current)
+                val saved = persist(uid, current, confirmed)
+                if (saved == null) {
+                    _state.update { it.copy(saving = false) }
+                    return@launch
+                }
                 savedState[DRAFT_ID_KEY] = saved.id
                 _state.update { it.copy(saving = false, savedItineraryId = saved.id) }
             } catch (e: CancellationException) {
@@ -105,8 +124,11 @@ class PlanningDateTimeViewModel(
         }
     }
 
-    /** Reads the stored draft first, because later steps may have changed it. */
-    private suspend fun persist(uid: String, form: PlanningDateTimeUiState): Itinerary {
+    /**
+     * Reads the stored draft first, because later steps may have changed it. Returns null, saving
+     * nothing, when Stops would be lost and the person has not confirmed.
+     */
+    private suspend fun persist(uid: String, form: PlanningDateTimeUiState, confirmed: Boolean): Itinerary? {
         val now = nowMillis()
         val existingId = draftId
         val saved = if (existingId == null) {
@@ -138,7 +160,17 @@ class PlanningDateTimeViewModel(
             val windowChanged = latest.date != updated.date ||
                 latest.startTime != updated.startTime ||
                 latest.endTime != updated.endTime
-            if (windowChanged && latest.stops.isNotEmpty()) reconciler.reconcile(latest, updated) else updated
+            val fitted = if (windowChanged) updated.withFittingMealBlocks(cityPack.timeZone) else updated
+            if (windowChanged && latest.stops.isNotEmpty()) {
+                val preview = reconciler.preview(latest, fitted)
+                if (preview.needsConfirmation && !confirmed) {
+                    _state.update { it.copy(changeWarning = preview) }
+                    return null
+                }
+                reconciler.reconcile(latest, fitted)
+            } else {
+                fitted
+            }
         }
         itineraries.saveItinerary(saved)
         return saved
@@ -212,7 +244,7 @@ class PlanningDateTimeViewModel(
             profiles: ProfileRepository,
             events: EventRepository,
             cityPack: CityPack,
-            reconciler: PlanningChangeReconciler = KeepSavedStops,
+            reconciler: PlanningChangeReconciler = cityPack.stopFitReconciler(),
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 PlanningDateTimeViewModel(

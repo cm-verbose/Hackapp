@@ -27,6 +27,9 @@ enum class StopRemovalReason {
     MealBlockRemoved,
     MealClosed,
     NoLongerReachable,
+
+    /** The Meal's price is above the new budget for its Meal Block. */
+    MealOverBudget,
 }
 
 data class RemovedStop(val stop: Stop, val reason: StopRemovalReason)
@@ -98,6 +101,8 @@ fun previewDraftEdit(
 }
 
 private fun canReach(from: Stop, to: Stop, estimator: LegEstimator): Boolean {
+    // Meal Block margins already reserve the travel to and from a Meal.
+    if (from.mealBlockId != null || to.mealBlockId != null) return true
     val travel = estimator.transit(from.latLng, to.latLng).totalMinutes * 60L
     return !from.plannedDeparture.toInstant().plusSeconds(travel).isAfter(to.start.toInstant())
 }
@@ -110,4 +115,14 @@ private fun Stop.movedTo(target: Itinerary, zone: ZoneId): Stop {
         start = newStart.toOffsetDateTime(),
         plannedDeparture = newStart.plus(length).toOffsetDateTime(),
     )
+}
+
+/**
+ * Drops Meal Blocks that no longer fit this Itinerary's window. When any is dropped, the draft goes
+ * back to the Meal choice step at the latest, so it cannot skip choosing Meals again.
+ */
+fun Itinerary.withFittingMealBlocks(zone: ZoneId): Itinerary {
+    val fitting = mealBlocks.filter { it.fitsWindow(this, zone) }
+    if (fitting.size == mealBlocks.size) return this
+    return copy(mealBlocks = fitting, step = minOf(step, PlanningStep.Meals))
 }

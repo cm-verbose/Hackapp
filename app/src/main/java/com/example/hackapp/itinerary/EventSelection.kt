@@ -7,6 +7,8 @@ import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Interest
 import com.example.hackapp.services.LegEstimate
 import com.example.hackapp.services.LegEstimator
+import java.time.Duration
+import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
@@ -38,14 +40,22 @@ data class EventSearch(
     val origin: LatLng? = null,
     /** Shared median of user-reported prices per Event key. */
     val medianPrices: Map<ShowtimeKey, Double> = emptyMap(),
+    /** Showtimes must start before this instant. Selection sets it to the next Meal Block start. */
+    val until: Instant? = null,
 )
 
 data class ReachableShowtime(
     val event: Event,
+    /** The Event's own published start, for display. */
     val start: ZonedDateTime,
     val suggestedDeparture: DepartureSuggestion,
     /** Null when the Leg's origin is unknown. */
     val leg: LegEstimate?,
+    /**
+     * When the person starts this Event: [start], or for a drop-in already in progress the earliest
+     * reachable arrival. It becomes the Stop's `start`.
+     */
+    val arrivalAt: ZonedDateTime = start,
 )
 
 /** One title at one venue on one day, with its selectable times in order. */
@@ -60,8 +70,12 @@ data class EventCard(
     /** Null when unknown. Free is 0. */
     val priceCad: Double?,
     val travelMinutes: Int?,
+    /** A long Event with a published end that may be joined at any time, see [isDropIn]. */
+    val isDropIn: Boolean = false,
+    /** [priceCad] is the shared median of user reports. */
+    val priceIsMedian: Boolean = false,
 ) {
-    val firstStart: ZonedDateTime get() = showtimes.first().start
+    val firstStart: ZonedDateTime get() = showtimes.first().arrivalAt
 }
 
 data class EventTypeGroup(val type: String, val cards: List<EventCard>)
@@ -104,28 +118,49 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
         .filter { isEligible(it, context) }
         .mapNotNull { event ->
             val start = event.startTime()?.atZoneSameInstant(zone) ?: return@mapNotNull null
-            if (start.toInstant() !in window || start.toInstant().isBefore(context.now)) return@mapNotNull null
+            val dropIn = event.isDropIn()
             val target = event.latLng() ?: return@mapNotNull null
             val leg = legOrigin?.let { estimator.transit(it, target) }
 
+            // Earliest moment the person can be there: the window, now, and the Leg from the previous Stop.
             val previous = search.gap.previous
+            var floor = maxOf(window.start, context.now)
             if (previous != null && leg != null) {
-                val earliest = previous.plannedDeparture.toInstant().plusSeconds(leg.totalMinutes * 60L)
-                if (start.toInstant().isBefore(earliest)) return@mapNotNull null
+                floor = maxOf(floor, previous.plannedDeparture.toInstant().plusSeconds(leg.totalMinutes * 60L))
             }
+            // A fixed showtime must start at or after that moment. A drop-in already in progress is joined on arrival.
+            if (!dropIn && (start.toInstant() !in window || start.toInstant().isBefore(floor))) return@mapNotNull null
+            val arrival = if (dropIn) maxOf(start.toInstant(), floor) else start.toInstant()
+            if (arrival !in window) return@mapNotNull null
+            if (search.until != null && !arrival.isBefore(search.until)) return@mapNotNull null
 
-            val departure = suggestDeparture(event, itinerary, zone) ?: return@mapNotNull null
-            val leaves = departure.plannedDeparture.toInstant()
-            if (blocks.any { it.overlaps(start.toInstant(), leaves) }) return@mapNotNull null
-
+            var departure = suggestDeparture(event, itinerary, zone, arrival.atZone(zone)) ?: return@mapNotNull null
+            var leaves = departure.plannedDeparture.toInstant()
+            if (blocks.any { it.overlaps(arrival, leaves) }) {
+                // A drop-in Event stays on the list, but its stay stops when the first Meal Block it crosses starts.
+                if (!dropIn) return@mapNotNull null
+                val stopsAt = blocks.filter { it.overlaps(arrival, leaves) }.minOf { it.start }
+                if (!stopsAt.isAfter(arrival)) return@mapNotNull null
+                departure = departure.copy(plannedDeparture = stopsAt.atZone(zone))
+                leaves = stopsAt
+            }
             val next = search.gap.next
             if (next != null) {
-                val toNext = estimator.transit(target, next.latLng).totalMinutes * 60L
-                if (leaves.plusSeconds(toNext).isAfter(next.start.toInstant())) return@mapNotNull null
+                val mustLeave = next.start.toInstant().minusSeconds(estimator.transit(target, next.latLng).totalMinutes * 60L)
+                if (leaves.isAfter(mustLeave)) {
+                    // A drop-in can be left early for the next Stop. A fixed showtime cannot.
+                    if (!dropIn) return@mapNotNull null
+                    departure = departure.copy(plannedDeparture = mustLeave.atZone(zone))
+                    leaves = mustLeave
+                }
             }
-            ReachableShowtime(event, start, departure, leg)
+            // Every drop-in needs a meaningful stay once all the limits apply.
+            if (dropIn && Duration.between(arrival, leaves).toMinutes() < MIN_DROP_IN_STAY_MINUTES) {
+                return@mapNotNull null
+            }
+            ReachableShowtime(event, start, departure, leg, arrivalAt = arrival.atZone(zone))
         }
-        .sortedBy { it.start.toInstant() }
+        .sortedBy { it.arrivalAt.toInstant() }
         .toList()
 }
 
@@ -136,16 +171,19 @@ fun rankedEventCards(search: EventSearch, estimator: LegEstimator): List<EventCa
         .groupBy { it.event.showtimeKey() }
         .map { (key, showtimes) ->
             val first = showtimes.first().event
-            val price = knownEventPrice(first, ownReport = null, median = search.medianPrices[key])
+            val median = search.medianPrices[key]
+            val price = knownEventPrice(first, ownReport = null, median = median)
             EventCard(
                 key = key,
                 title = first.title,
                 venueName = first.location.venueName,
                 type = first.type,
                 showtimes = showtimes,
+                isDropIn = first.isDropIn(),
                 matchesInterest = interestOf(first.type) in search.context.interests,
                 priceRank = priceRank(price, budget),
                 priceCad = price,
+                priceIsMedian = median != null && first.cost.status != CostStatus.FREE,
                 travelMinutes = showtimes.first().leg?.totalMinutes,
             )
         }

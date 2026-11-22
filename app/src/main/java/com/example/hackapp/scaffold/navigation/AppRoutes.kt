@@ -35,7 +35,12 @@ import kotlinx.serialization.Serializable
 @Serializable data class PlanningBudgetEditRoute(val itineraryId: String)
 @Serializable data class PlanningDistrictPickRoute(val itineraryId: String)
 @Serializable data class PlanningMealChoiceRoute(val itineraryId: String)
-@Serializable data class PlanningStopSelectionRoute(val itineraryId: String)
+/** With [districtId] set, Selection opens on the gap after [afterStopId] (null = before the first Stop). */
+@Serializable data class PlanningStopSelectionRoute(
+    val itineraryId: String,
+    val afterStopId: String? = null,
+    val districtId: String? = null,
+)
 @Serializable data class ItineraryReviewRoute(val itineraryId: String)
 
 // Underway

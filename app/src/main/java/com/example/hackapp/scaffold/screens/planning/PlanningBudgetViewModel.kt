@@ -9,6 +9,7 @@ import com.example.hackapp.auth.AuthService
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.MealBudgets
+import com.example.hackapp.itinerary.PlanningChangePreview
 import com.example.hackapp.itinerary.PlanningStep
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Profile
@@ -67,6 +68,8 @@ data class PlanningBudgetUiState(
     val saveFailed: Boolean = false,
     /** Set once saved. The route navigates, then clears it. */
     val continueToId: String? = null,
+    /** Meal Stops that no longer fit the new budgets. Nothing is saved until [PlanningBudgetViewModel.confirmChange]. */
+    val changeWarning: PlanningChangePreview? = null,
 )
 
 class PlanningBudgetViewModel(
@@ -74,6 +77,7 @@ class PlanningBudgetViewModel(
     private val auth: AuthService,
     private val itineraries: ItineraryRepository,
     private val profiles: ProfileRepository,
+    private val reconciler: PlanningChangeReconciler,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlanningBudgetUiState())
@@ -98,15 +102,31 @@ class PlanningBudgetViewModel(
 
     fun onNavigated() = _state.update { it.copy(continueToId = null) }
 
+    /** The edit waiting for the person to accept the Stop warning. */
+    private var pendingChange: ((Itinerary) -> Itinerary)? = null
+
+    /** Saves the budgets and the Stops that still fit, after the person accepted the warning. */
+    fun confirmChange() {
+        val change = pendingChange ?: return
+        _state.update { it.copy(changeWarning = null) }
+        save(confirmed = true, change)
+    }
+
+    /** Keeps the edited values on screen and saves nothing. */
+    fun cancelChange() {
+        pendingChange = null
+        _state.update { it.copy(changeWarning = null) }
+    }
+
     /** Moves on with the budgets already in effect. */
-    fun keep() = save { it }
+    fun keep() = save(confirmed = false) { it }
 
     fun saveEdits() {
         val selection = _state.value.selection
-        if (selection.isComplete) save { it.withBudgets(selection) }
+        if (selection.isComplete) save(confirmed = false) { it.withBudgets(selection) }
     }
 
-    private fun save(change: (Itinerary) -> Itinerary) {
+    private fun save(confirmed: Boolean, change: (Itinerary) -> Itinerary) {
         if (_state.value.saving) return
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -117,12 +137,19 @@ class PlanningBudgetViewModel(
         viewModelScope.launch {
             try {
                 val latest = checkNotNull(itineraries.getItinerary(uid, itineraryId))
-                itineraries.saveItinerary(
-                    change(latest).copy(
-                        step = maxOf(latest.step, PlanningStep.Districts),
-                        updatedAtMillis = nowMillis(),
-                    ),
+                val updated = change(latest).copy(
+                    step = maxOf(latest.step, PlanningStep.Districts),
+                    updatedAtMillis = nowMillis(),
                 )
+                val preview = if (latest.stops.isNotEmpty()) reconciler.preview(latest, updated) else null
+                if (preview != null && preview.needsConfirmation && !confirmed) {
+                    pendingChange = change
+                    _state.update { it.copy(saving = false, changeWarning = preview) }
+                    return@launch
+                }
+                pendingChange = null
+                val saved = if (latest.stops.isNotEmpty()) reconciler.reconcile(latest, updated) else updated
+                itineraries.saveItinerary(saved)
                 _state.update { it.copy(saving = false, continueToId = itineraryId) }
             } catch (e: CancellationException) {
                 throw e
@@ -157,8 +184,9 @@ class PlanningBudgetViewModel(
             auth: AuthService,
             itineraries: ItineraryRepository,
             profiles: ProfileRepository,
+            reconciler: PlanningChangeReconciler,
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { PlanningBudgetViewModel(itineraryId, auth, itineraries, profiles) }
+            initializer { PlanningBudgetViewModel(itineraryId, auth, itineraries, profiles, reconciler) }
         }
     }
 }

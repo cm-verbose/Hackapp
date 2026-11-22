@@ -14,6 +14,9 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
 
+/** The id of the default Meal Block of this kind, shared by Planning and Meal choice. */
+fun MealKind.defaultBlockId(): String = "meal-${name.lowercase(Locale.ROOT)}"
+
 val MealKind.defaultStart: LocalTime
     get() = when (this) {
         MealKind.Lunch -> LocalTime.of(12, 0)
@@ -33,7 +36,7 @@ fun defaultMealBlocks(itinerary: Itinerary, context: PlanningContext): List<Meal
     MealKind.entries
         .map { kind ->
             MealBlock(
-                id = "meal-${kind.name.lowercase(Locale.ROOT)}",
+                id = kind.defaultBlockId(),
                 kind = kind,
                 start = kind.defaultStart,
                 budget = itinerary.mealBudget(kind, context),
@@ -141,7 +144,7 @@ private fun barsAllowed(search: MealSearch): Boolean {
     return start.toLocalDate().isAfter(search.itinerary.date) || !start.toLocalTime().isBefore(BarsOpenFrom)
 }
 
-private fun isOpenDuring(
+internal fun isOpenDuring(
     place: Place,
     interval: PlanningWindow,
     zone: ZoneId,

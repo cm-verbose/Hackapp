@@ -12,8 +12,10 @@ import com.example.hackapp.data.repository.EventQuery
 import com.example.hackapp.data.repository.EventRepository
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryRepository
+import com.example.hackapp.itinerary.PlanningChangePreview
 import com.example.hackapp.itinerary.PlanningStep
-import com.example.hackapp.itinerary.eventEligibility
+import com.example.hackapp.itinerary.districtCountFilter
+import com.example.hackapp.itinerary.planningWindow
 import com.example.hackapp.profile.ProfileRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 data class DistrictPickUiState(
     val loading: Boolean = true,
@@ -41,6 +44,8 @@ data class DistrictPickUiState(
     val saveFailed: Boolean = false,
     /** Set once Continue has saved. The route navigates, then clears it. */
     val continueToId: String? = null,
+    /** Stops that no longer fit the selected Districts. Nothing is saved until [DistrictPickViewModel.confirmChange]. */
+    val changeWarning: PlanningChangePreview? = null,
 ) {
     /** The maximum-reached sheet is open: a new District waits for a replacement choice. */
     val replacing: Boolean
@@ -65,7 +70,7 @@ class DistrictPickViewModel(
     private val cityPack: CityPack,
     private val loadMap: suspend () -> DistrictMapData,
     private val profiles: ProfileRepository,
-    private val reconciler: PlanningChangeReconciler = KeepSavedStops,
+    private val reconciler: PlanningChangeReconciler,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(DistrictPickUiState())
@@ -118,7 +123,18 @@ class DistrictPickViewModel(
 
     fun onNavigated() = _state.update { it.copy(continueToId = null) }
 
-    fun continueToMeals() {
+    fun continueToMeals() = continueToMeals(confirmed = false)
+
+    /** Saves the selection and the Stops that still fit, after the person accepted the warning. */
+    fun confirmChange() {
+        _state.update { it.copy(changeWarning = null) }
+        continueToMeals(confirmed = true)
+    }
+
+    /** Keeps the selection and stays on the page. Nothing else is saved. */
+    fun cancelChange() = _state.update { it.copy(changeWarning = null) }
+
+    private fun continueToMeals(confirmed: Boolean) {
         val current = _state.value
         if (!current.canContinue) return
         val uid = auth.currentUser?.uid
@@ -129,17 +145,25 @@ class DistrictPickViewModel(
         _state.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
             try {
-                saveLock.withLock {
+                val warned = saveLock.withLock {
                     val latest = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                     val updated = latest.copy(
                         step = maxOf(latest.step, PlanningStep.Meals),
                         districtIds = _state.value.selected,
                         updatedAtMillis = nowMillis(),
                     )
+                    val preview = if (latest.stops.isNotEmpty()) reconciler.preview(latest, updated) else null
+                    if (preview != null && preview.needsConfirmation && !confirmed) {
+                        _state.update { it.copy(changeWarning = preview) }
+                        return@withLock true
+                    }
                     val saved = if (latest.stops.isNotEmpty()) reconciler.reconcile(latest, updated) else updated
                     itineraries.saveItinerary(saved)
+                    false
                 }
-                _state.update { it.copy(saving = false, continueToId = itineraryId) }
+                _state.update {
+                    if (warned) it.copy(saving = false) else it.copy(saving = false, continueToId = itineraryId)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -167,6 +191,9 @@ class DistrictPickViewModel(
             try {
                 saveLock.withLock {
                     val latest = checkNotNull(itineraries.getItinerary(uid, itineraryId))
+                    // A selection that drops a Stop's District is saved only by Continue, after the warning.
+                    val selected = _state.value.selected
+                    if (latest.stops.any { it.districtId !in selected }) return@withLock
                     itineraries.saveItinerary(
                         latest.copy(
                             step = maxOf(latest.step, PlanningStep.Districts),
@@ -190,9 +217,10 @@ class DistrictPickViewModel(
                 val uid = checkNotNull(auth.currentUser?.uid)
                 val draft = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                 val map = loadMap()
-                val eligibility = eventEligibility(profiles, uid, cityPack.timeZone)
+                val zone = cityPack.timeZone
+                val counts = districtCountFilter(profiles, uid, draft.planningWindow(zone), zone, Instant.ofEpochMilli(nowMillis()))
                 val summary = withContext(Dispatchers.Default) {
-                    summarizeDistrictEvents(events.search(windowQuery(draft)), eligibility)
+                    summarizeDistrictEvents(events.search(windowQuery(draft)), counts)
                 }
                 _state.update {
                     it.copy(
@@ -210,8 +238,9 @@ class DistrictPickViewModel(
         }
     }
 
+    /** No lower bound: a drop-in that began before the window can still be running in it. */
     private fun windowQuery(itinerary: Itinerary) = EventQuery(
-        startsAtOrAfter = itinerary.windowStart(cityPack.timeZone).toOffsetDateTime(),
+        startsAtOrAfter = null,
         startsBefore = itinerary.windowEnd(cityPack.timeZone).toOffsetDateTime(),
     )
 
@@ -224,7 +253,7 @@ class DistrictPickViewModel(
             cityPack: CityPack,
             loadMap: suspend () -> DistrictMapData,
             profiles: ProfileRepository,
-            reconciler: PlanningChangeReconciler = KeepSavedStops,
+            reconciler: PlanningChangeReconciler = cityPack.stopFitReconciler(),
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 DistrictPickViewModel(itineraryId, auth, itineraries, events, cityPack, loadMap, profiles, reconciler)

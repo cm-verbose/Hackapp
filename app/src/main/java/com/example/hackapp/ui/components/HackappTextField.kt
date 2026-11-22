@@ -19,9 +19,11 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
@@ -33,7 +35,10 @@ import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.ui.theme.HackappTheme
 
-/** Figma "Text field" (M3 outlined), with the clear icon shown once it has a value. */
+/**
+ * Figma "Text field" (M3 outlined), with the clear icon shown once it has a value.
+ * [supportingText] is the helper under the field; [errorText] replaces it and is a live region.
+ */
 @Composable
 fun HackappTextField(
     value: String,
@@ -44,6 +49,7 @@ fun HackappTextField(
     imeAction: ImeAction = ImeAction.Next,
     isPassword: Boolean = false,
     errorText: String? = null,
+    supportingText: String? = null,
     enabled: Boolean = true,
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
 ) {
@@ -55,7 +61,15 @@ fun HackappTextField(
         singleLine = true,
         enabled = enabled,
         isError = errorText != null,
-        supportingText = errorText?.let { { Text(it) } },
+        supportingText = when {
+            errorText != null -> {
+                { Text(errorText, Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
+            }
+            supportingText != null -> {
+                { Text(supportingText) }
+            }
+            else -> null
+        },
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(
             keyboardType = if (isPassword) KeyboardType.Password else keyboardType,
@@ -76,8 +90,9 @@ fun HackappTextField(
 
 /**
  * A read-only field that opens a picker when tapped (date, time, budget, District).
- * TalkBack sees one button named [label] whose state is [value]; the field itself is silent.
- * [choiceList] adds the drop-down arrow for pickers that open a list of options.
+ * TalkBack sees one button named [contentDescription] (the [label] by default) whose state is
+ * [value]; the field itself is silent. [choiceList] adds the drop-down arrow for pickers that
+ * open a list of options.
  */
 @Composable
 fun HackappPickerField(
@@ -87,6 +102,7 @@ fun HackappPickerField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     choiceList: Boolean = false,
+    contentDescription: String = label,
 ) {
     Box(modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -109,7 +125,7 @@ fun HackappPickerField(
             Modifier
                 .matchParentSize()
                 .semantics {
-                    contentDescription = label
+                    this.contentDescription = contentDescription
                     if (value.isNotBlank()) stateDescription = value
                 }
                 .clickable(enabled = enabled, role = Role.Button, onClick = onClick),

@@ -62,32 +62,57 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
     }
     planningPage<PlanningMealChoiceRoute>(controller) { entry ->
         val route = entry.toRoute<PlanningMealChoiceRoute>()
-        RoutePlaceholder(
-            title = stringResource(R.string.meal_title),
+        PlanningMealChoiceScreen(
+            itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            step = 4,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(PlanningStopSelectionRoute(route.itineraryId)) },
+            onContinue = { id -> controller.navigate(PlanningStopSelectionRoute(id)) },
+            onChangeDateTime = { id -> controller.returnToDateTime(id) },
         )
     }
     planningPage<PlanningStopSelectionRoute>(controller) { entry ->
         val route = entry.toRoute<PlanningStopSelectionRoute>()
-        RoutePlaceholder(
-            title = stringResource(R.string.planning_stops_title),
-            onBack = { controller.popBackStack() },
-            step = 5,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(ItineraryReviewRoute(route.itineraryId)) },
+        PlanningStopSelectionScreen(
+            itineraryId = route.itineraryId,
+            returnGap = route.districtId?.let { SelectionGap(route.afterStopId, it) },
+            onLeave = { id -> controller.returnToMealChoice(id) },
+            onReview = { id -> controller.navigate(ItineraryReviewRoute(id)) },
+            onHome = { controller.backToHome() },
         )
     }
-    planningPage<ItineraryReviewRoute>(controller) {
-        RoutePlaceholder(
-            title = stringResource(R.string.review_title),
+    planningPage<ItineraryReviewRoute>(controller) { entry ->
+        val route = entry.toRoute<ItineraryReviewRoute>()
+        ItineraryReviewScreen(
+            itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            step = 6,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(UnderwayLegRoute) },
+            // A started Itinerary has left Planning, so its steps leave the back stack.
+            onStarted = {
+                controller.navigate(UnderwayLegRoute) {
+                    popUpTo(ScreenHomeDestination)
+                    launchSingleTop = true
+                }
+            },
+            onBackToSelection = { target -> controller.returnToSelection(target) },
+            onChangeDateTime = { id -> controller.returnToDateTimeFromReview(id) },
         )
+    }
+}
+
+/**
+ * Opens Selection on the gap a removed Stop left. The earlier Selection entry is replaced, because
+ * its route holds no gap. Without one, Selection takes Review's place in a resumed draft.
+ */
+private fun NavHostController.returnToSelection(target: ReviewNavigation.BackToSelection) {
+    if (!popBackStack<PlanningStopSelectionRoute>(inclusive = true)) {
+        popBackStack<ItineraryReviewRoute>(inclusive = true)
+    }
+    navigate(PlanningStopSelectionRoute(target.itineraryId, target.afterStopId, target.districtId))
+}
+
+private fun NavHostController.returnToDateTimeFromReview(itineraryId: String) {
+    if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) {
+        navigate(PlanningDateTimeRoute(itineraryId)) {
+            popUpTo<ItineraryReviewRoute> { inclusive = true }
+        }
     }
 }
 
@@ -98,6 +123,31 @@ private inline fun <reified T : Any> NavGraphBuilder.planningPage(
     flowComposable<T> { entry ->
         BackHandler { controller.backToHome() }
         content(entry)
+    }
+}
+
+/**
+ * Returns to the Date and time step already on the back stack, so the later steps are left again
+ * from there. A draft resumed straight at a later step has no such entry, so Date and time opens
+ * in place of the Meal page rather than on top of it.
+ */
+private fun NavHostController.returnToDateTime(itineraryId: String) {
+    if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) {
+        navigate(PlanningDateTimeRoute(itineraryId)) {
+            popUpTo<PlanningMealChoiceRoute> { inclusive = true }
+        }
+    }
+}
+
+/**
+ * Returns to the Meal choice step on the back stack. A draft resumed straight at selection has no
+ * such entry, so Meal choice opens in place of the selection page.
+ */
+private fun NavHostController.returnToMealChoice(itineraryId: String) {
+    if (!popBackStack<PlanningMealChoiceRoute>(inclusive = false)) {
+        navigate(PlanningMealChoiceRoute(itineraryId)) {
+            popUpTo<PlanningStopSelectionRoute> { inclusive = true }
+        }
     }
 }
 
