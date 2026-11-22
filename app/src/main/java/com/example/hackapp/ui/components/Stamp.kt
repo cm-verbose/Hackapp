@@ -10,10 +10,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -25,15 +30,18 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.ui.theme.HackappPalette
 import com.example.hackapp.ui.theme.HackappTheme
+import kotlin.math.hypot
 
 /**
  * Figma "Stamp" (30:737): a Passport stamp. One per Event or restaurant/bar ever visited
@@ -81,11 +89,15 @@ fun StampDisc(
     shape: Shape = CircleShape,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
     initialsScale: () -> Float = { 1f },
+    roundOutline: Boolean = true,
 ) {
+    var boxSize by remember { mutableStateOf(IntSize.Zero) }
+    var textSize by remember { mutableStateOf(IntSize.Zero) }
     Box(
         modifier
             .background(discColor, shape)
-            .dashedBorder(2.dp, inkColor, shape),
+            .dashedBorder(2.dp, inkColor, shape)
+            .onSizeChanged { boxSize = it },
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -93,15 +105,52 @@ fun StampDisc(
             style = textStyle,
             color = inkColor,
             maxLines = 1,
+            softWrap = false,
             modifier = Modifier
                 .clearAndSetSemantics {}
+                .wrapContentSize(unbounded = true)
+                .onSizeChanged { textSize = it }
                 .graphicsLayer {
-                    val scale = initialsScale()
+                    val scale = fittedInitialsScale(
+                        wanted = initialsScale(),
+                        textWidth = textSize.width.toFloat(),
+                        textHeight = textSize.height.toFloat(),
+                        boxWidth = boxSize.width.toFloat(),
+                        boxHeight = boxSize.height.toFloat(),
+                        round = roundOutline,
+                    )
                     scaleX = scale
                     scaleY = scale
                 },
         )
     }
+}
+
+/** Share of a round outline's diameter that is safe for text, clear of the scallops and border. */
+private const val ROUND_SAFE_FRACTION = 0.76f
+
+/** Share of a rounded rectangle's width and height that is safe for text. */
+private const val RECT_SAFE_FRACTION = 0.82f
+
+/**
+ * The text scale closest to [wanted] that keeps the initials inside the shape. Both are drawn in
+ * the same layer, so the limit holds at any Stamp size and system text size.
+ */
+internal fun fittedInitialsScale(
+    wanted: Float,
+    textWidth: Float,
+    textHeight: Float,
+    boxWidth: Float,
+    boxHeight: Float,
+    round: Boolean,
+): Float {
+    if (textWidth <= 0f || textHeight <= 0f || boxWidth <= 0f || boxHeight <= 0f) return wanted
+    val limit = if (round) {
+        minOf(boxWidth, boxHeight) * ROUND_SAFE_FRACTION / hypot(textWidth, textHeight)
+    } else {
+        minOf(boxWidth * RECT_SAFE_FRACTION / textWidth, boxHeight * RECT_SAFE_FRACTION / textHeight)
+    }
+    return minOf(wanted, limit)
 }
 
 /**

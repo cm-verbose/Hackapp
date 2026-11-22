@@ -92,6 +92,10 @@ enum class StampShape(val widthDp: Int, val heightDp: Int) {
     RoundedLarge(150, 80),
     RoundedMedium(160, 80),
     Circle(110, 110),
+    ;
+
+    /** False for the rounded rectangles, whose text room is a box rather than a circle. */
+    val isRound: Boolean get() = this != RoundedLarge && this != RoundedMedium
 }
 
 /**

@@ -213,6 +213,7 @@ private fun StampField(
                                 inkColor = colors.onStopType,
                                 shape = outline,
                                 initialsScale = { readableInitialsScale(itemScale()) },
+                                roundOutline = stamp.shape.isRound,
                                 modifier = Modifier.fillMaxSize().clearAndSetSemantics {
                                     contentDescription = stamp.description
                                     role = Role.Button
@@ -287,6 +288,7 @@ private fun StampBadge(
         inkColor = colors.onStopType,
         shape = stamp.shape.outline(scale),
         textStyle = textStyle,
+        roundOutline = stamp.shape.isRound,
         modifier = modifier.size(stamp.shape.widthDp.dp * scale, stamp.shape.heightDp.dp * scale),
     )
 }
