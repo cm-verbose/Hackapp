@@ -122,7 +122,7 @@ MealPickerContent(state, nextDistrictName: String?, budgetLabel: String?, onSele
 - The sheet looks up `nextDistrictName` from the City Pack (`rememberDistrictMap()`) by `state.nextDistrictId`; while it is unknown the tab says `meal_tab_next`.
 - Each row shows the venue type (`venueTypeLabel`, strings `venue_type_*`) under the name.
 - `budgetLabel` is the Meal budget bracket label Selection already shows (for example `budget_under_50`); null drops the budget part of the subtitle.
-- Tabs render only when `state.tabs.size > 1`. **Skip this Meal** is a text button, or the primary button when `hasNoOptions`.
+- Tabs render only when `state.tabs.size > 1` and not in the `hasNoOptions` state; the District label may wrap to 3 lines (`HackappSegmentedButton(maxLines = 3)`). **Skip this Meal** is a text button, or the primary button when `hasNoOptions`.
 - `onChoose` receives the row's `placeId`; Selection calls `holder.choose(placeId)` and applies the outcome.
 
 ### `PlannedDepartureSheet.kt`
@@ -135,18 +135,20 @@ PlannedDepartureContent(state, venueName, onTimeChange, onConfirm, onCancel, mod
 
 - Uses `HackappTimeWheels`; every wheel move calls `onTimeChange` (wire it to `holder.setTime`). The wheels show `rejectedTime` while there is an error, else `departure`.
 - `venueName` fills the subtitle's middle part; the Event type label stands in when null. The state has no venue field.
-- The note uses `state.typicalStayMinutes`; the duration row adds `planned_departure_next_day` when `crossesMidnight`.
+- The duration row reads `planned_departure_typical` while `isTypicalStay`, else `planned_departure_duration`, and adds `planned_departure_next_day` when `crossesMidnight`. It is hidden while `error != null`; both errors show `planned_departure_error_range(earliestDeparture, latestDeparture)` as sentence times.
 - **Confirm** is disabled while `!canConfirm`. **Cancel** dismisses.
 
 ### `EventDetailsSheet.kt`
 
 ```kotlin
 EventDetailsSheet(state: EventDetailsUiState, onSelectShowtime: (eventId: String) -> Unit, onTicketPriceChange: (String) -> Unit,
-    onRetryLoad: () -> Unit, onSignIn: () -> Unit, onAddToItinerary: () -> Unit, onDismiss: () -> Unit)
-EventDetailsContent(state, onSelectShowtime, onTicketPriceChange, onRetryLoad, onSignIn, onAddToItinerary, onClose, modifier)
+    onRetryLoad: () -> Unit, onSignIn: () -> Unit, onAddToItinerary: () -> Unit, onAddWithoutPrice: () -> Unit, onDismiss: () -> Unit)
+EventDetailsContent(state, onSelectShowtime, onTicketPriceChange, onRetryLoad, onSignIn, onAddToItinerary, onAddWithoutPrice, onClose, modifier)
 ```
 
-- The ticket link opens `ticketUrl` with `LocalUriHandler` (an `IllegalArgumentException` from a device with no browser is swallowed). The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper, and is disabled while `ticketPrice.isBusy`.
-- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while `ticketPrice.isBusy`.
-- `onRetryLoad` wires to `holder.load()`; the `LoadFailed` text and Retry show for signed-out people too. `onSignIn` is shown only when `ticketPrice.signedIn` is false.
-- Audience label: `audience.description` when non-blank; otherwise `minAge >= 18` is adults, a `maxAge` is family, else all audiences.
+- The ticket link (48 dp tall) opens `ticketUrl` with `LocalUriHandler` (an `IllegalArgumentException` from a device with no browser is swallowed). The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper, and is disabled while `ticketPrice.isBusy`.
+- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while `ticketPrice.isBusy`. When `canAddWithoutPrice` (a failed save), a text button **Add without price** calls `onAddWithoutPrice`, wired to `holder.addWithoutPrice()`.
+- The whole ticket price section is hidden when `ticketPrice.applicable` is false (free Events). The shared-price notice shows only when signed in.
+- `onRetryLoad` wires to `holder.load()`; the `LoadFailed` text and Retry show for signed-out people too. `onSignIn` is shown only when `ticketPrice.signedIn` is false. `EventPrice.Loading` shows `state_loading` in the price row.
+- Time row: a single showtime shows only the time (`start – end` when published); repeated showtimes show `event_showtimes(date, n)`, the selected `start – end` when published, and radio-role chips described by `event_showtime_label`.
+- Audience label: `audience.description` mapped through the table in `sheets-strings.md` ("Audience labels"), unknown text shown as is; without a text, `minAge >= 18` is adults, a `maxAge` is family, else all audiences.
