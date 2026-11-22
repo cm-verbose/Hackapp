@@ -520,6 +520,7 @@ private fun StopWarningDialog(
     title: String,
     busy: Boolean,
     onDismiss: () -> Unit,
+    stackActions: Boolean = false,
     actions: @Composable () -> Unit,
     body: @Composable ColumnScope.() -> Unit,
 ) {
@@ -543,10 +544,14 @@ private fun StopWarningDialog(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     content = body,
                 )
-                FlowRow(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                ) { actions() }
+                if (stackActions) {
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) { actions() }
+                } else {
+                    FlowRow(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    ) { actions() }
+                }
             }
         }
     }
@@ -575,12 +580,12 @@ private fun StopRemovalReason.textRes(): Int = when (this) {
 }
 
 /**
- * A labelled list of Stops, as time and name. [emphasized] marks those that would be lost, and
- * [reasons] by Stop id says why.
+ * A list of Stops, as time and name, under an optional [label]. [emphasized] marks those that
+ * would be lost, and [reasons] by Stop id says why.
  */
 @Composable
 private fun WarningStopList(
-    label: String,
+    label: String?,
     stops: List<Stop>,
     emphasized: Boolean,
     reasons: Map<String, StopRemovalReason> = emptyMap(),
@@ -588,12 +593,14 @@ private fun WarningStopList(
     if (stops.isEmpty()) return
     val scheme = MaterialTheme.colorScheme
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (emphasized) scheme.error else scheme.onSurfaceVariant,
-            modifier = Modifier.semantics { heading() },
-        )
+        label?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (emphasized) scheme.error else scheme.onSurfaceVariant,
+                modifier = Modifier.semantics { heading() },
+            )
+        }
         stops.forEach { stop ->
             Row(
                 Modifier
@@ -618,6 +625,11 @@ private fun WarningStopList(
         }
     }
 }
+
+/** A single affected Stop needs no list label. */
+@Composable
+private fun affectedLabel(stops: List<Stop>): String? =
+    if (stops.size > 1) stringResource(R.string.review_unreachable_affected) else null
 
 /** Figma "StartItineraryWarningDialog" (141:2958). */
 @Composable
@@ -683,6 +695,7 @@ internal fun UnreachableStopsDialog(
         title = stringResource(R.string.review_unreachable_title),
         busy = busy,
         onDismiss = onCancel,
+        stackActions = true,
         actions = {
             HackappTextActionButton(stringResource(R.string.action_cancel), onCancel, enabled = !busy)
             HackappTextActionButton(
@@ -699,9 +712,9 @@ internal fun UnreachableStopsDialog(
         },
     ) {
         WarningBody(stringResource(R.string.review_unreachable_body, removedName))
-        WarningStopList(stringResource(R.string.review_unreachable_affected), affected, emphasized = true)
-        WarningStopList(stringResource(R.string.stop_edit_kept), kept, emphasized = false)
+        WarningStopList(affectedLabel(affected), affected, emphasized = true)
         if (!canReschedule) WarningBody(stringResource(R.string.review_reschedule_unavailable))
+        WarningStopList(stringResource(R.string.stop_edit_kept), kept, emphasized = false)
         if (saveFailed) DialogSaveError()
     }
 }
@@ -743,7 +756,7 @@ private fun ReschedulePickerDialog(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        WarningStopList(stringResource(R.string.review_unreachable_affected), listed, emphasized = true)
+        WarningStopList(affectedLabel(listed), listed, emphasized = true)
         if (saveFailed) DialogSaveError()
         if (busy) {
             LinearProgressIndicator(
