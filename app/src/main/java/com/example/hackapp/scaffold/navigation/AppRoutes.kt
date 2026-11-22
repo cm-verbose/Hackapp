@@ -17,9 +17,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object OnboardingBudgetAudienceRoute
 @Serializable data object OnboardingInterestsRoute
 
-// Top-level tabs and Settings
-@Serializable data object ItinerariesRoute
-@Serializable data object PassportRoute
+// Settings (the top-level tabs use ScreenItineraryDestination and ScreenPassportDestination)
 @Serializable data object SettingsRoute
 
 // Planning

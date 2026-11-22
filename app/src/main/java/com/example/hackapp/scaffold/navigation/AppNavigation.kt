@@ -13,16 +13,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hackapp.R
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
-import com.example.hackapp.scaffold.screens.TabPlaceholder
 import com.example.hackapp.scaffold.screens.home.ScreenHome
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
+import com.example.hackapp.scaffold.screens.itinerary.ScreenItinerary
+import com.example.hackapp.scaffold.screens.itinerary.ScreenItineraryDestination
 import com.example.hackapp.scaffold.screens.login.ScreenLogin
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
+import com.example.hackapp.scaffold.screens.passport.ScreenPassport
+import com.example.hackapp.scaffold.screens.passport.ScreenPassportDestination
 import com.example.hackapp.scaffold.screens.places.PlacesDestination
 import com.example.hackapp.scaffold.screens.places.PlacesScreen
 import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
 import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
-import com.example.hackapp.ui.components.AppTab
 
 private const val ONBOARDING_STEPS = 4
 private const val PLANNING_STEPS = 5
@@ -36,8 +38,6 @@ private const val PLANNING_STEPS = 5
  */
 @Composable
 fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
-    val selectTab: (AppTab) -> Unit = { tab -> controller.navigateToTab(tab) }
-
     NavHost(navController = controller, startDestination = ScreenLoginDestination) {
         composable<ScreenLoginDestination> {
             Box(Modifier.padding(padding)) {
@@ -55,15 +55,16 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
 
         composable<ScreenHomeDestination> {
             ScreenHome(
+                controller = controller,
+                outerPaddingValues = padding,
                 onPlanItinerary = { controller.navigate(PlanningDateTimeRoute) },
-                onSelectTab = selectTab,
             )
         }
-        composable<ItinerariesRoute> {
-            TabPlaceholder(stringResource(R.string.nav_itineraries), AppTab.Itineraries, selectTab)
+        composable<ScreenItineraryDestination> {
+            ScreenItinerary(controller, padding)
         }
-        composable<PassportRoute> {
-            TabPlaceholder(stringResource(R.string.passport_title), AppTab.Passport, selectTab)
+        composable<ScreenPassportDestination> {
+            ScreenPassport(controller, padding)
         }
 
         placeholder<RegisterRoute>(controller, R.string.auth_create_account)
@@ -109,19 +110,5 @@ private inline fun <reified T : Any> NavGraphBuilder.placeholder(
             totalSteps = totalSteps,
             onNext = next?.let { route -> { controller.navigate(route) } },
         )
-    }
-}
-
-/** Switches tab without stacking tabs on the back stack. */
-private fun NavHostController.navigateToTab(tab: AppTab) {
-    val route: Any = when (tab) {
-        AppTab.Home -> ScreenHomeDestination
-        AppTab.Itineraries -> ItinerariesRoute
-        AppTab.Passport -> PassportRoute
-    }
-    navigate(route) {
-        popUpTo(ScreenHomeDestination) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
     }
 }
