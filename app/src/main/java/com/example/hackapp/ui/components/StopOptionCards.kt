@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -139,7 +140,7 @@ fun EventOptionCard(
         OutlinedCard(
             onClick = onClick,
             shape = shape,
-            colors = CardDefaults.outlinedCardColors(containerColor = HackappTheme.appColors.card),
+            colors = CardDefaults.outlinedCardColors(containerColor = scheme.surfaceContainerLowest),
             border = BorderStroke(1.dp, scheme.outlineVariant),
             modifier = modifier.fillMaxWidth(),
             content = body,
@@ -183,6 +184,13 @@ fun MealOptionCard(
 }
 
 @Preview(name = "Stop options", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)
+@Preview(
+    name = "Stop options · dark",
+    showBackground = true,
+    backgroundColor = PreviewDefaults.DARK_CANVAS,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    widthDp = PreviewDefaults.WIDTH_DP,
+)
 @Composable
 private fun StopOptionCardsPreview() = HackappTheme {
     Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

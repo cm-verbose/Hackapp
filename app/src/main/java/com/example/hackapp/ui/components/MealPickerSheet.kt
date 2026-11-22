@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -303,6 +304,17 @@ private fun MealPickerPreview(
 @Preview(name = "MealPicker · two tabs", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
 @Composable
 private fun MealPickerTwoTabsPreview() = MealPickerPreview(previewState())
+
+@Preview(
+    name = "MealPicker · dark",
+    showBackground = true,
+    backgroundColor = PreviewDefaults.DARK_SHEET,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    widthDp = PreviewDefaults.WIDTH_DP,
+    heightDp = 640,
+)
+@Composable
+private fun MealPickerDarkPreview() = MealPickerPreview(previewState())
 
 @Preview(name = "MealPicker · one tab, no budget", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
 @Composable
