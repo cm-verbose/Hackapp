@@ -50,7 +50,7 @@ Create: `PlannedDepartureHolder.create(event, itinerary, zone, latestDeparture):
 | `hasPublishedEnd` | Always false when the sheet is needed |
 | `isTypicalStay` | `stayMinutes` equals `typicalStayMinutes` and no end was published. False when clamped to the limit or edited |
 | `crossesMidnight` | `departure` is on a later day than `start`: show an after-midnight hint |
-| `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists at all). The invalid pick leaves `departure` unchanged |
+| `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists: `hasValidTime` is false, `latestDeparture` is not after `earliestDeparture`; never show the range, show a no-time-left message, disable Confirm). The invalid pick leaves `departure` unchanged |
 | `canConfirm` | `error == null` |
 
 Callbacks
@@ -86,7 +86,7 @@ Create: `EventDetailsHolder(showtimes: List<ReachableShowtime>, initialEventId, 
 - `Unknown`: unknown-price state (no reports and no published price).
 
 `TicketPriceFieldState`
-- `applicable`: false for Free Events. Hide the whole section: nothing can be entered or saved, and no report goes with the Stop.
+- `applicable`: false for Free Events (`inputError` is then always null). Hide the whole section: nothing can be entered or saved, and no report goes with the Stop.
 - `signedIn`: false means hide the field or show a sign-in prompt. Nobody else is ever shown a name.
 - `input`, `inputError` (`NotANumber`, `OutOfRange`), `minCad` 0, `maxCad` 500. Blank is valid and means no report. `$` before or after the amount and a comma decimal are accepted (`25 $`, `12,50 $`), at most 2 decimals, ASCII digits only. A leading minus is `OutOfRange`.
 - `ownReportCad`: this person's own saved report, loaded by `load()`; the field is prefilled with it.

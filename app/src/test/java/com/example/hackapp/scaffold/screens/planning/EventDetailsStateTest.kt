@@ -340,4 +340,20 @@ class EventDetailsStateTest {
         published.addToItinerary()
         assertEquals(9.0, (published.addWithoutPrice() as AddToItineraryAction.Add).stop.ticketPriceCad)
     }
+
+    @Test
+    fun `a stale input error is ignored once the section does not apply`() = runBlocking {
+        val free = e("f", 21, cost = Cost(CostStatus.FREE))
+        val h = holder(listOf(e("a", 19), free))
+        h.load()
+        h.setTicketPriceInput("abc")
+        assertEquals(TicketPriceInputError.NotANumber, h.state.value.ticketPrice.inputError)
+        h.selectShowtime("f")
+        assertFalse(h.state.value.ticketPrice.applicable)
+        assertNull(h.state.value.ticketPrice.inputError)
+        assertTrue(h.state.value.canAdd)
+        assertTrue(h.addToItinerary() is AddToItineraryAction.ChooseDeparture)
+        h.selectShowtime("a")
+        assertEquals(TicketPriceInputError.NotANumber, h.state.value.ticketPrice.inputError)
+    }
 }

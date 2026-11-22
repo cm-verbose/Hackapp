@@ -308,7 +308,9 @@ class EventDetailsHolder(
 
     private fun isApplicable() = selected.event.cost.status != CostStatus.FREE
 
-    private fun fieldNow() = field.copy(applicable = isApplicable())
+    /** A stale input error is ignored while the section does not apply. */
+    private fun fieldNow() =
+        if (isApplicable()) field else field.copy(applicable = false, inputError = null)
 
     private fun canAdd() =
         !field.isBusy && eventStop(selected.event, selected.suggestedDeparture.plannedDeparture) != null
