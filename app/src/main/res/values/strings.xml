@@ -182,6 +182,9 @@
     <string name="meal_change_time">Modifier l’horaire</string>
     <string name="meal_error_outside_window">Ce repas ne tient pas dans la plage.</string>
     <string name="meal_error_overlaps">Ce repas chevauche un autre repas.</string>
+    <string name="meal_error_summary">Corrigez l’heure d’un repas.</string>
+    <string name="meal_none_selected">Choisissez un repas ou « Je m’en occupe ».</string>
+    <string name="meal_start_description">%1$s, début</string>
     <string name="selection_district_progress">Arrondissement %1$d sur %2$d</string>
     <string name="selection_time_block" translatable="false">%1$s – %2$s</string>
     <string name="selection_finish_here">Terminer ici</string>
