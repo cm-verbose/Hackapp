@@ -114,6 +114,19 @@ class UnderwayCoordinator(
     }
 
     /**
+     * The time an Underway page draws: real for a real Itinerary, simulated for a demo run.
+     * Read-only, and never throws: a failed read falls back to the shared clock.
+     */
+    suspend fun displayNow(uid: String): Instant = try {
+        val state = underwayItineraries(uid).firstOrNull()?.let { states.get(uid, it.id) }
+        state?.let(::nowFor) ?: clock.now()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        clock.now()
+    }
+
+    /**
      * The view of the Itinerary that is Underway, or null when none is. Emits when the Itinerary
      * or its state changes. It does not tick: re-collect or call [view] as time passes.
      */

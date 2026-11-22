@@ -27,9 +27,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 private const val MINUTE_MILLIS = 60_000L
+
+/**
+ * How long until the next minute. A clock that did not move since [previousMillis] is paused, so
+ * this waits a full minute instead of waking again at once.
+ */
+internal fun minuteTickDelay(nowMillis: Long, previousMillis: Long?): Long =
+    if (nowMillis == previousMillis) MINUTE_MILLIS else MINUTE_MILLIS - nowMillis.mod(MINUTE_MILLIS)
 
 /** What every Underway page draws. [now] comes from the injected clock and moves each minute. */
 data class UnderwayScreenData(val view: UnderwayView, val now: Instant)
@@ -74,10 +83,16 @@ class UnderwayViewModel(
                 .catch { _view.value = LoadState.Failed }
                 .collect { apply(it) }
         }
+        // Restarts on every jump and on resume, so it stays aligned with the minute it draws.
         viewModelScope.launch {
-            while (true) {
-                delay(MINUTE_MILLIS - clock.now().toEpochMilli().mod(MINUTE_MILLIS))
-                refresh()
+            clock.jumps.onStart { emit(Unit) }.collectLatest {
+                var previous: Long? = null
+                while (true) {
+                    val now = coordinator.displayNow(uid).toEpochMilli()
+                    delay(minuteTickDelay(now, previous))
+                    previous = now
+                    refresh()
+                }
             }
         }
         // A demo jump changes the time without changing the state: redraw at once.
@@ -137,11 +152,11 @@ class UnderwayViewModel(
         }
     }
 
-    private fun apply(view: UnderwayView?, ended: Boolean = false) {
+    private suspend fun apply(view: UnderwayView?, ended: Boolean = false) {
         if (view != null) {
             lastItineraryId = view.itineraryId
             _nothingUnderway.value = false
-            _view.value = LoadState.Ready(UnderwayScreenData(view, clock.now()))
+            _view.value = LoadState.Ready(UnderwayScreenData(view, coordinator.displayNow(uid)))
             if ((ended || view.phase == UnderwayPhase.Ended) && _endOfDay.value !is LoadState.Ready) retry()
         } else if (lastItineraryId != null) {
             // It was Underway and is not any more: the day ended.
