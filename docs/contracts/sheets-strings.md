@@ -76,3 +76,22 @@ Same as above, plus:
 
 - Rows that show "Prix inconnu" use `meal_picker_price_unknown` and `event_price_unknown`: two contexts, two keys. `price_unknown` (lowercase) is unrelated.
 - No emoji or checkmark in chips: the selected showtime uses colour only.
+
+## States from `sheets.md`
+
+| State | Key | Arguments / note |
+|---|---|---|
+| Meal picker, `isEmpty` on the Here tab | `meal_picker_empty_here` | |
+| Meal picker, `isEmpty` on the next District tab | `meal_picker_empty_next` | `%1$s` District name |
+| Meal picker, `hasNoOptions` | `meal_picker_no_options` | Names the next action. Make **Skip this Meal** (`action_skip_meal`) the main button |
+| Planned Departure, `OutsideWindow` | `planned_departure_error_outside_window` | `%1$s` window end time, e.g. `23 h 30` |
+| Planned Departure, `NotAfterStart` | `planned_departure_error_not_after_start` | |
+| Event price, `Published(min, max)` | `event_price_published` | Caption under the price, in place of `event_price_median`. Price formatted in code |
+| Ticket price, `NotANumber` | `event_ticket_price_error_format` | |
+| Ticket price, `OutOfRange` | `event_ticket_price_error_range` | `%1$s`, `%2$s` min and max, formatted in code |
+| Ticket price, `Saved` | `event_ticket_price_saved` | |
+| Ticket price, `signedIn = false` | `event_ticket_price_signed_out` | Pair with the existing `auth_sign_in` button |
+| Ticket price, `LoadFailed` | `event_load_failed` | Pair with the existing `action_retry`. The Event can still be added |
+| Ticket price, `SaveFailed` | `event_save_failed` | Input is kept. Next action is in the text |
+
+Not given a key: `Loading` and `Saving` (use a progress indicator), the after-midnight hint (`crossesMidnight`), and a separate save button (the maquette has none, Add saves the price). Add keys if the Feature Engineer wants them. The "+ prix inconnu" total belongs to team Selection.
