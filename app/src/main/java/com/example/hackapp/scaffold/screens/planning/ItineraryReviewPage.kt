@@ -717,13 +717,16 @@ private fun ReschedulePickerDialog(
     onCancel: () -> Unit,
 ) {
     val loading = stringResource(R.string.state_loading)
+    val canReorganize = step.options.isEmpty() || saveFailed
+    // Réorganiser removes every affected Stop, so all of them are listed whenever it is offered.
+    val listed = if (canReorganize) step.affected.ifEmpty { listOf(step.stop) } else listOf(step.stop)
     StopWarningDialog(
         title = stringResource(R.string.review_reschedule_title),
         busy = busy,
         onDismiss = onCancel,
         actions = {
             HackappTextActionButton(stringResource(R.string.action_cancel), onCancel, enabled = !busy)
-            if (step.options.isEmpty() || saveFailed) {
+            if (canReorganize) {
                 HackappTextActionButton(
                     stringResource(R.string.action_reorganize),
                     onReorganize,
@@ -740,7 +743,7 @@ private fun ReschedulePickerDialog(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        WarningStopList(stringResource(R.string.review_unreachable_affected), listOf(step.stop), emphasized = true)
+        WarningStopList(stringResource(R.string.review_unreachable_affected), listed, emphasized = true)
         if (saveFailed) DialogSaveError()
         if (busy) {
             LinearProgressIndicator(
@@ -998,11 +1001,30 @@ private fun ReschedulePreview() = HackappTheme {
     )
 }
 
+@Preview(name = "Reschedule picker · save failed", showBackground = true, widthDp = 328)
+@Composable
+private fun RescheduleFailedPreview() = HackappTheme {
+    ReschedulePickerDialog(
+        step = RescheduleStep(
+            stop = PreviewStops[3],
+            options = listOf(RescheduleOption("e", previewTime(23, 45), previewTime(23, 55), hasPublishedEnd = true)),
+            index = 1,
+            total = 2,
+            affected = PreviewStops.drop(2),
+        ),
+        busy = false,
+        saveFailed = true,
+        onPick = {},
+        onReorganize = {},
+        onCancel = {},
+    )
+}
+
 @Preview(name = "Reschedule picker · empty", showBackground = true, widthDp = 328)
 @Composable
 private fun RescheduleEmptyPreview() = HackappTheme {
     ReschedulePickerDialog(
-        step = RescheduleStep(PreviewStops[2], emptyList(), index = 1, total = 2),
+        step = RescheduleStep(PreviewStops[3], emptyList(), index = 1, total = 2, affected = PreviewStops.drop(2)),
         busy = false,
         onPick = {},
         onReorganize = {},
