@@ -84,8 +84,7 @@ Same as above, plus:
 | Meal picker, `isEmpty` on the Here tab | `meal_picker_empty_here` | |
 | Meal picker, `isEmpty` on the next District tab | `meal_picker_empty_next` | `%1$s` District name |
 | Meal picker, `hasNoOptions` | `meal_picker_no_options` | Names the next action. Make **Skip this Meal** (`action_skip_meal`) the main button |
-| Planned Departure, `OutsideWindow` | `planned_departure_error_outside_window` | `%1$s` window end time, e.g. `23 h 30` |
-| Planned Departure, `NotAfterStart` | `planned_departure_error_not_after_start` | |
+| Planned Departure, `OutsideWindow` or `NotAfterStart` | `planned_departure_error_range` | One message for both. `%1$s`, `%2$s` earliest and latest time, formatted in code |
 | Event price, `Published(min, max)` | `event_price_published` | Caption under the price, in place of `event_price_median`. Price formatted in code |
 | Ticket price, `NotANumber` | `event_ticket_price_error_format` | |
 | Ticket price, `OutOfRange` | `event_ticket_price_error_range` | `%1$s`, `%2$s` min and max, formatted in code |
@@ -128,7 +127,7 @@ Not given a key: `Loading` and `Saving` (use a progress indicator), the after-mi
 | Signed-out field | `event_ticket_price_signed_out` | "Pour déclarer un prix", pair with `auth_sign_in` |
 | Meal picker, no options | `meal_picker_no_options` | "Aucun repas disponible." The Skip button is the next action |
 | Add when the ticket price is blank | `event_add_without_price` | |
-| Departure outside the allowed range | `planned_departure_error_range` | `%1$s`, `%2$s` earliest and latest time, formatted in code. Replaces nothing: `planned_departure_error_outside_window` stays for the window end alone |
+| Departure outside the allowed range | `planned_departure_error_range` | `%1$s`, `%2$s` earliest and latest time, formatted in code. |
 | Showtime chip accessibility | `event_showtime_label` | `%1$s` time, e.g. `20:00` |
 | Ticket price saving | `event_price_saving` | |
 
