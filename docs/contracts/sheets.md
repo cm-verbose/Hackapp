@@ -99,3 +99,45 @@ Callbacks
   - `ChooseDeparture(event, ticketPriceCad)`: no published end. Open the Planned Departure sheet, then `eventStop(event, departure, ticketPriceCad)`.
 
 The Stop's `ticketPriceCad` is only this person's own report. The running total uses the own report, then the median, then the published price (`knownEventPrice`).
+
+## 4. Compose API (`ui/components/`)
+
+Each sheet is a `ModalBottomSheet` wrapper around a stateless `*Content` composable that takes the `UiState` and callbacks. Selection collects the holder's `state` and forwards the callbacks; the `*Content` composables are what the `@Preview`s render. Money, ranges and durations are formatted by `MoneyFormat.kt` (`formatCad`, `formatCadRange`, `formatDurationMinutes`), sentence times by `formatSentenceTime`.
+
+### `MealPickerSheet.kt`
+
+```kotlin
+MealPickerSheet(state: MealPickerUiState, onSelectTab: (MealTab) -> Unit, onChoose: (placeId: Long) -> Unit,
+    onSkip: () -> Unit, onDismiss: () -> Unit, budgetLabel: String? = null)
+MealPickerContent(state, nextDistrictName: String?, budgetLabel: String?, onSelectTab, onChoose, onSkip, modifier)
+```
+
+- The sheet looks up `nextDistrictName` from the City Pack (`rememberDistrictMap()`) by `state.nextDistrictId`.
+- `budgetLabel` is the Meal budget bracket label Selection already shows (for example `budget_under_50`); null drops the budget part of the subtitle.
+- Tabs render only when `state.tabs.size > 1`. **Skip this Meal** is a text button, or the primary button when `hasNoOptions`.
+- `onChoose` receives the row's `placeId`; Selection calls `holder.choose(placeId)` and applies the outcome.
+
+### `PlannedDepartureSheet.kt`
+
+```kotlin
+PlannedDepartureSheet(state: PlannedDepartureUiState, venueName: String?, onTimeChange: (LocalTime) -> Unit,
+    onConfirm: () -> Unit, onDismiss: () -> Unit)
+PlannedDepartureContent(state, venueName, onTimeChange, onConfirm, onCancel, modifier)
+```
+
+- Uses `HackappTimeWheels`; every wheel move calls `onTimeChange` (wire it to `holder.setTime`). The wheels show `rejectedTime` while there is an error, else `departure`.
+- `venueName` fills the subtitle's middle part; the Event type label stands in when null. The state has no venue field.
+- **Confirm** is disabled while `!canConfirm`. **Cancel** dismisses.
+
+### `EventDetailsSheet.kt`
+
+```kotlin
+EventDetailsSheet(state: EventDetailsUiState, onSelectShowtime: (eventId: String) -> Unit, onTicketPriceChange: (String) -> Unit,
+    onRetryLoad: () -> Unit, onSignIn: () -> Unit, onAddToItinerary: () -> Unit, onDismiss: () -> Unit)
+EventDetailsContent(state, onSelectShowtime, onTicketPriceChange, onRetryLoad, onSignIn, onAddToItinerary, onClose, modifier)
+```
+
+- The ticket link opens `ticketUrl` with `LocalUriHandler`. The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper.
+- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while saving.
+- `onRetryLoad` wires to `holder.load()`. `onSignIn` is shown only when `ticketPrice.signedIn` is false.
+- Audience label: `minAge >= 18` is adults, a `maxAge` is family, otherwise all audiences.
