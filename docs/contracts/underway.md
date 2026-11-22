@@ -49,7 +49,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
 
 - `start(uid, itineraryId, origin: LatLng?, demoMode = false, confirmEndCurrent = false): UnderwayStartResult` is `Started(view, askExactAlarm)`, `Blocked(StartBlock)`, `NeedsConfirmation(current)` or `NotFound`. It ends and awards the current Underway Itinerary first when `confirmEndCurrent`. `askExactAlarm` is true once, at Start, when `canScheduleExact()` is false: show `underway_exact_alarm_rationale`, launch `Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM` on Allow. A refusal is fine: alerts fall back to normal ones and Start is never blocked.
 - `dispatch(uid, itineraryId, event): DispatchResult(view, rejection)`.
-- `observeView(uid, notificationsAllowed: () -> Boolean): Flow<UnderwayView?>` and `view(...)` for the one Underway Itinerary (null if none). Recompute on a minute ticker too, since `view` depends on time.
+- `observeView(uid, notificationsAllowed: () -> Boolean): Flow<UnderwayView?>` emits on every state change; `view(uid, notificationsAllowed)` reads once. Neither ticks: `UnderwayViewModel` adds a minute ticker on the injected `UnderwayClock`.
 - `onAppOpen(uid)`, `onAlarm(uid, itineraryId)`, `onBoot()`: tick, reschedule and retry unfinished Stamp awards.
 - `endOfDay(uid, itineraryId): EndOfDay?`: null until Ended. Awards Stamps if not yet done. Retry-safe. If the Passport cannot be read, `EndOfDay.stampsAvailable = false` and every `stamp` is null: show the results without Stamps and call again later. Nothing is lost.
 
@@ -63,7 +63,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
 
 ## Rules
 
-- **Stamp rule.** Meal: arrival confirmed. Event: overlap of the stay with the expected period must be at least 20% of it (inclusive, in milliseconds). Expected period = start to Planned Departure, or arrival to Planned Departure for a drop-in. Time before the start does not count. Stay = arrived to `leftAt`. With no `leftAt` it runs to the next user action (any accepted event except Tick), or the automatic end, capped by the expected end.
+- **Stamp rule.** Meal: arrival confirmed. Event: overlap of the stay with the expected period must be at least 20% of it (inclusive, in milliseconds). Expected period = start to Planned Departure, or arrival to Planned Departure for a drop-in. Time before the start does not count. Stay = arrived to `leftAt`. With no `leftAt` it runs to the next user action (any accepted event except Tick and NotificationBannerHandled), or the automatic end, capped by the expected end.
 - **Drop-in** (the spec gives no flag): an Event whose start to Planned Departure span is at least 4 hours.
 - **Award.** At End of day only, including automatic and replaced endings. The engine builds a Completed copy of the Itinerary where too-brief Events are `Skipped`, then calls `StampRepository.award`. `PassportUnavailableException` is caught and retried on the next `endOfDay`, `onAppOpen` or `onBoot`. The Place lookup behind `PlaceStampIdentityResolver` must include non-ACTIVE Places.
 - **Automatic end.** 2 hours after the Itinerary window closes (`windowEnd`), at that exact time, even if the app opens later. Hours after midnight belong to the Itinerary's date.
@@ -71,7 +71,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
   - `ArrivalReminder`: Stop start + 30 min, while on Leg or Arrival for it.
   - `LeaveBy` (high priority): Leave By - 30 min, at the Stop, never on the last remaining Stop.
   - `LateWarning`: once per next Stop, when now + transit estimate passes its start, while at the previous Stop.
-- Alert actions: arrival = `ConfirmArrival` + `SkipStop`; leave = `Leaving` + `SkipStop`; late = `SkipStop` of the next Stop (Go anyway is dismissing it). They run in a broadcast receiver and never open the app.
+- Alert actions (never open the app, except Ouvrir): arrival = `action_arrived` (`ConfirmArrival`) + `action_skip_stop`; leave = `action_leaving` (`Leaving`) + `notification_action_open` (opens the app); late = `action_go_anyway` (`GoAnyway`) + `action_skip_stop` (`SkipStop` of the next Stop).
 
 ## Android
 
@@ -80,3 +80,26 @@ Manifest gets `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM` (max SDK 32 requestab
 ## Open items for the lead
 
 See the final report of the Domain Engineer: drop-in definition, first-Leg Leave By without an origin, arrival reminder due at Start, skipping the last Stop ends the day.
+
+## Wiring Start and screens (integration)
+
+```kotlin
+val app = context.applicationContext as HackappApplication
+val coordinator = app.underwayCoordinator
+val result = coordinator.start(
+    uid = uid,                       // signed-in account
+    itineraryId = itinerary.id,
+    origin = LatLng(lat, lng),       // current location, or null if denied
+    demoMode = false,                // true only in demo mode (skips the date check)
+    confirmEndCurrent = false,       // true after the user accepts the "current one will end" warning
+)
+```
+
+Handle the result: `Started(view, askExactAlarm)` navigate to Leg. `NeedsConfirmation(current)` show the warning, then call again with `confirmEndCurrent = true`. `Blocked(reason)` shows why (`WrongDate`, `WindowEnded`, `NoEvents`, `NotInPlanning`). `NotFound` is an error.
+
+Permissions at Start, in this order, neither blocking Start:
+
+1. `POST_NOTIFICATIONS` (API 33+): request with the standard launcher before calling `start`. If denied, do nothing more: pass `notificationsAllowed = { NotificationManagerCompat.from(ctx).areNotificationsEnabled() }` to the ViewModel and the banner (`view.showNotificationBanner`) appears once. Its button opens `Settings.ACTION_APP_NOTIFICATION_SETTINGS`. Send `NotificationBannerHandled` when it is dismissed or the button is used.
+2. Exact alarms: after `start`, if `askExactAlarm` is true, show the `underway_exact_alarm_*` strings. On Allow, `startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))`. On refusal do nothing. The next `onResume` reschedules with the new permission.
+
+Screens call `UnderwayViewModel.create(uid, coordinator, SystemUnderwayClock(), notificationsAllowed)` (a Composable, in `scaffold/screens/underway/`, one shared ViewModel for Leg, Arrival, At the Stop and End of day; `factory(...)` is the same for a `ViewModelProvider`). It exposes `state: StateFlow<LoadState<UnderwayScreenData(view, now)>>`, where `now` comes from the injected clock and moves on a minute ticker: pages never read time themselves. Also `endOfDay: StateFlow<LoadState<EndOfDay>>`, `retry()` (reloads End of day and retries Stamp awarding after `stampsAvailable = false`), `rejections: SharedFlow<Rejection>`, `dispatch(event)` and `onResume()` (call on every resume). `state` is `Failed` when nothing is Underway. When the day ends, `state` keeps its last value and `endOfDay` loads: navigate to End of day when it is `Ready`.
