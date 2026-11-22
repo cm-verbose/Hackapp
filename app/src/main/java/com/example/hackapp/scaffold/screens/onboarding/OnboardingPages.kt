@@ -16,11 +16,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -97,6 +99,8 @@ fun OnboardingProfilePage(
 ) {
     val draft = state.draft
     var pickingDistrict by rememberSaveable { mutableStateOf(false) }
+    var emailTouched by rememberSaveable { mutableStateOf(false) }
+    var emailWasFocused by remember { mutableStateOf(false) }
     val districtLabel = stringResource(R.string.profile_district_of_stay)
 
     HackappPage(
@@ -116,7 +120,11 @@ fun OnboardingProfilePage(
             label = stringResource(R.string.auth_email),
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Done,
-            errorText = if (draft.email.isNotBlank() && !draft.isEmailValid) {
+            modifier = Modifier.onFocusChanged {
+                if (emailWasFocused && !it.isFocused) emailTouched = true
+                emailWasFocused = it.isFocused
+            },
+            errorText = if (emailTouched && draft.email.isNotBlank() && !draft.isEmailValid) {
                 stringResource(R.string.auth_error_invalid_email)
             } else {
                 null

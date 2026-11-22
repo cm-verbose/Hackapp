@@ -106,6 +106,7 @@ fun SettingsPage(
             is LoadState.Ready -> profile.value?.let { ProfileCards(it, language) } ?: EmptyState()
         }
         DataAttribution()
+        DataAttribution(text = stringResource(R.string.data_licences))
     }
 }
 

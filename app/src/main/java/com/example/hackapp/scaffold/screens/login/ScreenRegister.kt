@@ -42,6 +42,7 @@ fun ScreenRegister(
         title = stringResource(R.string.auth_create_account),
         onBack = onBack,
         bottomActions = {
+            AuthErrorMessage(error)
             HackappPrimaryButton(
                 text = stringResource(R.string.register_submit),
                 enabled = !busy && email.isNotBlank() && password.isNotEmpty() && confirm == password,
@@ -87,7 +88,12 @@ fun ScreenRegister(
             enabled = !busy,
             errorText = if (mismatch) stringResource(R.string.auth_error_password_mismatch) else null,
         )
-        AuthErrorMessage(error)
+        Text(
+            stringResource(R.string.label_or),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
         GoogleLoginButton(
             onSignedIn = onSignedIn,
             onError = { error = it },
