@@ -62,11 +62,15 @@ Living checklist for the current implementation step. Update it in the same chan
 | Start date | **Start** works only on the Itinerary's date, except in demo mode |
 | Resuming drafts | Tapping a draft reopens its last step with all choices kept |
 | Deleting drafts | Drafts have a Delete action with confirmation. Past Itineraries cannot be deleted |
-| Expired drafts | Moved to an **Archived** section in Itineraries once their time window has ended, with a note telling the user they were archived |
+| Expired drafts | Moved to an **Archived** section in Itineraries once their time window has ended. They open read-only with the note "Archived because its date has passed", plus **Choose a new date** and **Delete**. A new date uses the same warning for Stops that no longer fit |
 | Event details | Sheet with title, time, venue, price, audience, description when available, ticket link and Add to Itinerary |
 | Skipping a Meal | **Skip this Meal** frees the block so Events in that time appear again |
-| Budget | Separate budgets for lunch (Meal 1), dinner (Meal 2) and total Events, with a possible late-night snack add-on. **Setup details still being decided** |
-| Event prices | Events are never hidden by budget. Free counts as $0. Users can enter a ticket price, which updates shared data so other users see it. **Trust rules still being decided** |
+| Budget defaults | Onboarding asks for Lunch (Meal 1), Dinner (Meal 2) and total Events budgets using the four brackets, plus an optional Late-night snack add-on that is off by default |
+| Budget overrides | Date and time edits this Itinerary's Event budget. Meal choice shows an editable budget beside each selected Meal. The Profile is unchanged. **Revisit and lock this down after the first implementation** |
+| Day total | Event budget plus the budgets of selected Meals, shown as a running total during selection |
+| Event prices | Events are never hidden by budget. Free counts as $0. Users can enter a ticket price, which updates shared data so other users see it |
+| Shared ticket prices | One editable report per signed-in user and Event. The app shows the median and clearly labels it as the median of user-reported prices. Reports accept $0 to $500 CAD, never show who submitted them, tell users the price is shared, and apply to all showtimes of the same title and venue that day |
+| Ticket price storage | Separate Firestore collection behind `TicketPriceRepository`, merged with read-only `events.json` when read. Add the ODbL implications to the license notes |
 | Meal cost | Counts at the top of the restaurant's price range. Restaurants above that Meal's budget are hidden. Unknown prices stay visible, rank lower and show as "+ unknown price" |
 | Over budget | Warn but allow the Stop. Selection shows a running total |
 | Ranking | Matching Interests, then known price within budget, then unknown price, then shortest travel time |
@@ -102,6 +106,7 @@ Living checklist for the current implementation step. Update it in the same chan
 - [ ] Shared onboarding state and step navigation
 - [ ] Resident or Visitor
 - [ ] Profile
+- [ ] Update the Budget maquette for Lunch, Dinner, Events and Late-night snack
 - [ ] Budget and Audience Preference
 - [ ] Interests and cuisines
 - [ ] Save the Profile behind a `ProfileRepository`
@@ -116,7 +121,7 @@ Living checklist for the current implementation step. Update it in the same chan
 ### 4. Main tabs
 
 - [ ] Home
-- [ ] Itineraries: In planning, Past and empty state
+- [ ] Itineraries: In planning, Past, Archived and empty state (update maquette for Archived)
 - [ ] Past Itinerary summary: maquette, then page
 - [ ] Settings
 - [ ] Passport (`cmvb`)
@@ -131,6 +136,9 @@ Living checklist for the current implementation step. Update it in the same chan
 - [ ] Meal choice
 - [ ] Event and Meal selection
 - [ ] Planned Departure sheet
+- [ ] Budget overrides and running total
+- [ ] Event details sheet with optional ticket price
+- [ ] `TicketPriceRepository` with median of user reports
 - [ ] Itinerary review
 
 ### 6. Underway
@@ -150,11 +158,19 @@ Living checklist for the current implementation step. Update it in the same chan
 - [ ] Check every screen against Figma
 - [ ] Full rehearsal in French and English
 
+### 8. Review after the first pass
+
+- [ ] Do a page-by-page review of every screen
+- [ ] Revisit and lock down budget overrides
+- [ ] Revisit District map badges
+- [ ] Revisit borough descriptions
+- [ ] Revisit how edits to earlier Planning steps affect Stops
+
 ## Data facts for planning
 
 - The snapshot covers Nov 21 to Dec 6, 2026, with 1,236 scheduled Events.
 - 574 scheduled Events (46%) have no published end time.
-- 549 have an unknown price, 671 are free, and only 16 are marked paid.
+- 549 have an unknown price, 671 are free, and only 16 are marked paid. None has a dollar amount.
 - On Sat Nov 28 from 18:00 to 02:00, Ville-Marie has 17 Events and Le Plateau-Mont-Royal has 11. Every other District has 2 or fewer.
 
 ## Open questions
