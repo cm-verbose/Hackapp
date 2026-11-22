@@ -24,6 +24,10 @@ import kotlinx.serialization.Serializable
 // Settings (the top-level tabs use ScreenItineraryDestination and ScreenPassportDestination)
 @Serializable data object SettingsRoute
 
+// Read-only Itinerary pages, opened from the Itineraries tab
+@Serializable data class PastItineraryRoute(val itineraryId: String)
+@Serializable data class ArchivedItineraryRoute(val itineraryId: String)
+
 // Planning
 /** A null [itineraryId] starts a new draft. */
 @Serializable data class PlanningDateTimeRoute(val itineraryId: String? = null)
