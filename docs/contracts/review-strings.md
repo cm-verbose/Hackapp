@@ -98,3 +98,10 @@ Shown beside a Stop in the `stop_edit_removed` list. One key per enum value.
 | Start `NotToday` | `review_start_only_on` | See above |
 | Load error | `review_load_failed`, button `action_retry` | |
 | Save error (`actionFailed`) | `planning_save_error` | Existing |
+
+## TalkBack labels
+
+| Element | Key | Arguments / note |
+|---|---|---|
+| Map marker | `review_marker_description` | `%1$d` Stop number, `%2$s` Stop name. Replaces any reuse of `strip_stop` |
+| Row "Retirer" action | `review_remove_stop` | `%1$s` Stop name. Content description only; the visible label stays `action_remove` |

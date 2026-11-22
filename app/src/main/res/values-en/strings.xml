@@ -275,6 +275,8 @@
     <string name="review_change_date">Change date and time</string>
     <string name="review_start_no_events">Add at least one event.</string>
     <string name="review_load_failed">Couldn’t load the itinerary.</string>
+    <string name="review_marker_description">Stop %1$d, %2$s</string>
+    <string name="review_remove_stop">Remove %1$s</string>
 
     <!-- Underway -->
     <string name="leg_how_to_get_there">Getting there</string>

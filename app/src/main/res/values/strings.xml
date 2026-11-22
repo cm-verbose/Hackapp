@@ -280,6 +280,8 @@
     <string name="review_change_date">Changer la date et l’heure</string>
     <string name="review_start_no_events">Ajoutez au moins un événement.</string>
     <string name="review_load_failed">Impossible de charger l’itinéraire.</string>
+    <string name="review_marker_description">Arrêt %1$d, %2$s</string>
+    <string name="review_remove_stop">Retirer %1$s</string>
 
     <!-- Underway -->
     <string name="leg_how_to_get_there">Comment y aller?</string>
