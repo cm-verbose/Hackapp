@@ -71,6 +71,12 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
                 controller = controller,
                 outerPaddingValues = padding,
                 onPlanItinerary = { controller.navigate(PlanningDateTimeRoute) },
+                onLogOff = {
+                    controller.navigate(ScreenLoginDestination) {
+                        popUpTo(controller.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
         composable<ScreenItineraryDestination> {

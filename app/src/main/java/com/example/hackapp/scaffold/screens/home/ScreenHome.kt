@@ -10,12 +10,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.scaffold.screens.home.bottombar.MainBottomBar
+import com.example.hackapp.scaffold.screens.planning.GoogleLogoffButton
 import com.example.hackapp.ui.components.PlanItineraryCard
 import kotlinx.serialization.Serializable
 
@@ -28,6 +30,7 @@ fun ScreenHome(
     controller: NavHostController,
     outerPaddingValues: PaddingValues,
     onPlanItinerary: () -> Unit,
+    onLogOff: () -> Unit,
 ) {
     val language = LocalConfiguration.current.locales[0].language
     val cityName = LocalCityPack.current.displayName.get(language).orEmpty()
@@ -43,6 +46,7 @@ fun ScreenHome(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             PlanItineraryCard(cityName = cityName, onPlan = onPlanItinerary, modifier = Modifier.fillMaxWidth())
+            GoogleLogoffButton(onLogOff = onLogOff, modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }
