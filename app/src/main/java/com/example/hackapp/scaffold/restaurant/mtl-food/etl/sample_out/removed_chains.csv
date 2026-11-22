@@ -1,0 +1,566 @@
+business_id,name,brand,address
+100020,DOMINO'S PIZZA,Domino's,4655   Avenue Van Horne 
+100086,TIM HORTONS,Tim Hortons,6245   Boulevard Métropolitain Est
+100164,MANCHU WOK,Manchu Wok,7999  F-004 Boulevard Galeries-d'Anjou 
+100220,TIM HORTONS,Tim Hortons,1500   Avenue Atwater 
+100279,DOMINO'S PIZZA,Domino's,2595   Rue Fleury Est
+100654,DOMINO'S PIZZA,Domino's,7046   Rue Saint-Hubert 
+102289,THAI EXPRESS  LES HALLES D'ANJOU,Thaï Express,7500  26A Boulevard Galeries-d'Anjou 
+102309,DAIRY QUEEN,Dairy Queen,3140   Rue Beaubien Est
+102375,RESTAURANT A&W,A&W,4501   Rue Saint-Denis 
+102382,RESTAURANT SESAME,Sesame,380   Rue Saint-Jacques 
+102729,DOMINO'S PIZZA,Domino's,3326   Rue Ontario Est
+102974,PIZZA PIZZA,Pizza Pizza,414   Rue Jean-Talon Ouest
+103089,TIM HORTONS,Tim Hortons,3440   Boulevard Saint-Laurent 
+103178,JUGO JUICE,Jugo Juice,1500  KA 03 Avenue McGill College 
+103442,HARVEY'S,Harvey's,6775   Chemin Côte-des-Neiges 
+103520,SUSHI SHOP EXPRESS PLACE VERSAILLES,Sushi Shop,7275  89 Rue Sherbrooke Est
+103715,THAI EXPRESS,Thaï Express,1504   Rue De Bleury 
+104248,TIM HORTONS,Tim Hortons,1220   Boulevard Saint-Jean-Baptiste 
+104532,LILIA SCOOP INC. (BEN & JERRY'S),Ben & Jerry's,1230   Avenue McGill College 
+104590,THAI EXPRESS,Thaï Express,175  F-13 Boulevard René-Lévesque Ouest
+104716,RESTAURANT A ET W,A&W,330   Rue Sainte-Catherine Est
+104765,PIZZA PIZZA,Pizza Pizza,5184   Avenue Parc 
+105236,TIM  HORTONS,Tim Hortons,5   Avenue Saint-Pierre 
+105293,SUBWAY,Subway,159  142 Rue Saint-Antoine Ouest
+105309,RESTAURANT SUBWAY,Subway,7420   Rue Sherbrooke Ouest
+105418,PIZZA PIZZA,Pizza Pizza,1846   Rue Sainte-Catherine Ouest
+105518,RESTAURANT SUBWAY PENFIELD,Subway,1100   Avenue Docteur-Penfield 
+105644,SUBWAY,Subway,7814   Boulevard Champlain 
+105688,LES 3 BRASSEURS,3 Brasseurs,7225   Boulevard Galeries-d'Anjou 
+105823,CAFE STARBUCKS COFFEE,Starbucks,7090   Boulevard Langelier 
+106006,THAI EXPRESS,Thaï Express,12882   Rue Sherbrooke Est
+106105,SUBWAY,Subway,1555   Boulevard Henri-Bourassa Ouest
+106129,CAFE STARBUCKS,Starbucks,5395   Chemin Queen-Mary 
+106296,PIZZA PIZZA,Pizza Pizza,4073   Rue Wellington 
+106566,SUSHI SHOP LE VILLAGE,Sushi Shop,1356   Rue Sainte-Catherine Est
+106651,A & W,A&W,8000   Boulevard Maurice-Duplessis 
+106975,CAFE STARBUCKS,Starbucks,7999  E-029 Boulevard Galeries-d'Anjou 
+107123,PIZZA PIZZA,Pizza Pizza,3570   Rue Ontario Est
+10727,TIM HORTONS,Tim Hortons,8080   Boulevard Champlain 
+107401,PIZZA PIZZA #322,Pizza Pizza,4911   Boulevard Sources 
+107415,PIZZA PIZZA,Pizza Pizza,1000   Boulevard Décarie 
+107501,VALENTINE,Valentine,1000  RC 11 Rue De La Gauchetière Ouest
+107605,SUSHI SHOP (PAVILLON ROSEMONT),Sushi Shop,5689   Boulevard Rosemont 
+107615,SUSHI SHOP CAMPUS (CAFETERIA HEC),Sushi Shop,3000   Chemin Côte-Sainte-Catherine 
+107671,SUBWAY,Subway,740  159D Boulevard Côte-Vertu 
+107978,T.C.B.Y.,TCBY,6142   Chemin Côte-Saint-Luc 
+108114,SUBWAY #19298,Subway,3131  N39 Boulevard Côte-Vertu 
+108220,SUBWAY #23209,Subway,8647   Rue Hochelaga 
+108332,SUSHI SHOP,Sushi Shop,2245   Boulevard Marcel-Laurin 
+108509,TIM HORTONS,Tim Hortons,9725   Boulevard Henri-Bourassa Est
+108659,BENTO SUSHI ANJOU,Bento Sushi,7999  Z-57 Boulevard Galeries-d'Anjou 
+108987,SUSHI SHOP,Sushi Shop,7010   Avenue Henri-Julien 
+109160,RESTAURANT PIZZA PIZZA,Pizza Pizza,7745   Boulevard Newman 
+109193,VALENTINE,Valentine,977  R-11 Rue Sainte-Catherine Ouest
+109261,SUBWAY,Subway,415   Rue Jean-Talon Ouest
+109420,DAIRY QUEEN,Dairy Queen,9761   Boulevard Saint-Michel 
+109465,STARBUCKS,Starbucks,5484   Chemin Côte-des-Neiges 
+109524,JUS JUGO JUICE,Jugo Juice,895  90-467 Rue De La Gauchetière Ouest
+109633,SUBWAY,Subway,4650   Rue Verdun 
+109679,RESTAURANT A&W #5549,A&W,1651   Avenue Mont-Royal Est
+109721,SUBWAY,Subway,2944  A Rue Remembrance 
+109798,RESTAURANT A & W,A&W,5150   Rue Sherbrooke Ouest
+109835,RESTAURANT MC DONALD'S,McDonald's,9375   Boulevard Lacordaire 
+109962,SUBWAY,Subway,2101   Avenue Dollard 
+110373,THAI EXPRESS,Thaï Express,5040   Rue Jean-Talon Est
+110390,SUBWAY,Subway,1399   Rue Ontario Est
+110423,RESTAURANT SUSHI SHOP MARCHE ATWATER,Sushi Shop,138  27A-28B Avenue Atwater 
+110436,LES CAFES SECOND CUP,Second Cup,4795   Avenue Van Horne 
+110441,MC DONALD,McDonald's,2901   Rue Sherbrooke Est
+110444,TIM HORTONS #5203,Tim Hortons,5780   Boulevard Gouin Ouest
+110522,QUESADA,Quesada,3680   Chemin Côte-Sainte-Catherine 
+110527,BEN & JERRY'S,Ben & Jerry's,433   Place Jacques-Cartier 
+110573,TIM HORTONS,Tim Hortons,2035   Rue Stanley 
+110873,DAIRY QUEEN,Dairy Queen,4501   Boulevard Saint-Charles 
+111030,RESTAURANT R.S.L. (SUBWAY),Subway,3501   Rue Ontario Est
+111031,SUBWAY,Subway,6355   Rue Sherbrooke Est
+111032,SUBWAY,Subway,2544   Rue Ontario Est
+111624,SECOND CUP,Second Cup,5206   Chemin Côte-des-Neiges 
+111748,DOMINO'S PIZZA,Domino's,1175   Rue Église 
+111832,DOMINO'S PIZZA,Domino's,9350   Boulevard Lacordaire 
+111894,SUSHI SHOP,Sushi Shop,643   Rue Wellington 
+112006,STARBUCKS #25787,Starbucks,8460   Boulevard Newman 
+112078,PIZZA PIZZA,Pizza Pizza,500   Boulevard Henri-Bourassa Est
+112184,ST-HUBERT EXPRESS,St-Hubert,1300   Boulevard Marcel-Laurin 
+1122,TIM HORTONS 2122,Tim Hortons,15   Avenue Mont-Royal Ouest
+112275,STARBUCKS CAFE#23511,Starbucks,180   Boulevard Crémazie Est
+112451,RESTAURANT MUCHO BURRITO & THAI EXPRESS,Mucho Burrito,1029   Rue Marché-Central 
+112593,CUISINE PRONTO,Pronto,2025   Avenue Mont-Royal Est
+112701,JUS JUGO JUICE,Jugo Juice,1500  SK-06 Avenue Atwater 
+112785,SUBWAY,Subway,1055   Rue Wellington 
+112854,VALENTINE,Valentine,800  R20Z Boulevard De Maisonneuve Est
+112860,MCDONALDS PLACE VERSAILLES,McDonald's,7275  102 Rue Sherbrooke Est
+112887,PIZZA PIZZA LTD,Pizza Pizza,3714   Boulevard Saint-Laurent 
+112928,DAIRY QUEEN (MC),Dairy Queen,6110   Rue Laurendeau 
+112950,A & W,A&W,6411   Rue Saint-Hubert 
+113049,VALENTINE CARREFOUR ANGRIGNON,Valentine,7077  252 Boulevard Newman 
+113204,SUBWAY,Subway,705  1230 Rue Sainte-Catherine Ouest
+113642,STARBUCKS COFFEE #29742,Starbucks,3601   Boulevard Saint-Laurent 
+1139,PIZZA PIZZA,Pizza Pizza,6390   Rue Sherbrooke Ouest
+114005,PIZZA PIZZA,Pizza Pizza,9735   Boulevard Acadie 
+114064,RESTAURANT SUBWAY,Subway,5993   Rue Bélanger 
+114164,LES RESTAURANTS SUBWAY (MC) DECARIE,Subway,993   Boulevard Décarie 
+114396,PIZZA PIZZA,Pizza Pizza,5050   Rue Jean-Talon Est
+114588,PIZZA PIZZA,Pizza Pizza,1001   Rue Sainte-Catherine Est
+114646,DOMINO'S PIZZA,Domino's,4391   Avenue Papineau 
+114742,TIM HORTONS,Tim Hortons,11880   Boulevard Laurentien 
+114766,PIZZA HUT (DOUBLE PIZZA),Pizza Hut,2972   Rue Remembrance 
+114769,DOMINOS PIZZA,Domino's,9071   Boulevard Maurice-Duplessis 
+114778,STARBUCKS COFFEE #27452,Starbucks,1265   Avenue Canadiens-de-Montréal 
+115162,DOMINO'S,Domino's,9295   Rue Sherbrooke Est
+115383,PIZZA HUT 343,Pizza Hut,3969   Rue Wellington 
+115405,LE RESTAURANT PIZZA PIZZA,Pizza Pizza,8705   Boulevard Viau 
+115445,STARBUCKS CAFFEE #47948,Starbucks,1000  RC-28 Rue De La Gauchetière Ouest
+115448,DAIRY QUEEN,Dairy Queen,1439   Rue Guy 
+115674,SECOND CUP LOYOLA,Second Cup,7345   Rue Sherbrooke Ouest
+115803,TIM HORTONS #100,Tim Hortons,2525   Rue Victoria 
+115824,TIM HORTONS (BATIMENT A),Tim Hortons,1   Carrefour Alexander-Graham-Bell 
+115883,TIM HORTONS,Tim Hortons,9600   Boulevard Maurice-Duplessis 
+115900,PIZZA HUT,Pizza Hut,10400   Boulevard Pie-IX 
+115911,PIZZA HUT,Pizza Hut,4689   Rue Jean-Talon Est
+116078,PIZZA HUT,Pizza Hut,6600   Chemin Côte-Saint-Luc 
+116079,PIZZA HUT,Pizza Hut,1431 A  Rue Bishop 
+116154,TIM HORTONS,Tim Hortons,10433   Boulevard Pie-IX 
+116193,DAIRY QUEEN,Dairy Queen,420   Place Jacques-Cartier 
+116207,TEASHOP,Chatime,52  C Rue De La Gauchetière Ouest
+116461,RESTAURANT SUSHI SHOP,Sushi Shop,895  90-420B Rue De La Gauchetière Ouest
+116476,PIZZA HUT - N.D.G.,Pizza Hut,5734   Rue Sherbrooke Ouest
+116549,RESTAURANT A & W,A&W,5120   Chemin Queen-Mary 
+116617,TIM HORTONS,Tim Hortons,2980   Rue Masson 
+116653,TIM HORTONS,Tim Hortons,7545   Boulevard Maurice-Duplessis 
+116661,LES CAFES SECOND CUP,Second Cup,1551   Rue Saint-Denis 
+116673,GYU-KAKU JAPANESE BBQ,Gyu-Kaku,1255   Rue Crescent 
+116697,RESTAURANTS A&W,A&W,1494   Boulevard Côte-Vertu 
+11671,MCDONALD'S,McDonald's,2600   Rue Ontario Est
+11675,MCDONALD'S,McDonald's,2010   Avenue Papineau 
+11681,MCDONALD'S - ENTREPRISES VANA,McDonald's,7275   Boulevard Saint-Laurent 
+116838,FIVE GUYS,Five Guys,468   Rue McGill 
+116877,RESTAURANT MIKES,Mikes,3500  105 Boulevard Côte-Vertu 
+116975,SUBWAY,Subway,8492   Boulevard Lacordaire 
+117074,MC DONALD,McDonald's,7570   Boulevard Décarie 
+117302,ROTISSERIE ST-HUBERT EXPRESS-HARVEY'S POINTE-AUX TREMBLES,St-Hubert,12575   Rue Sherbrooke Est
+117333,THAI EXPRESS,Thaï Express,5259  5259 Rue Sherbrooke Ouest
+117352,THAI EXPRESS (ANGRIGNON),Thaï Express,7077  3110 Boulevard Newman 
+117521,SUBWAY MC,Subway,4845   Rue Jean-Talon Est
+117562,SUBWAY,Subway,1500  FF-02 Avenue Atwater 
+11758,CHEZ CORA DEJEUNERS,Cora,1396   Avenue Mont-Royal Est
+117713,PIZZA PIZZA,Pizza Pizza,12908   Rue Sherbrooke Est
+117728,LES CAFES SECOND CUP / QUESADA,Second Cup,3801   Boulevard Saint-Laurent 
+11773,SUBWAY OUTREMONT,Subway,1452   Avenue Van Horne 
+117882,RESTAURANT A & W,A&W,655   Avenue Président-Kennedy 
+117905,TIM HORTON,Tim Hortons,6270   Boulevard Louis-H.-La Fontaine 
+118330,TIM HORTONS,Tim Hortons,6500   Chemin Côte-Saint-Luc 
+118499,THAI EXPRESS PIERREFONDS,Thaï Express,14850   Boulevard Pierrefonds 
+118633,HARVEY'S #2675,Harvey's,11245   Boulevard Lacordaire 
+118700,SUBWAY,Subway,1404   Rue Jean-Talon Est
+118739,SUSHI SHOP,Sushi Shop,6687   Rue Jean-Talon Est
+118782,QUESADA BURRITOS & TACOS,Quesada,335   Rue Sainte-Catherine Est
+119041,TIM HORTONS,Tim Hortons,10   Avenue Sainte-Croix 
+119204,RESTAURANT A&W,A&W,6810   Rue Jean-Talon Est
+119323,SUBWAY,Subway,6201   Boulevard Monk 
+11933,TIM HORTONS,Tim Hortons,115   Boulevard Crémazie Ouest
+119339,SUBWAY,Subway,5185   Chemin Côte-des-Neiges 
+119676,SUSHI SHOP,Sushi Shop,150  100 A Rue Sainte-Catherine Ouest
+1197,LES 3 BRASSEURS,3 Brasseurs,105   Rue Saint-Paul Est
+119832,MCDONALD'S,McDonald's,5  11296 Place Ville-Marie 
+120067,MEET FRESH,Meet Fresh,1805   Rue Sainte-Catherine Ouest
+12012,SUBWAY,Subway,7275  124 Rue Sherbrooke Est
+12039,JUS JUGO JUICE,Jugo Juice,1000  RC05A Rue De La Gauchetière Ouest
+120432,PIZZA HUT,Pizza Hut,2800   Rue Rachel Est
+120524,DAIRY QUEEN/ORANGE JULIUS ST-CATHERINE (+LAFLEUR),Dairy Queen,268   Rue Sainte-Catherine Ouest
+120595,RESTAURANT THAI EXPRESS GAUCHETIERE,Thaï Express,1000  RC08 Rue De La Gauchetière Ouest
+120625,RESTAURANT THAI EXPRESS,Thaï Express,4497   Rue Saint-Denis 
+120712,SUSHI SHOP,Sushi Shop,159  119 Rue Saint-Antoine Ouest
+120720,PIZZA HUT QUEEN MARY,Pizza Hut,5002   Chemin Queen-Mary 
+121026,RESTAURANT A&W,A&W,3251   Rue Beaubien Est
+121036,PIZZA HUT,Pizza Hut,1008   Rue Jean-Talon Est
+121438,RESTAURANT A & W,A&W,12649   Rue Sherbrooke Est
+121523,SUBWAY,Subway,1500   Rue De Bleury 
+121561,PIZZA HUT,Pizza Hut,8604   Rue Sherbrooke Est
+121585,RESTAURANT A&W,A&W,3457   Avenue Parc 
+121590,DOMINO'S PIZZA,Domino's,1215   Rue Bishop 
+121635,THAI EXPRESS,Thaï Express,1155  B003F Boulevard René-Lévesque Ouest
+121660,BOSTON PIZZA,Boston Pizza,6857   Boulevard Newman 
+121725,SUSHI SHOP OUTREMONT,Sushi Shop,1053   Avenue Bernard 
+121744,RESTAURANT RYU GRIFFINTOWN,Ryu,388   Rue Richmond 
+121746,DOMINO'S PIZZA,Domino's,2659   Avenue Van Horne 
+121812,SUBWAY,Subway,5872  19 Boulevard Léger 
+121863,RESTAURANT SUBWAY,Subway,8780  3-A Boulevard Saint-Laurent 
+121907,MUCHO BURRITO COTE-VERTU,Mucho Burrito,3830  120 Boulevard Côte-Vertu 
+122187,SUBWAY LA RONDE,Subway,22  112 Chemin Macdonald 
+122224,SUBWAY,Subway,8101   Boulevard Pie-IX 
+122253,DOMINO'S PIZZA,Domino's,38  17 Place Commerce 
+122284,SUBWAY,Subway,22  711 Chemin Macdonald 
+122456,PIZZA HUT,Pizza Hut,1400  102 Boulevard Saint-Jean-Baptiste 
+122534,THAI EXPRESS,Thaï Express,8780  7 Boulevard Saint-Laurent 
+122680,COCO THE ET JUS FRAIS,CoCo,1388   Rue Sainte-Catherine Ouest
+122842,PIZZA PIZZA,Pizza Pizza,5504   Rue Sherbrooke Ouest
+122871,TIM HORTONS,Tim Hortons,4750   Boulevard Saint-Jean 
+122882,DAIRY QUEEN,Dairy Queen,9214   Boulevard Lacordaire 
+123017,ROTISSERIE ST-HUBERT,St-Hubert,7979   Boulevard Newman 
+123161,PRESOTEA,Presotea,5302   Chemin Côte-des-Neiges 
+123181,CHUNGCHUN KOGO COREEN,Chungchun Rice Dog,1418   Rue Pierce 
+123395,PIZZA PIZZA,Pizza Pizza,1270   Rue Jarry Est
+123399,RESTAURANT MIKES,Mikes,1850   Avenue Dollard 
+123568,STARBUCKS - CINEMA BANQUE SCOTIA MONTREAL,Starbucks,977   Rue Sainte-Catherine Ouest
+123623,TIM HORTONS,Tim Hortons,12451   Boulevard Rodolphe-Forget 
+123906,TIM HORTONS,Tim Hortons,3650   Rue De Salaberry 
+123948,STARBUCKS,Starbucks,5291   Avenue Courtrai 
+123953,CHATIME,Chatime,1931   Boulevard Keller 
+123961,SUBWAY,Subway,3500  180 Boulevard Côte-Vertu 
+123962,SUBWAY,Subway,6971   Chemin Côte-de-Liesse 
+124037,SUSHI SHOP FLEURY,Sushi Shop,1751   Rue Fleury Est
+124112,DOMINO'S PIZZA,Domino's,4805   Boulevard Sources 
+124197,MCDONALD'S,McDonald's,1016   Rue Montagne 
+124224,PIZZA HUT,Pizza Hut,3547   Boulevard Saint-Laurent 
+124255,ROTISSERIE ST-HUBERT,St-Hubert,10520   Rue Lajeunesse 
+124300,PETROS GRIFFINTOWN,Petros,1613   Rue William 
+124430,THAI EXPRESS,Thaï Express,10734   Boulevard Pie-IX 
+124540,COCO FRESH TEA & JUICE,CoCo,40   Rue De La Gauchetière Ouest
+124788,SUSHI SHOP SALABERRY,Sushi Shop,2415  310 Rue De Salaberry 
+124790,MCDONALD'S,McDonald's,5252   Chemin Côte-des-Neiges 
+124801,TIM HORTONS,Tim Hortons,7895   Chemin Côte-de-Liesse 
+124817,SUSHI SHOP / BUBLE TEA,Sushi Shop,12825  1 Rue Sherbrooke Est
+125007,PRESOTEA,Presotea,1080   Rue Wellington 
+125008,SUBWAY,Subway,1001  C-23 Boulevard Robert-Bourassa 
+125029,SUSHI SHOP VERDUN (9457-0249 QC INC.),Sushi Shop,4147   Boulevard LaSalle 
+125117,RESTAURANT MCDONALDS,McDonald's,6797   Boulevard Newman 
+125160,PRESOTEA,Presotea,62   Rue De La Gauchetière Ouest
+125275,MC DONALD,McDonald's,150   Rue Sainte-Catherine Ouest
+125431,THAI EXPRESS,Thaï Express,5660   Chemin Côte-des-Neiges 
+125453,SUSHI SHOP,Sushi Shop,8061   Boulevard Newman 
+125590,TIM HORTONS #5858,Tim Hortons,3600   Rue Notre-Dame Ouest
+125607,TIM HORTONS,Tim Hortons,5005   Rue Jean-Talon Est
+125610,MCDONALD'S,McDonald's,215  B-123 Rue Peel 
+125621,REAL FRUIT BUBBLE TEA,Real Fruit Bubble Tea,705  2142 Rue Sainte-Catherine Ouest
+125839,OSMOW'S SHAWARMA,Osmow's,1627   Rue Sainte-Catherine Ouest
+125907,MCDONALD'S,McDonald's,4494   Rue Saint-Denis 
+126159,COCO THE ET JUS FRAIS,CoCo,5647   Chemin Côte-des-Neiges 
+126269,JUGO JUICE,Jugo Juice,7077   Boulevard Newman 
+126322,BENTO SUSHI,Bento Sushi,895  63 Rue De La Gauchetière Ouest
+12637,DAIRY QUEEN,Dairy Queen,4604   Avenue Parc 
+126385,THAI EXPRESS,Thaï Express,8071   Boulevard Newman 
+126390,TIM HORTONS,Tim Hortons,10725   Boulevard Henri-Bourassa Est
+126434,RESTAURANT SUBWAY,Subway,1750   Rue Fleury Est
+126517,SUBWAY,Subway,2111   Rue Sainte-Catherine Ouest
+126568,PRESOTEA LASALLE,Presotea,7559   Boulevard Newman 
+126589,9469-4767 QUEBEC INC. (PRESOTEA MC ET CHICKEN PLUS),Presotea,400   Rue Jean-Talon Est
+126650,MCDONALD'S,McDonald's,10400   Rue Lajeunesse 
+126783,RESTAURANT KFC,KFC,4086   Rue Wellington 
+126786,PIZZA HUT (SAINT-LAURENT),Pizza Hut,1595   Boulevard Côte-Vertu 
+126876,THAI EXPRESS,Thaï Express,5510   Rue Jean-Talon Ouest
+126940,KRISPY KREME CAFE,Krispy Kreme,1450   Rue Mackay 
+126950,PIZZA PAPA JOHN'S,Papa John's,1320   Rue Église 
+126986,TIM HORTONS,Tim Hortons,323   Rue Jean-Talon Est
+127115,TIM HORTONS,Tim Hortons,8115   Avenue Papineau 
+127187,KUNG FU THE MONTREAL INC.,Kung Fu Tea,55   Rue Notre-Dame Ouest
+127203,TIM HORTONS,Tim Hortons,400   Boulevard Marcel-Laurin 
+127208,RESTAURANT PIZZA HUT,Pizza Hut,2101   Avenue Mont-Royal Est
+127237,DOMINO'S PIZZA,Domino's,6922   Rue Sherbrooke Est
+127257,TIM HORTONS,Tim Hortons,3131  M9 Boulevard Côte-Vertu 
+127282,PIZZA HUT,Pizza Hut,7575   Boulevard Newman 
+127348,A&W #5903 (MASSON),A&W,3244   Rue Masson 
+127394,TIM HORTONS,Tim Hortons,22   Place Commerce 
+127408,TIM HORTONS,Tim Hortons,30   Rue Église 
+127419,TIM HORTONS,Tim Hortons,3838   Boulevard Côte-Vertu 
+127437,PIZZA PIZZA,Pizza Pizza,3235   Avenue Granby 
+127566,RESTAURANT SUBWAY,Subway,2717   Rue Notre-Dame Ouest
+127577,RESTAURANT MCDONALD'S,McDonald's,7995   Boulevard Henri-Bourassa Est
+127603,SECOND CUP 9448,Second Cup,7  101 Place Commerce 
+127647,GONG CHA,Gong Cha,757   Avenue Mont-Royal Est
+127713,RESTAURANT SUBWAY,Subway,1000  RC-12 Rue De La Gauchetière Ouest
+127764,RESTAURANT SUBWAY,Subway,442   Avenue Lafleur 
+127783,SUBWAY,Subway,3   Rue Sainte-Catherine Est
+127945,SUBWAY LES ALIMENTS PRECIEUSES RS3 INC.,Subway,780   Rue Beaubien Est
+127994,FMI NATIONAL INC. (PIZZA HUT),Pizza Hut,7246   Boulevard Langelier 
+128010,MCDONALD'S,McDonald's,7685   Boulevard Maurice-Duplessis 
+128016,TIM HORTONS,Tim Hortons,10005   Boulevard Louis-H.-La Fontaine 
+128043,PRESOTEA (MONT-ROYAL),Presotea,376 A  Avenue Mont-Royal Est
+128063,TIM HORTONS,Tim Hortons,15560   Rue Sherbrooke Est
+128065,TIM HORTONS,Tim Hortons,12775   Rue Sherbrooke Est
+128078,RESTAURANT HARVEY'S,Harvey's,3201   Boulevard Crémazie Est
+128126,RESTAURANT ET BAR SAINT-HUBERT,St-Hubert,5235   Chemin Côte-des-Neiges 
+128168,DOMINO'S PIZZA,Domino's,844   Boulevard Décarie 
+128200,STARBUCKS,Starbucks,3900   Boulevard Saint-Charles 
+128261,RESTAURANT SUBWAY,Subway,444   Rue Chabanel Ouest
+128318,JUGO JUICE,Jugo Juice,1001   Boulevard Décarie 
+128382,CORA DEJEUNERS,Cora,12580   Rue Sherbrooke Est
+128394,OSMOW'S SHAWARMA,Osmow's,1604   Avenue Mont-Royal Est
+12840,SUBWAY,Subway,480   Boulevard Saint-Laurent 
+128423,SUBWAY,Subway,3216   Rue Masson 
+128463,PIZZA PIZZA,Pizza Pizza,1305   Rue Notre-Dame 
+128493,JUS JUGO JUICE,Jugo Juice,1515   Rue Sainte-Catherine Ouest
+128533,SUSHI SHOP (BLUE BONNETS),Sushi Shop,5510  3A Rue Jean-Talon Ouest
+128534,SUSHI SHOP (ACADIE),Sushi Shop,9252 A  Boulevard Acadie 
+128548,TIM HORTONS,Tim Hortons,2323   Boulevard Marcel-Laurin 
+128593,STARBUCKS,Starbucks,1201   Boulevard René-Lévesque Ouest
+128678,SUBWAY,Subway,11725   Boulevard Pierrefonds 
+128695,PRESOTEA (MCGILL),Presotea,600   Avenue Président-Kennedy 
+128751,PFK,KFC,7246   Boulevard Langelier 
+128783,MANCHU WOK,Manchu Wok,7077   Boulevard Newman 
+128814,SUSHI SHOP,Sushi Shop,3830  110 Boulevard Côte-Vertu 
+128856,MCDONALD'S,McDonald's,7101   Boulevard Galeries-d'Anjou 
+128873,SUBWAY (PLACE DUPUIS),Subway,845  204 Rue Sainte-Catherine Est
+128884,SUBWAY (MONT-ROYAL),Subway,1350   Avenue Mont-Royal Est
+128924,SUBWAY,Subway,4235   Rue Wellington 
+128927,JUGO JUICE / LA DIPERIE / POKÉ BY SUSHI SHOP,Jugo Juice,1000   Rue Saint-Denis 
+128928,KUNG FU TEA MONTREAL (SAINTE-CATHERINE),Kung Fu Tea,218   Rue Sainte-Catherine Est
+128960,SUBWAY (WILDERTON),Subway,2651   Avenue Van Horne 
+128969,PRESOTEA,Presotea,1502   Rue De Bleury 
+128977,TIM HORTONS,Tim Hortons,9464   Boulevard Lacordaire 
+128980,SUBWAY,Subway,765   Rue Legendre Est
+128990,PIZZA PIZZA,Pizza Pizza,2823   Rue Masson 
+128993,MCDONALDS,McDonald's,8100   Boulevard Champlain 
+129001,TIM HORTONS,Tim Hortons,8100   Boulevard Pie-IX 
+129040,STARBUCKS,Starbucks,835   Rue Sainte-Catherine Est
+12915,SUBWAY,Subway,7077  306 Boulevard Newman 
+129187,BURGER KING,Burger King,55   Boulevard Crémazie Ouest
+129209,BURGER KING,Burger King,5300   Rue Jean-Talon Ouest
+129267,SECOND CUP,Second Cup,7275  193 Rue Sherbrooke Est
+129366,A & W,A&W,1540   Boulevard De Maisonneuve Ouest
+129400,SUBWAY LACORDAIRE,Subway,9356   Boulevard Lacordaire 
+129405,PIZZA HUT MTL,Pizza Hut,3899   Rue Ontario Est
+129476,TIM HORTONS,Tim Hortons,3700   Chemin Côte-Sainte-Catherine 
+129562,SUBWAY,Subway,2144   Rue Guy 
+129634,TIM HORTINS,Tim Hortons,3881   Rue Sherbrooke Est
+129686,TIM HORTONS,Tim Hortons,3634   Rue Ontario Est
+129695,RESTAURANT MCDONALD'S,McDonald's,1500   Avenue Atwater 
+129706,RESTAURANT PFK,KFC,6415   Rue Saint-Hubert 
+129736,TIM HORTONS,Tim Hortons,2081   Rue Guy 
+129738,RESTAURANT PFK,KFC,1670   Rue Saint-Denis 
+129739,SUSHI SHOP,Sushi Shop,355   Rue Sainte-Catherine Est
+129767,RESTAURANT SUBWAY,Subway,1255   Rue Notre-Dame Ouest
+129863,CHATIME ANGRIGNON,Chatime,7077  A-K6 Boulevard Newman 
+129888,A & W (VIEUX-MONTREAL),A&W,48   Rue Notre-Dame Est
+129923,PRESOTEA (COTE-VERTU),Presotea,991   Boulevard Décarie 
+129945,RESTAURANT THAI EXPRESS/POKE MONSTER,Thaï Express,2910   Rue De Salaberry 
+129973,SUBWAY,Subway,9325   Rue Sherbrooke Est
+130019,STARBUCKS,Starbucks,220   Rue Peel 
+130077,SUBWAY,Subway,7519   Boulevard Maurice-Duplessis 
+130084,REAL FRUIT BUBBLE TEA,Real Fruit Bubble Tea,7600   Boulevard Viau 
+130118,TIM HORTONS,Tim Hortons,6765   Rue Hochelaga 
+130162,SUSHI SHOP / THAI EXPRESS,Sushi Shop,3550   Avenue Parc 
+130165,A & W,A&W,5060   Rue Jean-Talon Est
+130179,PFK MAISONNEUVE,KFC,1500  7 Boulevard De Maisonneuve Ouest
+130207,SUBWAY,Subway,3246   Boulevard Rosemont 
+130228,TIM HORTON,Tim Hortons,2700   Rue Ontario Est
+130268,TIM HORTONS,Tim Hortons,4932   Boulevard Sources 
+130333,SUSHI SHOP,Sushi Shop,5580   Avenue Monkland 
+130336,JUGO JUICE/ POKE PAR SUSHI SHOP,Jugo Juice,630  150 Boulevard René-Lévesque Ouest
+130390,TIM HORTONS,Tim Hortons,1611   Rue Sainte-Catherine Ouest
+130540,SUSHI SHOP (SITE GLEN),Sushi Shop,1001   Boulevard Décarie 
+130619,KRISPY KREME CAFE,Krispy Kreme,5737   Chemin Côte-des-Neiges 
+130627,SUBWAY,Subway,1001  114 Boulevard Décarie 
+130635,SUBWAY (HOME DEPOT),Subway,4625   Rue Saint-Antoine Ouest
+130636,PIZZA PIZZA,Pizza Pizza,3438   Rue Notre-Dame Ouest
+130681,SUBWAY,Subway,12836   Rue Sherbrooke Est
+130695,MCDONALD'S,McDonald's,3026   Rue Notre-Dame Ouest
+130742,OSMOW'S SHAWARMA,Osmow's,7100   Boulevard Langelier 
+130799,LE PETIT HOTEL (NOTRE-DAME),Le Petit Hôtel,39   Rue Notre-Dame Ouest
+130902,TIM HORTONS,Tim Hortons,5900   Rue Sherbrooke Est
+130933,GONG CHA THE,Gong Cha,55   Rue Sainte-Catherine Est
+131013,THAI EXPRESS,Thaï Express,1995   Boulevard Marcel-Laurin 
+131030,SUSHI SHOP (SAINT-JEAN),Sushi Shop,4924   Boulevard Saint-Jean 
+131043,RESTAURANT SUBWAY,Subway,1300  125 Boulevard Saint-Jean-Baptiste 
+131052,PIZZA PIZZA,Pizza Pizza,6669   Rue Jean-Talon Est
+131091,THAI EXPRESS,Thaï Express,3218   Rue Masson 
+131112,PRESOTEA (JARRY),Presotea,607   Rue Jarry Est
+131118,TIM HORTONS,Tim Hortons,6775   Rue Saint-Hubert 
+131140,PIZZA HUT,Pizza Hut,1453   Avenue Van Horne 
+131193,FIVE GUYS,Five Guys,1232   Rue Peel 
+131236,RESTAURANT SUBWAY,Subway,4913   Boulevard Saint-Jean 
+131262,TIM HORTONS,Tim Hortons,6125   Boulevard Monk 
+131283,POULET PFK,KFC,3497   Rue Ontario Est
+131299,TIM HORTON'S,Tim Hortons,5778   Rue Notre-Dame Est
+131337,TIM HORTONS,Tim Hortons,1508   Rue De Bleury 
+131347,TIM HORTONS,Tim Hortons,800   Rue De La Gauchetière Ouest
+131359,SUBWAY,Subway,1100   Boulevard Robert-Bourassa 
+131430,TIM HORTONS (FLEURY),Tim Hortons,1745   Rue Fleury Est
+131434,TIM HORTONS,Tim Hortons,3785   Boulevard Saint-Laurent 
+131484,RESTAURANT MC DONALD'S,McDonald's,1   Rue Notre-Dame Ouest
+131493,RESTAURANT MC DONALD'S,McDonald's,1500   Avenue McGill College 
+131495,RESTAURANT MC DONALD'S,McDonald's,640   Rue Sainte-Catherine Ouest
+131544,SUSHI SHOP,Sushi Shop,1600   Boulevard De Maisonneuve Ouest
+131562,TIM HORTONS,Tim Hortons,5915   Rue Bélanger 
+131578,RESTAURANT MC DONALD'S,McDonald's,430   Avenue 28e 
+131655,TIM HORTONS,Tim Hortons,93   Rue Sainte-Catherine Ouest
+131672,FUWA FUWA,Fuwa Fuwa,976   Boulevard Saint-Laurent 
+131709,RESTAURANT MCDONALD'S,McDonald's,1021 F  Rue Marché-Central 
+131716,TIM HORTON,Tim Hortons,7077   Boulevard Newman 
+131772,STARBUCKS,Starbucks,1115   Rue Sherbrooke Ouest
+132077,SUBWAY 39624,Subway,9067   Boulevard Maurice-Duplessis 
+132130,TIM HORTONS,Tim Hortons,241   Rue Peel 
+132246,BAR LAITIER JARRY INC. / DAIRY QUEEN,Dairy Queen,955   Rue Jarry Est
+132247,A&W #5900,A&W,292   Rue Jean-Talon Est
+132269,A&W #5268,A&W,3780   Boulevard Saint-Laurent 
+132291,TIM HORTONS,Tim Hortons,2021   Avenue Union 
+132299,A & W,A&W,453   Rue Sainte-Catherine Ouest
+132302,TIM HORTONS,Tim Hortons,625   Rue Sainte-Catherine Ouest
+132398,STARBUCKS COFFEE (84650),Starbucks,705   Rue Sainte-Catherine Ouest
+132433,TIM HORTONS,Tim Hortons,5180   Boulevard Décarie 
+132482,NICOLAS KHOUZAM INC. (TIM HORTONS),Tim Hortons,1599   Rue Saint-Denis 
+132755,SUBWAY,Subway,1280   Rue Jarry Est
+133002,PIZZA HUT,Pizza Hut,8254   Boulevard Maurice-Duplessis 
+133012,TIM HORTONS,Tim Hortons,5985   Chemin Côte-des-Neiges 
+133013,LES ROTISSERIES ST-HUBERT LTEE,St-Hubert,10495   Boulevard Pie-IX 
+133061,TIM HORTONS,Tim Hortons,2155   Boulevard De Maisonneuve Est
+133107,STARBUCKS COFFEE 83228,Starbucks,1009   Rue De Bleury 
+133113,SECOND CUP,Second Cup,2020  309 Boulevard Robert-Bourassa 
+133142,THAI EXPRESS,Thaï Express,1570  135 Boulevard De Maisonneuve Ouest
+133161,TIM HORTONS,Tim Hortons,5405   Boulevard Décarie 
+133163,TIM HORTONS,Tim Hortons,2160   Boulevard Décarie 
+133259,SUBWAY #35431 L'ILE BIZARD,Subway,574   Boulevard Jacques-Bizard 
+133285,AMIR,Amir Cuisine Libanaise,1205   Rue Notre-Dame Ouest
+133313,SUBWAY,Subway,4504   Boulevard Saint-Laurent 
+133351,PRESOTEA,Presotea,7932   Rue Sherbrooke Est
+133361,DOMINO'S PIZZA,Domino's,2609   Rue Masson 
+133396,TIM HORTONS #121635,Tim Hortons,901   Avenue Mont-Royal Est
+133399,OSMOWS,Osmow's,364   Rue Sainte-Catherine Ouest
+133443,STARBUCKS COFFEE (84585),Starbucks,665   Avenue 32e 
+133444,OSMOW'S SHAWARMA,Osmow's,665 B  Avenue 32e 
+133526,PRESOTEA & POKE ZEN,Presotea,5283   Avenue Courtrai 
+133571,PIZZA PIZZA,Pizza Pizza,6448   Avenue Papineau 
+133658,SUSHI SHOP (MC),Sushi Shop,1500  FF-10 Avenue Atwater 
+133685,RESTAURANT A&W LACORDAIRE,A&W,9205   Boulevard Lacordaire 
+133726,SUBWAY,Subway,6400   Rue Beaubien Est
+133748,TIM HORTON,Tim Hortons,2108   Rue Sainte-Catherine Est
+133781,THAI EXPRESS,Thaï Express,1500  FF06 Avenue Atwater 
+133787,SUBWAY,Subway,635   Avenue Président-Kennedy 
+133901,TIM HORTON,Tim Hortons,4819   Avenue Van Horne 
+133933,MCDONALD'S,McDonald's,6501   Rue Saint-Hubert 
+133935,RESTAURANT MCDONALD'S,McDonald's,1275   Boulevard Rosemont 
+133956,KRISPY KREME,Krispy Kreme,375   Rue Sainte-Catherine Ouest
+133987,MCDONALD'S,McDonald's,405   Rue Jean-Talon Ouest
+133993,BENTO SUSHI,Bento Sushi,3421   Avenue Parc 
+134070,RESTAURANT A&W,A&W,4813   Boulevard Saint-Jean 
+134082,TIM HORTONS,Tim Hortons,2661   Avenue Van Horne 
+134090,SUSHI SHOP WESTMOUNT,Sushi Shop,5133   Rue Sherbrooke Ouest
+13420,RESTAURANT HARVEY'S #2946,Harvey's,7881   Boulevard Newman 
+134228,DEPANNEUR ERIC MARCHAND ET A&W,A&W,2033   Boulevard De Maisonneuve Est
+134240,TIM HORTONS,Tim Hortons,1257   Rue Peel 
+134262,BENTO SUSHI CENTRE EATON,Bento Sushi,705  k151 Rue Sainte-Catherine Ouest
+134264,A & W,A&W,455   Rue Guy 
+134280,SUBWAY,Subway,4969   Chemin Queen-Mary 
+134296,BENTO SUSHI ( WALMART ),Bento Sushi,951   Rue Marché-Central 
+134330,MANCHU WOK,Manchu Wok,1500  FF-02 Avenue Atwater 
+134353,A & W,A&W,5195   Chemin Côte-des-Neiges 
+134369,TIM HORTON'S,Tim Hortons,14810   Boulevard Pierrefonds 
+134370,THAI EXPRESS,Thaï Express,705  F121 Rue Sainte-Catherine Ouest
+134377,WENDY'S,Wendy's,5005   Rue Jean-Talon Est
+134407,RESTAURANT WENDY'S,Wendy's,5180   Boulevard Décarie 
+134420,RESTAURANT A & W #5004,A&W,1200   Rue Sainte-Catherine Est
+134450,TIM HORTONS,Tim Hortons,10592   Chemin Côte-de-Liesse 
+134488,A&W ST-CHARLES,A&W,4520   Boulevard Saint-Charles 
+134522,RESTAURANT WENDY'S,Wendy's,7340   Boulevard Décarie 
+134524,SECOND CUP CAFE,Second Cup,1555   Boulevard Marcel-Laurin 
+134536,RESTAURANT WENDY'S,Wendy's,8699   Boulevard Newman 
+134683,A W,A&W,4505   Avenue Parc 
+134689,RESTAURANT BURGER KING # 3411,Burger King,6348   Rue Sherbrooke Est
+134814,YI FANG TAIWAN FRUIT THE,Yi Fang,1490   Boulevard De Maisonneuve Ouest
+134928,RESTAURANT MCDONALD'S,McDonald's,1472   Rue Sainte-Catherine Ouest
+134985,HARVEY'S,Harvey's,800  1115 Rue De La Gauchetière Ouest
+13508,TIM HORTONS #3410,Tim Hortons,2912   Rue De Salaberry 
+135089,SECOND CUP CAFE/QUESADA,Second Cup,1166   Rue Sainte-Catherine Ouest
+135117,PIZZA PIZZA,Pizza Pizza,5071   Chemin Queen-Mary 
+135119,BURGER KING,Burger King,1605   Rue Saint-Denis 
+135221,SUBWAY,Subway,1575   Rue Saint-Denis 
+135245,BURGER KING,Burger King,159  C-20 Rue Saint-Antoine Ouest
+135297,A&W #5269,A&W,2313   Rue Sainte-Catherine Ouest
+135339,BURGER KING,Burger King,1617   Rue Sainte-Catherine Ouest
+135383,SUBWAY (9529-7354 QUEBEC INC.),Subway,1110   Rue Provost 
+135395,9564-9208 QUEBEC INC. (PIZZA PIZZA),Pizza Pizza,14860   Boulevard Pierrefonds 
+135551,TIM HORTONS,Tim Hortons,5095   Chemin Queen-Mary 
+135572,QUESADA BURRITOS ET TACOS,Quesada,1555   Boulevard Marcel-Laurin 
+135724,THAI EXPRESS,Thaï Express,637   Avenue 32e 
+13640,SUBWAY,Subway,7919   Boulevard Newman 
+13912,TIM HORTONS,Tim Hortons,6495   Rue Saint-Jacques 
+13995,RESTAURANT SUBWAY,Subway,977  R-12 Rue Sainte-Catherine Ouest
+14094,SECOND CUP #2 (LEGARE 1ER ETAGE),Second Cup,3755  E Chemin Côte-Sainte-Catherine 
+14225,TIM HORTONS,Tim Hortons,700  700 Avenue Atwater 
+14424,THAI EXPRESS,Thaï Express,977  206 Rue Sainte-Catherine Ouest
+14611,PIZZA-PIZZA,Pizza Pizza,6185   Chemin Côte-des-Neiges 
+147,SUSHI SHOP EXPRESS,Sushi Shop,1000  rc01 Rue De La Gauchetière Ouest
+14729,SUSHI SHOP ILES-DES-SOEURS,Sushi Shop,7  103A Place Commerce 
+14809,RESTAURANT A & W,A&W,8400   Avenue Christophe-Colomb 
+14854,RESTAURANT MC DONALD,McDonald's,5090   Boulevard Métropolitain Est
+15042,ROTISSERIE ST-HUBERT,St-Hubert,100  282 Rue Sainte-Catherine Ouest
+1524,DAIRY QUEEN,Dairy Queen,5151   Rue Beaubien Est
+15271,TIM HORTONS #1918,Tim Hortons,9485   Boulevard Saint-Laurent 
+15483,MC DONALD,McDonald's,850   Rue Sainte-Catherine Est
+15490,RESTAURANT THAI EXPRESS,Thaï Express,3131  N45 Boulevard Côte-Vertu 
+15834,DOMINO'S PIZZA,Domino's,3628   Rue Notre-Dame Ouest
+15870,RESTAURANT MC DONALD,McDonald's,8005   Boulevard Langelier 
+1620,ROTISSERIE ST-HUBERT,St-Hubert,6225   Rue Sherbrooke Est
+1627,RESTAURANT MC DONALD,McDonald's,6415   Rue Sherbrooke Est
+1665,RESTAURANT MIKE'S ENR.,Mikes,7275  #148 Rue Sherbrooke Est
+1688,BENIHANA CUISINE JAPONNAISE,Benihana,5666   Rue Sherbrooke Est
+16916,LES 3 BRASSEURS,3 Brasseurs,1356   Rue Sainte-Catherine Ouest
+17345,RESTAURANT LE KEG,The Keg,25   Rue Saint-Paul Est
+17808,HARVEY'S # 2346,Harvey's,7475   Boulevard Décarie 
+18060,MC DONALD,McDonald's,6025   Chemin Côte-des-Neiges 
+18678,PIZZA HUT,Pizza Hut,9870   Boulevard Saint-Laurent 
+1933,THAI EXPRESS,Thaï Express,7999   Boulevard Galeries-d'Anjou 
+1965,MC DONALD,McDonald's,2920   Rue De Salaberry 
+20521,MC DONALD,McDonald's,7270   Rue Saint-Jacques 
+22613,DOMINO'S PIZZA,Domino's,5488   Chemin Côte-Saint-Luc 
+2376,LES 3 BRASSEURS,3 Brasseurs,1658   Rue Saint-Denis 
+2382,DOMINO'S PIZZA,Domino's,35   Rue Rachel Ouest
+2655,DAIRY QUEEN,Dairy Queen,4545   Rue Sainte-Catherine Est
+2684,HAPPY LAMB HOT POT,Happy Lamb Hot Pot,50   Rue De La Gauchetière Ouest
+2794,SUSHI SHOP VIEUX-MONTREAL,Sushi Shop,480  RC1 Boulevard Saint-Laurent 
+2922,TIM HORTONS,Tim Hortons,9255   Boulevard Acadie 
+306,A & W,A&W,7235   Rue Saint-Jacques 
+3169,TIM HORTONS,Tim Hortons,410   Rue Jean-Talon Ouest
+3250,MC DONALD RESTAURANT,McDonald's,9797   Avenue Papineau 
+3573,TIM HORTONS #2343,Tim Hortons,7500  65 #A Boulevard Galeries-d'Anjou 
+3606,TIM HORTONS #2351,Tim Hortons,7340   Boulevard Décarie 
+3691,TIM HORTONS,Tim Hortons,8481   Boulevard Newman 
+3793,CAFE STARBUCKS COFFEE #4111,Starbucks,3131  E2F Boulevard Côte-Vertu 
+40100,RESTAURANT MC DONALD,McDonald's,12090   Rue Sherbrooke Est
+4011,SUBWAY PLACE MTL TRUST,Subway,1500  A053 Avenue McGill College 
+4033,TIM HORTONS,Tim Hortons,2460   Rue Dandurand 
+4034,HARVEY'S,Harvey's,14855   Boulevard Pierrefonds 
+44157,SUBWAY GALERIES D'ANJOU,Subway,7999  F-001 Boulevard Galeries-d'Anjou 
+46240,RESTAURANT HARVEY'S,Harvey's,4247   Rue Jean-Talon Est
+4785,ROTISSERIE ST-HUBERT EXPRESS,St-Hubert,7190   Rue Michelet 
+5126,TIM HORTONS,Tim Hortons,674   Rue Sherbrooke Ouest
+5259,DAIRY QUEEN,Dairy Queen,10730   Boulevard Pie-IX 
+5449,RESTAURANT SUBWAY,Subway,7900   Boulevard Saint-Michel 
+5454,LES 3 BRASSEURS,3 Brasseurs,732   Rue Sainte-Catherine Ouest
+5510,SUBWAY,Subway,9720   Boulevard Saint-Laurent 
+5573,RESTAURANT TIM HORTONS #265,Tim Hortons,8055   Boulevard Saint-Michel 
+5639,RESTAURANT A & W ANJOU,A&W,7600   Rue Béclard 
+5640,SUBWAY #23371,Subway,150  F16 Rue Sainte-Catherine Ouest
+5914,TIM HORTONS,Tim Hortons,7295   Boulevard Galeries-d'Anjou 
+60217,MC DONALD,McDonald's,4300   Boulevard LaSalle 
+6074,SUBWAY PIE IX #14720,Subway,10716   Boulevard Pie-IX 
+62047,DAIRY QUEEN,Dairy Queen,2429   Avenue Dollard 
+6252,MCDONALD'S,McDonald's,895  90-420B Rue De La Gauchetière Ouest
+66822,TIM HORTONS,Tim Hortons,5800   Avenue Christophe-Colomb 
+682,DAIRY QUEEN,Dairy Queen,8654   Rue Sherbrooke Est
+68201,DAIRY QUEEN,Dairy Queen,3210   Boulevard Saint-Joseph 
+7013,JUGO JUICE INTERNATIONAL,Jugo Juice,705  Z150 Rue Sainte-Catherine Ouest
+7027,RESTAURANT MC DONALD,McDonald's,10333   Boulevard Pie-IX 
+72268,BASKIN-ROBBINS,Baskin-Robbins,1140   Boulevard Marcel-Laurin 
+72523,MCDONALD'S,McDonald's,1565   Boulevard Côte-Vertu 
+7291,SUBWAY,Subway,2765   Rue Sherbrooke Est
+7292,DOMINO'S PIZZA,Domino's,2190   Avenue Dollard 
+7298,HARVEY'S,Harvey's,7100   Rue Sherbrooke Est
+74073,DOMINO'S PIZZA,Domino's,15480   Boulevard Pierrefonds 
+7462,TIM HORTONS,Tim Hortons,1000   Rue Legendre Ouest
+7466,TIM HORTONS,Tim Hortons,605   Boulevard René-Lévesque Ouest
+75085,MC DONALD,McDonald's,11680   Boulevard Pierrefonds 
+7788,SUSHI SHOP,Sushi Shop,1200   Avenue McGill College 
+7827,TIM HORTONS,Tim Hortons,8390   Boulevard Newman 
+7842,TIM HORTONS #1534,Tim Hortons,790   Boulevard Crémazie Est
+7848,ROTISSERIE ST-HUBERT EXPRESS,St-Hubert,6355   Rue Saint-Hubert 
+789,TIM HORTONS,Tim Hortons,159  C-21 Rue Saint-Antoine Ouest
+8080,CAFE STARBUCKS COFFEE #4056,Starbucks,2000  101 Rue Guy 
+8169,DAIRY QUEEN,Dairy Queen,11990   Rue Lachapelle 
+8900,CHEZ CORA DEJEUNERS,Cora,9394   Boulevard Acadie 
+8929,CAFE STARBUCKS COFFEE #4059,Starbucks,1  11510 Place Ville-Marie 
+8990,SUBWAY DU PARC,Subway,3550  4207 Avenue Parc 
+9025,A & W,A&W,150  72FO9 Rue Sainte-Catherine Ouest
+9034,KEG RESTAURANT,The Keg,5  12500 Place Ville-Marie 
+9276,MC DONALD,McDonald's,3882   Boulevard Saint-Charles 

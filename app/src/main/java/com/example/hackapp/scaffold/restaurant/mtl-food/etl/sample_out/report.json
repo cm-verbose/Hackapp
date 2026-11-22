@@ -1,0 +1,54 @@
+{
+  "boundary_mode": "sector-name fallback (pass --boundary for polygons and full borough coverage)",
+  "counts": {
+    "0_raw_city_rows": 54937,
+    "1_inside_city_of_montreal": 50614,
+    "2_tourist_food_types": 25065,
+    "3_status_ouvert": 6529,
+    "4_one_row_per_place": 6494,
+    "5_after_chain_rule": 5929,
+    "6_exported_places": 5929
+  },
+  "matched_to_osm": 2273,
+  "with_cuisine": 1395,
+  "with_dietary": 286,
+  "quebec_chain_locations_kept": 124,
+  "chains_removed_top": {
+    "Tim Hortons": 96,
+    "Subway": 85,
+    "McDonald's": 45,
+    "A&W": 33,
+    "Sushi Shop": 33,
+    "Pizza Pizza": 27,
+    "Thaï Express": 26,
+    "Starbucks": 22,
+    "Domino's": 21,
+    "Pizza Hut": 21,
+    "Dairy Queen": 17,
+    "Presotea": 12,
+    "Second Cup": 11,
+    "Jugo Juice": 10,
+    "St-Hubert": 10
+  },
+  "venue_types": {
+    "RESTAURANT": 3501,
+    "BAR": 620,
+    "FAST_FOOD": 833,
+    "BAKERY": 363,
+    "CAFE": 359,
+    "FOOD_TRUCK": 154,
+    "DESSERT": 99
+  },
+  "boroughs_assigned": 1049,
+  "google_enriched": 0,
+  "price_sources": {
+    "NONE": 5929
+  },
+  "google_new_calls_this_run": {
+    "search": 0,
+    "details": 0,
+    "details_desc": 0
+  },
+  "review_low_score_matches": 37,
+  "review_chain_candidates": 64
+}
