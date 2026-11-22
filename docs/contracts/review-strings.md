@@ -45,14 +45,14 @@ Shown on Step 1 when a date or time change makes Stops no longer fit.
 | List label, error colour | `stop_edit_removed` | Rows are time and Stop name from data |
 | List label | `stop_edit_kept` | Also used by the unreachable dialog |
 | Text button | `action_cancel` | Existing |
-| Confirm button | `stop_edit_confirm` | "Modifier" |
+| Confirm button | `stop_edit_confirm` | "Modifier et retirer" |
 
 ## RemoveStopWarningDialog, unreachable Stops (`141:3031`)
 
 | Element | Key | Arguments / note |
 |---|---|---|
 | Title | `review_unreachable_title` | "Arrêts inaccessibles" |
-| Body | `review_unreachable_body` | `%1$s` time of the time slot as a sentence time: `19 h 30` in French, in the app's English time format in English |
+| Body | `review_unreachable_body` | `%1$s` name of the removed Stop (data), not a time |
 | List label, error colour | `review_unreachable_affected` | Rows are time and Stop name from data |
 | List label | `stop_edit_kept` | Reused, same meaning |
 | Text button | `action_cancel` | Existing |
@@ -65,7 +65,7 @@ Shown on Step 1 when a date or time change makes Stops no longer fit.
 
 ## Notes for the engineers
 
-- Times in the dialogs' Stop rows use `18:30`. The sentence time in `review_unreachable_body` uses `19 h 30` (non-breaking spaces from the formatter).
+- Times in the dialogs' Stop rows use `18:30`. `review_unreachable_body` takes the removed Stop’s name, not a time.
 - Maquette text left out: "Dîner (repas 1)" and similar labels are replaced by the `budget_*` keys. Maquette "Seront aussi retirés" is now "Arrêts touchés"; the frame's layer name is not text.
 
 ## Removal reasons (`StopRemovalReason`)
@@ -90,8 +90,9 @@ Shown beside a Stop in the `stop_edit_removed` list. One key per enum value.
 | Element | Key | Arguments / note |
 |---|---|---|
 | Picker title | `review_reschedule_title` | The affected Stop's name is data |
-| Progress "2 sur 3" | `review_reschedule_progress` | `%1$d` index (1-based), `%2$d` total |
+| Progress "Arrêt 2 sur 3" | `review_reschedule_progress` | `%1$d` index (1-based), `%2$d` total |
 | Option row | none | Start time from data, plus `review_planned_departure` when the option has no published end |
+| Reschedule unavailable | `review_reschedule_unavailable` | Shown when the affected Stops cannot be rescheduled |
 | Empty state | `review_reschedule_empty` | Actions `action_reorganize` and `action_cancel` |
 | Start `WindowEnded` | `review_start_window_ended`, button `review_change_date` | Replaces the notification note, error colour |
 | Start `NoEvents` | `review_start_no_events` | Same slot |
