@@ -80,6 +80,8 @@ class UnderwayViewModel(
                 refresh()
             }
         }
+        // A demo jump changes the time without changing the state: redraw at once.
+        viewModelScope.launch { clock.jumps.collect { refresh() } }
     }
 
     /** Call when the screen resumes: reschedules alerts, fires any due, then refreshes. */
