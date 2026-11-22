@@ -120,6 +120,7 @@ fun DistrictPickScreen(
         onChooseReplaceTarget = viewModel::chooseReplaceTarget,
         onConfirmReplace = viewModel::confirmReplace,
         onContinue = viewModel::continueToMeals,
+        onMoveSelected = viewModel::moveSelected,
     )
 }
 
@@ -136,6 +137,7 @@ fun DistrictPickPage(
     onConfirmReplace: () -> Unit,
     onContinue: () -> Unit,
     viewportState: MapViewportState = rememberMapViewportState(),
+    onMoveSelected: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val scheme = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().background(scheme.surface)) {
@@ -171,6 +173,7 @@ fun DistrictPickPage(
                         state = state,
                         viewportState = viewportState,
                         onChipClick = onDistrictTap,
+                        onMove = onMoveSelected,
                         modifier = Modifier.align(Alignment.TopStart),
                     )
                     Column(
@@ -227,6 +230,7 @@ private fun MapHeader(
     state: DistrictPickUiState,
     viewportState: MapViewportState,
     onChipClick: (String) -> Unit,
+    onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -249,27 +253,7 @@ private fun MapHeader(
                     color = scheme.onSurfaceVariant,
                 )
                 if (state.selected.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        state.selected.forEachIndexed { index, id ->
-                            Surface(
-                                onClick = { onChipClick(id) },
-                                shape = MaterialTheme.shapes.small,
-                                color = scheme.secondaryContainer,
-                                contentColor = scheme.onSecondaryContainer,
-                            ) {
-                                Text(
-                                    stringResource(R.string.district_order_chip, index + 1, state.nameOf(id)),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                                )
-                            }
-                        }
-                    }
+                    ReorderableDistrictList(state.selected, state::nameOf, onChipClick, onMove)
                 }
             }
         }

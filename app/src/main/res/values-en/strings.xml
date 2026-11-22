@@ -124,6 +124,9 @@
     <string name="profile_age_range">Age range</string>
     <!-- City Pack may override the District label -->
     <string name="profile_district_of_stay">Borough where you’re staying</string>
+    <string name="profile_district_located">You’re in %1$s.</string>
+    <string name="profile_district_choose">Choose %1$s</string>
+    <string name="profile_district_choose_empty">Choose</string>
     <string name="budget_audience_title">Budget and audience</string>
     <string name="budget_subtitle">Per person</string>
     <string name="budget_under_20">&lt; $20</string>
@@ -164,6 +167,8 @@
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Boroughs</string>
     <string name="district_pick_instructions">Choose 1 to 3, in the order you’ll visit them.</string>
+    <string name="district_move_up">Move up</string>
+    <string name="district_move_down">Move down</string>
     <string name="meal_title">Meals</string>
     <string name="meal_lunch_at">Lunch · %1$s</string>
     <string name="meal_dinner_at">Dinner · %1$s</string>

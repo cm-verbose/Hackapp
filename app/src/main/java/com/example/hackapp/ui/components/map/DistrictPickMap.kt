@@ -77,6 +77,8 @@ fun DistrictPickMap(
     onDistrictTap: (String) -> Unit,
     onEmptyTap: () -> Unit,
     modifier: Modifier = Modifier,
+    /** False for maps that only pick a place, such as the District of stay: TalkBack reads names only. */
+    showCounts: Boolean = true,
 ) {
     val cs = MaterialTheme.colorScheme
     val density = LocalDensity.current
@@ -183,6 +185,7 @@ fun DistrictPickMap(
                 val description = when {
                     marker.order != null -> pluralStringResource(R.plurals.map_district_selected, marker.count, name, marker.order, marker.count)
                     !marker.pickable -> stringResource(R.string.map_district_unavailable, name)
+                    !showCounts -> name
                     else -> pluralStringResource(R.plurals.map_district_description, marker.count, name, marker.count)
                 }
                 Box(

@@ -122,6 +122,15 @@ class DistrictPickViewModel(
         changeSelection { state, id -> replaceDistrict(state.selected, target, id) }
     }
 
+    /** Moves a selected District from position [from] to [to]. The new order is the visit order. */
+    fun moveSelected(from: Int, to: Int) {
+        val current = _state.value.selected
+        if (from !in current.indices || to !in current.indices || from == to) return
+        val next = current.toMutableList().apply { add(to, removeAt(from)) }
+        _state.update { it.copy(selected = next, saveFailed = false) }
+        autosave()
+    }
+
     fun onNavigated() = _state.update { it.copy(continueToId = null) }
 
     fun continueToMeals() = continueToMeals(confirmed = false)

@@ -1,17 +1,12 @@
 package com.example.hackapp.scaffold.screens.onboarding
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -146,26 +141,15 @@ fun OnboardingProfilePage(
 
     val options = (state.districts as? LoadState.Ready)?.value
     if (pickingDistrict && options != null) {
-        ModalBottomSheet(onDismissRequest = { pickingDistrict = false }) {
-            Text(
-                districtLabel,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-            )
-            LazyColumn {
-                items(options, key = { it.id }) { option ->
-                    ListItem(
-                        headlineContent = { Text(option.name) },
-                        modifier = Modifier.clickable {
-                            onDistrictChange(option.id)
-                            pickingDistrict = false
-                        },
-                    )
-                }
-            }
-        }
+        DistrictOfStayMapDialog(
+            options = options,
+            selectedId = draft.districtOfStayId,
+            onConfirm = {
+                onDistrictChange(it)
+                pickingDistrict = false
+            },
+            onDismiss = { pickingDistrict = false },
+        )
     }
 }
 

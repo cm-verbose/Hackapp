@@ -128,6 +128,9 @@
     <string name="age_range_55_plus" translatable="false">55+</string>
     <!-- City Pack may override the District label -->
     <string name="profile_district_of_stay">Arrondissement de séjour</string>
+    <string name="profile_district_located">Vous êtes dans %1$s.</string>
+    <string name="profile_district_choose">Choisir %1$s</string>
+    <string name="profile_district_choose_empty">Choisir</string>
     <string name="budget_audience_title">Budget et public</string>
     <string name="budget_subtitle">Par personne</string>
     <string name="budget_under_20">&lt; 20 $</string>
@@ -168,6 +171,8 @@
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Arrondissements</string>
     <string name="district_pick_instructions">Choisissez-en 1 à 3, dans l’ordre de visite.</string>
+    <string name="district_move_up">Monter</string>
+    <string name="district_move_down">Descendre</string>
     <string name="district_order_chip" translatable="false">%1$d · %2$s</string>
     <string name="meal_title">Repas</string>
     <string name="meal_lunch_at">Dîner · %1$s</string>
