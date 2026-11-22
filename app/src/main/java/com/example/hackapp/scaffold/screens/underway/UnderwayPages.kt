@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.scaffold.screens.itinerary.itineraryShortDate
@@ -45,7 +46,6 @@ import com.example.hackapp.ui.components.StopTypeTag
 import com.example.hackapp.ui.components.TransportChoice
 import com.example.hackapp.ui.components.TransportChoiceCard
 import com.example.hackapp.ui.components.stampInitials
-import com.example.hackapp.ui.components.stopTypeLabel
 import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.underway.StopOutcome
@@ -87,6 +87,7 @@ fun UnderwayLegPage(
         hero = hero != null,
         bottomActions = {
             val appName = if (transport == TransportChoice.Transit) labels.transitAppName else labels.rideHailName
+            handoffError?.let { HandoffError(it, hero != null) }
             HackappPrimaryButton(stringResource(R.string.leg_open_transit_app, appName), onOpenTransport)
             // With no travel app there is no Arrival page, and this is the only way to earn the Stamp.
             if (handoffError != null) {
@@ -105,10 +106,8 @@ fun UnderwayLegPage(
         if (hero != null) {
             LegHeader(
                 stopName = ui.stop.name,
-                stopDetails = listOfNotNull(
-                    "${stopTypeLabel(ui.stop.type)} ${ui.stop.time}",
-                    ui.stop.districtName,
-                ).joinToString(" · "),
+                stopDetails = ui.stop.districtName?.let { stringResource(R.string.leg_time_district, ui.stop.time, it) }
+                    ?: ui.stop.time,
                 stopTypeTag = { StopTypeTag(ui.stop.type) },
                 legTimes = {
                     LegTimes(
@@ -133,7 +132,7 @@ fun UnderwayLegPage(
                 stopDetails = stringResource(R.string.leg_start_from_location, ui.stop.time),
                 modifier = Modifier.fillMaxWidth(),
             )
-            ui.leaveBy?.let { LegLeaveBy(it) }
+            ui.leaveBy?.let { LegLeaveBy(it, ui.leaveNow) }
         }
         TransportChoiceCard(
             selected = transport,
@@ -142,12 +141,11 @@ fun UnderwayLegPage(
             fareLabel = labels.fareLabel,
             fareAgency = labels.fareAgency,
         )
-        handoffError?.let { HandoffError(it, hero != null) }
     }
 }
 
 @Composable
-private fun LegLeaveBy(time: String) {
+private fun LegLeaveBy(time: String, leaveNow: Boolean) {
     val color = MaterialTheme.colorScheme.onPrimaryContainer
     Column(
         Modifier
@@ -158,8 +156,16 @@ private fun LegLeaveBy(time: String) {
             .semantics(mergeDescendants = true) {},
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(stringResource(R.string.at_stop_leave_by), style = MaterialTheme.typography.labelLarge, color = color)
-        Text(time, style = MaterialTheme.typography.displaySmall, color = color)
+        Text(
+            stringResource(if (leaveNow) R.string.leg_depart else R.string.at_stop_leave_by),
+            style = MaterialTheme.typography.labelLarge,
+            color = color,
+        )
+        Text(
+            if (leaveNow) stringResource(R.string.leg_now) else time,
+            style = if (leaveNow) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
+            color = color,
+        )
     }
 }
 
@@ -169,6 +175,7 @@ private fun HandoffError(message: String, onHero: Boolean) {
         message,
         style = MaterialTheme.typography.bodyMedium,
         color = if (onHero) HackappTheme.appColors.onHeroCard else MaterialTheme.colorScheme.error,
+        textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
             .semantics { liveRegion = LiveRegionMode.Polite },
@@ -194,7 +201,15 @@ fun UnderwayArrivalPage(
             HackappTextActionButton(skipLabel(ui.stop), onSkip)
         },
     ) {
-        ArrivalStatusCard(expectedArrivalTime = ui.expectedArrival, modifier = Modifier.fillMaxWidth())
+        val time = ui.expectedArrival ?: ui.stop.time
+        ArrivalStatusCard(
+            expectedArrivalTime = time,
+            modifier = Modifier.fillMaxWidth(),
+            expectedArrival = stringResource(
+                if (ui.expectedArrival != null) R.string.arrival_expected else R.string.leg_start_from_location,
+                time,
+            ),
+        )
         HackappTextActionButton(
             stringResource(R.string.arrival_change_transport),
             onChangeTransport,
@@ -235,10 +250,16 @@ fun UnderwayAtStopPage(
         }
         if (ui.leaveBy != null && ui.nextStopName != null && ui.nextTransitMinutes != null) {
             LeaveByCard(
-                leaveByTime = ui.leaveBy,
+                leaveByTime = if (ui.leaveNow) stringResource(R.string.leg_now) else ui.leaveBy,
                 nextStopName = ui.nextStopName,
                 transitMinutes = ui.nextTransitMinutes,
                 modifier = Modifier.fillMaxWidth(),
+                label = stringResource(if (ui.leaveNow) R.string.leg_depart else R.string.at_stop_leave_by),
+                valueStyle = if (ui.leaveNow) {
+                    MaterialTheme.typography.headlineMedium
+                } else {
+                    MaterialTheme.typography.displayMedium
+                },
             )
         }
         ui.lateStop?.let { late ->
@@ -247,9 +268,7 @@ fun UnderwayAtStopPage(
                 onGoAnyway = { onGoAnyway(late.id) },
                 onSkipStop = { onSkipNext(late) },
                 skipStopLabel = skipLabel(late),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { liveRegion = LiveRegionMode.Polite },
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -305,7 +324,7 @@ private fun DayResultRow(result: DayResultUi) {
         result.stamp == DayStampUi.New -> stringResource(R.string.end_of_day_stamp_new)
         result.stamp == DayStampUi.AlreadyInPassport -> stringResource(R.string.end_of_day_already_in_passport)
         result.stamp == DayStampUi.None -> stringResource(R.string.end_of_day_no_stamp)
-        else -> null
+        else -> stringResource(R.string.end_of_day_stamp_pending)
     }
     Row(
         Modifier
@@ -341,4 +360,12 @@ fun UnderwayLoadingPage(onBack: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun UnderwayErrorPage(onRetry: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
     HackappPage(title = "", modifier = modifier, onBack = onBack) { ErrorState(onRetry = onRetry) }
+}
+
+/** An error that retrying cannot fix: the only action goes Home. */
+@Composable
+fun UnderwayExitErrorPage(onExit: () -> Unit, modifier: Modifier = Modifier) {
+    HackappPage(title = "", modifier = modifier, onBack = onExit) {
+        ErrorState(onRetry = onExit, actionLabel = stringResource(R.string.end_of_day_done))
+    }
 }

@@ -3,6 +3,7 @@ package com.example.hackapp.scaffold.screens.underway
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,19 +105,20 @@ internal fun NotificationsOffBanner(onOpenSettings: () -> Unit, onDismiss: () ->
             .fillMaxWidth()
             .clip(RoundedCornerShape(HackappCorners.Medium))
             .background(scheme.surfaceContainer)
-            .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(Icons.Filled.NotificationsOff, contentDescription = null, tint = scheme.onSurfaceVariant)
-        Text(
-            stringResource(R.string.underway_notifications_off),
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        HackappSmallTextButton(stringResource(R.string.underway_notifications_open_settings), onOpenSettings)
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.underway_notifications_off),
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+            HackappSmallTextButton(stringResource(R.string.underway_notifications_open_settings), onOpenSettings)
+        }
         IconButton(onClick = onDismiss) {
             Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.underway_banner_dismiss))
         }
@@ -125,11 +127,18 @@ internal fun NotificationsOffBanner(onOpenSettings: () -> Unit, onDismiss: () ->
 
 /** Figma `160:2635`. */
 @Composable
-internal fun SkipStopDialog(stopName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+internal fun SkipStopDialog(
+    stopName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    endsItinerary: Boolean = false,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.underway_skip_title, stopName)) },
-        text = { Text(stringResource(R.string.underway_skip_body)) },
+        text = {
+            Text(stringResource(if (endsItinerary) R.string.underway_skip_last_body else R.string.underway_skip_body))
+        },
         confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.underway_skip_confirm)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
@@ -142,7 +151,7 @@ internal fun EndEarlyDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.underway_end_early_title)) },
         text = { Text(stringResource(R.string.underway_end_early_body)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.end_of_day_finish)) } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.underway_end_confirm)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

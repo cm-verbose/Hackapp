@@ -47,10 +47,12 @@ data class LegUi(
     val leaveBy: String?,
     val strip: List<StripStop>,
     val currentIndex: Int?,
+    /** Leave By has passed: show Départ, Maintenant. */
+    val leaveNow: Boolean = false,
 )
 
 @Immutable
-data class ArrivalUi(val stop: UnderwayStopUi, val expectedArrival: String)
+data class ArrivalUi(val stop: UnderwayStopUi, val expectedArrival: String?)
 
 @Immutable
 data class AtStopUi(
@@ -60,6 +62,8 @@ data class AtStopUi(
     val nextStopName: String?,
     val nextTransitMinutes: Int?,
     val lateStop: UnderwayStopUi?,
+    /** Leave By has passed: show Départ, Maintenant. */
+    val leaveNow: Boolean = false,
 )
 
 enum class DayStampUi { New, AlreadyInPassport, None, Unavailable }
@@ -98,6 +102,8 @@ class UnderwayStopsInfo(
 }
 
 private val Stop.point get() = LatLng(latitude, longitude)
+
+private fun UnderwayView.isPastLeaveBy(now: Instant) = leaveBy?.toInstant()?.isAfter(now) == false
 
 internal fun EngineTransport.toChoice() = when (this) {
     EngineTransport.Transit -> TransportChoice.Transit
@@ -142,15 +148,16 @@ internal fun legUi(
         leaveBy = view.leaveBy?.let(info::time),
         strip = info.stops.map { StripStop(info.time(it.start), info.ui(it).type) },
         currentIndex = index.takeIf { it >= 0 },
+        leaveNow = view.isPastLeaveBy(now),
     )
 }
 
 internal fun arrivalUi(view: UnderwayView, info: UnderwayStopsInfo): ArrivalUi? {
     val stop = view.currentStop ?: return null
-    return ArrivalUi(info.ui(stop), info.time(view.expectedArrival ?: stop.start))
+    return ArrivalUi(info.ui(stop), view.expectedArrival?.let(info::time))
 }
 
-internal fun atStopUi(view: UnderwayView, info: UnderwayStopsInfo, estimator: LegEstimator): AtStopUi? {
+internal fun atStopUi(view: UnderwayView, info: UnderwayStopsInfo, now: Instant, estimator: LegEstimator): AtStopUi? {
     val stop = view.currentStop ?: return null
     val next = view.nextStop
     return AtStopUi(
@@ -160,6 +167,7 @@ internal fun atStopUi(view: UnderwayView, info: UnderwayStopsInfo, estimator: Le
         nextStopName = next?.name,
         nextTransitMinutes = next?.let { estimator.estimate(stop.point, it.point, LegMode.TRANSIT).travelMinutes },
         lateStop = view.lateWarningStop?.let(info::ui),
+        leaveNow = view.isPastLeaveBy(now),
     )
 }
 

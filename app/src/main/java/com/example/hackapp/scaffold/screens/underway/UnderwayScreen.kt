@@ -1,6 +1,7 @@
 package com.example.hackapp.scaffold.screens.underway
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.itinerary.Stop
+import com.example.hackapp.scaffold.navigation.flowForwardTransform
 import com.example.hackapp.scaffold.screens.itinerary.itineraryTitle
 import com.example.hackapp.scaffold.screens.itinerary.loadDistrictNames
 import com.example.hackapp.scaffold.screens.itinerary.stopTypesFor
@@ -58,7 +60,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
     BackHandler(onBack = onExitToHome)
     val uid = LocalAuthService.current.currentUser?.uid
     if (uid == null) {
-        UnderwayErrorPage(onRetry = onExitToHome, onBack = onExitToHome)
+        UnderwayExitErrorPage(onExitToHome)
         return
     }
     val context = LocalContext.current
@@ -134,13 +136,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                 val view = data.view
                 val chrome = UnderwayChrome(
                     showNotificationBanner = view.showNotificationBanner,
-                    onBack = {
-                        if (view.phase == UnderwayPhase.Arrival) {
-                            viewModel.dispatch(UnderwayEvent.ReturnToLeg)
-                        } else {
-                            onExitToHome()
-                        }
-                    },
+                    onBack = onExitToHome,
                     onEndItinerary = { viewModel.dispatch(UnderwayEvent.EndItinerary(confirmed = false)) },
                     onOpenNotificationSettings = {
                         viewModel.dispatch(UnderwayEvent.NotificationBannerHandled)
@@ -148,20 +144,28 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                     },
                     onDismissBanner = { viewModel.dispatch(UnderwayEvent.NotificationBannerHandled) },
                 )
-                ActivePhase(
-                    view = view,
-                    now = data.now,
-                    info = loaded,
-                    services = services,
-                    chrome = chrome,
-                    dispatch = viewModel::dispatch,
-                    isOnLegTo = { id ->
-                        val fresh = appContext.underwayCoordinator.view(uid, notificationsAllowed = true)
-                        fresh?.phase == UnderwayPhase.Leg && fresh.currentStop?.id == id
-                    },
-                    onAskSkip = { skipStopId = it },
-                    onExitToHome = onExitToHome,
-                )
+                // Same phase and Stop keeps the page in place; the content still gets each new view.
+                AnimatedContent(
+                    targetState = view,
+                    contentKey = { it.phase to it.currentStop?.id },
+                    transitionSpec = { flowForwardTransform() },
+                    label = "underway-phase",
+                ) { shown ->
+                    ActivePhase(
+                        view = shown,
+                        now = data.now,
+                        info = loaded,
+                        services = services,
+                        chrome = chrome,
+                        dispatch = viewModel::dispatch,
+                        isOnLegTo = { id ->
+                            val fresh = appContext.underwayCoordinator.view(uid, notificationsAllowed = true)
+                            fresh?.phase == UnderwayPhase.Leg && fresh.currentStop?.id == id
+                        },
+                        onAskSkip = { skipStopId = it },
+                        onExitToHome = onExitToHome,
+                    )
+                }
                 skipStopId?.let { id ->
                     val stop = loaded.itinerary.stops.firstOrNull { it.id == id }
                     if (stop == null) {
@@ -174,6 +178,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                                 viewModel.dispatch(UnderwayEvent.SkipStop(id))
                             },
                             onDismiss = { skipStopId = null },
+                            endsItinerary = view.phase != UnderwayPhase.AtStop && view.nextStop == null,
                         )
                     }
                 }
@@ -209,7 +214,7 @@ private fun ActivePhase(
         UnderwayPhase.Arrival -> {
             val ui = arrivalUi(view, info.stops)
             if (ui == null) {
-                UnderwayErrorPage(onRetry = onExitToHome, onBack = onExitToHome)
+                UnderwayExitErrorPage(onExitToHome)
             } else {
                 UnderwayArrivalPage(
                     ui = ui,
@@ -221,9 +226,9 @@ private fun ActivePhase(
             }
         }
         UnderwayPhase.AtStop -> {
-            val ui = atStopUi(view, info.stops, services.legs)
+            val ui = atStopUi(view, info.stops, now, services.legs)
             if (ui == null) {
-                UnderwayErrorPage(onRetry = onExitToHome, onBack = onExitToHome)
+                UnderwayExitErrorPage(onExitToHome)
             } else {
                 UnderwayAtStopPage(
                     ui = ui,
@@ -253,14 +258,14 @@ private fun LegContent(
 ) {
     val stop = view.currentStop
     if (stop == null) {
-        UnderwayErrorPage(onRetry = onExitToHome, onBack = onExitToHome)
+        UnderwayExitErrorPage(onExitToHome)
         return
     }
     var transport by rememberSaveable(stop.id, view.transport) { mutableStateOf(view.transport.toChoice()) }
     var failedApp by rememberSaveable(stop.id) { mutableStateOf<String?>(null) }
     val ui = legUi(view, info.stops, now, services.legs, transport)
     if (ui == null) {
-        UnderwayErrorPage(onRetry = onExitToHome, onBack = onExitToHome)
+        UnderwayExitErrorPage(onExitToHome)
         return
     }
     val language = LocalConfiguration.current.locales[0].language
