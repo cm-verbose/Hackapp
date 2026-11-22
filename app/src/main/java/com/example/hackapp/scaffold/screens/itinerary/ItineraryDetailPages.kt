@@ -115,7 +115,7 @@ fun PastItineraryPage(
             SectionLabel(stringResource(R.string.past_stamps_earned))
             if (loaded.stamps.isEmpty()) {
                 Text(
-                    stringResource(R.string.end_of_day_no_stamp),
+                    stringResource(R.string.past_stamps_none),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -220,7 +220,7 @@ private fun StatusStopRow(stop: DetailStop, showStatus: Boolean) {
         StopRow(
             time = stop.time,
             stopName = stop.name,
-            details = "$kind · ${stop.districtName}",
+            details = "$kind\u00a0· ${stop.districtName}",
             modifier = Modifier.weight(1f),
         )
         if (showStatus) {

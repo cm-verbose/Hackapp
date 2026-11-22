@@ -111,9 +111,9 @@ fun DistrictPickMap(
             districts.mapNotNull { d ->
                 val marker = markers[d.id]?.takeIf { it.showLabel } ?: return@mapNotNull null
                 val text = buildString {
-                    marker.order?.let { append(it).append(" · ") }
+                    marker.order?.let { append(it).append("\u00a0· ") }
                     append(breakableName(d.shape.name))
-                    if (marker.count > 0) append(" · ").append(marker.count)
+                    if (marker.count > 0) append("\u00a0· ").append(marker.count)
                 }
                 val layout = measurer.measure(
                     text = text,

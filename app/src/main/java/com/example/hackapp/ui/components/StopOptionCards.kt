@@ -71,7 +71,7 @@ fun EventOptionCard(
     }
     HorizontalInfoCard(
         title = title,
-        subtitle = parts.joinToString(" · "),
+        subtitle = parts.joinToString("\u00a0· "),
         selected = selected,
         onClick = onClick,
         modifier = modifier,
@@ -90,7 +90,7 @@ fun MealOptionCard(
 ) {
     HorizontalInfoCard(
         title = name,
-        subtitle = "$details · ${price.text()}",
+        subtitle = "$details\u00a0· ${price.text()}",
         selected = selected,
         onClick = onClick,
         modifier = modifier,

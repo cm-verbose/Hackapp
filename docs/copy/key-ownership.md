@@ -79,11 +79,11 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `welcome_tagline`: ScreenLogin.kt
 - `welcome_title`: ScreenLogin.kt
 
-## home: Home and Itineraries (34)
+## home: Home and Itineraries (35)
 
 - `action_delete`: ItineraryDetailPages.kt, ItineraryUi.kt, ScreenItinerary.kt
 - `archived_choose_new_date`: ItineraryDetailPages.kt
-- `end_of_day_no_stamp`: ItineraryDetailPages.kt
+- `end_of_day_no_stamp`: unused
 - `home_greeting`: ScreenHome.kt
 - `home_greeting_anonymous`: ScreenHome.kt
 - `home_next_stop`: ScreenHome.kt, UnderwayItineraryCard.kt
@@ -110,15 +110,18 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `nav_itineraries`: MainBottomAppBar.kt, ItineraryDetailPages.kt, ScreenItinerary.kt
 - `nav_passport`: MainBottomAppBar.kt
 - `past_stamps_earned`: ItineraryDetailPages.kt
+- `past_stamps_none`: ItineraryDetailPages.kt
 - `stamps_count`: ItineraryUi.kt, HeroHeader.kt
 - `stop_kind_meal`: ItineraryDetailPages.kt
 - `stop_status_confirmed`: ItineraryDetailPages.kt
 - `stop_status_skipped`: ItineraryDetailPages.kt
 - `stops_count`: ItineraryUi.kt
 
-## planning: Planning (68)
+## planning: Planning (71)
 
 - `action_remove`: DistrictPickPage.kt, StopRow.kt
+- `action_reorganize`: unused
+- `action_reschedule`: unused
 - `budget_dinner`: BudgetFields.kt, PlanningBudgetPages.kt
 - `budget_events`: BudgetFields.kt, PlanningBudgetPages.kt
 - `budget_late_night`: BudgetFields.kt, PlanningBudgetPages.kt
@@ -163,6 +166,7 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `planning_night_out`: PlanningDateTimePage.kt, ChoiceControls.kt
 - `planning_save_error`: DistrictPickPage.kt, PlanningBudgetPages.kt, PlanningDateTimePage.kt
 - `planning_start`: PlanningDateTimePage.kt, DateTimeFields.kt
+- `planning_stops_title`: PlanningNavigation.kt
 - `planning_when_title`: PlanningDateTimePage.kt
 - `review_notification_note`: unused
 - `review_planned_departure`: unused
@@ -187,13 +191,14 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `stop_type_sport`: StopTypeTag.kt
 - `stop_type_theatre`: StopTypeTag.kt
 
-## underway: Underway and Passport (28)
+## underway: Underway and Passport (29)
 
 - `arrival_en_route`: AppNavigation.kt, ArrivalStatusCard.kt
 - `arrival_expected`: ArrivalStatusCard.kt
 - `at_stop_leave_by`: AppNavigation.kt, LeaveByCard.kt
 - `at_stop_next`: LeaveByCard.kt
 - `end_of_day_already_in_passport`: unused
+- `end_of_day_done`: unused
 - `end_of_day_finish`: unused
 - `end_of_day_new_stamps_section`: unused
 - `end_of_day_title`: AppNavigation.kt
@@ -246,7 +251,7 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `state_empty_title`: StateViews.kt
 - `state_error_title`: StateViews.kt
 - `state_loading`: StateViews.kt
-- `stop_kind_event`: ItineraryDetailPages.kt, PlanningNavigation.kt
+- `stop_kind_event`: ItineraryDetailPages.kt
 - `stops_confirmed`: unused
 - `stops_skipped`: unused
 - `time_hour`: TimeWheels.kt

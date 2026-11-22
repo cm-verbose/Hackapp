@@ -66,7 +66,7 @@ fun ItineraryCard(
     }
     HorizontalInfoCard(
         title = itineraryTitle(card.date, card.districtName),
-        subtitle = parts.joinToString(" · "),
+        subtitle = parts.joinToString("\u00a0· "),
         modifier = modifier,
         onClick = onClick,
         trailing = trailing,

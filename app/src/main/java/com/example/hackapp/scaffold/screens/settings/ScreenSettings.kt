@@ -123,7 +123,7 @@ private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
             profile.email,
             ageRangeLabel(profile.ageRange),
             summary.districtName,
-        ).joinToString(" · "),
+        ).joinToString("\u00a0· "),
         avatarText = profile.name.take(1).uppercase(),
         trailing = null,
     )
@@ -133,7 +133,7 @@ private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
             listOf(stringResource(R.string.settings_events_budget, budgetLabel(profile.eventBudget))) +
                 profile.audience.map { audienceLabel(it) }
             )
-            .joinToString(" · "),
+            .joinToString("\u00a0· "),
         trailing = null,
     )
     val preferences = profile.interests.map { stopTypeLabel(it.stopType) } +

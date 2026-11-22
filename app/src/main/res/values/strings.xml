@@ -20,7 +20,7 @@
     <string name="selection_meal_block_title">Bloc repas</string>
     <string name="selection_choose_meal">Choisir un repas</string>
     <string name="leg_next_stop_label">Prochain arrêt</string>
-    <string name="leg_fare_required">Titre requis : %1$s · %2$s</string>
+    <string name="leg_fare_required">Titre requis : %1$s · tarif %2$s</string>
     <string name="leg_depart">Départ</string>
     <string name="leg_travel">Trajet</string>
     <string name="leg_arrive">Arrivée</string>
@@ -41,15 +41,15 @@
     <string name="meal_plan_yes">Planifier mes repas</string>
     <string name="meal_plan_no">Je m’en occupe</string>
     <string name="meal_block_note">Bloc de %1$d min</string>
-    <string name="leg_stop_progress">Prochain arrêt · %1$d sur %2$d</string>
+    <string name="leg_stop_progress">Prochain arrêt · %1$d sur %2$d</string>
     <string name="leg_start_from_location">Début %1$s</string>
     <string name="arrival_en_route">En route</string>
     <string name="arrival_expected">Arrivée prévue %1$s</string>
     <string name="action_skip_stop">Sauter cet arrêt</string>
     <string name="action_go_anyway">Y aller quand même</string>
     <string name="at_stop_leave_by">Partez avant</string>
-    <string name="at_stop_next">Prochain arrêt : %1$s · ≈ %2$d min</string>
-    <string name="late_warning">Retard possible : %1$s</string>
+    <string name="at_stop_next">Prochain arrêt : %1$s · ≈ %2$d min</string>
+    <string name="late_warning">Vous risquez d’être en retard : %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
     <string name="password_reset_sent">Lien envoyé si un compte existe pour ce courriel.</string>
     <string name="auth_error_invalid_credentials">Courriel ou mot de passe incorrect.</string>
@@ -65,9 +65,9 @@
     <string name="action_remove">Retirer</string>
     <string name="action_arrived">Je suis sur place</string>
     <string name="action_leaving">Je pars</string>
-    <string name="notification_preview_header">%1$s · maintenant</string>
+    <string name="notification_preview_header">%1$s · maintenant</string>
     <string name="notification_arrival_title">Êtes-vous sur place?</string>
-    <string name="notification_arrival_body">%1$s · %2$s</string>
+    <string name="notification_arrival_body">%1$s · %2$s</string>
     <string name="notification_leave_title">Partez avant %1$s</string>
     <string name="notification_leave_body">Prochain arrêt : %1$s</string>
 
@@ -75,6 +75,8 @@
     <string name="action_back">Retour</string>
     <string name="action_clear_field">Effacer le champ %1$s</string>
     <string name="action_cancel">Annuler</string>
+    <string name="action_reschedule">Replanifier</string>
+    <string name="action_reorganize">Réorganiser</string>
     <string name="action_confirm">Confirmer</string>
     <string name="action_retry">Réessayer</string>
     <string name="state_loading">Chargement…</string>
@@ -124,7 +126,7 @@
     <!-- City Pack may override the District label -->
     <string name="profile_district_of_stay">Arrondissement de séjour</string>
     <string name="budget_audience_title">Budget et public</string>
-    <string name="budget_subtitle">Par personne, par itinéraire.</string>
+    <string name="budget_subtitle">Par personne</string>
     <string name="budget_under_20">&lt; 20 $</string>
     <string name="budget_under_50">&lt; 50 $</string>
     <string name="budget_under_100">&lt; 100 $</string>
@@ -140,10 +142,11 @@
     <string name="audience_no_alcohol">Sans alcool</string>
     <string name="audience_bars_hidden_note">Bars masqués</string>
     <string name="interests_title">Intérêts et cuisines</string>
-    <string name="interests_subtitle">Pour classer les résultats, sans rien masquer.</string>
+    <string name="interests_subtitle">Pour classer les résultats, sans rien masquer</string>
     <string name="interests_event_types">Types d’événements</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Événement</string>
+    <string name="planning_stops_title">Choix des arrêts</string>
     <string name="stop_kind_meal">Repas</string>
 
     <!-- Cuisines (align with restaurant data) -->
@@ -162,11 +165,11 @@
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Arrondissements</string>
     <string name="district_pick_instructions">Choisissez-en 1 à 3, dans l’ordre de visite.</string>
-    <string name="district_order_chip" translatable="false">%1$d · %2$s</string>
+    <string name="district_order_chip" translatable="false">%1$d · %2$s</string>
     <string name="meal_title">Repas</string>
-    <string name="meal_lunch_at">Dîner · %1$s</string>
-    <string name="meal_dinner_at">Souper · %1$s</string>
-    <string name="meal_late_bite_at">Bouchée tardive · %1$s</string>
+    <string name="meal_lunch_at">Dîner · %1$s</string>
+    <string name="meal_dinner_at">Souper · %1$s</string>
+    <string name="meal_late_bite_at">Bouchée tardive · %1$s</string>
     <string name="selection_district_progress">Arrondissement %1$d sur %2$d</string>
     <string name="selection_time_block" translatable="false">%1$s – %2$s</string>
     <string name="selection_finish_here">Terminer ici</string>
@@ -174,7 +177,7 @@
     <string name="planned_departure_title">Départ prévu</string>
     <string name="review_title">Révision</string>
     <string name="review_planned_departure">départ prévu %1$s</string>
-    <string name="review_remove_note">Retirer un arrêt vous ramène à la sélection pour ce créneau. Les arrêts ne se réordonnent pas.</string>
+    <string name="review_remove_note">Retirer un arrêt vous ramène à la sélection pour cette plage horaire.</string>
     <string name="review_start">Démarrer l’itinéraire</string>
     <string name="review_notification_note">On vous demandera d’autoriser les notifications.</string>
 
@@ -185,10 +188,12 @@
     <string name="leg_google_maps_directions">Ouvrir dans Google Maps</string>
     <string name="notification_channel_underway">Itinéraire en cours</string>
     <string name="end_of_day_title">Itinéraire terminé</string>
-    <string name="end_of_day_no_stamp">Aucun</string>
+    <string name="end_of_day_no_stamp">Aucun timbre</string>
+    <string name="past_stamps_none">Aucun</string>
     <string name="end_of_day_already_in_passport">Déjà dans votre passeport</string>
     <string name="end_of_day_new_stamps_section">Nouveaux timbres</string>
     <string name="end_of_day_finish">Terminer l’itinéraire</string>
+    <string name="end_of_day_done">Retour à l’accueil</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passeport</string>
@@ -218,11 +223,11 @@
 
     <!-- Main tabs -->
     <string name="home_greeting_anonymous">Bonjour</string>
-    <string name="itinerary_title_in">%1$s · %2$s</string>
+    <string name="itinerary_title_in">%1$s · %2$s</string>
     <string name="itinerary_date_pattern" translatable="false">d MMM</string>
-    <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
+    <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
     <string name="itineraries_past">Passés</string>
-    <string name="itineraries_archived">Archivés · jamais commencés</string>
+    <string name="itineraries_archived">Archivés · jamais commencés</string>
     <string name="itineraries_archived_note">Archivé : date passée</string>
     <string name="itineraries_empty_body">Aucun itinéraire</string>
     <string name="itinerary_menu">Options de l’itinéraire</string>

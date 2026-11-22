@@ -22,7 +22,7 @@ import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import java.util.Locale
 
 /**
  * Figma "LocalNotificationPreview" (30:743): an in-app mock of an Android local notification
@@ -93,7 +93,8 @@ private fun LocalNotificationArrivalPreview() = HackappTheme {
 @Preview(name = "LocalNotificationPreview · leave by", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun LocalNotificationLeavePreview() = HackappTheme {
-    val leaveBy = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(LocalTime.of(19, 15))
+    val pattern = if (Locale.getDefault().language == "fr") "H\u00a0'h'\u00a0mm" else "HH:mm"
+    val leaveBy = DateTimeFormatter.ofPattern(pattern).format(LocalTime.of(19, 15))
     LocalNotificationPreview(
         title = stringResource(R.string.notification_leave_title, leaveBy),
         body = stringResource(R.string.notification_leave_body, "Jazz sur le toit"),

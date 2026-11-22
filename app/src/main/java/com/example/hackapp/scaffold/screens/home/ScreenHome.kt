@@ -174,7 +174,6 @@ private val PreviewHomeState = HomeUiState(
             underway = UnderwayUi(
                 date = LocalDate.of(2026, 11, 28),
                 districtName = "Le Plateau",
-                nextStopTime = "19:30",
                 nextStopName = "Bistro du coin",
                 strip = listOf(StripStop("18:30", StopType.Music), StripStop("19:30", StopType.Meal)),
                 currentIndex = 1,

@@ -73,7 +73,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
     planningPage<PlanningStopSelectionRoute>(controller) { entry ->
         val route = entry.toRoute<PlanningStopSelectionRoute>()
         RoutePlaceholder(
-            title = stringResource(R.string.stop_kind_event),
+            title = stringResource(R.string.planning_stops_title),
             onBack = { controller.popBackStack() },
             step = 5,
             totalSteps = PLANNING_STEPS,
