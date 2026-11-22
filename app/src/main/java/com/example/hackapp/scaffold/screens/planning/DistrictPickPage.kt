@@ -150,7 +150,7 @@ fun DistrictPickPage(
                             d.id to DistrictMarker(
                                 count = count,
                                 pickable = isDistrictPickable(d.groupId, count, order != null),
-                                showBadge = order != null || d.groupId != LINKED_CITY_GROUP,
+                                showLabel = order != null || d.groupId != LINKED_CITY_GROUP,
                                 order = order,
                                 previewed = d.id == state.previewId,
                             )

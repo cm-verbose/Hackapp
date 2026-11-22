@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components.map
 
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -7,6 +8,9 @@ import kotlin.math.sin
 
 const val MIN_MAP_ZOOM = 1f
 const val MAX_MAP_ZOOM = 6f
+
+/** Below this zoom Districts show count badges. From it they show their names. */
+const val MAP_NAMES_ZOOM = 2f
 
 /** A rectangle in pixels. */
 data class MapBounds(val left: Float, val top: Float, val right: Float, val bottom: Float)
@@ -112,49 +116,68 @@ fun normalizedDegrees(degrees: Float): Float {
 fun nextDoubleTapZoom(zoom: Float): Float =
     if (zoom >= MAX_MAP_ZOOM - 0.01f) MIN_MAP_ZOOM else min(zoom * 2f, MAX_MAP_ZOOM)
 
-/** A count badge at its fitted (1x) position. */
-data class MapBadge(val id: String, val x: Float, val y: Float, val count: Int, val selected: Boolean)
+/** A District name at its fitted (1x) position, with its measured size in pixels. */
+data class MapLabel(
+    val id: String,
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+    val count: Int,
+    /** Selected or previewed names always show. */
+    val pinned: Boolean,
+)
 
-/** Selected Districts first, then the highest counts. The id keeps the order stable. */
-private val BadgePriority = compareByDescending<MapBadge> { it.selected }
+/** Pinned names first, then the highest counts. The id keeps the order stable. */
+private val LabelPriority = compareByDescending<MapLabel> { it.pinned }
     .thenByDescending { it.count }
     .thenBy { it.id }
 
 /**
- * The badges to show at [zoom]. Badges keep a fixed [diameter], so spreading the map apart reveals
- * lower-count ones. Selected badges always show. Panning cannot change the result.
+ * The names to show. Names stay upright at a fixed size, so zooming spreads them apart and reveals
+ * lower-priority ones. Panning cannot change the result.
  */
-fun visibleBadgeIds(badges: List<MapBadge>, zoom: Float, diameter: Float): Set<String> {
-    val kept = ArrayList<MapBadge>(badges.size)
-    val minDistanceSquared = (diameter / zoom).let { it * it }
-    badges.sortedWith(BadgePriority).forEach { badge ->
+fun visibleLabelIds(labels: List<MapLabel>, viewport: MapViewport, gap: Float = 0f): Set<String> {
+    val placement = viewport.copy(panX = 0f, panY = 0f)
+    class Placed(val x: Float, val y: Float, val label: MapLabel)
+
+    val kept = ArrayList<Placed>(labels.size)
+    labels.sortedWith(LabelPriority).forEach { label ->
+        val placed = Placed(placement.screenX(label.x, label.y), placement.screenY(label.x, label.y), label)
         val clear = kept.none { other ->
-            val dx = other.x - badge.x
-            val dy = other.y - badge.y
-            dx * dx + dy * dy < minDistanceSquared
+            abs(other.x - placed.x) < (other.label.width + label.width) / 2f + gap &&
+                abs(other.y - placed.y) < (other.label.height + label.height) / 2f + gap
         }
-        if (badge.selected || clear) kept += badge
+        if (label.pinned || clear) kept += placed
     }
-    return kept.mapTo(LinkedHashSet()) { it.id }
+    return kept.mapTo(LinkedHashSet()) { it.label.id }
 }
 
-/** The visible badge under a screen point, nearest first, or null. */
-fun badgeAt(
-    badges: List<MapBadge>,
+/**
+ * Where a centered name starts on one axis. A name whose anchor is on screen is nudged fully inside
+ * the canvas. One whose anchor has moved off screen leaves with it.
+ */
+fun labelStart(anchor: Float, size: Float, canvas: Float): Float {
+    val start = anchor - size / 2f
+    return if (anchor in 0f..canvas && size <= canvas) start.coerceIn(0f, canvas - size) else start
+}
+
+/** The visible name under a screen point, nearest first, or null. */
+fun labelAt(
+    labels: List<MapLabel>,
     visibleIds: Set<String>,
     viewport: MapViewport,
     screenX: Float,
     screenY: Float,
-    radius: Float,
-): String? = badges
+): String? = labels
     .asSequence()
     .filter { it.id in visibleIds }
-    .map { badge ->
-        val dx = viewport.screenX(badge.x, badge.y) - screenX
-        val dy = viewport.screenY(badge.x, badge.y) - screenY
-        badge to dx * dx + dy * dy
+    .map { label ->
+        val dx = viewport.screenX(label.x, label.y) - screenX
+        val dy = viewport.screenY(label.x, label.y) - screenY
+        Triple(label, dx, dy)
     }
-    .filter { (_, distanceSquared) -> distanceSquared <= radius * radius }
-    .minByOrNull { (_, distanceSquared) -> distanceSquared }
+    .filter { (label, dx, dy) -> abs(dx) <= label.width / 2f && abs(dy) <= label.height / 2f }
+    .minByOrNull { (_, dx, dy) -> dx * dx + dy * dy }
     ?.first
     ?.id

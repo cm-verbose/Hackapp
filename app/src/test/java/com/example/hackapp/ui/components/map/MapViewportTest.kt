@@ -101,42 +101,57 @@ class MapViewportTest {
 
     @Test
     fun higherCountWinsAnOverlap() {
-        val badges = listOf(badge("low", 100f, 2), badge("high", 110f, 9))
-        assertEquals(setOf("high"), visibleBadgeIds(badges, zoom = 1f, diameter = 24f))
+        val labels = listOf(label("low", 100f, 2), label("high", 110f, 9))
+        assertEquals(setOf("high"), visibleLabelIds(labels, MapViewport()))
     }
 
     @Test
-    fun zoomingInRevealsHiddenBadges() {
-        val badges = listOf(badge("low", 100f, 2), badge("high", 110f, 9))
-        assertEquals(setOf("high", "low"), visibleBadgeIds(badges, zoom = 3f, diameter = 24f))
+    fun zoomingInRevealsHiddenNames() {
+        val labels = listOf(label("low", 100f, 2), label("high", 110f, 9))
+        assertEquals(setOf("high", "low"), visibleLabelIds(labels, MapViewport(zoom = 6f)))
     }
 
     @Test
-    fun selectedBadgesAlwaysShow() {
-        val badges = listOf(
-            badge("a", 100f, 1, selected = true),
-            badge("b", 101f, 1, selected = true),
-            badge("busy", 102f, 50),
+    fun pinnedNamesAlwaysShow() {
+        val labels = listOf(
+            label("a", 100f, 1, pinned = true),
+            label("b", 101f, 1, pinned = true),
+            label("busy", 102f, 50),
         )
-        assertEquals(setOf("a", "b"), visibleBadgeIds(badges, zoom = 1f, diameter = 24f))
+        assertEquals(setOf("a", "b"), visibleLabelIds(labels, MapViewport()))
+    }
+
+    @Test
+    fun rotatingCanSeparateNames() {
+        // Side by side they overlap; turned 90 degrees they stack, and the names are wider than tall.
+        val labels = listOf(label("a", 100f, 3), label("b", 130f, 2))
+        assertEquals(setOf("a"), visibleLabelIds(labels, MapViewport()))
+        assertEquals(setOf("a", "b"), visibleLabelIds(labels, MapViewport(rotation = 90f)))
     }
 
     @Test
     fun equalCountsResolveTheSameWayEveryTime() {
-        val one = listOf(badge("b", 100f, 3), badge("a", 105f, 3))
-        assertEquals(visibleBadgeIds(one, 1f, 24f), visibleBadgeIds(one.reversed(), 1f, 24f))
-        assertTrue("a" in visibleBadgeIds(one, 1f, 24f))
+        val one = listOf(label("b", 100f, 3), label("a", 105f, 3))
+        assertEquals(visibleLabelIds(one, MapViewport()), visibleLabelIds(one.reversed(), MapViewport()))
+        assertTrue("a" in visibleLabelIds(one, MapViewport()))
     }
 
     @Test
-    fun badgeTapUsesScreenPositionAtZoom() {
-        val badges = listOf(badge("a", 100f, 3))
+    fun nameTapUsesScreenPositionAtZoom() {
+        val labels = listOf(label("a", 100f, 3))
         val viewport = MapViewport(zoom = 4f, panX = -200f, panY = 0f)
-        assertEquals("a", badgeAt(badges, setOf("a"), viewport, 200f, 400f, 12f))
-        assertNull(badgeAt(badges, setOf("a"), viewport, 100f, 100f, 12f))
-        assertNull(badgeAt(badges, emptySet(), viewport, 200f, 400f, 12f))
+        assertEquals("a", labelAt(labels, setOf("a"), viewport, 200f, 400f))
+        assertNull(labelAt(labels, setOf("a"), viewport, 100f, 100f))
+        assertNull(labelAt(labels, emptySet(), viewport, 200f, 400f))
     }
 
-    private fun badge(id: String, x: Float, count: Int, selected: Boolean = false) =
-        MapBadge(id, x, 100f, count, selected)
+    @Test
+    fun namesNearAnEdgeStayOnScreen() {
+        assertEquals(340f, labelStart(390f, 60f, 400f), 0.001f)
+        assertEquals(0f, labelStart(10f, 60f, 400f), 0.001f)
+        assertEquals(-40f, labelStart(-10f, 60f, 400f), 0.001f)
+    }
+
+    private fun label(id: String, x: Float, count: Int, pinned: Boolean = false) =
+        MapLabel(id, x, 100f, width = 60f, height = 16f, count = count, pinned = pinned)
 }

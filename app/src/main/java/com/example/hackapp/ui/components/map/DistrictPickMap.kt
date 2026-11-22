@@ -1,8 +1,11 @@
 package com.example.hackapp.ui.components.map
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -11,20 +14,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.example.hackapp.citypack.CityPack
 import com.example.hackapp.citypack.DistrictMapData
-import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.components.DistrictEventCount
 import com.example.hackapp.ui.theme.HackappTheme
 import kotlin.math.roundToInt
@@ -33,14 +43,28 @@ import kotlin.math.roundToInt
 data class DistrictMarker(
     val count: Int,
     val pickable: Boolean,
-    val showBadge: Boolean,
+    val showLabel: Boolean,
     val order: Int? = null,
     val previewed: Boolean = false,
 )
 
+private val LabelMaxWidth = 104.dp
+private val LabelPaddingX = 4.dp
+private val LabelPaddingY = 2.dp
+private const val LABEL_MAX_LINES = 3
+
+private val BadgeSize = 24.dp
+
+private class PlacedName(
+    val label: MapLabel,
+    val layout: TextLayoutResult,
+    val marker: DistrictMarker,
+)
+
 /**
- * Full-size interactive District map. Badges keep a fixed size, move in the layout phase and
- * recompose only when the set of visible badges changes.
+ * Full-size interactive District map. Below [MAP_NAMES_ZOOM] a District shows its count badge, or
+ * nothing when it has no Events. From that zoom it shows its upright name. Markers move in the
+ * layout phase and recompose only when what is shown changes.
  */
 @Composable
 fun DistrictPickMap(
@@ -50,17 +74,18 @@ fun DistrictPickMap(
     onDistrictTap: (String) -> Unit,
     onEmptyTap: () -> Unit,
     modifier: Modifier = Modifier,
-    cityPack: CityPack = LocalCityPack.current,
-    badgeSize: Dp = 24.dp,
 ) {
     val cs = MaterialTheme.colorScheme
-    val groupTint = remember(cityPack) {
-        cityPack.districtGroups.mapNotNull { g -> g.colors.firstOrNull()?.let { g.id to Color(it) } }.toMap()
-    }
-    val badgePx = with(LocalDensity.current) { badgeSize.toPx() }
+    val density = LocalDensity.current
     val currentMarkers by rememberUpdatedState(markers)
+    val measurer = rememberTextMeasurer(cacheSize = 96)
+    val textStyle = MaterialTheme.typography.labelSmall.copy(textAlign = TextAlign.Center)
+    val maxWidthPx = with(density) { LabelMaxWidth.roundToPx() }
+    val padX = with(density) { LabelPaddingX.toPx() }
+    val padY = with(density) { LabelPaddingY.toPx() }
+    val badgePx = with(density) { BadgeSize.toPx() }
     // Published after composition for the tap handler, which runs outside it.
-    val badgeHolder = remember { BadgeHolder() }
+    val labelHolder = remember { LabelHolder() }
 
     CityMap(
         map = map,
@@ -71,69 +96,124 @@ fun DistrictPickMap(
             when {
                 marker?.order != null -> cs.secondaryContainer
                 marker?.previewed == true -> cs.primary
-                marker?.pickable != true -> cs.outlineVariant.copy(alpha = 0.4f)
-                else -> districtBaseFill(cs, d.shape.groupId, groupTint)
+                marker?.pickable == true -> cs.primaryContainer
+                else -> cs.outlineVariant.copy(alpha = 0.55f)
             }
         },
         tapTarget = { tap ->
-            badgeAt(badgeHolder.badges, badgeHolder.visible, viewportState.viewport, tap.x, tap.y, badgePx / 2f)
+            labelAt(labelHolder.labels, labelHolder.visible, viewportState.viewport, tap.x, tap.y)
         },
         onDistrictTap = { id -> if (currentMarkers[id]?.pickable == true) onDistrictTap(id) },
         onEmptyTap = onEmptyTap,
     ) { t, districts ->
-        val badges = remember(districts, t.scale, t.origin, markers) {
+        val showNames by remember { derivedStateOf { viewportState.viewport.zoom >= MAP_NAMES_ZOOM } }
+        val names = remember(districts, t.scale, t.origin, markers, textStyle, maxWidthPx) {
             districts.mapNotNull { d ->
-                val marker = markers[d.id]?.takeIf { it.showBadge } ?: return@mapNotNull null
+                val marker = markers[d.id]?.takeIf { it.showLabel } ?: return@mapNotNull null
+                val text = buildString {
+                    marker.order?.let { append(it).append(" · ") }
+                    append(breakableName(d.shape.name))
+                    if (marker.count > 0) append(" · ").append(marker.count)
+                }
+                val layout = measurer.measure(
+                    text = text,
+                    style = textStyle,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = LABEL_MAX_LINES,
+                    constraints = Constraints(maxWidth = maxWidthPx),
+                )
                 val p = t.toScreen(d.label)
-                MapBadge(d.id, p.x, p.y, marker.count, marker.order != null)
+                PlacedName(
+                    label = MapLabel(
+                        id = d.id,
+                        x = p.x,
+                        y = p.y,
+                        width = layout.size.width + padX * 2f,
+                        height = layout.size.height + padY * 2f,
+                        count = marker.count,
+                        pinned = marker.order != null || marker.previewed,
+                    ),
+                    layout = layout,
+                    marker = marker,
+                )
             }
         }
-        val visible by remember(badges, badgePx) {
-            derivedStateOf { visibleBadgeIds(badges, viewportState.viewport.zoom, badgePx) }
+        val shown = remember(names, showNames, badgePx) {
+            names.mapNotNull { placed ->
+                when {
+                    showNames -> placed to placed.label
+                    placed.marker.order == null && placed.marker.count == 0 -> null
+                    else -> placed to placed.label.copy(width = badgePx, height = badgePx)
+                }
+            }
+        }
+        val labels = remember(shown) { shown.map { it.second } }
+        val visible by remember(labels) {
+            derivedStateOf(structuralEqualityPolicy()) { visibleLabelIds(labels, viewportState.viewport) }
         }
         SideEffect {
-            badgeHolder.badges = badges
-            badgeHolder.visible = visible
+            labelHolder.labels = labels
+            labelHolder.visible = visible
         }
-        val names = remember(districts) { districts.associate { it.id to it.shape.name } }
-        val half = badgePx / 2f
-        // Selected badges come last, so they draw on top.
-        badges.sortedBy { it.selected }.forEach { badge ->
-            if (badge.id !in visible) return@forEach
-            key(badge.id) {
-                val marker = markers.getValue(badge.id)
-                val name = names[badge.id].orEmpty()
+        val districtNames = remember(districts) { districts.associate { it.id to it.shape.name } }
+        // Pinned markers come last, so they draw on top.
+        shown.sortedBy { it.second.pinned }.forEach { (placed, label) ->
+            if (label.id !in visible) return@forEach
+            key(label.id) {
+                val marker = placed.marker
+                val showsName = showNames
+                val background = when {
+                    marker.order != null -> cs.secondaryContainer
+                    marker.previewed -> cs.primary
+                    else -> Color.Transparent
+                }
+                val textColor = when {
+                    marker.order != null -> cs.onSecondaryContainer
+                    marker.previewed -> cs.onPrimary
+                    marker.pickable -> cs.onSurface
+                    else -> cs.onSurfaceVariant
+                }
+                val halo = if (label.pinned) null else Shadow(cs.surface, blurRadius = 6f)
+                val name = districtNames[label.id].orEmpty()
                 Box(
                     Modifier
                         .offset {
                             val vp = viewportState.viewport
                             IntOffset(
-                                (vp.screenX(badge.x, badge.y) - half).roundToInt(),
-                                (vp.screenY(badge.x, badge.y) - half).roundToInt(),
+                                labelStart(vp.screenX(label.x, label.y), label.width, viewportState.canvasWidth).roundToInt(),
+                                labelStart(vp.screenY(label.x, label.y), label.height, viewportState.canvasHeight).roundToInt(),
                             )
                         }
+                        .size(with(density) { label.width.toDp() }, with(density) { label.height.toDp() })
+                        .then(
+                            if (!showsName) Modifier
+                            else Modifier
+                                .background(background, RoundedCornerShape(4.dp))
+                                .drawBehind {
+                                    drawText(placed.layout, color = textColor, topLeft = Offset(padX, padY), shadow = halo)
+                                },
+                        )
                         .clearAndSetSemantics {
                             contentDescription = name
                             if (marker.pickable) {
                                 onClick {
-                                    onDistrictTap(badge.id)
+                                    onDistrictTap(label.id)
                                     true
                                 }
                             }
                         },
                 ) {
-                    when {
-                        marker.order != null -> DistrictEventCount(
-                            result = marker.order,
-                            badgeColor = cs.surface,
-                            textColor = cs.secondaryContainer,
-                            badgeSize = badgeSize,
-                        )
-                        else -> DistrictEventCount(
-                            result = marker.count,
-                            badgeColor = if (marker.pickable) cs.primary else cs.outline,
-                            badgeSize = badgeSize,
-                        )
+                    if (!showsName) {
+                        if (marker.order != null) {
+                            DistrictEventCount(
+                                result = marker.order,
+                                badgeColor = cs.surface,
+                                textColor = cs.secondaryContainer,
+                                badgeSize = BadgeSize,
+                            )
+                        } else {
+                            DistrictEventCount(result = marker.count, badgeSize = BadgeSize)
+                        }
                     }
                 }
             }
@@ -141,8 +221,11 @@ fun DistrictPickMap(
     }
 }
 
-private class BadgeHolder {
-    var badges: List<MapBadge> = emptyList()
+/** Lets a long name wrap after its hyphens instead of inside a word. */
+private fun breakableName(name: String) = name.replace("-", "-\u200B").replace("–", "–\u200B")
+
+private class LabelHolder {
+    var labels: List<MapLabel> = emptyList()
     var visible: Set<String> = emptySet()
 }
 
@@ -152,10 +235,10 @@ private fun DistrictPickMapPreview() = HackappTheme {
     DistrictPickMap(
         map = PreviewDistrictMap,
         markers = mapOf(
-            "a" to DistrictMarker(14, pickable = true, showBadge = true, order = 1),
-            "b" to DistrictMarker(8, pickable = true, showBadge = true, previewed = true),
-            "c" to DistrictMarker(0, pickable = false, showBadge = true),
-            "d" to DistrictMarker(3, pickable = false, showBadge = false),
+            "a" to DistrictMarker(14, pickable = true, showLabel = true, order = 1),
+            "b" to DistrictMarker(8, pickable = true, showLabel = true, previewed = true),
+            "c" to DistrictMarker(0, pickable = false, showLabel = true),
+            "d" to DistrictMarker(3, pickable = false, showLabel = false),
         ),
         viewportState = rememberMapViewportState(),
         onDistrictTap = {},
