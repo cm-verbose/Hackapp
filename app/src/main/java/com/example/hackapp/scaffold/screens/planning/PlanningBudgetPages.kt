@@ -98,16 +98,6 @@ fun PlanningBudgetChoicePage(
             state.loading -> LoadingState()
             state.loadFailed -> ErrorState(onRetry = onRetry)
             else -> {
-                Text(
-                    stringResource(R.string.planning_budget_question),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    stringResource(R.string.planning_budget_current),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
                 CurrentBudgetCard(state.selection)
             }
         }
@@ -213,11 +203,6 @@ fun PlanningBudgetEditPage(
                     stringResource(R.string.planning_budget_edit_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    stringResource(R.string.planning_budget_edit_note),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 BudgetFields(
                     lunch = selection.lunch,

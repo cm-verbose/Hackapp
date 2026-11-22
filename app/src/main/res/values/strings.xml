@@ -17,8 +17,7 @@
     <string name="home_plan_title">Journée ou soirée à %1$s</string>
     <string name="home_plan_action">Planifier un itinéraire</string>
     <string name="home_suggestions">Suggestions</string>
-    <string name="selection_meal_block_title">Bloc repas %1$s – %2$s</string>
-    <string name="selection_meal_block_body">Choisissez un restaurant ou un bar (dès 17:00).</string>
+    <string name="selection_meal_block_title">Bloc repas</string>
     <string name="selection_choose_meal">Choisir un repas</string>
     <string name="leg_next_stop_label">Prochain arrêt</string>
     <string name="leg_fare_required">Titre requis : %1$s</string>
@@ -40,9 +39,9 @@
     <string name="data_attribution">Données : Has Things (hasthings.com), Ville de Montréal, © les contributeurs d’OpenStreetMap</string>
     <string name="district_add_as_position">Ajouter en %1$de</string>
     <string name="district_choose_another">Choisir un autre</string>
-    <string name="meal_plan_yes">Oui, planifiez mes repas</string>
+    <string name="meal_plan_yes">Planifier mes repas</string>
     <string name="meal_plan_no">Je m’en occupe</string>
-    <string name="meal_block_note">Chaque repas réserve un bloc de 90 min : 1 h, plus 15 min avant et après.</string>
+    <string name="meal_block_note">Bloc de %1$d min</string>
     <string name="leg_stop_progress">Prochain arrêt · %1$d sur %2$d</string>
     <string name="leg_start_from_location">Début %1$s · départ depuis votre position</string>
     <string name="arrival_en_route">En route</string>
@@ -133,11 +132,10 @@
     <string name="budget_under_50">&lt; 50 $</string>
     <string name="budget_under_100">&lt; 100 $</string>
     <string name="budget_100_plus">100 $ +</string>
-    <string name="budget_lunch">Dîner (repas 1)</string>
-    <string name="budget_dinner">Souper (repas 2)</string>
+    <string name="budget_lunch">Dîner</string>
+    <string name="budget_dinner">Souper</string>
     <string name="budget_events">Événements (total)</string>
-    <string name="budget_late_night">Collation de fin de soirée</string>
-    <string name="budget_late_night_description">Facultatif. Ajoutez un budget pour une bouchée tardive.</string>
+    <string name="budget_late_night">Bouchée tardive</string>
     <string name="onboarding_save_error">Impossible d’enregistrer votre profil. Réessayez.</string>
     <string name="audience_title">Public</string>
     <string name="audience_adults_only">18+ seulement</string>
@@ -159,7 +157,6 @@
 
     <!-- Planning -->
     <string name="planning_new_itinerary">Nouvel itinéraire</string>
-    <string name="planning_when_title">Quand sortez-vous?</string>
     <string name="planning_date">Date</string>
     <string name="planning_day_out">Journée</string>
     <string name="planning_night_out">Soirée</string>
@@ -167,19 +164,17 @@
     <string name="planning_end">Fin</string>
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Arrondissements</string>
-    <string name="district_pick_instructions">Choisissez 1 à 3 arrondissements, dans l’ordre de visite.</string>
+    <string name="district_pick_instructions">Choisissez-en 1 à 3, dans l’ordre de visite.</string>
     <string name="district_order_chip" translatable="false">%1$d · %2$s</string>
     <string name="meal_title">Repas</string>
-    <string name="meal_question">On planifie vos repas?</string>
-    <string name="meal_when">Quand voulez-vous manger?</string>
     <string name="meal_lunch_at">Dîner · %1$s</string>
     <string name="meal_dinner_at">Souper · %1$s</string>
     <string name="meal_late_bite_at">Bouchée tardive · %1$s</string>
-    <string name="selection_district_progress">Arrondissement %1$d sur %2$d · %3$s → %4$s</string>
+    <string name="selection_district_progress">Arrondissement %1$d sur %2$d</string>
     <string name="selection_time_block" translatable="false">%1$s – %2$s</string>
     <string name="selection_finish_here">Terminer ici</string>
     <string name="selection_next_district">Arrondissement suivant</string>
-    <string name="planned_departure_title">À quelle heure partirez-vous?</string>
+    <string name="planned_departure_title">Départ prévu</string>
     <string name="review_title">Révision</string>
     <string name="review_planned_departure">départ prévu %1$s</string>
     <string name="review_remove_note">Retirer un arrêt vous ramène à la sélection pour ce créneau. Les arrêts ne se réordonnent pas.</string>
@@ -253,24 +248,20 @@
     <string name="settings_events_budget">Événements : %1$s</string>
 
     <!-- Planning: date and District map -->
-    <string name="planning_error_min_duration">Un itinéraire dure au moins 2 heures.</string>
-    <string name="planning_error_latest_end">Un itinéraire se termine au plus tard à 04:00.</string>
+    <string name="planning_error_min_duration">Prévoyez au moins 2 h.</string>
+    <string name="planning_error_latest_end">Terminez au plus tard à 4 h.</string>
     <string name="planning_save_error">Impossible d’enregistrer. Réessayez.</string>
     <string name="district_add_first">Ajouter en 1re</string>
     <string name="district_max_title">Maximum de %1$d %2$s</string>
-    <string name="district_max_body">Pour ajouter %1$s, choisissez lequel remplacer.</string>
-    <string name="district_replace_label">Remplacer :</string>
+    <string name="district_max_body">Lequel remplacer par %1$s?</string>
     <string name="district_replace_action">Remplacer</string>
     <string name="district_map_reset">Réinitialiser la carte</string>
     <string name="time_hour">Heure</string>
     <string name="time_minute">Minute</string>
     <string name="planning_budget_title">Budget</string>
-    <string name="planning_budget_question">Modifier votre budget pour cette sortie?</string>
-    <string name="planning_budget_current">Voici le budget actuellement prévu pour cette sortie.</string>
     <string name="planning_budget_keep">Garder ce budget</string>
-    <string name="planning_budget_change">Modifier pour cette sortie</string>
-    <string name="planning_budget_edit_title">Budget de cette sortie</string>
-    <string name="planning_budget_edit_note">Ces changements s’appliquent à cet itinéraire seulement.</string>
+    <string name="planning_budget_change">Modifier pour cet itinéraire</string>
+    <string name="planning_budget_edit_title">Pour cet itinéraire seulement</string>
     <string name="budget_off">Désactivée</string>
     <string name="budget_not_set">Non défini</string>
 

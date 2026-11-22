@@ -364,12 +364,6 @@ private fun MaximumReachedContent(
         color = scheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 4.dp),
     )
-    Text(
-        stringResource(R.string.district_replace_label),
-        style = MaterialTheme.typography.labelLarge,
-        color = scheme.onSurface,
-        modifier = Modifier.padding(top = 8.dp),
-    )
     Column(Modifier.selectableGroup()) {
         state.selected.forEachIndexed { index, selectedId ->
             RadioOptionRow(

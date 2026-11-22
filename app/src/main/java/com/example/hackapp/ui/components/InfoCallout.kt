@@ -34,5 +34,5 @@ fun InfoCallout(text: String, modifier: Modifier = Modifier) {
 @Preview(name = "InfoCallout", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun InfoCalloutPreview() = HackappTheme {
-    InfoCallout(stringResource(R.string.meal_block_note))
+    InfoCallout(stringResource(R.string.meal_block_note, 90))
 }

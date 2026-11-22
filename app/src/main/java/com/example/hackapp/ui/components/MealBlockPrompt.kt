@@ -19,16 +19,13 @@ import com.example.hackapp.ui.theme.HackappTheme
 
 /**
  * Figma "MealBlockPrompt" (53:1267), PlanningStopSelectionScreen: a reserved 90-min Meal Block
- * waiting for a restaurant or bar. [start] and [end] are formatted times ("19:00").
+ * waiting for a restaurant or bar.
  */
 @Composable
 fun MealBlockPrompt(
-    start: String,
-    end: String,
     onChooseMeal: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.selection_meal_block_title, start, end),
-    body: String = stringResource(R.string.selection_meal_block_body),
+    title: String = stringResource(R.string.selection_meal_block_title),
     actionLabel: String = stringResource(R.string.selection_choose_meal),
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -40,7 +37,6 @@ fun MealBlockPrompt(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(title, style = MaterialTheme.typography.titleSmall, color = scheme.onTertiaryContainer)
-        Text(body, style = MaterialTheme.typography.bodyMedium, color = scheme.onTertiaryContainer)
         HackappSmallButton(text = actionLabel, onClick = onChooseMeal)
     }
 }
@@ -48,5 +44,5 @@ fun MealBlockPrompt(
 @Preview(name = "MealBlockPrompt", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun MealBlockPromptPreview() = HackappTheme {
-    MealBlockPrompt(start = "19:00", end = "20:30", onChooseMeal = {})
+    MealBlockPrompt(onChooseMeal = {})
 }

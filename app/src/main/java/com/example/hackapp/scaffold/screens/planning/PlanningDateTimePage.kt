@@ -104,7 +104,6 @@ fun PlanningDateTimePage(
             state.loading -> LoadingState()
             state.loadFailed -> ErrorState(onRetry = onRetry)
             else -> {
-                Text(stringResource(R.string.planning_when_title), style = MaterialTheme.typography.headlineSmall)
                 HackappDateField(
                     value = state.date,
                     onValueChange = onDateChange,

@@ -57,11 +57,6 @@ fun ColumnScope.BudgetFields(
     ) {
         Column(Modifier.weight(1f)) {
             BudgetTitle(stringResource(R.string.budget_late_night))
-            Text(
-                stringResource(R.string.budget_late_night_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
         Switch(checked = lateNightEnabled, onCheckedChange = null)
     }

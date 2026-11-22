@@ -19,8 +19,7 @@
     <string name="home_plan_title">Day or night out in %1$s</string>
     <string name="home_plan_action">Plan an itinerary</string>
     <string name="home_suggestions">Suggestions</string>
-    <string name="selection_meal_block_title">Meal block %1$s – %2$s</string>
-    <string name="selection_meal_block_body">Choose a restaurant or bar (from 17:00).</string>
+    <string name="selection_meal_block_title">Meal block</string>
     <string name="selection_choose_meal">Choose a meal</string>
     <string name="leg_next_stop_label">Next stop</string>
     <string name="leg_fare_required">Fare needed: %1$s</string>
@@ -42,9 +41,9 @@
     <string name="data_attribution">Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors</string>
     <string name="district_add_as_position">Add as #%1$d</string>
     <string name="district_choose_another">Choose another</string>
-    <string name="meal_plan_yes">Yes, plan my meals</string>
+    <string name="meal_plan_yes">Plan my meals</string>
     <string name="meal_plan_no">I’ll handle it</string>
-    <string name="meal_block_note">Each meal reserves a 90-minute block: 1 h, plus 15 min before and after.</string>
+    <string name="meal_block_note">%1$d-min block</string>
     <string name="leg_stop_progress">Next stop · %1$d of %2$d</string>
     <string name="leg_start_from_location">Starts %1$s · leaving from your location</string>
     <string name="arrival_en_route">On the way</string>
@@ -130,11 +129,10 @@
     <string name="budget_under_50">&lt; $50</string>
     <string name="budget_under_100">&lt; $100</string>
     <string name="budget_100_plus">$100+</string>
-    <string name="budget_lunch">Lunch (Meal 1)</string>
-    <string name="budget_dinner">Dinner (Meal 2)</string>
+    <string name="budget_lunch">Lunch</string>
+    <string name="budget_dinner">Dinner</string>
     <string name="budget_events">Events (total)</string>
-    <string name="budget_late_night">Late-night snack</string>
-    <string name="budget_late_night_description">Optional. Add a budget for a late bite.</string>
+    <string name="budget_late_night">Late bite</string>
     <string name="onboarding_save_error">Couldn’t save your profile. Try again.</string>
     <string name="audience_title">Audience</string>
     <string name="audience_adults_only">18+ only</string>
@@ -156,7 +154,6 @@
 
     <!-- Planning -->
     <string name="planning_new_itinerary">New itinerary</string>
-    <string name="planning_when_title">When are you going out?</string>
     <string name="planning_date">Date</string>
     <string name="planning_day_out">Day out</string>
     <string name="planning_night_out">Night out</string>
@@ -164,17 +161,15 @@
     <string name="planning_end">End</string>
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Boroughs</string>
-    <string name="district_pick_instructions">Choose 1 to 3 boroughs, in the order you’ll visit them.</string>
+    <string name="district_pick_instructions">Choose 1 to 3, in the order you’ll visit them.</string>
     <string name="meal_title">Meals</string>
-    <string name="meal_question">Should we plan your meals?</string>
-    <string name="meal_when">When do you want to eat?</string>
     <string name="meal_lunch_at">Lunch · %1$s</string>
     <string name="meal_dinner_at">Dinner · %1$s</string>
     <string name="meal_late_bite_at">Late bite · %1$s</string>
-    <string name="selection_district_progress">Borough %1$d of %2$d · %3$s → %4$s</string>
+    <string name="selection_district_progress">Borough %1$d of %2$d</string>
     <string name="selection_finish_here">Finish here</string>
     <string name="selection_next_district">Next borough</string>
-    <string name="planned_departure_title">When will you leave?</string>
+    <string name="planned_departure_title">Planned departure</string>
     <string name="review_title">Review</string>
     <string name="review_planned_departure">planned departure %1$s</string>
     <string name="review_remove_note">Removing a stop takes you back to selection for that time slot. Stops can’t be reordered.</string>
@@ -244,24 +239,20 @@
     <string name="settings_events_budget">Events: %1$s</string>
 
     <!-- Planning: date and District map -->
-    <string name="planning_error_min_duration">An itinerary lasts at least 2 hours.</string>
-    <string name="planning_error_latest_end">An itinerary ends no later than 04:00.</string>
+    <string name="planning_error_min_duration">Allow at least 2 hours.</string>
+    <string name="planning_error_latest_end">End by 04:00.</string>
     <string name="planning_save_error">Couldn’t save. Try again.</string>
     <string name="district_add_first">Add as #1</string>
     <string name="district_max_title">Maximum of %1$d %2$s</string>
-    <string name="district_max_body">To add %1$s, choose which one to replace.</string>
-    <string name="district_replace_label">Replace:</string>
+    <string name="district_max_body">Replace which one with %1$s?</string>
     <string name="district_replace_action">Replace</string>
     <string name="district_map_reset">Reset map</string>
     <string name="time_hour">Hour</string>
     <string name="time_minute">Minute</string>
     <string name="planning_budget_title">Budget</string>
-    <string name="planning_budget_question">Change your budget for this outing?</string>
-    <string name="planning_budget_current">This is the budget currently set for this outing.</string>
     <string name="planning_budget_keep">Keep this budget</string>
-    <string name="planning_budget_change">Change for this outing</string>
-    <string name="planning_budget_edit_title">Budget for this outing</string>
-    <string name="planning_budget_edit_note">These changes apply to this Itinerary only.</string>
+    <string name="planning_budget_change">Change for this itinerary</string>
+    <string name="planning_budget_edit_title">For this itinerary only</string>
     <string name="budget_off">Off</string>
     <string name="budget_not_set">Not set</string>
 
