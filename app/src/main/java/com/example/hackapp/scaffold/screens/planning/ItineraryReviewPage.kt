@@ -12,12 +12,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,6 +48,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hackapp.R
 import com.example.hackapp.auth.LocalAuthService
@@ -51,6 +58,7 @@ import com.example.hackapp.citypack.GeoPoint
 import com.example.hackapp.citypack.rememberDistrictMap
 import com.example.hackapp.data.repository.EventQuery
 import com.example.hackapp.itinerary.BudgetPrices
+import com.example.hackapp.itinerary.BudgetSummary
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.LocalItineraryRepository
@@ -64,6 +72,7 @@ import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.itinerary.StopRemovalReason
 import com.example.hackapp.itinerary.activeMealBlocks
 import com.example.hackapp.itinerary.mealBudget
+import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.screens.budgetBracketLabel
@@ -78,6 +87,7 @@ import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappTextActionButton
 import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.StopRow
+import com.example.hackapp.ui.components.formatCad
 import com.example.hackapp.ui.components.formatSentenceTime
 import com.example.hackapp.ui.components.map.ItineraryRouteMap
 import com.example.hackapp.ui.components.map.PreviewDistrictMap
@@ -115,9 +125,17 @@ fun ItineraryReviewScreen(
     val auth = LocalAuthService.current
     val profiles = LocalProfileRepository.current
     val zone = services.cityPack.timeZone
+    // A missing or unreadable Profile only leaves the fallback budgets unset, as on Meal choice.
     val loadProfileContext: suspend () -> PlanningContext = {
-        val uid = checkNotNull(auth.currentUser?.uid)
-        PlanningContext.from(checkNotNull(profiles.getProfile(uid)), Instant.now(), zone)
+        val profile = try {
+            auth.currentUser?.uid?.let { profiles.getProfile(it) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+        profile?.let { PlanningContext.from(it, Instant.now(), zone) }
+            ?: PlanningContext(Instant.now(), zone, AgeRange.From25To34)
     }
     val viewModel: ItineraryReviewViewModel = viewModel(
         factory = ItineraryReviewViewModel.factory(
@@ -165,16 +183,11 @@ fun ItineraryReviewScreen(
     val stopTypes by produceState(emptyMap<String, StopType>(), stops) {
         value = services.events.stopTypesFor(stops)
     }
-    // The budget card falls back to the Profile, so a failed read only leaves those rows unset.
     val context by produceState<PlanningContext?>(null, auth.currentUser?.uid) {
-        value = try {
-            loadProfileContext()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
-        }
+        value = loadProfileContext()
     }
+    // Start depends on the clock, so a page left open past its window must update.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
     ItineraryReviewPage(
         state = state,
         map = map,
@@ -275,7 +288,7 @@ fun ItineraryReviewPage(
                         StopRow(
                             time = row.stop.start.format(StopTimeFormat),
                             stopName = row.stop.name,
-                            details = stopDetails(row.stop, districtNames[row.stop.districtId]),
+                            details = stopDetails(row, districtNames[row.stop.districtId]),
                             highlighted = row.highlighted,
                             onClick = { onSelectStop(row.stop.id) },
                             onRemove = if (state.itinerary?.phase == ItineraryPhase.Planning) {
@@ -288,6 +301,7 @@ fun ItineraryReviewPage(
                     }
                 }
                 ReviewBudgetCard(budgetRows)
+                state.budget?.let { ReviewRunningTotal(it) }
             }
         }
     }
@@ -311,6 +325,7 @@ fun ItineraryReviewPage(
             },
             canReschedule = dialog.canReschedule,
             busy = state.busy,
+            saveFailed = state.actionFailed,
             onReschedule = onReschedule,
             onReorganize = onReorganize,
             onCancel = onDismissDialog,
@@ -320,6 +335,7 @@ fun ItineraryReviewPage(
         ReschedulePickerDialog(
             step = step,
             busy = state.busy,
+            saveFailed = state.actionFailed,
             onPick = onPickShowtime,
             onReorganize = onReorganize,
             onCancel = onCancelReschedule,
@@ -330,10 +346,12 @@ fun ItineraryReviewPage(
 private fun Stop.fallbackType() = if (kind == StopKind.Meal) StopType.Meal else StopType.Festival
 
 @Composable
-private fun stopDetails(stop: Stop, districtName: String?): String {
+private fun stopDetails(row: ReviewStop, districtName: String?): String {
+    val stop = row.stop
     val kind = stringResource(if (stop.kind == StopKind.Meal) R.string.stop_kind_meal else R.string.stop_kind_event)
-    val departure = if (stop.kind == StopKind.Event) {
-        stringResource(R.string.review_planned_departure, stop.plannedDeparture.format(StopTimeFormat))
+    // A Meal keeps its block's end, so it only shows a time when the next Stop needs an earlier one.
+    val departure = if (stop.kind == StopKind.Event || row.leaveBy.isBefore(stop.plannedDeparture)) {
+        stringResource(R.string.review_planned_departure, row.leaveBy.format(StopTimeFormat))
     } else {
         null
     }
@@ -347,7 +365,8 @@ private fun ColumnScope.ReviewActions(
     onChangeDateTime: () -> Unit,
 ) {
     val start = state.start
-    if (state.actionFailed) {
+    // Inside a dialog or the picker, the error is shown there instead.
+    if (state.actionFailed && state.dialog == null && state.reschedule == null) {
         Text(
             stringResource(R.string.planning_save_error),
             style = MaterialTheme.typography.bodySmall,
@@ -424,6 +443,81 @@ private fun ReviewBudgetCard(rows: List<ReviewBudgetRow>) {
             }
         }
     }
+}
+
+/** The running total, in the card pattern of Selection. Over budget warns only. */
+@Composable
+private fun ReviewRunningTotal(budget: BudgetSummary) {
+    val scheme = MaterialTheme.colorScheme
+    val over = budget.isOverBudget
+    val strong = if (over) scheme.onErrorContainer else scheme.onSurface
+    val quiet = if (over) scheme.onErrorContainer else scheme.onSurfaceVariant
+    val limit = budget.totalBudgetCad
+    val known = budget.runningTotalCad
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(
+                if (over) scheme.errorContainer else scheme.surfaceContainerHigh,
+                RoundedCornerShape(HackappCorners.Medium),
+            )
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            if (over) Icons.Filled.Warning else Icons.Filled.Payments,
+            contentDescription = null,
+            tint = strong,
+            modifier = Modifier.size(24.dp),
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                if (over && limit != null) {
+                    stringResource(R.string.running_total_over, formatCad(known - limit))
+                } else {
+                    stringResource(R.string.running_total_label)
+                },
+                style = MaterialTheme.typography.labelMedium,
+                color = quiet,
+            )
+            Text(
+                when {
+                    !budget.hasUnknownPrices -> formatCad(known)
+                    known == 0.0 -> stringResource(R.string.running_total_unknown_only)
+                    else -> stringResource(R.string.running_total_amount, formatCad(known))
+                },
+                style = MaterialTheme.typography.titleMedium,
+                color = strong,
+            )
+            if (over) {
+                Text(
+                    stringResource(R.string.running_total_over_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = quiet,
+                )
+            }
+        }
+        limit?.let {
+            Text(
+                stringResource(R.string.running_total_budget, formatCad(it)),
+                style = MaterialTheme.typography.labelMedium,
+                color = quiet,
+            )
+        }
+    }
+}
+
+/** A failed save inside a dialog. The dialog's actions stay available to try again. */
+@Composable
+private fun DialogSaveError() {
+    Text(
+        stringResource(R.string.planning_save_error),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 /**
@@ -590,6 +684,7 @@ internal fun UnreachableStopsDialog(
     kept: List<Stop>,
     canReschedule: Boolean,
     busy: Boolean,
+    saveFailed: Boolean = false,
     onReschedule: () -> Unit,
     onReorganize: () -> Unit,
     onCancel: () -> Unit,
@@ -617,14 +712,16 @@ internal fun UnreachableStopsDialog(
         WarningBody(stringResource(R.string.review_unreachable_body, formatSentenceTime(slotTime, locale)))
         WarningStopList(stringResource(R.string.review_unreachable_affected), affected, emphasized = true)
         WarningStopList(stringResource(R.string.stop_edit_kept), kept, emphasized = false)
+        if (saveFailed) DialogSaveError()
     }
 }
 
-/** Picks another showtime for one affected Stop at a time. */
+/** Picks another showtime for one affected Stop at a time. After a failed save the same pick can be retried. */
 @Composable
 private fun ReschedulePickerDialog(
     step: RescheduleStep,
     busy: Boolean,
+    saveFailed: Boolean = false,
     onPick: (String) -> Unit,
     onReorganize: () -> Unit,
     onCancel: () -> Unit,
@@ -636,7 +733,7 @@ private fun ReschedulePickerDialog(
         onDismiss = onCancel,
         actions = {
             HackappTextActionButton(stringResource(R.string.action_cancel), onCancel, enabled = !busy)
-            if (step.options.isEmpty()) {
+            if (step.options.isEmpty() || saveFailed) {
                 HackappTextActionButton(
                     stringResource(R.string.action_reorganize),
                     onReorganize,
@@ -654,6 +751,7 @@ private fun ReschedulePickerDialog(
             )
         }
         WarningStopList(stringResource(R.string.review_unreachable_affected), listOf(step.stop), emphasized = true)
+        if (saveFailed) DialogSaveError()
         if (busy) {
             LinearProgressIndicator(
                 Modifier
@@ -787,6 +885,22 @@ private fun ReviewNotTodayPreview() =
 @Composable
 private fun ReviewWindowEndedPreview() =
     PreviewPage(previewState(start = ReviewStartState.WindowEnded(LocalDate.of(2026, 11, 28))))
+
+@Preview(name = "Review · over budget, unknown price", showBackground = true, widthDp = 412, heightDp = 1000)
+@Composable
+private fun ReviewOverBudgetPreview() = PreviewPage(
+    previewState().copy(
+        budget = BudgetSummary(
+            eventBudgetCad = 50,
+            mealBudgetCad = 20,
+            totalBudgetCad = 70,
+            eventsCad = 60.0,
+            mealsCad = 30.0,
+            unknownPriceCount = 1,
+            isOverBudget = true,
+        ),
+    ),
+)
 
 @Preview(name = "Review · 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 800, fontScale = 1.3f)
 @Composable
