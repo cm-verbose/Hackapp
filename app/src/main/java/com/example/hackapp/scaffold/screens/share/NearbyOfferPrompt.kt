@@ -37,14 +37,15 @@ fun NearbyOfferPrompt(onReceive: (ShareOffer) -> Unit) {
         watcher.start()
         onStopOrDispose { watcher.stop() }
     }
-    // Each phone's offer is shown once; it comes back only if that phone leaves and returns.
+    // Each share is shown once. Its name has a code that is new every time the other phone starts
+    // sharing, so the next press and hold there asks again.
     var handled by remember { mutableStateOf(emptySet<String>()) }
-    val offer = watcher.offers.values.firstOrNull { it.endpointId !in handled }
+    val offer = watcher.offers.values.firstOrNull { it.deviceName !in handled }
         ?.takeIf { auth.currentUser != null }
         ?: return
     val name = readableDeviceName(offer.deviceName)
     AlertDialog(
-        onDismissRequest = { handled = handled + offer.endpointId },
+        onDismissRequest = { handled = handled + offer.deviceName },
         title = {
             Text(
                 stringResource(
@@ -58,12 +59,12 @@ fun NearbyOfferPrompt(onReceive: (ShareOffer) -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = {
-                handled = handled + offer.endpointId
+                handled = handled + offer.deviceName
                 onReceive(offer.offer)
             }) { Text(stringResource(R.string.share_offer_receive)) }
         },
         dismissButton = {
-            TextButton(onClick = { handled = handled + offer.endpointId }) { Text(stringResource(R.string.share_offer_later)) }
+            TextButton(onClick = { handled = handled + offer.deviceName }) { Text(stringResource(R.string.share_offer_later)) }
         },
     )
 }

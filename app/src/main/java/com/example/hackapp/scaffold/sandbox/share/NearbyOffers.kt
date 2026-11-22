@@ -1,6 +1,8 @@
 package com.example.hackapp.scaffold.sandbox.share
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import com.google.android.gms.common.ConnectionResult
@@ -12,6 +14,12 @@ import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Strategy
 
 private const val TAG = "NearbyOffers"
+
+/**
+ * How often listening restarts. A phone that stops sharing and starts again right away may never
+ * be reported lost, so its new offer would go unseen without a fresh scan.
+ */
+private const val RESCAN_MS = 8_000L
 
 /** What a phone on a share page is offering, carried in its advertised Nearby name. */
 enum class ShareOffer(val tag: String) {
@@ -34,7 +42,10 @@ enum class ShareOffer(val tag: String) {
     }
 }
 
-/** A nearby phone that is waiting to send something. */
+/**
+ * A nearby phone that is waiting to send something. [deviceName] carries a code that is new each
+ * time that phone starts sharing, so it tells one share from the next.
+ */
 data class NearbyOffer(val endpointId: String, val deviceName: String, val offer: ShareOffer)
 
 /**
@@ -49,6 +60,15 @@ class NearbyOfferWatcher(private val context: Context) {
     private val client = Nearby.getConnectionsClient(context)
     private var wanted = false
     private var running = false
+    private val handler = Handler(Looper.getMainLooper())
+    private val rescan = object : Runnable {
+        override fun run() {
+            if (!running) return
+            client.stopDiscovery()
+            startDiscovery()
+            handler.postDelayed(this, RESCAN_MS)
+        }
+    }
 
     /** Offers in range, by endpoint id. */
     val offers = mutableStateMapOf<String, NearbyOffer>()
@@ -81,17 +101,25 @@ class NearbyOfferWatcher(private val context: Context) {
             GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
         if (shouldRun == running) return
         running = shouldRun
+        handler.removeCallbacks(rescan)
         if (shouldRun) {
-            client.startDiscovery(
-                SERVICE_ID,
-                callback,
-                DiscoveryOptions.Builder().setStrategy(Strategy.P2P_CLUSTER).build(),
-            ).addOnFailureListener { Log.d(TAG, "Listening for offers failed: ${it.message}") }
+            // Start clean: a share page may have left discovery in any state.
+            client.stopDiscovery()
+            startDiscovery()
+            handler.postDelayed(rescan, RESCAN_MS)
         } else {
             offers.clear()
             // A share page restarts discovery itself right after this.
             client.stopDiscovery()
         }
+    }
+
+    private fun startDiscovery() {
+        client.startDiscovery(
+            SERVICE_ID,
+            callback,
+            DiscoveryOptions.Builder().setStrategy(Strategy.P2P_CLUSTER).build(),
+        ).addOnFailureListener { Log.d(TAG, "Listening for offers failed: ${it.message}") }
     }
 }
 
