@@ -116,3 +116,35 @@ Not given a key: `Loading` and `Saving` (use a progress indicator), the after-mi
 |---|---|---|
 | Planned Departure, `crossesMidnight` hint | `planned_departure_next_day` | "Le lendemain" / "Next day" |
 | Meal picker second tab while the borough name is unavailable | `meal_tab_next` | Fallback for `meal_tab_in_district` |
+
+## UX review changes
+
+| Change | Key | Note |
+|---|---|---|
+| Median caption shortened (French) | `event_price_median` | "Médiane des prix déclarés" |
+| No end time, no duration in the sentence | `planned_departure_no_end` | No argument now. Remove the duration argument at the call site |
+| Typical duration line | `planned_departure_typical` | `%1$s` duration. Show it while `isTypicalStay` |
+| Ticket price label | `event_ticket_price_label` | "Prix payé (facultatif)" |
+| Signed-out field | `event_ticket_price_signed_out` | "Pour déclarer un prix", pair with `auth_sign_in` |
+| Meal picker, no options | `meal_picker_no_options` | "Aucun repas disponible." The Skip button is the next action |
+| Add when the ticket price is blank | `event_add_without_price` | |
+| Departure outside the allowed range | `planned_departure_error_range` | `%1$s`, `%2$s` earliest and latest time, formatted in code. Replaces nothing: `planned_departure_error_outside_window` stays for the window end alone |
+| Showtime chip accessibility | `event_showtime_label` | `%1$s` time, e.g. `20:00` |
+| Ticket price saving | `event_price_saving` | |
+
+### Audience labels
+
+Source `targetAudience.description` values in `events.json` (counts: 178, 99, 52, 160, 209, 28, 43, 15; 508 events have none), shown by `audienceLabel` in `EventDetailsSheet.kt`. The code currently displays the raw French text; map it through these keys, matching the exact source string.
+
+| Source value | Key | FR | EN |
+|---|---|---|---|
+| `Pour tous` | `event_audience_all` | Tous publics | All audiences |
+| `Enfants d'âge préscolaire` (straight apostrophe) | `event_audience_preschool` | Enfants d’âge préscolaire | Preschoolers |
+| `Famille` | `event_audience_family` | Familial | Family-friendly |
+| `Enfants` | `event_audience_children` | Enfants | Children |
+| `Adultes` | `event_audience_adult_public` | Adultes | Adults |
+| `Adolescents` | `event_audience_teens` | Adolescents | Teens |
+| `Personnes aînées` | `event_audience_seniors` | Personnes aînées | Seniors |
+| `18+` (minAge 18) | none | | Shown as is |
+
+`event_audience_adults` ("18+ seulement") stays as the fallback when there is no description and the minimum age is 18 or more. An unknown description falls back to the raw text. No key was removed: all existing keys are still referenced.
