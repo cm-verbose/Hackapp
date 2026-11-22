@@ -17,8 +17,6 @@ import com.example.hackapp.scaffold.navigation.AppNavigation
 fun AppScaffold() {
     val navController: NavHostController = rememberNavController()
     Scaffold { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            AppNavigation(navController)
-        }
+        AppNavigation(navController, innerPadding)
     }
 }
