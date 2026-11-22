@@ -12,6 +12,7 @@ import com.example.hackapp.itinerary.MealBlock
 import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.PlanningContext
 import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.defaultBlockId
 import com.example.hackapp.itinerary.defaultStart
 import com.example.hackapp.itinerary.fitsWindow
 import com.example.hackapp.itinerary.interval
@@ -29,7 +30,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
-import java.util.Locale
 
 /** [OutsideWindow]: the block leaves the Itinerary window. [Overlaps]: it overlaps another selected block. */
 enum class MealTimeError { OutsideWindow, Overlaps }
@@ -60,7 +60,7 @@ data class MealChoiceOption(
 fun initialMealPicks(itinerary: Itinerary, context: PlanningContext): Map<MealKind, MealPick> =
     MealKind.entries.associateWith { kind ->
         val saved = itinerary.mealBlocks.firstOrNull { it.kind == kind }
-        val default = MealBlock("meal-${kind.idName()}", kind, kind.defaultStart)
+        val default = MealBlock(kind.defaultBlockId(), kind, kind.defaultStart)
         val fits = default.fitsWindow(itinerary, context.zone)
         // The Late bite add-on is off without a budget: it stays offered but is not preselected.
         val addOnOn = kind != MealKind.LateBite || itinerary.mealBudget(kind, context) != null
@@ -115,7 +115,7 @@ fun Itinerary.withMealChoice(planMeals: Boolean, picks: Map<MealKind, MealPick>,
                 val pick = picks.getValue(kind)
                 val existing = mealBlocks.firstOrNull { it.kind == kind }
                 MealBlock(
-                    id = existing?.id ?: "meal-${kind.idName()}",
+                    id = existing?.id ?: kind.defaultBlockId(),
                     kind = kind,
                     start = pick.start,
                     budget = pick.budget,
@@ -126,7 +126,6 @@ fun Itinerary.withMealChoice(planMeals: Boolean, picks: Map<MealKind, MealPick>,
     return copy(planMeals = planMeals, mealBlocks = blocks)
 }
 
-private fun MealKind.idName() = name.lowercase(Locale.ROOT)
 
 data class PlanningMealChoiceUiState(
     val loading: Boolean = true,
