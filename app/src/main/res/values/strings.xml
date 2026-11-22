@@ -271,7 +271,9 @@
     <string name="district_replace_action">Remplacer</string>
     <string name="district_map_reset">Réinitialiser la carte</string>
     <string name="time_hour">Heure</string>
+    <string name="time_hour_value">Heure : %1$s</string>
     <string name="time_minute">Minute</string>
+    <string name="time_minute_value">Minute : %1$s</string>
     <string name="planning_budget_title">Budget</string>
     <string name="planning_budget_keep">Garder ce budget</string>
     <string name="planning_budget_change">Modifier pour cet itinéraire</string>

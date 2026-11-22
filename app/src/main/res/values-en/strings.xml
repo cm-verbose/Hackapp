@@ -263,7 +263,9 @@
     <string name="district_replace_action">Replace</string>
     <string name="district_map_reset">Reset map</string>
     <string name="time_hour">Hour</string>
+    <string name="time_hour_value">Hour: %1$s</string>
     <string name="time_minute">Minute</string>
+    <string name="time_minute_value">Minute: %1$s</string>
     <string name="planning_budget_title">Budget</string>
     <string name="planning_budget_keep">Keep this budget</string>
     <string name="planning_budget_change">Change for this itinerary</string>
