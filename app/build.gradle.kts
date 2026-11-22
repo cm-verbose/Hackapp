@@ -86,7 +86,7 @@ dependencies {
     implementation(libs.litert)
     implementation(libs.litert.gpu)
 
-    /* Material Icons (Extended) */
+    /* Material Icons */
     implementation(libs.androidx.compose.material.icons.extended)
 
     /* Material 3 adaptive */
