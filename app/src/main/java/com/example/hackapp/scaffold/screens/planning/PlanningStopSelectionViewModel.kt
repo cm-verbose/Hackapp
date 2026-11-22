@@ -201,7 +201,16 @@ class StopSelectionSession(
 
     suspend fun addToItinerary() {
         val sheet = _state.value.sheet as? SelectionSheet.EventDetails ?: return
-        val action = sheet.holder.addToItinerary()
+        applyAction(sheet, sheet.holder.addToItinerary())
+    }
+
+    /** After a failed price save: adds the Event without saving the typed price. Same outcomes as [addToItinerary]. */
+    suspend fun addWithoutPrice() {
+        val sheet = _state.value.sheet as? SelectionSheet.EventDetails ?: return
+        applyAction(sheet, sheet.holder.addWithoutPrice())
+    }
+
+    private suspend fun applyAction(sheet: SelectionSheet.EventDetails, action: AddToItineraryAction?) {
         if (_state.value.sheet !== sheet) return
         when (action) {
             null -> Unit
@@ -435,6 +444,7 @@ class PlanningStopSelectionViewModel(private val session: StopSelectionSession) 
     fun setTicketPriceInput(text: String) = session.setTicketPriceInput(text)
     fun retryEventDetails() = launchOn { session.retryEventDetails() }
     fun addToItinerary() = launchOn { session.addToItinerary() }
+    fun addWithoutPrice() = launchOn { session.addWithoutPrice() }
     fun setDeparture(time: LocalTime) = session.setDeparture(time)
     fun confirmDeparture() = launchOn { session.confirmDeparture() }
     fun openMealPicker() = session.openMealPicker()

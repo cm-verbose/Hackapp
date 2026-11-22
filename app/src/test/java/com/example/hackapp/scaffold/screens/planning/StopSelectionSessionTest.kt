@@ -335,6 +335,60 @@ class StopSelectionSessionTest {
         assertEquals(1, groups.size)
     }
 
+    private class FailingSaves(private val inner: InMemoryTicketPriceRepository) : com.example.hackapp.itinerary.TicketPriceRepository by inner {
+        override suspend fun saveReport(uid: String, key: com.example.hackapp.itinerary.ShowtimeKey, priceCad: Double): Boolean = error("offline")
+    }
+
+    private suspend fun failedPriceSession(events: List<Event>): StopSelectionSession {
+        runBlocking { repo.saveItinerary(night(blocks = listOf(dinner))) }
+        val s = StopSelectionSession("it-1", { UID }, repo, NoProfile, FakeEvents(events), FakePlaces(emptyList()),
+            FailingSaves(InMemoryTicketPriceRepository()), fixedLegs(), Toronto, { instant(Nov28, 8).toEpochMilli() })
+        s.load()
+        s.openEvent(s.state.value.groups.first().types.first().cards.first())
+        s.setTicketPriceInput("20")
+        s.addToItinerary()
+        return s
+    }
+
+    @Test
+    fun `add without price adds the Event after a failed price save`() = runBlocking {
+        val s = failedPriceSession(listOf(early))
+        assertTrue(s.state.value.stops.isEmpty())
+        s.addWithoutPrice()
+        assertNull(s.state.value.sheet)
+        assertEquals(listOf("event-early"), s.state.value.stops.map { it.id })
+        assertNull(s.state.value.stops.single().ticketPriceCad)
+    }
+
+    @Test
+    fun `add without price opens Planned Departure when the Event has no end`() = runBlocking {
+        val s = failedPriceSession(listOf(noEnd))
+        s.addWithoutPrice()
+        assertTrue(s.state.value.sheet is SelectionSheet.PlannedDeparture)
+        assertTrue(s.state.value.stops.isEmpty())
+    }
+
+    @Test
+    fun `add without price keeps the arrival of an in-progress drop-in`() = runBlocking {
+        val allDay = event("all-day", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), type = "exhibition")
+        val s = failedPriceSession(listOf(allDay))
+        s.addWithoutPrice()
+        assertEquals(at(Nov28, 18).toInstant(), s.state.value.stops.single().start.toInstant())
+    }
+
+    @Test
+    fun `add without price does nothing when no save failed`() = runBlocking {
+        val s = session(night(blocks = listOf(dinner)), listOf(early))
+        s.load()
+        s.openEvent(s.state.value.groups.first().types.first().cards.first())
+        s.addWithoutPrice()
+        assertTrue(s.state.value.sheet is SelectionSheet.EventDetails)
+        assertTrue(s.state.value.stops.isEmpty())
+        val none = StopSelectionSession("it-1", { UID }, repo, NoProfile, FakeEvents(emptyList()), FakePlaces(emptyList()),
+            InMemoryTicketPriceRepository(), fixedLegs(), Toronto)
+        none.addWithoutPrice()
+    }
+
     @Test
     fun `an unreadable draft is a load error`() = runBlocking {
         val s = session(night(), saved = false)

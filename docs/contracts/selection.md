@@ -55,6 +55,7 @@ Both actions are always available: `openMealPicker()` and `skipMeal()`.
 | `openEvent(card)` | Opens Event details for the card and loads its prices. |
 | `selectShowtime(eventId)`, `setTicketPriceInput(text)`, `retryEventDetails()` | Forward to the details holder. |
 | `addToItinerary()` | From Event details. With a published end the Stop is added at once. Without one the sheet becomes `PlannedDeparture`. Nothing happens while the holder says it cannot add. |
+| `addWithoutPrice()` | From Event details after a failed ticket price save (`EventDetailsUiState.canAddWithoutPrice`). Calls `holder.addWithoutPrice()` and applies the outcome exactly like `addToItinerary()`: `Add` adds the Stop (an in-progress drop-in keeps its `arrivalAt`), `ChooseDeparture` opens Planned Departure. Nothing happens when the holder returns null. |
 | `setDeparture(time)`, `confirmDeparture()` | From Planned Departure. Confirm adds the Stop. |
 | `openMealPicker()` | Opens the Meal picker for `mealPrompt`. Ignored without a prompt. |
 | `selectMealTab(tab)`, `chooseMeal(placeId)` | Forward to the picker holder. Choosing adds the Meal Stop; choosing from the next District also moves planning there. |
