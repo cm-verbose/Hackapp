@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -77,5 +78,34 @@ class StampRepositoryTest {
         assertTrue(retry.created.isEmpty())
         assertEquals(1, repository.observeStamps(itinerary.ownerUid).first().size)
         assertTrue(repository.observeStamps("other").first().isEmpty())
+    }
+
+    @Test
+    fun `an existing unreadable record is never overwritten`() = runBlocking {
+        val repository = DataStoreStampRepository(store)
+        val candidate = awardStamps(itinerary, emptyList(), resolver, 5).created.single()
+        val key = androidx.datastore.preferences.core.stringPreferencesKey("stamp_${candidate.ownerUid.length}_${candidate.ownerUid}_${candidate.key}")
+        store.edit { it[key] = "garbage" }
+        val result = repository.award(itinerary, resolver, 10)
+        assertTrue(result.created.isEmpty())
+        assertTrue(result.resultFor("a") is StopStampResult.AlreadyInPassport)
+        assertEquals("garbage", store.data.first()[key])
+    }
+
+    @Test
+    fun `a corrupt store reports Unavailable and is left untouched`() = runBlocking {
+        val file = folder.root.resolve("bad.preferences_pb")
+        val bytes = ByteArray(64) { (it * 7 + 3).toByte() }
+        file.writeBytes(bytes)
+        val badStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val repository = DataStoreStampRepository(badStore)
+        assertEquals(PassportState.Unavailable, repository.observePassport(itinerary.ownerUid).first())
+        assertTrue(repository.observeStamps(itinerary.ownerUid).first().isEmpty())
+        try {
+            repository.award(itinerary, resolver, 10)
+            org.junit.Assert.fail("expected PassportUnavailableException")
+        } catch (_: PassportUnavailableException) {
+        }
+        assertTrue(bytes.contentEquals(file.readBytes()))
     }
 }
