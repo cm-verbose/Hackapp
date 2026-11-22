@@ -43,6 +43,8 @@ sealed interface ShareMessage {
         /** Speed in meters per second of the simulated world. */
         val speed: Float,
         val angularVelocity: Float,
+        /** Opaque content for a future shared object. Stamps are never sent. */
+        val payload: String? = null,
     ) : ShareMessage
 
     companion object {

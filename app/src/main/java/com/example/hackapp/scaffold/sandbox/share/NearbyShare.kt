@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -19,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
@@ -68,7 +68,7 @@ private const val FALLBACK_REQUEST_MS = 8_000L
 private const val ANDROID_17 = 37
 
 /** A shape thrown to this device by the peer named [fromName]. */
-data class IncomingThrow(val fromName: String, val message: ShareMessage.Throw)
+data class IncomingThrow(val fromName: String?, val message: ShareMessage.Throw)
 
 /** A connected nearby device. */
 data class SharePeer(
@@ -96,7 +96,7 @@ data class SharePeer(
  *
  * Must be used from the main thread.
  */
-class NearbyShare(private val context: Context, private val scope: CoroutineScope) {
+class NearbyShare(private val context: Context, private val scope: CoroutineScope) : ThrowChannel {
 
     private val client = Nearby.getConnectionsClient(context)
     /**
@@ -119,10 +119,10 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
     private var retryJob: Job? = null
 
     /** Connected peers by endpoint id. */
-    val peers = mutableStateMapOf<String, SharePeer>()
+    override val peers = mutableStateMapOf<String, SharePeer>()
 
     private val _incomingThrows = MutableSharedFlow<IncomingThrow>(extraBufferCapacity = 16)
-    val incomingThrows: SharedFlow<IncomingThrow> = _incomingThrows
+    override val incomingThrows: SharedFlow<IncomingThrow> = _incomingThrows
 
     private val uwb = UwbRanger(
         context = context,
@@ -160,7 +160,7 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
                 }
                 is ShareMessage.UwbHello -> uwb.onHello(endpointId, message)
                 is ShareMessage.Throw -> {
-                    val from = peers[endpointId]?.name ?: "a nearby device"
+                    val from = peers[endpointId]?.name
                     Log.d(TAG, "Received throw from $from: $message")
                     _incomingThrows.tryEmit(IncomingThrow(from, message))
                 }
@@ -345,7 +345,7 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
     }
 
     /** Shares this device's forward bearing, skipping updates too small to matter. */
-    fun broadcastHeading(forwardBearing: Float?) {
+    override fun broadcastHeading(forwardBearing: Float?) {
         val previous = lastHeading?.forwardBearing
         val changed = when {
             lastHeading == null -> true
@@ -360,7 +360,7 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
         }
     }
 
-    fun sendThrow(endpointId: String, message: ShareMessage.Throw) = send(endpointId, message)
+    override fun sendThrow(endpointId: String, message: ShareMessage.Throw) = send(endpointId, message)
 
     private fun send(endpointId: String, message: ShareMessage) {
         client.sendPayload(endpointId, Payload.fromBytes(ShareMessage.encode(message)))
@@ -406,11 +406,12 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
 }
 
 /**
- * Requests the needed permissions, then keeps a [NearbyShare] running while in composition.
- * Returns `null` while permissions are missing.
+ * Runs a [NearbyShare] while [enabled] and the page is started. Permissions are requested only
+ * when [enabled] turns true, so pass true only after the person chose to share. Returns `null`
+ * while permissions are missing.
  */
 @Composable
-fun rememberNearbyShare(enabled: Boolean = true): NearbyShare? {
+fun rememberNearbyShare(enabled: Boolean): NearbyShare? {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var granted by remember { mutableStateOf(NearbyShare.hasRequiredPermissions(context)) }
@@ -430,9 +431,10 @@ fun rememberNearbyShare(enabled: Boolean = true): NearbyShare? {
     val share = remember(enabled, granted) {
         if (enabled && granted) NearbyShare(context.applicationContext, scope) else null
     }
-    DisposableEffect(share) {
+    LifecycleStartEffect(share) {
+        granted = NearbyShare.hasRequiredPermissions(context)
         share?.start()
-        onDispose { share?.stop() }
+        onStopOrDispose { share?.stop() }
     }
     return share
 }

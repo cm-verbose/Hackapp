@@ -13,11 +13,15 @@ import androidx.compose.ui.Modifier
  *
  * @param isLocked `true` when gravity is locked (not applied to the simulation).
  * @param onLockedChange Called with the new locked state when the button is pressed.
+ * @param lockedDescription Spoken action while locked.
+ * @param unlockedDescription Spoken action while unlocked.
  */
 @Composable
 fun SimulationGravityLockButton(
     isLocked: Boolean,
     onLockedChange: (Boolean) -> Unit,
+    lockedDescription: String?,
+    unlockedDescription: String?,
     modifier: Modifier = Modifier,
 ) {
     FloatingActionButton(
@@ -25,9 +29,9 @@ fun SimulationGravityLockButton(
         modifier = modifier,
     ) {
         if (isLocked) {
-            Icon(Icons.Default.Lock, contentDescription = "Unlock gravity")
+            Icon(Icons.Default.Lock, contentDescription = lockedDescription)
         } else {
-            Icon(Icons.Default.LockOpen, contentDescription = "Lock gravity")
+            Icon(Icons.Default.LockOpen, contentDescription = unlockedDescription)
         }
     }
 }

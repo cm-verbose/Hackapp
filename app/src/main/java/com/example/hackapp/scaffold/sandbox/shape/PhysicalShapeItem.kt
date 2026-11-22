@@ -3,6 +3,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,8 +15,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.cos
 import kotlin.math.sin
-
-private val ShadowColor = Color.Black.copy(alpha = 0.35f)
 
 /**
  * Draws a [PhysicalShape] at its simulated position and rotation.
@@ -39,6 +38,7 @@ fun PhysicalShapeItem(
     val widthDp = with(density) { physicalShape.widthPx.toDp() }
     val heightDp = with(density) { physicalShape.heightPx.toDp() }
     val shadowOffsetPx = with(density) { shadowElevation.toPx() } / 2f
+    val shadowColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)
 
     Box(
         modifier = Modifier
@@ -64,7 +64,7 @@ fun PhysicalShapeItem(
                     translationX = (shadowOffsetPx * sin(theta)).toFloat()
                     translationY = (shadowOffsetPx * cos(theta)).toFloat()
                 }
-                .background(ShadowColor, physicalShape.shape),
+                .background(shadowColor, physicalShape.shape),
         )
         Surface(
             modifier = Modifier.matchParentSize(),
