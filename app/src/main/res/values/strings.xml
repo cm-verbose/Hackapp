@@ -272,7 +272,6 @@
     <string name="review_planned_departure">départ prévu %1$s</string>
     <string name="review_leave_by">partez avant %1$s</string>
     <string name="review_start">Démarrer l’itinéraire</string>
-    <string name="review_notification_note">On vous demandera d’autoriser les notifications.</string>
     <string name="review_start_only_on">Disponible le %1$s.</string>
     <string name="review_start_warning_title">Terminer l’itinéraire en cours?</string>
     <string name="review_start_warning_body">« %1$s » sera déplacé dans Passés. Les arrêts confirmés garderont leur timbre, les autres seront marqués comme sautés.</string>
