@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.data.model.PriceRange
 import com.example.hackapp.itinerary.MealBlock
 import com.example.hackapp.itinerary.MealKind
@@ -16,6 +17,9 @@ import com.example.hackapp.itinerary.night
 import com.example.hackapp.itinerary.place
 import com.example.hackapp.itinerary.stop
 import com.example.hackapp.profile.BudgetBracket
+import com.example.hackapp.services.LegEstimate
+import com.example.hackapp.services.LegEstimator
+import com.example.hackapp.services.LegMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -68,19 +72,57 @@ class MealPickerStateTest {
         assertTrue(h.state.value.hasNoOptions)
     }
 
+    /** Walking takes 7 minutes and transit 13, plus a 10-minute buffer that is never shown. */
+    private val modeLegs = LegEstimator { _, _, mode ->
+        LegEstimate(1000.0, if (mode == LegMode.WALK) 7 else 13, 10)
+    }
+
+    private fun rows(
+        places: List<com.example.hackapp.data.model.Place>,
+        previousDistrict: String? = HERE,
+        origin: LatLng? = null,
+    ): Pair<List<MealOptionRow>, List<MealOptionRow>> {
+        val stops = previousDistrict?.let { listOf(stop("p", at(Nov28, 18), at(Nov28, 18, 30), district = it)) }.orEmpty()
+        val plan = night(stops = stops, blocks = listOf(block))
+        return mealPickerRows(MealSearch(plan, block, places, context(), HERE, NEXT, origin = origin), modeLegs)
+    }
+
     @Test
-    fun `distance and walking time come from the previous Stop`() {
-        val withStop = night(stops = listOf(stop("p", at(Nov28, 18), at(Nov28, 18, 30))), blocks = listOf(block))
-        val row = holder(listOf(place(1)), it = withStop).state.value.here.single()
+    fun `a Meal in the District of the previous Stop shows walking time`() {
+        val row = rows(listOf(place(1))).first.single()
         assertNotNull(row.distanceMeters)
-        assertEquals(10, row.walkingMinutes)
+        assertEquals(MealTravel(LegMode.WALK, 7), row.travel)
+    }
+
+    @Test
+    fun `a Meal in the next District shows transit time without the buffer`() {
+        val row = rows(listOf(place(1, district = NEXT))).second.single()
+        assertEquals(MealTravel(LegMode.TRANSIT, 13), row.travel)
+    }
+
+    @Test
+    fun `the mode follows the previous Stop and not the selected tab`() {
+        val (here, next) = rows(listOf(place(1), place(2, district = NEXT)), previousDistrict = NEXT)
+        assertEquals(MealTravel(LegMode.TRANSIT, 13), here.single().travel)
+        assertEquals(MealTravel(LegMode.WALK, 7), next.single().travel)
+    }
+
+    @Test
+    fun `without a previous Stop the current District is the reference`() {
+        val (here, next) = rows(
+            listOf(place(1), place(2, district = NEXT)),
+            previousDistrict = null,
+            origin = LatLng(45.5, -73.6),
+        )
+        assertEquals(LegMode.WALK, here.single().travel?.mode)
+        assertEquals(LegMode.TRANSIT, next.single().travel?.mode)
     }
 
     @Test
     fun `no reference point gives no distance`() {
         val row = holder(listOf(place(1))).state.value.here.single()
         assertNull(row.distanceMeters)
-        assertNull(row.walkingMinutes)
+        assertNull(row.travel)
     }
 
     @Test
