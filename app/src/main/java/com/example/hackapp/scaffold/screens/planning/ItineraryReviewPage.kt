@@ -346,11 +346,12 @@ private fun stopDetails(row: ReviewStop, districtName: String?): String {
     val stop = row.stop
     // A Meal keeps its block's end, so it only shows a time when the next Stop needs an earlier one.
     val departure = if (stop.kind == StopKind.Event || row.leaveBy.isBefore(stop.plannedDeparture)) {
-        stringResource(R.string.review_planned_departure, row.leaveBy.format(StopTimeFormat))
+        stringResource(R.string.review_leave_by, row.leaveBy.format(StopTimeFormat))
     } else {
         null
     }
-    return listOfNotNull(districtName, departure).joinToString(" · ")
+    // The time comes first, so a long District name is what gets cut.
+    return listOfNotNull(departure, districtName).joinToString(" · ")
 }
 
 @Composable
