@@ -353,6 +353,11 @@
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passeport</string>
+    <string name="passport_gravity_lock">Verrouiller la gravité</string>
+    <string name="passport_gravity_unlock">Déverrouiller la gravité</string>
+    <string name="passport_empty_title">Aucun timbre</string>
+    <string name="passport_empty_body">Confirmez un arrêt pour obtenir un timbre.</string>
+    <string name="passport_all_stamps">Tous les timbres</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_language">Langue</string>
     <string name="language_french" translatable="false">Français</string>
