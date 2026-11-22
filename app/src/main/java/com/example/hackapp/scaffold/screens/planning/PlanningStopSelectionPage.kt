@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -185,8 +186,45 @@ fun PlanningStopSelectionScreen(
         onPreviewMealTime = viewModel::previewMealTime,
         onSaveMealTime = viewModel::confirmMealTime,
         onCancelMealTime = viewModel::cancelMealTimeEdit,
+        onChooseMeal = viewModel::openMealPicker,
+        onFinishDay = viewModel::finishCompleteDay,
+        onUndoChoice = viewModel::undoLastChoice,
     )
-    state.districtSuggestion?.let { DistrictSuggestionDialog(nameOf(it.districtId), guidance) }
+    if (state.dayComplete) {
+        DayCompleteDialog(state.canFinish, guidance)
+    } else {
+        state.districtSuggestion?.let { suggestion ->
+            DistrictSuggestionDialog(suggestion, state.districtId?.let(nameOf).orEmpty(), nameOf(suggestion.districtId), guidance)
+        }
+    }
+
+    // Colour panels mark each boundary: the start of selection, a new borough and a Meal coming up.
+    // The intro covers the page from its first frame, so it arrives with the page's slide.
+    var introPending by rememberSaveable { mutableStateOf(showIntro) }
+    var transition by remember { mutableStateOf<SelectionTransition?>(if (introPending) SelectionTransition.Intro else null) }
+    var shownDistrict by rememberSaveable { mutableStateOf<String?>(null) }
+    var shownMealBlock by rememberSaveable { mutableStateOf<String?>(null) }
+    var boundariesSeeded by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state.loading, state.districtId, state.mealPrompt) {
+        if (state.loading || state.loadFailed) return@LaunchedEffect
+        val district = state.districtId ?: return@LaunchedEffect
+        val dueMeal = state.mealPrompt?.takeIf { it.reached }
+        if (!boundariesSeeded) {
+            boundariesSeeded = true
+            shownDistrict = district
+            shownMealBlock = dueMeal?.blockId
+            return@LaunchedEffect
+        }
+        val previous = shownDistrict
+        shownDistrict = district
+        val movedForward = previous != null && previous != district &&
+            state.districtIds.indexOf(previous) < state.districtIds.indexOf(district)
+        when {
+            movedForward -> transition = SelectionTransition.District(nameOf(district))
+            dueMeal != null && dueMeal.blockId != shownMealBlock -> transition = SelectionTransition.Meal(dueMeal.kind)
+        }
+        shownMealBlock = dueMeal?.blockId
+    }
 
     PlanningStopSelectionPage(
         state = state,
@@ -255,9 +293,14 @@ fun PlanningStopSelectionScreen(
             )
         }
     }
-    // Shown once per arrival from Meal choice, and not again after rotation or a return from Review.
-    var introPending by rememberSaveable { mutableStateOf(showIntro) }
-    if (introPending) SelectionIntroOverlay(onFinished = { introPending = false })
+    transition?.let { shown ->
+        key(shown) {
+            SelectionTransitionOverlay(shown, onFinished = {
+                if (shown == SelectionTransition.Intro) introPending = false
+                transition = null
+            })
+        }
+    }
 }
 
 /** Figma "PlanningStopSelectionScreen" (29:754, 141:3868, 141:3910, 141:3952, 141:3994). Holds no rules. */

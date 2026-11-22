@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
@@ -37,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
+import com.example.hackapp.itinerary.ContinueKind
 import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.ui.components.HackappSmallTextButton
 import com.example.hackapp.ui.components.HackappSmallTonalButton
@@ -68,6 +72,9 @@ data class SelectionGuidanceActions(
     val onPreviewMealTime: (LocalTime) -> Unit = {},
     val onSaveMealTime: () -> Unit = {},
     val onCancelMealTime: () -> Unit = {},
+    val onChooseMeal: () -> Unit = {},
+    val onFinishDay: () -> Unit = {},
+    val onUndoChoice: () -> Unit = {},
 )
 
 private const val MEAL_STEP_MINUTES = 15L
@@ -171,21 +178,87 @@ internal fun MealTimeEditor(edit: MealTimeEdit, actions: SelectionGuidanceAction
     }
 }
 
-/** Asked once per District, after an Event, or an Event and a Meal. */
+/**
+ * Asked after each new Stop while a next District exists: add another Event, or the Meal that is
+ * due, here, or move on. Moving on plays the District transition.
+ */
 @Composable
-internal fun DistrictSuggestionDialog(nextDistrictName: String, actions: SelectionGuidanceActions) {
+internal fun DistrictSuggestionDialog(
+    suggestion: DistrictSuggestion,
+    currentDistrictName: String,
+    nextDistrictName: String,
+    actions: SelectionGuidanceActions,
+) {
+    val meal = suggestion.kind == ContinueKind.Meal
     AlertDialog(
         onDismissRequest = actions.onDismissDistrict,
-        title = { Text(stringResource(R.string.selection_move_on_title)) },
+        title = {
+            Text(
+                stringResource(
+                    if (meal) R.string.selection_continue_meal else R.string.selection_continue_event,
+                    currentDistrictName,
+                ),
+            )
+        },
         confirmButton = {
+            TextButton(onClick = {
+                actions.onDismissDistrict()
+                if (meal) actions.onChooseMeal()
+            }) {
+                Text(stringResource(if (meal) R.string.selection_continue_choose_meal else R.string.selection_continue_add_event))
+            }
+        },
+        dismissButton = {
             TextButton(onClick = actions.onAcceptDistrict) {
                 Text(stringResource(R.string.selection_move_on_action, nextDistrictName))
             }
         },
+    )
+}
+
+/** The last choice left nothing for the rest of the day. Finish needs at least one Event. */
+@Composable
+internal fun DayCompleteDialog(canFinish: Boolean, actions: SelectionGuidanceActions) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(stringResource(R.string.selection_day_complete_title)) },
+        text = { Text(stringResource(R.string.selection_day_complete_body)) },
+        confirmButton = {
+            if (canFinish) {
+                TextButton(onClick = actions.onFinishDay) { Text(stringResource(R.string.selection_day_complete_finish)) }
+            }
+        },
         dismissButton = {
-            TextButton(onClick = actions.onDismissDistrict) { Text(stringResource(R.string.selection_move_on_stay)) }
+            TextButton(onClick = actions.onUndoChoice) { Text(stringResource(R.string.selection_day_complete_change)) }
         },
     )
+}
+
+/** What a transition panel announces. */
+internal sealed interface SelectionTransition {
+    data object Intro : SelectionTransition
+    data class District(val name: String) : SelectionTransition
+    data class Meal(val kind: MealKind) : SelectionTransition
+}
+
+/** Plays [transition] once, then calls [onFinished]. */
+@Composable
+internal fun SelectionTransitionOverlay(transition: SelectionTransition, onFinished: () -> Unit) {
+    when (transition) {
+        SelectionTransition.Intro -> SelectionIntroOverlay(onFinished)
+        is SelectionTransition.District -> SelectionIntroOverlay(
+            onFinished = onFinished,
+            title = transition.name,
+            caption = stringResource(R.string.selection_transition_district),
+            icon = Icons.Filled.Place,
+        )
+        is SelectionTransition.Meal -> SelectionIntroOverlay(
+            onFinished = onFinished,
+            title = mealKindLabel(transition.kind),
+            caption = stringResource(R.string.selection_transition_meal),
+            icon = Icons.Filled.Restaurant,
+        )
+    }
 }
 
 /**
@@ -194,7 +267,12 @@ internal fun DistrictSuggestionDialog(nextDistrictName: String, actions: Selecti
  * A tap skips it.
  */
 @Composable
-internal fun SelectionIntroOverlay(onFinished: () -> Unit) {
+internal fun SelectionIntroOverlay(
+    onFinished: () -> Unit,
+    title: String = stringResource(R.string.selection_intro_title),
+    caption: String? = null,
+    icon: ImageVector = Icons.Filled.Explore,
+) {
     val colors = HackappTheme.appColors
     val scheme = MaterialTheme.colorScheme
     val visible = remember { MutableTransitionState(true) }
@@ -227,9 +305,12 @@ internal fun SelectionIntroOverlay(onFinished: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    Icon(Icons.Filled.Explore, contentDescription = null, tint = scheme.onPrimary, modifier = Modifier.size(112.dp))
+                    Icon(icon, contentDescription = null, tint = scheme.onPrimary, modifier = Modifier.size(112.dp))
+                    caption?.let {
+                        Text(it, style = MaterialTheme.typography.titleMedium, color = scheme.onPrimary, textAlign = TextAlign.Center)
+                    }
                     Text(
-                        stringResource(R.string.selection_intro_title),
+                        title,
                         style = MaterialTheme.typography.displaySmall,
                         color = scheme.onPrimary,
                         textAlign = TextAlign.Center,

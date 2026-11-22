@@ -46,9 +46,9 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.flowBackExit(): ExitTransi
     slideOutOfContainer(SlideDirection.End, tween(FLOW_TRANSITION_MILLIS))
 
 /** The same forward slide, for pages that change inside one route. */
-fun <S> AnimatedContentTransitionScope<S>.flowForwardTransform(): ContentTransform =
-    slideIntoContainer(SlideDirection.Start, tween(FLOW_TRANSITION_MILLIS)) togetherWith
-        slideOutOfContainer(SlideDirection.Start, tween(FLOW_TRANSITION_MILLIS))
+fun <S> AnimatedContentTransitionScope<S>.flowForwardTransform(durationMillis: Int = FLOW_TRANSITION_MILLIS): ContentTransform =
+    slideIntoContainer(SlideDirection.Start, tween(durationMillis)) togetherWith
+        slideOutOfContainer(SlideDirection.Start, tween(durationMillis))
 
 /** A step that slides in the direction of progress, and back the opposite way. */
 inline fun <reified T : Any> NavGraphBuilder.flowComposable(

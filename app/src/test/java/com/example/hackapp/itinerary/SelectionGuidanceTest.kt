@@ -13,26 +13,26 @@ class SelectionGuidanceTest {
     private val now = instant(Nov28, 8)
 
     @Test
-    fun `moving on is suggested after an Event, unless a Meal comes right after it`() {
+    fun `after an Event, selection asks about another Event, or the Meal when it is due`() {
         val withEvent = day(stops = listOf(stop("e", at(Nov28, 11), at(Nov28, 12))))
-        assertTrue(withEvent.suggestsNextDistrict(HERE, mealPromptReached = false))
-        assertFalse(withEvent.suggestsNextDistrict(HERE, mealPromptReached = true))
-
-        val withMeal = day(
-            stops = listOf(
-                stop("e", at(Nov28, 11), at(Nov28, 12)),
-                stop("m", at(Nov28, 12), at(Nov28, 13), kind = StopKind.Meal, mealBlockId = "l"),
-            ),
-        )
-        assertTrue(withMeal.suggestsNextDistrict(HERE, mealPromptReached = true))
+        assertEquals(ContinueKind.Event, withEvent.continuePromptKind(HERE, mealPromptReached = false))
+        assertEquals(ContinueKind.Meal, withEvent.continuePromptKind(HERE, mealPromptReached = true))
     }
 
     @Test
-    fun `moving on is never suggested without an Event here or on the last District`() {
+    fun `nothing is asked without an Event here or on the last District`() {
         val mealOnly = day(stops = listOf(stop("m", at(Nov28, 12), at(Nov28, 13), kind = StopKind.Meal)))
-        assertFalse(mealOnly.suggestsNextDistrict(HERE, mealPromptReached = false))
+        assertNull(mealOnly.continuePromptKind(HERE, mealPromptReached = false))
         val lastDistrict = day(stops = listOf(stop("e", at(Nov28, 11), at(Nov28, 12), district = NEXT)))
-        assertFalse(lastDistrict.suggestsNextDistrict(NEXT, mealPromptReached = false))
+        assertNull(lastDistrict.continuePromptKind(NEXT, mealPromptReached = false))
+    }
+
+    @Test
+    fun `the day is complete when no Event is reachable ahead and no Meal waits`() {
+        val late = day(stops = listOf(stop("e", at(Nov28, 15), at(Nov28, 17, 30))))
+        val events = listOf(event("x", start = at(Nov28, 12).toString()), event("y", start = at(Nov28, 13).toString(), district = NEXT))
+        assertTrue(late.isDayComplete(events, context(now), HERE, legs))
+        assertFalse(day().isDayComplete(listOf(event("z", start = at(Nov28, 16).toString())), context(now), HERE, legs))
     }
 
     @Test

@@ -182,7 +182,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit, onShare: (String) -> Unit = {}) {
                 AnimatedContent(
                     targetState = view,
                     contentKey = { it.phase to it.currentStop?.id },
-                    transitionSpec = { flowForwardTransform() },
+                    transitionSpec = { flowForwardTransform(UNDERWAY_TRANSITION_MILLIS) },
                     label = "underway-phase",
                 ) { shown ->
                     ActivePhase(
@@ -349,7 +349,11 @@ private fun LegContent(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (pendingChoice != null) {
             leftApp = false
-            completeHandoff()
+            // A pause first, so the person sees the Leg again before it slides to Arrival.
+            scope.launch {
+                delay(HANDOFF_RETURN_PAUSE_MILLIS)
+                completeHandoff()
+            }
         }
     }
     // A handoff that never left the app, such as a link opened in a split-screen window, still moves on.
@@ -441,5 +445,11 @@ private fun EndOfDayContent(
 
 /** How long a handoff may keep the app on screen before the page moves on without a return. */
 private const val HANDOFF_STAY_MILLIS = 3_000L
+
+/** Back from the other app, the Leg stays this long before moving on. */
+private const val HANDOFF_RETURN_PAUSE_MILLIS = 800L
+
+/** Underway pages slide slower than Planning, so a change after a handoff is easy to follow. */
+private const val UNDERWAY_TRANSITION_MILLIS = 650
 
 private fun Stop.handoffDestination() = HandoffDestination(name, LatLng(latitude, longitude))

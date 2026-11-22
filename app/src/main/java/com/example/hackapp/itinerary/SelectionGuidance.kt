@@ -22,17 +22,32 @@ const val REORDER_GAIN_MINUTES = 60L
 /** A Meal that hides at least this many Events, and at least half of them, is worth moving. */
 const val MEAL_CONFLICT_MIN_LOST = 3
 
+/** What selection asks before moving on: another Event here, or the Meal that is due. */
+enum class ContinueKind { Event, Meal }
+
 /**
- * True when selection should suggest moving to the next District: there is one, the person has
- * planned an Event here, and the next thing is not a Meal still to answer. When a Meal comes right
- * after the Event, the suggestion waits until that Meal is chosen or skipped.
+ * After each new Stop, selection asks whether to add another one in [districtId] before moving on
+ * to the next District. Null when there is no next District or no Event planned here yet. The
+ * question is about the Meal when the next Meal Block is due, otherwise about another Event.
  */
-fun Itinerary.suggestsNextDistrict(districtId: String, mealPromptReached: Boolean): Boolean {
-    if (districtAfter(districtId) == null) return false
-    val here = activeStops.filter { it.districtId == districtId }
-    if (here.none { it.kind == StopKind.Event }) return false
-    val mealHere = here.any { it.kind == StopKind.Meal }
-    return mealHere || !mealPromptReached
+fun Itinerary.continuePromptKind(districtId: String, mealPromptReached: Boolean): ContinueKind? {
+    if (districtAfter(districtId) == null) return null
+    if (activeStops.none { it.districtId == districtId && it.kind == StopKind.Event }) return null
+    return if (mealPromptReached) ContinueKind.Meal else ContinueKind.Event
+}
+
+/**
+ * True when nothing else fits the rest of the day: no Event is reachable in any District still
+ * ahead, and no Meal Block is waiting for an answer.
+ */
+fun Itinerary.isDayComplete(
+    events: List<Event>,
+    context: PlanningContext,
+    districtId: String,
+    estimator: LegEstimator,
+): Boolean {
+    if (mealBlockToAnswer(context.now, context.zone) != null) return false
+    return remainingEventCount(this, events, context, districtsAhead(districtId), estimator) == 0
 }
 
 /** The earliest reachable Event in each District, from the start of the window, or null when none. */

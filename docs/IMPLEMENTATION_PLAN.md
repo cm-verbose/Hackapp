@@ -82,10 +82,12 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Date and time default | A new Itinerary starts on Day out (revision 2026-11-22) |
 | District of stay | Picked on a full-screen borough map in onboarding: names only, shown from 200% zoom, no counts. With coarse location allowed, the borough the person is in is preselected. Location is read once and never stored (revision 2026-11-22) |
 | Selection intro | Arriving from Meal choice shows a full-screen colour panel, "Choisissez vos arrêts", that wipes away to the start side. A tap skips it (revision 2026-11-22) |
-| Moving on | After an Event, or an Event and the Meal right after it, selection asks once per borough to move to the next one (revision 2026-11-22) |
+| Moving on | After each new Stop, while a next borough exists, selection asks to add another Event here, or the Meal when it is due, or **Aller dans [next]**. Moving on, and reaching a Meal, play a full-screen colour panel so each boundary is clear. If a choice leaves no Event or Meal for the rest of the day, **Journée complète** offers to finish or take that choice back (revision 2 2026-11-22) |
 | Late first borough | When the first borough's first Event starts 2 h or more after the gap opens and another order starts at least 1 h earlier, selection offers to sort the boroughs by their first Event. Only before any Stop is planned (revision 2026-11-22) |
 | Meal conflicts | When the next Meal hides every remaining Event, or at least 3 and half of them, selection offers **Changer l'heure**. The Meal moves in 15-minute steps, the Event list updates live, and nothing is saved until **Enregistrer l'heure** (revision 2026-11-22) |
-| Handoff return | Opening transit, Uber or maps moves to Arrival only once the person is back in the app, with the usual slide. A handoff that never leaves the app moves on after 3 s (revision 2026-11-22) |
+| Handoff return | Opening transit, Uber or maps moves to Arrival only once the person is back in the app: the Leg stays 0.8 s, then slides for 650 ms. A handoff that never leaves the app moves on after 3 s (revision 2 2026-11-22) |
+| Arrival question | Arrival asks "Êtes-vous sur place?" / "Have you arrived?" with **Confirmer l'arrivée** (revision 2 2026-11-22) |
+| Planned Departure sheet | Opens fully, so Confirm and Cancel are visible at once; swipe down still dismisses (revision 2 2026-11-22) |
 | Home delete | Holding down a draft on Home asks to delete it (revision 2026-11-22) |
 | Stamp shapes | Each new Stamp stores a random shape seed when awarded. Older Stamps keep their key-based shape (revision 2026-11-22) |
 | Demo control look | 85% opacity with a 60% background, so it reads as a demo tool (revision 2026-11-22) |

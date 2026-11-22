@@ -218,10 +218,15 @@ fun UnderwayArrivalPage(
         chrome = chrome,
         modifier = modifier,
         bottomActions = {
-            HackappPrimaryButton(stringResource(R.string.action_arrived), onArrived)
+            HackappPrimaryButton(stringResource(R.string.arrival_confirm), onArrived)
             HackappTextActionButton(skipLabel(ui.stop), onSkip)
         },
     ) {
+        Text(
+            stringResource(R.string.arrival_question),
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.semantics { heading() },
+        )
         val time = ui.expectedArrival ?: ui.stop.time
         ArrivalStatusCard(
             expectedArrivalTime = time,

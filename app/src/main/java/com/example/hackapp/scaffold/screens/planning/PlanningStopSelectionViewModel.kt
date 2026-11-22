@@ -43,7 +43,9 @@ import com.example.hackapp.itinerary.selectionDistrict
 import com.example.hackapp.itinerary.showtimeKey
 import com.example.hackapp.itinerary.withStop
 import com.example.hackapp.itinerary.withMealStart
-import com.example.hackapp.itinerary.suggestsNextDistrict
+import com.example.hackapp.itinerary.ContinueKind
+import com.example.hackapp.itinerary.continuePromptKind
+import com.example.hackapp.itinerary.isDayComplete
 import com.example.hackapp.itinerary.remainingEventCount
 import com.example.hackapp.itinerary.mealImpact
 import com.example.hackapp.itinerary.chronologicalDistrictOrder
@@ -80,8 +82,8 @@ data class MealPrompt(
     val reached: Boolean,
 )
 
-/** The person has planned enough here: suggests moving on to [districtId], the next District. */
-data class DistrictSuggestion(val districtId: String)
+/** Asked after a new Stop: add another [kind] here, or move on to [districtId], the next District. */
+data class DistrictSuggestion(val districtId: String, val kind: ContinueKind)
 
 /** The first District starts late: [order] follows the day, starting at [firstStart] instead of [currentStart]. */
 data class ReorderSuggestion(
@@ -146,6 +148,8 @@ data class PlanningStopSelectionUiState(
     /** Set by system Back once the draft is saved. Navigate Home, then call `onNavigated()`. */
     val homeId: String? = null,
     val districtSuggestion: DistrictSuggestion? = null,
+    /** The last choice left nothing else for the rest of the day. */
+    val dayComplete: Boolean = false,
     val reorderSuggestion: ReorderSuggestion? = null,
     val mealConflict: MealConflict? = null,
     val mealTimeEdit: MealTimeEdit? = null,
@@ -199,8 +203,8 @@ class StopSelectionSession(
     private val medians = mutableMapOf<ShowtimeKey, Double?>()
     private var mealMove: MealMove? = null
 
-    /** Districts already suggested to leave, so each suggestion shows once. */
-    private val suggestedDistricts = mutableSetOf<String>()
+    /** The draft before the last Stop or Meal answer, so the person can take that choice back. */
+    private var beforeLastChoice: Itinerary? = null
     /** Set by a new Stop or Meal answer: the next publish checks whether to suggest moving on. */
     private var checkDistrictSuggestion = false
     private var reorderDismissed = false
@@ -355,6 +359,7 @@ class StopSelectionSession(
         val from = draft?.selectionDistrict() ?: return
         _state.update { it.copy(sheet = null) }
         checkDistrictSuggestion = true
+        beforeLastChoice = draft
         commit(clearMove = false) { itinerary ->
             val withMeal = itinerary.withStop(chosen.stop)
             val target = chosen.moveToDistrictId
@@ -374,6 +379,7 @@ class StopSelectionSession(
         val blockId = picker?.holder?.skip()?.blockId ?: _state.value.mealPrompt?.blockId ?: return
         _state.update { it.copy(sheet = null) }
         checkDistrictSuggestion = true
+        beforeLastChoice = draft
         commit { it.withMealSkipped(blockId) }
     }
 
@@ -457,6 +463,20 @@ class StopSelectionSession(
     }
 
     fun dismissDistrictSuggestion() = _state.update { it.copy(districtSuggestion = null) }
+
+    /** Finishes from the day-complete notice. */
+    suspend fun finishCompleteDay() {
+        _state.update { it.copy(dayComplete = false) }
+        finish()
+    }
+
+    /** Takes back the choice that filled the day, and returns to the list it was made from. */
+    suspend fun undoLastChoice() {
+        _state.update { it.copy(dayComplete = false) }
+        val previous = beforeLastChoice ?: return
+        beforeLastChoice = null
+        commit { previous }
+    }
 
     /** Puts the Districts in the order their Events happen. Only offered before any Stop is planned. */
     suspend fun acceptReorder() {
@@ -553,16 +573,12 @@ class StopSelectionSession(
             }
         }
         val next = itinerary.districtAfter(district)
-        val moveOn = if (
-            checkDistrictSuggestion && next != null && district !in suggestedDistricts &&
-            itinerary.suggestsNextDistrict(district, prompt?.reached == true)
-        ) {
-            suggestedDistricts += district
-            DistrictSuggestion(next)
-        } else {
-            null
-        }
+        val checking = checkDistrictSuggestion
         checkDistrictSuggestion = false
+        val complete = checking && itinerary.isDayComplete(events, context, district, estimator)
+        if (complete) _state.update { it.copy(dayComplete = true) }
+        val kind = if (checking && !complete) itinerary.continuePromptKind(district, prompt?.reached == true) else null
+        val moveOn = if (next != null && kind != null) DistrictSuggestion(next, kind) else null
         val conflict = prompt
             ?.takeIf { it.blockId !in dismissedMealConflicts && moveOn == null }
             ?.let { mealImpact(itinerary, it.blockId, events, context, itinerary.districtsAhead(district), estimator) }
@@ -576,6 +592,7 @@ class StopSelectionSession(
     private suspend fun addStop(stop: Stop) {
         _state.update { it.copy(sheet = null) }
         checkDistrictSuggestion = true
+        beforeLastChoice = draft
         commit { it.withStop(stop) }
     }
 
@@ -729,6 +746,8 @@ class PlanningStopSelectionViewModel(private val session: StopSelectionSession) 
     fun onNavigated() = session.onNavigated()
     fun acceptDistrictSuggestion() = launchOn { session.acceptDistrictSuggestion() }
     fun dismissDistrictSuggestion() = session.dismissDistrictSuggestion()
+    fun finishCompleteDay() = launchOn { session.finishCompleteDay() }
+    fun undoLastChoice() = launchOn { session.undoLastChoice() }
     fun acceptReorder() = launchOn { session.acceptReorder() }
     fun dismissReorder() = launchOn { session.dismissReorder() }
     fun dismissMealConflict() = launchOn { session.dismissMealConflict() }
