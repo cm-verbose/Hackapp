@@ -3,6 +3,7 @@ package com.example.hackapp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
@@ -33,6 +34,7 @@ import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.profile.VisitorType
 import com.example.hackapp.scaffold.navigation.AppNavigation
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
+import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
@@ -94,7 +96,14 @@ class AppNavigationTest {
         assertEquals(true, saved.planMeals)
         assertEquals(listOf(MealKind.Dinner), saved.mealBlocks.map { it.kind })
         assertEquals(PlanningStep.Stops, saved.step)
-        repeat(PAGES_AFTER_MEAL_CHOICE) { click(R.string.action_continue) }
+        click(R.string.action_continue)
+        // The draft has no Event yet, so Review opens with Start disabled.
+        awaitText(R.string.review_start)
+        compose.onNodeWithText(context.getString(R.string.review_start)).assertIsNotEnabled()
+        compose.onNodeWithText(context.getString(R.string.review_start_no_events)).assertIsDisplayed()
+        compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
+        compose.waitForIdle()
+        repeat(UNDERWAY_PAGES) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
@@ -155,8 +164,7 @@ class AppNavigationTest {
     }
 
     private companion object {
-        /** Stop selection, Review and the four Underway pages. */
-        const val PAGES_AFTER_MEAL_CHOICE = 6
+        const val UNDERWAY_PAGES = 4
         const val LOAD_TIMEOUT_MILLIS = 10_000L
         const val TEST_UID = "test-user"
 
