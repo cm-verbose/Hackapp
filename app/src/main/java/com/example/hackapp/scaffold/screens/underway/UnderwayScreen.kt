@@ -45,6 +45,7 @@ import com.example.hackapp.underway.UnderwayEvent
 import com.example.hackapp.underway.UnderwayPhase
 import com.example.hackapp.underway.UnderwayView
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private class UnderwayItineraryInfo(val itinerary: Itinerary, val stops: UnderwayStopsInfo) {
@@ -324,6 +325,39 @@ private fun LegContent(
     val destination = stop.handoffDestination()
     val scope = rememberCoroutineScope()
     var opening by remember(stop.id) { mutableStateOf(false) }
+    // The other app opened, but the page only moves on once the person is back, so they see it change.
+    var pendingChoice by rememberSaveable(stop.id) { mutableStateOf<com.example.hackapp.underway.TransportChoice?>(null) }
+    var leftApp by remember(stop.id) { mutableStateOf(false) }
+
+    /** Moves to Arrival for the app the person came back from, unless a notification already moved on. */
+    fun completeHandoff() {
+        val choice = pendingChoice ?: return
+        pendingChoice = null
+        scope.launch {
+            val stillOnLeg = try {
+                isOnLegTo(stop.id)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                false
+            }
+            if (stillOnLeg) dispatch(UnderwayEvent.OpenTransport(choice, stop.id))
+        }
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { if (pendingChoice != null) leftApp = true }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (pendingChoice != null) {
+            leftApp = false
+            completeHandoff()
+        }
+    }
+    // A handoff that never left the app, such as a link opened in a split-screen window, still moves on.
+    LaunchedEffect(pendingChoice) {
+        if (pendingChoice != null) {
+            delay(HANDOFF_STAY_MILLIS)
+            if (!leftApp) completeHandoff()
+        }
+    }
 
     /** Rereads the state first: a notification action may have moved on from the Stop on screen. */
     fun handoff(appName: String, choice: com.example.hackapp.underway.TransportChoice, open: () -> HandoffResult) {
@@ -344,7 +378,7 @@ private fun LegContent(
                     failedApp = appName
                 } else {
                     failedApp = null
-                    dispatch(UnderwayEvent.OpenTransport(choice, stop.id))
+                    pendingChoice = choice
                 }
             } finally {
                 opening = false
@@ -403,5 +437,8 @@ private fun EndOfDayContent(
         )
     }
 }
+
+/** How long a handoff may keep the app on screen before the page moves on without a return. */
+private const val HANDOFF_STAY_MILLIS = 3_000L
 
 private fun Stop.handoffDestination() = HandoffDestination(name, LatLng(latitude, longitude))

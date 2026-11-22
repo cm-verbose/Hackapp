@@ -46,7 +46,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
         PlanningMealChoiceScreen(
             itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            onContinue = { id -> controller.navigate(PlanningStopSelectionRoute(id)) },
+            onContinue = { id -> controller.navigate(PlanningStopSelectionRoute(id, intro = true)) },
             onChangeDateTime = { id -> controller.returnToDateTime(id) },
         )
     }
@@ -55,6 +55,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
         PlanningStopSelectionScreen(
             itineraryId = route.itineraryId,
             returnGap = route.districtId?.let { SelectionGap(route.afterStopId, it) },
+            showIntro = route.intro,
             onLeave = { id -> controller.returnToMealChoice(id) },
             onReview = { id -> controller.navigate(ItineraryReviewRoute(id)) },
             onHome = { controller.backToHome() },

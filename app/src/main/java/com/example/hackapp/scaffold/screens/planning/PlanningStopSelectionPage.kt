@@ -108,11 +108,12 @@ private val SelectionTimeFormat = DateTimeFormatter.ofPattern("HH:mm")
  */
 private val SessionTicketPrices: TicketPriceRepository = InMemoryTicketPriceRepository()
 
-/** Connects Event and Meal selection (Planning step 5) to its ViewModel, sheets and navigation. */
+/** Connects Event and Meal selection (Planning step 4) to its ViewModel, sheets and navigation. */
 @Composable
 fun PlanningStopSelectionScreen(
     itineraryId: String,
     returnGap: SelectionGap? = null,
+    showIntro: Boolean = false,
     onLeave: (String) -> Unit,
     onReview: (String) -> Unit,
     onHome: () -> Unit,
@@ -173,9 +174,25 @@ fun PlanningStopSelectionScreen(
         eventId?.let(viewModel::selectShowtime)
     }
 
+    val nameOf: (String) -> String = { id -> map?.districts?.firstOrNull { it.id == id }?.name ?: id }
+    val guidance = SelectionGuidanceActions(
+        onAcceptDistrict = viewModel::acceptDistrictSuggestion,
+        onDismissDistrict = viewModel::dismissDistrictSuggestion,
+        onAcceptReorder = viewModel::acceptReorder,
+        onDismissReorder = viewModel::dismissReorder,
+        onChangeMealTime = viewModel::startMealTimeEdit,
+        onKeepMealTime = viewModel::dismissMealConflict,
+        onPreviewMealTime = viewModel::previewMealTime,
+        onSaveMealTime = viewModel::confirmMealTime,
+        onCancelMealTime = viewModel::cancelMealTimeEdit,
+    )
+    state.districtSuggestion?.let { DistrictSuggestionDialog(nameOf(it.districtId), guidance) }
+
     PlanningStopSelectionPage(
         state = state,
         districtName = districtName,
+        districtNameOf = nameOf,
+        guidance = guidance,
         chosenShowtimes = chosen.toSet(),
         onBack = viewModel::back,
         onRetry = viewModel::retry,
@@ -238,6 +255,9 @@ fun PlanningStopSelectionScreen(
             )
         }
     }
+    // Shown once per arrival from Meal choice, and not again after rotation or a return from Review.
+    var introPending by rememberSaveable { mutableStateOf(showIntro) }
+    if (introPending) SelectionIntroOverlay(onFinished = { introPending = false })
 }
 
 /** Figma "PlanningStopSelectionScreen" (29:754, 141:3868, 141:3910, 141:3952, 141:3994). Holds no rules. */
@@ -255,6 +275,8 @@ fun PlanningStopSelectionPage(
     onSkipMeal: () -> Unit,
     onNextDistrict: () -> Unit,
     onFinish: () -> Unit,
+    districtNameOf: (String) -> String = { it },
+    guidance: SelectionGuidanceActions = SelectionGuidanceActions(),
 ) {
     val ready = !state.loading && !state.loadFailed
     HackappPage(
@@ -291,6 +313,9 @@ fun PlanningStopSelectionPage(
                 val atMeal = prompt?.reached == true
                 // Listed Events belong to the open gap, so the Meal time moves to its card.
                 val headingIsMeal = atMeal && state.groups.isEmpty()
+                state.reorderSuggestion?.let { ReorderCard(it, districtNameOf(state.districtIds.first()), guidance) }
+                state.mealTimeEdit?.let { MealTimeEditor(it, guidance) }
+                state.mealConflict?.let { MealConflictCard(it, guidance) }
                 SlotHeader(
                     start = if (headingIsMeal) prompt.start else state.gapStart,
                     end = if (headingIsMeal) prompt.end else state.gapEnd,

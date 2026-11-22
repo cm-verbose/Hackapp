@@ -192,6 +192,25 @@
     <string name="selection_no_fixed_time">No fixed time · %1$s</string>
     <string name="selection_fixed_hidden">Fixed-time events are hidden during this block.</string>
     <string name="selection_empty_title">No events in this time slot</string>
+    <string name="selection_reorder_late">In %1$s, events start at %2$s.</string>
+    <string name="selection_reorder_none">No events in %1$s.</string>
+    <string name="selection_reorder_action">Sort by time</string>
+    <string name="selection_reorder_keep">Keep this order</string>
+    <string name="selection_move_on_title">Change boroughs?</string>
+    <string name="selection_move_on_action">Go to %1$s</string>
+    <string name="selection_move_on_stay">Stay here</string>
+    <string name="selection_meal_conflict">This meal hides %1$d of %2$d upcoming events.</string>
+    <string name="selection_meal_change_time">Change time</string>
+    <string name="selection_meal_keep_time">Keep this time</string>
+    <string name="selection_meal_earlier">15 minutes earlier</string>
+    <string name="selection_meal_later">15 minutes later</string>
+    <string name="selection_meal_blocked">This time overlaps a stop or falls outside your hours.</string>
+    <string name="selection_meal_save_time">Save time</string>
+    <string name="selection_intro_title">Choose your stops</string>
+    <plurals name="selection_events_left">
+        <item quantity="one">%d upcoming event</item>
+        <item quantity="other">%d upcoming events</item>
+    </plurals>
     <string name="selection_empty_body">Nothing reachable from your last stop.</string>
     <string name="selection_price_median">%1$s (reported median)</string>
     <string name="selection_save_error">Couldn’t save</string>

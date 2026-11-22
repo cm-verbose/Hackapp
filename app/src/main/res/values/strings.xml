@@ -198,6 +198,25 @@
     <string name="selection_no_fixed_time">Sans heure fixe · %1$s</string>
     <string name="selection_fixed_hidden">Événements à heure fixe masqués pendant ce bloc.</string>
     <string name="selection_empty_title">Aucun événement dans cette plage horaire</string>
+    <string name="selection_reorder_late">Dans %1$s, les événements commencent à %2$s.</string>
+    <string name="selection_reorder_none">Aucun événement dans %1$s.</string>
+    <string name="selection_reorder_action">Trier par heure</string>
+    <string name="selection_reorder_keep">Garder l’ordre</string>
+    <string name="selection_move_on_title">Changer d’arrondissement?</string>
+    <string name="selection_move_on_action">Aller dans %1$s</string>
+    <string name="selection_move_on_stay">Rester ici</string>
+    <string name="selection_meal_conflict">Ce repas masque %1$d des %2$d événements à venir.</string>
+    <string name="selection_meal_change_time">Changer l’heure</string>
+    <string name="selection_meal_keep_time">Garder l’heure</string>
+    <string name="selection_meal_earlier">15 minutes plus tôt</string>
+    <string name="selection_meal_later">15 minutes plus tard</string>
+    <string name="selection_meal_blocked">Cette heure chevauche un arrêt ou sort de l’horaire.</string>
+    <string name="selection_meal_save_time">Enregistrer l’heure</string>
+    <string name="selection_intro_title">Choisissez vos arrêts</string>
+    <plurals name="selection_events_left">
+        <item quantity="one">%d événement à venir</item>
+        <item quantity="other">%d événements à venir</item>
+    </plurals>
     <string name="selection_empty_body">Rien d’accessible depuis votre dernier arrêt.</string>
     <string name="selection_price_median">%1$s (médiane déclarée)</string>
     <string name="selection_save_error">Enregistrement impossible</string>

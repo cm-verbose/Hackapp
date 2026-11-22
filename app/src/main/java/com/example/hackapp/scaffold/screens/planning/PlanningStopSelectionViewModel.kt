@@ -42,6 +42,13 @@ import com.example.hackapp.itinerary.mealBlockToAnswer
 import com.example.hackapp.itinerary.selectionDistrict
 import com.example.hackapp.itinerary.showtimeKey
 import com.example.hackapp.itinerary.withStop
+import com.example.hackapp.itinerary.withMealStart
+import com.example.hackapp.itinerary.suggestsNextDistrict
+import com.example.hackapp.itinerary.remainingEventCount
+import com.example.hackapp.itinerary.mealImpact
+import com.example.hackapp.itinerary.chronologicalDistrictOrder
+import com.example.hackapp.itinerary.earliestEventStarts
+import com.example.hackapp.itinerary.districtsAhead
 import com.example.hackapp.itinerary.withoutStop
 import com.example.hackapp.itinerary.OTHER_EVENT_TYPE
 import com.example.hackapp.profile.AgeRange
@@ -71,6 +78,31 @@ data class MealPrompt(
     val start: ZonedDateTime,
     val end: ZonedDateTime,
     val reached: Boolean,
+)
+
+/** The person has planned enough here: suggests moving on to [districtId], the next District. */
+data class DistrictSuggestion(val districtId: String)
+
+/** The first District starts late: [order] follows the day, starting at [firstStart] instead of [currentStart]. */
+data class ReorderSuggestion(
+    val order: List<String>,
+    val firstStart: ZonedDateTime,
+    /** Null when the current first District has no Event left. */
+    val currentStart: ZonedDateTime?,
+)
+
+/** The next Meal hides [lost] of [withoutMeal] Events for the rest of the day. */
+data class MealConflict(val blockId: String, val kind: MealKind, val lost: Int, val withoutMeal: Int)
+
+/** The Meal time being moved while the list updates live. Nothing is saved until confirmed. */
+data class MealTimeEdit(
+    val blockId: String,
+    val kind: MealKind,
+    val start: LocalTime,
+    /** Event cards left for the rest of the day at [start]. */
+    val eventCount: Int,
+    /** The last step was refused because the Meal would leave the window or overlap a Stop. */
+    val blocked: Boolean = false,
 )
 
 /** The open sheet. Collect the holder's `state` and forward its callbacks through the ViewModel. */
@@ -113,6 +145,10 @@ data class PlanningStopSelectionUiState(
     val leaveId: String? = null,
     /** Set by system Back once the draft is saved. Navigate Home, then call `onNavigated()`. */
     val homeId: String? = null,
+    val districtSuggestion: DistrictSuggestion? = null,
+    val reorderSuggestion: ReorderSuggestion? = null,
+    val mealConflict: MealConflict? = null,
+    val mealTimeEdit: MealTimeEdit? = null,
 )
 
 /** True when no fixed-time card is left: nothing, or only drop-in cards that stay available across the block. */
@@ -162,6 +198,15 @@ class StopSelectionSession(
     private var cuisines: List<CuisineGroup> = emptyList()
     private val medians = mutableMapOf<ShowtimeKey, Double?>()
     private var mealMove: MealMove? = null
+
+    /** Districts already suggested to leave, so each suggestion shows once. */
+    private val suggestedDistricts = mutableSetOf<String>()
+    /** Set by a new Stop or Meal answer: the next publish checks whether to suggest moving on. */
+    private var checkDistrictSuggestion = false
+    private var reorderDismissed = false
+    private val dismissedMealConflicts = mutableSetOf<String>()
+    /** The draft with a Meal moved, shown while the person tries times. Never saved as is. */
+    private var mealPreview: Itinerary? = null
 
     /** Held from the first Finish tap until Review opens, so a double tap cannot navigate twice. */
     private val finishing = AtomicBoolean(false)
@@ -309,6 +354,7 @@ class StopSelectionSession(
         val chosen = sheet.holder.choose(placeId) ?: return
         val from = draft?.selectionDistrict() ?: return
         _state.update { it.copy(sheet = null) }
+        checkDistrictSuggestion = true
         commit(clearMove = false) { itinerary ->
             val withMeal = itinerary.withStop(chosen.stop)
             val target = chosen.moveToDistrictId
@@ -327,6 +373,7 @@ class StopSelectionSession(
         val picker = pickerSheet()
         val blockId = picker?.holder?.skip()?.blockId ?: _state.value.mealPrompt?.blockId ?: return
         _state.update { it.copy(sheet = null) }
+        checkDistrictSuggestion = true
         commit { it.withMealSkipped(blockId) }
     }
 
@@ -398,10 +445,137 @@ class StopSelectionSession(
         _state.update { it.copy(reviewId = null, leaveId = null, homeId = null) }
     }
 
+    // Suggestions
+
+    suspend fun acceptDistrictSuggestion() {
+        val suggestion = _state.value.districtSuggestion ?: return
+        _state.update { it.copy(districtSuggestion = null) }
+        val itinerary = draft ?: return
+        val from = itinerary.selectionDistrict() ?: return
+        if (itinerary.districtAfter(from) != suggestion.districtId) return
+        commit { it.movedToDistrict(from, suggestion.districtId) }
+    }
+
+    fun dismissDistrictSuggestion() = _state.update { it.copy(districtSuggestion = null) }
+
+    /** Puts the Districts in the order their Events happen. Only offered before any Stop is planned. */
+    suspend fun acceptReorder() {
+        val order = _state.value.reorderSuggestion?.order ?: return
+        reorderDismissed = true
+        _state.update { it.copy(reorderSuggestion = null) }
+        commit { itinerary ->
+            if (itinerary.activeStops.isNotEmpty() || order.toSet() != itinerary.districtIds.toSet()) {
+                itinerary
+            } else {
+                itinerary.copy(districtIds = order, planningDistrictId = order.first())
+            }
+        }
+    }
+
+    suspend fun dismissReorder() = lock.withLock {
+        reorderDismissed = true
+        _state.update { it.copy(reorderSuggestion = null) }
+    }
+
+    suspend fun dismissMealConflict() = lock.withLock {
+        _state.value.mealConflict?.let { dismissedMealConflicts += it.blockId }
+        _state.update { it.copy(mealConflict = null) }
+    }
+
+    /** Opens the live Meal time editor on the conflicting Meal. */
+    suspend fun startMealTimeEdit() = lock.withLock {
+        val conflict = _state.value.mealConflict ?: return@withLock
+        val itinerary = draft ?: return@withLock
+        val block = itinerary.mealBlocks.firstOrNull { it.id == conflict.blockId } ?: return@withLock
+        mealPreview = itinerary
+        _state.update {
+            it.copy(
+                mealConflict = null,
+                mealTimeEdit = MealTimeEdit(block.id, block.kind, block.start, countAhead(itinerary)),
+            )
+        }
+        publish()
+    }
+
+    /** Tries the Meal at [start]. The list shows the Events left at that time; nothing is saved. */
+    suspend fun previewMealTime(start: LocalTime) = lock.withLock {
+        val edit = _state.value.mealTimeEdit ?: return@withLock
+        val moved = draft?.withMealStart(edit.blockId, start, zone)
+        if (moved == null) {
+            _state.update { it.copy(mealTimeEdit = edit.copy(blocked = true)) }
+            return@withLock
+        }
+        mealPreview = moved
+        _state.update { it.copy(mealTimeEdit = edit.copy(start = start, eventCount = countAhead(moved), blocked = false)) }
+        publish()
+    }
+
+    suspend fun confirmMealTime() {
+        val edit = _state.value.mealTimeEdit ?: return
+        lock.withLock {
+            mealPreview = null
+            dismissedMealConflicts += edit.blockId
+            _state.update { it.copy(mealTimeEdit = null) }
+        }
+        commit { it.withMealStart(edit.blockId, edit.start, zone) ?: it }
+    }
+
+    suspend fun cancelMealTimeEdit() = lock.withLock {
+        mealPreview = null
+        _state.update { it.copy(mealTimeEdit = null) }
+        publish()
+    }
+
+    private fun countAhead(itinerary: Itinerary): Int {
+        val district = itinerary.selectionDistrict() ?: return 0
+        return remainingEventCount(itinerary, events, context(), itinerary.districtsAhead(district), estimator)
+    }
+
+    /** Works out which suggestion, if any, the page shows. Previews never suggest anything. */
+    private fun suggestions(
+        itinerary: Itinerary,
+        district: String,
+        prompt: MealPrompt?,
+        context: PlanningContext,
+        gapStart: Instant,
+    ): Triple<DistrictSuggestion?, ReorderSuggestion?, MealConflict?> {
+        if (mealPreview != null || targetGap != null) return Triple(null, null, null)
+        val reorder = if (reorderDismissed) {
+            null
+        } else {
+            val starts = earliestEventStarts(itinerary, events, context, estimator)
+            itinerary.chronologicalDistrictOrder(starts, gapStart)?.let { order ->
+                ReorderSuggestion(
+                    order = order,
+                    firstStart = checkNotNull(starts[order.first()]).atZone(zone),
+                    currentStart = starts[itinerary.districtIds.first()]?.atZone(zone),
+                )
+            }
+        }
+        val next = itinerary.districtAfter(district)
+        val moveOn = if (
+            checkDistrictSuggestion && next != null && district !in suggestedDistricts &&
+            itinerary.suggestsNextDistrict(district, prompt?.reached == true)
+        ) {
+            suggestedDistricts += district
+            DistrictSuggestion(next)
+        } else {
+            null
+        }
+        checkDistrictSuggestion = false
+        val conflict = prompt
+            ?.takeIf { it.blockId !in dismissedMealConflicts && moveOn == null }
+            ?.let { mealImpact(itinerary, it.blockId, events, context, itinerary.districtsAhead(district), estimator) }
+            ?.takeIf { it.isConflict }
+            ?.let { MealConflict(it.blockId, prompt.kind, it.lost, it.withoutMeal) }
+        return Triple(moveOn, reorder, conflict)
+    }
+
     // Internals
 
     private suspend fun addStop(stop: Stop) {
         _state.update { it.copy(sheet = null) }
+        checkDistrictSuggestion = true
         commit { it.withStop(stop) }
     }
 
@@ -441,7 +615,7 @@ class StopSelectionSession(
         targetGap?.districtId?.takeIf { it in itinerary.districtIds } ?: itinerary.selectionDistrict()
 
     private suspend fun publish() {
-        val itinerary = draft ?: return
+        val itinerary = mealPreview ?: draft ?: return
         val district = itinerary.selectionDistrict() ?: return
         loadMedians(district, itinerary)
         val context = context()
@@ -471,8 +645,17 @@ class StopSelectionSession(
                 .associateWith { placesById[it]?.price },
         )
         val index = itinerary.districtIds.indexOf(district)
+        val mealPrompt = pending?.let { block ->
+            val span = block.interval(itinerary, zone)
+            MealPrompt(block.id, block.kind, span.start.atZone(zone), span.end.atZone(zone), groups.onlyDropIns())
+        }
+        val (moveOn, reorder, conflict) = suggestions(itinerary, district, mealPrompt, context, gapFrom)
         _state.update {
             it.copy(
+                // An open suggestion stays until answered, as long as it still points at the next District.
+                districtSuggestion = moveOn ?: it.districtSuggestion?.takeIf { shown -> itinerary.districtAfter(district) == shown.districtId },
+                reorderSuggestion = reorder,
+                mealConflict = conflict,
                 districtIds = itinerary.districtIds,
                 districtId = district,
                 districtNumber = index + 1,
@@ -481,10 +664,7 @@ class StopSelectionSession(
                 gapStart = gapFrom.atZone(zone),
                 gapEnd = gapUntil.atZone(zone),
                 groups = groups,
-                mealPrompt = pending?.let { block ->
-                    val span = block.interval(itinerary, zone)
-                    MealPrompt(block.id, block.kind, span.start.atZone(zone), span.end.atZone(zone), groups.onlyDropIns())
-                },
+                mealPrompt = mealPrompt,
                 stops = itinerary.activeStops,
                 budget = engine.budget(itinerary, context, prices),
             )
@@ -547,6 +727,15 @@ class PlanningStopSelectionViewModel(private val session: StopSelectionSession) 
     fun finish() = launchOn { session.finish() }
     fun back() = launchOn { session.back() }
     fun onNavigated() = session.onNavigated()
+    fun acceptDistrictSuggestion() = launchOn { session.acceptDistrictSuggestion() }
+    fun dismissDistrictSuggestion() = session.dismissDistrictSuggestion()
+    fun acceptReorder() = launchOn { session.acceptReorder() }
+    fun dismissReorder() = launchOn { session.dismissReorder() }
+    fun dismissMealConflict() = launchOn { session.dismissMealConflict() }
+    fun startMealTimeEdit() = launchOn { session.startMealTimeEdit() }
+    fun previewMealTime(start: LocalTime) = launchOn { session.previewMealTime(start) }
+    fun confirmMealTime() = launchOn { session.confirmMealTime() }
+    fun cancelMealTimeEdit() = launchOn { session.cancelMealTimeEdit() }
 
     private fun launchOn(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

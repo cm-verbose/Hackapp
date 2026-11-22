@@ -38,6 +38,8 @@ import kotlinx.serialization.Serializable
     val itineraryId: String,
     val afterStopId: String? = null,
     val districtId: String? = null,
+    /** Shows the colour transition that opens selection. Set only when arriving from Meal choice. */
+    val intro: Boolean = false,
 )
 @Serializable data class ItineraryReviewRoute(val itineraryId: String)
 
