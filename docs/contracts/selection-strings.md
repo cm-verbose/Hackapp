@@ -27,6 +27,15 @@ Amounts are formatted by code as `20 $` (U+00A0 before `$`) and passed as string
 | Right button | `selection_next_district` | Arrondissement suivant | Next borough | Existing |
 | Last borough button (full width) | `action_finish` | Terminer | Finish | Existing, not mine. Replaces both buttons in `141:3994` |
 
+## Added by the copy pass
+
+| Element | Key | FR | EN | Notes |
+|---|---|---|---|---|
+| Median price label | `selection_price_median` | %1$s (médiane déclarée) | %1$s (reported median) | Arg: the formatted price. Keeps the "median of user-reported prices" label |
+| Save failure | `selection_save_error` | Enregistrement impossible | Couldn’t save | Own key. `planning_save_error` is shared and unchanged |
+
+Non-breaking spaces (U+00A0) keep `selection_end_unknown` and every `running_total_*` string together, so an amount never splits from its label or currency.
+
 ## Running total card
 
 | Element | Key | FR | EN | Notes |
