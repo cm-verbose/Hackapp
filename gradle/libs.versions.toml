@@ -9,6 +9,7 @@ datastorePreferences = "1.3.0"
 firebaseBom = "35.2.0"
 glance = "1.3.0-alpha02"
 glanceWearTiles = "1.0.0-alpha07"
+jbox2dLibrary = "2.2.1.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -24,9 +25,9 @@ navigationCompose = "2.10.2"
 navigationTesting = "2.10.2"
 retrofit = "3.0.0"
 googleidVersion = "1.2.1"
+runtime = "1.13.0"
 
 [libraries]
-androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
@@ -70,6 +71,7 @@ androidx-glance-wear-tiles = { module = "androidx.glance:glance-wear-tiles", ver
 # Firebase & Identity
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+jbox2d-library = { module = "org.jbox2d:jbox2d-library", version.ref = "jbox2dLibrary" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 google-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleidVersion" }
@@ -91,6 +93,7 @@ retrofit-converter-kotlinx-serialization = { module = "com.squareup.retrofit2:co
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

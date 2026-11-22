@@ -43,8 +43,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroidTemplateTheme {
                 Column {
-                    // TODO: temporary API test buttons, remove once events are wired into the UI
-                    TempEventApiButtons()
                     Box(Modifier.weight(1f)) {
                         AppScaffold()
                     }
@@ -66,42 +64,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-/** Temporary debug panel to trigger the event APIs. Results are also logged (tags TorontoEventsVM / MontrealEventsVM). */
-@Composable
-private fun TempEventApiButtons(
-    torontoViewModel: TorontoEventsViewModel = viewModel(),
-    montrealViewModel: MontrealEventsViewModel = viewModel(),
-) {
-    val torontoState by torontoViewModel.state.collectAsState()
-    val montrealState by montrealViewModel.state.collectAsState()
-
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(8.dp)
-        ) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { torontoViewModel.loadEvents() }) { Text("Toronto") }
-                Button(onClick = { torontoViewModel.loadCityCsvEvents() }) { Text("TO City CSV") }
-                Button(onClick = { torontoViewModel.loadAllEvents() }) { Text("TO All") }
-                Button(onClick = { montrealViewModel.loadHasThingsEvents() }) { Text("MTL Has Things") }
-                Button(onClick = { montrealViewModel.loadOpenDataEvents() }) { Text("MTL Open Data") }
-                Button(onClick = { montrealViewModel.loadAllEvents() }) { Text("MTL All") }
-            }
-            Text("Toronto: ${torontoState.summary()}", style = MaterialTheme.typography.bodySmall)
-            Text("Montréal: ${montrealState.summary()}", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-private fun EventsUiState.summary(): String = when (this) {
-    EventsUiState.Idle -> "idle"
-    EventsUiState.Loading -> "loading…"
-    is EventsUiState.Success -> "${events.size} events" +
-        (events.firstOrNull()?.let { " — first: ${it.title} @ ${it.schedule.startDate}" } ?: "")
-    is EventsUiState.Error -> "error: $message"
 }
