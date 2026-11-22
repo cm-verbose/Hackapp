@@ -28,5 +28,61 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+
+    // Everything under users/{uid} belongs to that account alone.
+    match /users/{uid} {
+
+      // users/{uid}/profile/current: one Profile per account (see FirestoreDocuments).
+      match /profile/{docId} {
+        allow read, delete: if request.auth != null && request.auth.uid == uid;
+        allow create, update: if request.auth != null && request.auth.uid == uid
+          && docId == 'current'
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'ownerUid', 'payload', 'updatedAtMillis'])
+          && request.resource.data.keys().hasAll(['schemaVersion', 'ownerUid', 'payload', 'updatedAtMillis'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.payload is string
+          && request.resource.data.payload.size() <= 20000
+          && request.resource.data.updatedAtMillis is int;
+      }
+
+      // users/{uid}/itineraries/{id}
+      match /itineraries/{itineraryId} {
+        allow read, delete: if request.auth != null && request.auth.uid == uid;
+        allow create, update: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'ownerUid', 'id', 'payload', 'updatedAtMillis'])
+          && request.resource.data.keys().hasAll(['schemaVersion', 'ownerUid', 'id', 'payload', 'updatedAtMillis'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.id == itineraryId
+          && request.resource.data.payload is string
+          && request.resource.data.payload.size() <= 200000
+          && request.resource.data.updatedAtMillis is int;
+      }
+    }
+
+    // Raw ticket price reports: one document per signed-in user and showtime key, readable only by
+    // its owner and never listable, so nobody can read other people's reports. The key id is a
+    // SHA-256 hex digest of the showtime key.
+    match /ticketReports/{keyId}/reports/{uid} {
+      allow get, delete: if request.auth != null && request.auth.uid == uid;
+      allow list: if false;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && keyId.matches('^[0-9a-f]{64}$')
+        && request.resource.data.keys().hasOnly(['ownerUid', 'priceCad', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['ownerUid', 'priceCad', 'updatedAt'])
+        && request.resource.data.ownerUid == uid
+        && request.resource.data.priceCad is number
+        && request.resource.data.priceCad >= 0
+        && request.resource.data.priceCad <= 500
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    // The median per showtime key. Clients read it but can never write it: only a trusted
+    // Cloud Function (Admin SDK, which bypasses these rules) computes it from the reports.
+    match /ticketSummaries/{keyId} {
+      allow get: if request.auth != null;
+      allow list, write: if false;
+    }
   }
 }

@@ -1,0 +1,122 @@
+package com.example.hackapp.firestore
+
+import com.example.hackapp.itinerary.Itinerary
+import com.example.hackapp.itinerary.ItineraryRepository
+import com.example.hackapp.itinerary.ShowtimeKey
+import com.example.hackapp.itinerary.TicketPriceRepository
+import com.example.hackapp.itinerary.TicketPriceSummary
+import com.example.hackapp.itinerary.isValidTicketPrice
+import com.example.hackapp.profile.Profile
+import com.example.hackapp.profile.ProfileRepository
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.tasks.await
+
+/*
+ * Failure mapping. The interfaces expect: unreadable or foreign data counts as missing (null, or
+ * skipped in a list), and a storage failure throws (callers catch Exception and keep going). So
+ * Firestore errors, including PERMISSION_DENIED and UNAVAILABLE, propagate from suspend calls and
+ * close the observing flows with the same exception. Nothing is swallowed here.
+ */
+
+private fun DocumentSnapshot.dataOrNull(): Map<String, Any?>? = if (exists()) data else null
+
+class FirestoreProfileRepository(
+    private val db: FirebaseFirestore = Firebase.firestore,
+    private val clock: () -> Long = System::currentTimeMillis,
+) : ProfileRepository {
+    private fun ref(uid: String) = db.collection(FirestoreDocuments.USERS).document(uid)
+        .collection(FirestoreDocuments.PROFILE).document(FirestoreDocuments.PROFILE_DOC)
+
+    override suspend fun getProfile(uid: String): Profile? =
+        FirestoreDocuments.profileFrom(uid, ref(uid).get().await().dataOrNull())
+
+    override suspend fun saveProfile(uid: String, profile: Profile) {
+        ref(uid).set(FirestoreDocuments.profileDoc(uid, profile, clock())).await()
+    }
+}
+
+class FirestoreItineraryRepository(
+    private val db: FirebaseFirestore = Firebase.firestore,
+) : ItineraryRepository {
+    private fun collection(uid: String) = db.collection(FirestoreDocuments.USERS).document(uid)
+        .collection(FirestoreDocuments.ITINERARIES)
+
+    override fun observeItineraries(uid: String): Flow<List<Itinerary>> = callbackFlow {
+        val registration = collection(uid).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+            } else if (snapshot != null) {
+                trySend(
+                    snapshot.documents
+                        .mapNotNull { FirestoreDocuments.itineraryFrom(uid, it.id, it.data) }
+                        .sortedByDescending { it.updatedAtMillis },
+                )
+            }
+        }
+        awaitClose { registration.remove() }
+    }.distinctUntilChanged()
+
+    override suspend fun getItinerary(uid: String, id: String): Itinerary? =
+        FirestoreDocuments.itineraryFrom(uid, id, collection(uid).document(id).get().await().dataOrNull())
+
+    override suspend fun saveItinerary(itinerary: Itinerary) {
+        collection(itinerary.ownerUid).document(itinerary.id)
+            .set(FirestoreDocuments.itineraryDoc(itinerary)).await()
+    }
+
+    override suspend fun deleteItinerary(uid: String, id: String) {
+        collection(uid).document(id).delete().await()
+    }
+}
+
+/**
+ * Own reports are read and written directly; the median is read from `ticketSummaries/{keyId}`.
+ * A client never reads other people's reports. That aggregate must be written by a trusted
+ * Cloud Function (design in the team report); until it is deployed, summaries are always null.
+ */
+class FirestoreTicketPriceRepository(
+    private val db: FirebaseFirestore = Firebase.firestore,
+) : TicketPriceRepository {
+    private fun summaryRef(key: ShowtimeKey): DocumentReference =
+        db.collection(FirestoreDocuments.TICKET_SUMMARIES).document(FirestoreDocuments.keyId(key))
+
+    private fun reportRef(uid: String, key: ShowtimeKey): DocumentReference =
+        db.collection(FirestoreDocuments.TICKET_REPORTS).document(FirestoreDocuments.keyId(key))
+            .collection(FirestoreDocuments.REPORTS).document(uid)
+
+    override fun observeSummary(key: ShowtimeKey): Flow<TicketPriceSummary?> = callbackFlow {
+        val registration = summaryRef(key).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+            } else if (snapshot != null) {
+                trySend(FirestoreDocuments.summaryFrom(snapshot.dataOrNull()))
+            }
+        }
+        awaitClose { registration.remove() }
+    }.distinctUntilChanged()
+
+    override suspend fun getSummary(key: ShowtimeKey): TicketPriceSummary? =
+        FirestoreDocuments.summaryFrom(summaryRef(key).get().await().dataOrNull())
+
+    override suspend fun getOwnReport(uid: String, key: ShowtimeKey): Double? =
+        FirestoreDocuments.reportFrom(uid, reportRef(uid, key).get().await().dataOrNull())
+
+    override suspend fun saveReport(uid: String, key: ShowtimeKey, priceCad: Double): Boolean {
+        if (!isValidTicketPrice(priceCad)) return false
+        reportRef(uid, key).set(FirestoreDocuments.reportDoc(uid, priceCad, FieldValue.serverTimestamp())).await()
+        return true
+    }
+
+    override suspend fun deleteReport(uid: String, key: ShowtimeKey) {
+        reportRef(uid, key).delete().await()
+    }
+}
