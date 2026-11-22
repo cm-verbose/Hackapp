@@ -201,4 +201,11 @@ class PlanningMealChoiceTest {
         // Turned on by the Profile budget, it is preselected.
         assertTrue(initialMealPicks(it, context()).getValue(MealKind.LateBite).selected)
     }
+
+    @Test
+    fun keptBlockKeepsItsSkippedFlag() {
+        val it = draft(18, 2, planMeals = true, blocks = listOf(MealBlock("d", MealKind.Dinner, LocalTime.of(18, 30), skipped = true)))
+        val saved = it.withMealChoice(true, initialMealPicks(it, context()), zone)
+        assertTrue(saved.mealBlocks.single().skipped)
+    }
 }

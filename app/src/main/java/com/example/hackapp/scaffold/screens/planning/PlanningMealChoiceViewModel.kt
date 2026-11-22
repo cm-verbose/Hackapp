@@ -119,6 +119,7 @@ fun Itinerary.withMealChoice(planMeals: Boolean, picks: Map<MealKind, MealPick>,
                     kind = kind,
                     start = pick.start,
                     budget = pick.budget,
+                    skipped = existing?.skipped == true,
                 )
             }
             .sortedBy { it.interval(this, zone).start }
