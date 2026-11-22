@@ -40,8 +40,11 @@ Living checklist for the current implementation step. Update it in the same chan
 | "Other" events | Show them in their own tab or group for now. If their label cannot be made clearer than "Other", hide them for the demo |
 | District map technology | Keep the custom Canvas map |
 | District map layout | Full-height map, selected boroughs as chips on top, details in a bottom sheet |
-| District map gestures | Pinch zoom 1x to 6x, one-finger drag, double-tap zoom, bounded edges, reset button |
-| District map badges | Fixed-size badges. Lower-count overlapping badges hide until zoomed in, and selected boroughs always show their order. **Revisit after the first iteration** |
+| District map gestures | Pinch zoom 1x to 6x, two-finger rotation, one-finger drag, double-tap zoom, bounded edges, reset button (also resets rotation) |
+| District map labels | Below 200% zoom, boroughs with Events show a count badge and boroughs with none stay blank. From 200%, boroughs show upright names with their Event counts. Boroughs with Events are colored, others and linked cities are gray, and linked cities have no marker. Overlapping lower-count markers hide until zoomed in, and selected boroughs always show their order. **Revisit after the first iteration** |
+| System Back in flows | In Planning, the phone's Back action returns straight to Home and the draft stays saved. The top-left arrow goes to the previous step. Onboarding keeps step-by-step Back because no Home exists before a Profile |
+| Flow transitions | Onboarding and Planning pages slide in the direction of progress, and the opposite way going back |
+| Time picker | Two rectangles for hour and minute, flicked on a looping wheel or tapped to type. No dial |
 | District selection | Tap opens a sheet with Add as #N, or Remove if selected. Remaining boroughs renumber. Boroughs with no matching Events and linked cities are gray and untappable |
 | District count | Events starting in the time window that fit the audience, including unknown prices |
 | Itinerary drafts | Created after Date and time, autosaved after each step behind `ItineraryRepository`, local until Firestore is connected |
@@ -55,7 +58,7 @@ Living checklist for the current implementation step. Update it in the same chan
 | Date | Nov 21 to Dec 6, defaulting to the next date with data. Demo mode can pin Sat Nov 28 |
 | Time window | At least 2 hours, ending no later than 04:00. Day/night switch resets to 10:00–18:00 or 18:00–02:00 |
 | Meal choice | Multi-select within the window: lunch 12:00, dinner 18:30, late bite 22:00, with editable times. Lunch and dinner reserve 90 minutes. Late bite is 45 minutes |
-| Meal Block conflicts | Events overlapping a reserved Meal Block are hidden. The Meal prompt appears when planning reaches the block |
+| Meal Block conflicts | Events with a fixed showtime that overlap a reserved Meal Block are hidden. Long drop-in Events, such as an all-day exhibition, stay visible because they can be visited before or after the Meal. The Meal prompt appears when planning reaches the block |
 | Meal location | Meal list has **Here** and **In [next borough]** tabs. The second shows only restaurants reachable by the block's start after transit. Choosing one moves planning to that borough after the Meal, and Back can undo it |
 | Advancing boroughs | **Next borough** moves on. **Finish here** skips remaining boroughs and goes to Review, and needs at least one Event. The last borough shows only **Finish**. Back keeps Stops. A borough left with no Stops is dropped |
 | Replacing a borough | The maximum-reached message lists the 3 selected boroughs, and the new one takes the replaced borough's position |
@@ -69,7 +72,7 @@ Living checklist for the current implementation step. Update it in the same chan
 | Event details | Sheet with title, time, venue, price, audience, description when available, ticket link and Add to Itinerary |
 | Skipping a Meal | **Skip this Meal** frees the block so Events in that time appear again |
 | Budget defaults | Onboarding asks for Lunch (Meal 1), Dinner (Meal 2) and total Events budgets using the four brackets, plus an optional Late-night snack add-on that is off by default |
-| Budget overrides | Date and time edits this Itinerary's Event budget. Meal choice shows an editable budget beside each selected Meal. The Profile is unchanged. **Revisit and lock this down after the first implementation** |
+| Budget overrides | A Budget step follows Date and time. It shows the current Lunch, Dinner, Events and Late-night budgets with **Keep this budget** or **Change for this outing**. Changes apply to this Itinerary and its Meal Blocks only. Meal choice shows an editable budget beside each selected Meal. The Profile is unchanged. **Revisit and lock this down after the first implementation** |
 | Day total | Event budget plus the budgets of selected Meals, shown as a running total during selection |
 | Event prices | Events are never hidden by budget. Free counts as $0. Users can enter a ticket price, which updates shared data so other users see it |
 | Shared ticket prices | One editable report per signed-in user and Event. The app shows the median and clearly labels it as the median of user-reported prices. Reports accept $0 to $500 CAD, never show who submitted them, tell users the price is shared, and apply to all showtimes of the same title and venue that day |
@@ -123,7 +126,7 @@ Living checklist for the current implementation step. Update it in the same chan
 
 - [x] District map behavior
 - [x] Itinerary draft and Planning flow
-- [x] Update maquettes from these decisions (the Figma map badges still show counts for selected boroughs)
+- [x] Update maquettes from these decisions
 - [ ] Underway pages (grill when we get there)
 
 ### 4. Main tabs
@@ -142,11 +145,14 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Planning engine with unit tests: eligibility, ranking, Meal Blocks, reachability, Leave By, after-midnight dates
 - [x] Date and time
 - [x] District map with zoom, drag and selection
-- [ ] Confirm Date and time and District map gestures on the phone
+- [x] Review pass 1: system Back to Home, sliding transitions, time wheels, optional Budget step, map rotation, borough names
+- [ ] Confirm Date and time, Budget and District map gestures on the phone
 - [ ] Meal choice
 - [ ] Event and Meal selection
+- [ ] Keep long drop-in Events visible across Meal Blocks
 - [ ] Planned Departure sheet
-- [ ] Budget overrides and running total UI
+- [x] Itinerary budget override step
+- [ ] Per-Meal budget editing and running total UI
 - [ ] Event details sheet with optional ticket price
 - [x] `TicketPriceRepository` logic with median of user reports (in memory until Firestore)
 - [ ] Connect Stop edit warnings to Date and time, District pick and Review
@@ -173,7 +179,7 @@ Living checklist for the current implementation step. Update it in the same chan
 
 - [ ] Do a page-by-page review of every screen
 - [ ] Revisit and lock down budget overrides
-- [ ] Revisit District map badges
+- [ ] Revisit District map labels
 - [ ] Revisit borough descriptions
 - [ ] Revisit how edits to earlier Planning steps affect Stops
 
@@ -186,6 +192,5 @@ Living checklist for the current implementation step. Update it in the same chan
 
 ## Open questions
 
-- Should a long drop-in Event that overlaps a Meal Block stay visible? The current rule hides it.
 
 Move answers to **Decisions**.

@@ -90,15 +90,21 @@ An Itinerary covers a single day out or night out. Multi-day planning is out of 
 
 - Date, limited to Nov 21 to Dec 6, 2026, defaulting to the next date with data. Demo mode can pin Sat Nov 28
 - Day out (default 10:00–18:00) or night out (default 18:00–02:00), with editable times. An Itinerary lasts at least 2 hours and ends no later than 04:00
-- Optional Event budget override for this Itinerary. The Profile is unchanged
+- Tapping a time opens two rectangles, hour and minute. Flick one to change it, or tap it to type a value
 - An Itinerary belongs to the date it starts on, including hours after midnight
 - Continuing creates a draft, which autosaves after every step and resumes at its last step
+- In every Planning step, the top-left arrow returns to the previous step and the phone's Back action returns to Home. Pages slide in the direction of progress
+
+### 1a. Budget
+
+- Shows the current Lunch, Dinner, Events and Late-night budgets, with **Keep this budget** and **Change for this outing**
+- Changing opens the same budget fields as onboarding. Changes apply to this Itinerary only, and the Profile is unchanged
 
 ### 2. District pick
 
-- Full-height Canvas map with District boundaries, pinch zoom from 1x to 6x, one-finger drag, double-tap zoom, bounded edges and a reset button
+- Full-height Canvas map with District boundaries, pinch zoom from 1x to 6x, two-finger rotation, one-finger drag, double-tap zoom, bounded edges and a reset button
 - Choose 1 to 3 Districts, in visit order, shown as chips over the map. Order changes only by removing and adding a District
-- Each District shows a fixed-size red circle counting Events that start in the time window and fit the audience, including unknown prices. Lower-count overlapping badges hide until zoomed in, and selected Districts always show their order
+- Below 200% zoom, each District with Events that start in the time window and fit the audience, including unknown prices, shows a fixed-size count circle, and other Districts stay blank. From 200%, Districts show upright names with their counts. Districts with such Events are colored. Lower-count overlapping markers hide until zoomed in, and selected Districts always show their order
 - A District with zero matching Events, or a linked city, is grayed out and cannot be picked
 - Tapping a District opens a non-blocking sheet with its name and Event types, and **Add as #N** or **Remove**. Borough descriptions are deferred
 - At the maximum, Add shows a message listing the 3 selected Districts and offers to replace one. The new District takes that visit position
