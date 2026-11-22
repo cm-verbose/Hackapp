@@ -130,6 +130,9 @@ data class PlanningMealChoiceUiState(
     val loading: Boolean = true,
     val loadFailed: Boolean = false,
     val planMeals: Boolean = true,
+    /** The Itinerary window, set when the draft loads. Null until then. */
+    val windowStart: LocalTime? = null,
+    val windowEnd: LocalTime? = null,
     val options: List<MealChoiceOption> = emptyList(),
     /** No Meal block fits the Itinerary window. */
     val noMealFits: Boolean = false,
@@ -219,7 +222,14 @@ class PlanningMealChoiceViewModel(
                 draft = saved
                 profile = checkNotNull(profiles.getProfile(uid))
                 picks = initialMealPicks(saved, zone)
-                _state.update { it.copy(loading = false, planMeals = saved.planMeals ?: true) }
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        planMeals = saved.planMeals ?: true,
+                        windowStart = saved.startTime,
+                        windowEnd = saved.endTime,
+                    )
+                }
                 publish { it }
             } catch (e: CancellationException) {
                 throw e

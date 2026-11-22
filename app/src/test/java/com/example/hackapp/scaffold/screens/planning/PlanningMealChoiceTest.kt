@@ -182,4 +182,11 @@ class PlanningMealChoiceTest {
         assertTrue(none.copy(planMeals = false).canContinue)
         assertTrue(base.copy(planMeals = false, options = listOf(ok.copy(error = MealTimeError.Overlaps))).canContinue)
     }
+
+    @Test
+    fun windowIsUnknownUntilLoaded() {
+        val state = PlanningMealChoiceUiState()
+        assertNull(state.windowStart)
+        assertNull(state.windowEnd)
+    }
 }

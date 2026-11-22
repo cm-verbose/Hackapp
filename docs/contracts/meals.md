@@ -15,6 +15,7 @@ Owner: Domain Engineer, team Meals. Consumer: Feature Engineer. File:
 | `loading` | Boolean | First load or retry in progress. Render a progress state. |
 | `loadFailed` | Boolean | Draft or Profile could not be read. Render the error with Retry. |
 | `planMeals` | Boolean | true = the app plans Meals; false = the person handles food. Defaults to true. |
+| `windowStart`, `windowEnd` | LocalTime? | The Itinerary window, set once the draft loads (null before). `windowEnd` may be after midnight. The page needs no second read of the draft. |
 | `options` | List<MealChoiceOption> | The Meals offered, in order Lunch, Dinner, Late bite. Empty when none fits. Hide the list when `planMeals` is false. |
 | `noMealFits` | Boolean | No Meal block fits the Itinerary window. Render the "no Meal fits" state with the Change date and time action. |
 | `canContinue` | Boolean | Enables Continue. |

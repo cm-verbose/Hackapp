@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -79,13 +78,6 @@ fun PlanningMealChoiceScreen(
         ),
     )
     val state by viewModel.state.collectAsState()
-    // The UiState carries no window times yet, so the range line reads the draft once itself.
-    val hours by produceState<ItineraryHours?>(initialValue = null, itineraryId) {
-        val uid = auth.currentUser?.uid ?: return@produceState
-        value = runCatching { itineraries.getItinerary(uid, itineraryId) }
-            .getOrNull()
-            ?.let { ItineraryHours(it.startTime, it.endTime) }
-    }
     LaunchedEffect(state.continueToId) {
         state.continueToId?.let { id ->
             viewModel.onNavigated()
@@ -100,7 +92,7 @@ fun PlanningMealChoiceScreen(
     }
     PlanningMealChoicePage(
         state = state,
-        hours = hours,
+        hours = state.windowStart?.let { start -> state.windowEnd?.let { end -> ItineraryHours(start, end) } },
         onBack = onBack,
         onRetry = viewModel::retry,
         onPlanMealsChange = viewModel::setPlanMeals,
