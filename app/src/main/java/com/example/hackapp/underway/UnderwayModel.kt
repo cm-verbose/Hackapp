@@ -55,6 +55,8 @@ data class UnderwayState(
     val stampsAwarded: Boolean = false,
     /** When transit or Uber was opened for the current Leg. Null on the Leg and in older saved state. */
     val handoffAtMillis: Long? = null,
+    /** Started in demo mode: reads simulated time and never schedules a real alarm. */
+    val demoRun: Boolean = false,
 )
 
 /** Everything the engine needs besides the state. The Itinerary is read-only here. */

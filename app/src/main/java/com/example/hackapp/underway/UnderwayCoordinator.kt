@@ -59,23 +59,31 @@ class UnderwayCoordinator(
         demoMode: Boolean = false,
         confirmEndCurrent: Boolean = false,
     ): UnderwayStartResult = lock.withLock {
-        val now = clock.now()
+        val demoClock = (clock as? DemoClock)?.takeIf { demoMode && it.isSimulated }
+        val current = if (demoMode) clock.now() else clock.realNow()
         val draft = itineraries.getItinerary(uid, itineraryId) ?: return UnderwayStartResult.NotFound
-        startBlock(draft, now, clock.zone, demoMode)?.let { return UnderwayStartResult.Blocked(it) }
+        startBlock(draft, current, clock.zone, demoMode)?.let { return UnderwayStartResult.Blocked(it) }
         val others = underwayItineraries(uid).filter { it.id != itineraryId }
         if (others.isNotEmpty() && !confirmEndCurrent) return UnderwayStartResult.NeedsConfirmation(others.first())
         others.forEach { endCurrent(uid, it, UnderwayEvent.EndForReplacement) }
+        // Only now, after any confirmation: the old Itinerary has ended at its own time.
+        val now = demoClock?.let { demo ->
+            val at = demoStartInstant(draft, origin, estimator, clock.zone) ?: current
+            demo.jumpTo(at)
+            at
+        } ?: current
         val started = when (val r = startItinerary(itineraries, uid, itineraryId, now, clock.zone, demoMode, true)) {
             is StartResult.Started -> r.itinerary
             is StartResult.Blocked -> return UnderwayStartResult.Blocked(r.reason)
             is StartResult.NeedsConfirmation -> return UnderwayStartResult.NeedsConfirmation(r.current)
             StartResult.NotFound -> return UnderwayStartResult.NotFound
         }
-        val state = UnderwayEngine.begin(started, now, origin) ?: return UnderwayStartResult.NotFound
+        val state = UnderwayEngine.begin(started, now, origin)?.copy(demoRun = demoClock != null)
+            ?: return UnderwayStartResult.NotFound
         states.save(state)
         reschedule(uid, started, state)
         val view = UnderwayEngine.view(ctx(started), state, now, notificationsAllowed = true)
-        UnderwayStartResult.Started(view, askExactAlarm = !scheduler.canScheduleExact())
+        UnderwayStartResult.Started(view, askExactAlarm = !state.demoRun && !scheduler.canScheduleExact())
     }
 
     suspend fun dispatch(
@@ -88,14 +96,14 @@ class UnderwayCoordinator(
         val state = states.get(uid, itineraryId)
         if (itinerary == null || state == null) return DispatchResult(null, Rejection.WrongPhase)
         val t = run(uid, itinerary, state, event)
-        DispatchResult(UnderwayEngine.view(ctx(itinerary), t.state, clock.now(), notificationsAllowed), t.rejection)
+        DispatchResult(UnderwayEngine.view(ctx(itinerary), t.state, nowFor(t.state), notificationsAllowed), t.rejection)
     }
 
     /** The view of the Itinerary that is Underway, or null. Call again as time passes. */
     suspend fun view(uid: String, notificationsAllowed: Boolean): UnderwayView? = lock.withLock {
         val itinerary = underwayItineraries(uid).firstOrNull() ?: return null
         val state = states.get(uid, itinerary.id) ?: return null
-        UnderwayEngine.view(ctx(itinerary), state, clock.now(), notificationsAllowed)
+        UnderwayEngine.view(ctx(itinerary), state, nowFor(state), notificationsAllowed)
     }
 
     /**
@@ -106,14 +114,14 @@ class UnderwayCoordinator(
         combine(itineraries.observeItineraries(uid), states.observe(uid)) { all, stateList ->
             val itinerary = all.firstOrNull { it.phase == ItineraryPhase.Underway } ?: return@combine null
             val state = stateList.firstOrNull { it.itineraryId == itinerary.id } ?: return@combine null
-            UnderwayEngine.view(ctx(itinerary), state, clock.now(), notificationsAllowed())
+            UnderwayEngine.view(ctx(itinerary), state, nowFor(state), notificationsAllowed())
         }.distinctUntilChanged()
 
     /** Results of an ended Itinerary. Awards the Stamps if that is not done yet. Safe to repeat. */
     suspend fun endOfDay(uid: String, itineraryId: String): EndOfDay? = lock.withLock {
         val loaded = itineraries.getItinerary(uid, itineraryId) ?: return null
         val state = states.get(uid, itineraryId)?.takeIf { it.phase == UnderwayPhase.Ended } ?: return null
-        val itinerary = UnderwayEngine.syncItinerary(loaded, state, clock.now())
+        val itinerary = UnderwayEngine.syncItinerary(loaded, state, nowFor(state))
         val award = awardOrNull(itinerary, state)
         if (award != null && !state.stampsAwarded) states.save(state.copy(stampsAwarded = true))
         val results = state.stopOrder.mapNotNull { id ->
@@ -157,7 +165,58 @@ class UnderwayCoordinator(
         }
     }
 
+    // ---- demo mode (see docs/contracts/demo.md) ----
+
+    /** Opens demo mode on its pinned date. Refused while a real Itinerary is Underway. */
+    suspend fun enableDemo(uid: String): DemoEnableResult = lock.withLock {
+        val demo = demoClock()
+        if (demo.isSimulated) return DemoEnableResult.Enabled
+        underwayItineraries(uid).firstOrNull()?.let { return DemoEnableResult.RealItineraryUnderway(it) }
+        demo.jumpTo(demo.pinnedStart())
+        DemoEnableResult.Enabled
+    }
+
+    /** Ends every unfinished demo run at its simulated time, then returns to real time. */
+    suspend fun disableDemo(): Unit = lock.withLock {
+        val demo = demoClock()
+        states.all().filter { it.demoRun && it.phase != UnderwayPhase.Ended }.forEach { state ->
+            val itinerary = itineraries.getItinerary(state.ownerUid, state.itineraryId) ?: return@forEach
+            run(state.ownerUid, itinerary, state, UnderwayEvent.EndItinerary(confirmed = true))
+        }
+        demo.stop()
+    }
+
+    /** Jumps to the next moment of the demo run and fires what is due. */
+    suspend fun advanceDemo(uid: String): DemoAdvance = lock.withLock {
+        val demo = (clock as? DemoClock)?.takeIf { it.isSimulated } ?: return DemoAdvance.NotEnabled
+        val itinerary = underwayItineraries(uid).firstOrNull() ?: return DemoAdvance.NothingUnderway
+        val state = states.get(uid, itinerary.id)?.takeIf { it.demoRun && it.phase != UnderwayPhase.Ended }
+            ?: return DemoAdvance.NothingUnderway
+        // Null only past the automatic end: the Tick below then ends the day.
+        UnderwayEngine.nextMomentAfter(ctx(itinerary), state, clock.now())?.let { demo.jumpTo(it) }
+        val t = run(uid, itinerary, state, UnderwayEvent.Tick)
+        DemoAdvance.Moved(clock.now(), t.state.phase == UnderwayPhase.Ended)
+    }
+
+    /** True while this account has an unfinished demo run. */
+    fun observeDemoRun(uid: String): Flow<Boolean> =
+        combine(itineraries.observeItineraries(uid), states.observe(uid)) { all, stateList ->
+            val itinerary = all.firstOrNull { it.phase == ItineraryPhase.Underway }
+            stateList.any { it.itineraryId == itinerary?.id && it.demoRun && it.phase != UnderwayPhase.Ended }
+        }.distinctUntilChanged()
+
+    private fun demoClock(): DemoClock = checkNotNull(clock as? DemoClock) { "Demo mode needs a DemoClock" }
+
     // ---- internals (lock held) ----
+
+    /** A demo run reads simulated time. A real Itinerary always reads real time. */
+    private fun nowFor(state: UnderwayState): Instant = if (state.demoRun) clock.now() else clock.realNow()
+
+    /** The state of an Itinerary that lost it. While simulating, it can only be a demo run. */
+    private fun beginMissing(itinerary: Itinerary): UnderwayState? {
+        val demo = clock.isSimulated
+        return UnderwayEngine.begin(itinerary, if (demo) clock.now() else clock.realNow(), null)?.copy(demoRun = demo)
+    }
 
     private suspend fun underwayItineraries(uid: String): List<Itinerary> =
         itineraries.observeItineraries(uid).first().filter { it.phase == ItineraryPhase.Underway }
@@ -165,26 +224,29 @@ class UnderwayCoordinator(
     private suspend fun reconcile(uid: String) {
         underwayItineraries(uid).forEach { itinerary ->
             if (states.get(uid, itinerary.id) == null) {
-                UnderwayEngine.begin(itinerary, clock.now(), null)?.let { states.save(it) }
+                beginMissing(itinerary)?.let { states.save(it) }
             }
         }
         states.all().filter { it.ownerUid == uid }.forEach { state ->
             val itinerary = itineraries.getItinerary(uid, state.itineraryId) ?: return@forEach
             val finished = state.phase == UnderwayPhase.Ended && state.stampsAwarded &&
                 itinerary.phase == ItineraryPhase.Completed
-            if (!finished) run(uid, itinerary, state, UnderwayEvent.Tick)
+            if (finished) return@forEach
+            // Demo settings were lost: a demo run must not stay Underway with no alarms.
+            val orphan = state.demoRun && !clock.isSimulated && state.phase != UnderwayPhase.Ended
+            run(uid, itinerary, state, if (orphan) UnderwayEvent.EndItinerary(confirmed = true) else UnderwayEvent.Tick)
         }
     }
 
     private suspend fun endCurrent(uid: String, itinerary: Itinerary, event: UnderwayEvent) {
         val state = states.get(uid, itinerary.id)
-            ?: UnderwayEngine.begin(itinerary, clock.now(), null)
+            ?: beginMissing(itinerary)
             ?: return
         run(uid, itinerary, state, event)
     }
 
     private suspend fun run(uid: String, itinerary: Itinerary, state: UnderwayState, event: UnderwayEvent): Transition {
-        val now = clock.now()
+        val now = nowFor(state)
         val t = UnderwayEngine.reduce(ctx(itinerary), state, event, now)
         // State first: it is the source of truth. The Itinerary is re-synced by [reconcile] if we die here.
         if (t.state != state) states.save(t.state)
@@ -216,7 +278,8 @@ class UnderwayCoordinator(
     }
 
     private fun reschedule(uid: String, itinerary: Itinerary, state: UnderwayState) {
-        if (state.phase == UnderwayPhase.Ended) {
+        // A demo run never holds a real alarm: its alerts fire on Next moment.
+        if (state.phase == UnderwayPhase.Ended || state.demoRun) {
             scheduler.cancelAll(state.itineraryId)
         } else {
             scheduler.replaceAll(uid, state.itineraryId, UnderwayEngine.alarmsToSchedule(ctx(itinerary), state))
@@ -227,7 +290,10 @@ class UnderwayCoordinator(
     private suspend fun awardOrNull(itinerary: Itinerary, state: UnderwayState) =
         try {
             val toAward = UnderwayEngine.stampItinerary(itinerary, state)
-            stamps.award(toAward, resolverFor(toAward), state.endedAtMillis ?: Instant.EPOCH.toEpochMilli())
+            // A simulated date must not sort above Stamps earned later in real time.
+            val awardedAt = if (state.demoRun) clock.realNow().toEpochMilli()
+            else state.endedAtMillis ?: Instant.EPOCH.toEpochMilli()
+            stamps.award(toAward, resolverFor(toAward), awardedAt)
         } catch (_: PassportUnavailableException) {
             null
         } catch (e: CancellationException) {

@@ -17,15 +17,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.passport.PlaceStampIdentityResolver
 import com.example.hackapp.passport.createStampRepository
-import com.example.hackapp.underway.SystemUnderwayClock
-import com.example.hackapp.underway.UnderwayClock
+import com.example.hackapp.underway.DemoClock
+import com.example.hackapp.underway.DemoController
+import com.example.hackapp.underway.SharedPreferencesDemoModeRepository
 import com.example.hackapp.underway.UnderwayCoordinator
 import com.example.hackapp.underway.android.AndroidUnderwayAlertScheduler
 import com.example.hackapp.underway.android.AndroidUnderwayNotifier
 import com.example.hackapp.underway.createUnderwayRepository
+
+/** The date demo mode pins: a Saturday with good seed data. */
+private val DEMO_DATE: LocalDate = LocalDate.of(2026, 11, 28)
 
 /** Owns the single [CityServices] container for this build's City Pack. */
 class HackappApplication : Application() {
@@ -36,8 +41,17 @@ class HackappApplication : Application() {
 
     val itineraryRepository: ItineraryRepository by lazy { createItineraryRepository(this) }
 
-    /** The one clock for Underway: coordinator, ViewModel and pages. Demo mode replaces it here. */
-    val underwayClock: UnderwayClock by lazy { SystemUnderwayClock(ActiveCityPack.timeZone) }
+    /** The one clock for the app. Real time unless demo mode is on. See docs/contracts/demo.md. */
+    val underwayClock: DemoClock by lazy {
+        DemoClock(
+            repository = SharedPreferencesDemoModeRepository(this),
+            zone = ActiveCityPack.timeZone,
+            pinnedDate = DEMO_DATE,
+            planningFrom = ActiveCityPack.eventCoverage.firstDate,
+        )
+    }
+
+    val demoController: DemoController by lazy { DemoController(underwayCoordinator, underwayClock) }
 
     /**
      * Underway: state machine, alarms, notifications and Stamp awarding. Places are looked up by id,
