@@ -168,6 +168,14 @@
     <string name="meal_lunch_at">Lunch · %1$s</string>
     <string name="meal_dinner_at">Dinner · %1$s</string>
     <string name="meal_late_bite_at">Late bite · %1$s</string>
+    <string name="meal_itinerary_range">Itinerary: %1$s – %2$s</string>
+    <string name="meal_lunch">Lunch</string>
+    <string name="meal_dinner">Dinner</string>
+    <string name="meal_late_bite">Late bite</string>
+    <string name="meal_budget_label">Budget for this meal</string>
+    <string name="meal_none_reserved">No meal blocks reserved.</string>
+    <string name="meal_none_fit">No meal fits this time slot. Extend it, or choose “I’ll handle it”.</string>
+    <string name="meal_change_time">Change time</string>
     <string name="selection_district_progress">Borough %1$d of %2$d</string>
     <string name="selection_finish_here">Finish here</string>
     <string name="selection_next_district">Next borough</string>
