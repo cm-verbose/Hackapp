@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
@@ -48,10 +50,17 @@ fun HackappSmallTonalButton(text: String, onClick: () -> Unit, modifier: Modifie
 
 /** Text button (primary label, no container). */
 @Composable
-fun HackappSmallTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun HackappSmallTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: ButtonColors = ButtonDefaults.textButtonColors(),
+) {
     TextButton(
         onClick = onClick,
         enabled = enabled,
+        colors = colors,
         modifier = modifier.heightIn(min = SmallButtonMinHeight),
         contentPadding = SmallButtonPadding,
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }

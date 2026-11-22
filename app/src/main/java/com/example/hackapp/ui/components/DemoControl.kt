@@ -120,7 +120,11 @@ fun DemoControl(
                         .weight(1f)
                         .semantics { liveRegion = LiveRegionMode.Polite },
                 )
-                HackappSmallTextButton(stringResource(R.string.action_retry), onRetry)
+                HackappSmallTextButton(
+                    stringResource(R.string.action_retry),
+                    onRetry,
+                    colors = ButtonDefaults.textButtonColors(contentColor = colors.onWarningContainer),
+                )
             }
         }
     }
