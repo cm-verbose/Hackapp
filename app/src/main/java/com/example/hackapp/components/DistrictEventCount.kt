@@ -10,14 +10,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.hackapp.R
 
 @Composable
-fun DistrictEventCount(result : Int, badgeColor : Color, badgeSize : Dp = 32.dp) {
+fun DistrictEventCount(
+    result : Int = 0,
+    badgeColor : Color = colorResource(R.color.black),
+    badgeSize : Dp = 32.dp
+) {
     Box(
         modifier = Modifier
             .size(badgeSize)
@@ -39,6 +45,7 @@ fun DistrictEventCount(result : Int, badgeColor : Color, badgeSize : Dp = 32.dp)
 @Preview(showBackground = true, backgroundColor = 0xFFEDEDED)
 @Composable
 private fun DistrictEventCountPreview() {
+    //How to call
     DistrictEventCount(
         result = 8,
         badgeColor = Color(0xFFE0042B),
