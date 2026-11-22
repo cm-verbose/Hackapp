@@ -43,6 +43,10 @@ import kotlinx.serialization.Serializable
 )
 @Serializable data class ItineraryReviewRoute(val itineraryId: String)
 
+// Sharing
+/** Flick an Itinerary to a nearby phone. A null [itineraryId] only receives. */
+@Serializable data class ShareItineraryRoute(val itineraryId: String? = null)
+
 // Underway
 /** One route for Leg, Arrival, At the Stop and End of day: the page follows the Underway phase. */
 @Serializable data object UnderwayLegRoute

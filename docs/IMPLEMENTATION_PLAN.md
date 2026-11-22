@@ -12,6 +12,8 @@ Living checklist for the current implementation step. Update it in the same chan
 
 Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 
+**Revision pass (2026-11-22 06:45).** Branch `feat/integration-revisions`, from `team/integration`, applies Niko's phone revision notes (see the Decisions marked "revision 2026-11-22"). 546 unit tests pass and `assembleDebug` builds. Not yet tried on a device, and not pushed.
+
 **Where the code is.** Use **`origin/team/integration`**. It contains Planning, Underway, the dark-mode and travel-time fixes, demo mode and the physics Passport. `origin/feat/ui-foundation` is still at `5d0eb80` and contains none of these until Niko approves the milestone on the phone.
 
 | Branch | Contains | State |
@@ -77,6 +79,17 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | District map labels | Below 200% zoom, boroughs with Events show a count badge and boroughs with none stay blank. From 200%, boroughs show upright names with their Event counts. Boroughs with Events are colored, others and linked cities are gray, and linked cities have no marker. Overlapping lower-count markers hide until zoomed in, and selected boroughs always show their order. **Revisit after the first iteration** |
 | System Back in flows | In Planning, the phone's Back action returns straight to Home and the draft stays saved. The top-left arrow goes to the previous step. Onboarding keeps step-by-step Back because no Home exists before a Profile |
 | Flow transitions | Onboarding and Planning pages slide in the direction of progress, and the opposite way going back |
+| Date and time default | A new Itinerary starts on Day out (revision 2026-11-22) |
+| District of stay | Picked on a full-screen borough map in onboarding: names only, shown from 200% zoom, no counts. With coarse location allowed, the borough the person is in is preselected. Location is read once and never stored (revision 2026-11-22) |
+| Selection intro | Arriving from Meal choice shows a full-screen colour panel, "Choisissez vos arrêts", that wipes away to the start side. A tap skips it (revision 2026-11-22) |
+| Moving on | After an Event, or an Event and the Meal right after it, selection asks once per borough to move to the next one (revision 2026-11-22) |
+| Late first borough | When the first borough's first Event starts 2 h or more after the gap opens and another order starts at least 1 h earlier, selection offers to sort the boroughs by their first Event. Only before any Stop is planned (revision 2026-11-22) |
+| Meal conflicts | When the next Meal hides every remaining Event, or at least 3 and half of them, selection offers **Changer l'heure**. The Meal moves in 15-minute steps, the Event list updates live, and nothing is saved until **Enregistrer l'heure** (revision 2026-11-22) |
+| Handoff return | Opening transit, Uber or maps moves to Arrival only once the person is back in the app, with the usual slide. A handoff that never leaves the app moves on after 3 s (revision 2026-11-22) |
+| Home delete | Holding down a draft on Home asks to delete it (revision 2026-11-22) |
+| Stamp shapes | Each new Stamp stores a random shape seed when awarded. Older Stamps keep their key-based shape (revision 2026-11-22) |
+| Demo control look | 85% opacity with a 60% background, so it reads as a demo tool (revision 2026-11-22) |
+| Itinerary sharing | Flick a card to a nearby phone through `cmvb`'s Nearby code, with the Itinerary in `ShareMessage.Throw.payload`. Share from Review or the Underway ⋮ menu; receive from the Home icon. The receiver gets a copy in Planning: drafts keep their step, Underway copies open on Review with past Stops skipped. No owner, budgets, ticket reports or confirmations are copied, and nothing syncs back. Live group sync waits for Firestore (revision 2026-11-22) |
 | Time picker | Two rectangles for hour and minute, flicked on a looping wheel or tapped to type. No dial |
 | District selection | Tap opens a sheet with Add as #N, or Remove if selected. Remaining boroughs renumber. Boroughs with no matching Events and linked cities are gray and untappable |
 | District count | Events starting in the time window that fit the audience, including unknown prices |
@@ -85,7 +98,7 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Missing end times | Planned Departure sheet opens prefilled with a typical stay for the Event type, and the user can change it |
 | Planning travel time | Public transit estimate plus buffer |
 | Editing earlier steps | Warn which Stops will be removed and keep those that still fit. **May change during implementation** |
-| Borough order | Change it only by removing and re-adding a borough. No drag-to-reorder |
+| Borough order | The chosen boroughs show as a list in visit order on step 2. Drag a row by its handle, or long press it, to reorder. TalkBack has Move up and Move down (revision 2026-11-22) |
 | Borough sheet content | Name and Event types only, with no description. **Revisit borough descriptions later** |
 | 3-borough limit | Add shows a maximum-reached message and offers to replace a selected borough |
 | Date | Nov 21 to Dec 6, defaulting to the next date with data. Demo mode can pin Sat Nov 28 |
@@ -98,7 +111,7 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Replacing a borough | The maximum-reached message lists the 3 selected boroughs, and the new one takes the replaced borough's position |
 | Late bite | 45 minutes total, including its shorter margins |
 | Removing a Stop | Return to selection for that gap and keep later reachable Stops. If a later Stop can no longer be reached by transit in time, warn the user and offer to reschedule or reorganize their day instead of removing it silently |
-| Planning progress | Every Planning page uses the 6-segment bar with "Étape N sur 6" |
+| Planning progress | Every Planning page uses the 5-segment bar with "Étape N sur 5". The Budget step was removed (revision 2026-11-22) |
 | Late-night Meal name | "Bouchée tardive" everywhere |
 | Meal time field | Opens the same hour and minute rectangles as Date and time |
 | Meal with no bracket | Falls back to the Profile budget for that Meal |
@@ -119,7 +132,7 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Underway notifications | Denied notifications never block Start. Underway shows one dismissible banner with a Settings button, at most once per Itinerary |
 | Underway alerts | Use exact alarms. Ask once at Start, and fall back to normal alerts if declined. Reschedule after a reboot and whenever the app opens. Arrival and Skip work directly from the notification. On the last remaining Stop, the notification offers Open instead of Skip, so the app can warn before the Itinerary ends |
 | Past Leave By | Once the Leave By time has passed, Underway shows Departure: Now instead of a past time |
-| First Leg origin | The first Leg starts from the Profile's District of stay, with no location permission. Its Leave By and travel time are approximate |
+| First Leg origin | The first Leg starts from the Profile's District of stay, with no location permission at Underway. Its Leave By and travel time are approximate |
 | Back during Underway | The phone Back action returns to Home, where the Underway card resumes. It never ends the Itinerary |
 | Arrival reminder | Fires once. A Stop is never skipped automatically while the Itinerary is active |
 | Late warning | Appears at a Stop when the current time plus travel passes the next Stop start, and as one alert per Stop if the app is closed |
@@ -137,7 +150,7 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Demo control | Shown only on Underway. **Moment suivant** jumps to Leave By, arrival, next Stop, then end of day. Start moves the clock to the first Leave By, or 30 minutes before the first Stop. The clock pauses while the app is closed. Turn it off in Settings or the Underway ⋮ menu |
 | Physics Passport | Gravity starts locked. Stamps keep all six playful shapes from the prototype, with a stable shape per Stamp. The first Stamps are full size, and all shapes shrink together to about half size as the collection grows. They show initials and open a details sheet. **Tous les timbres** reaches Stamps that don't fit. No sharing control until Itinerary sharing is built |
 | Travel between Stops | Planning and Underway use a public transit estimate between Districts and walking time within one District. A walk over 20 minutes uses transit instead |
-| Passport direction | Integrate `cmvb`'s physics prototype from `shape-playground`, with real Stamps as the objects. Keep its flicking code for Itinerary sharing later |
+| Passport direction | Integrate `cmvb`'s physics prototype from `shape-playground`, with real Stamps as the objects. Its flicking code now carries Itinerary sharing; Stamps are never sent |
 | Onboarding start | Starts at Profile with 3 steps until Resident ships. The Visitor or Resident page stays in the code |
 | Age notice | "18 ans et plus" on Register only |
 | Home suggestions | Not tappable until Event selection can preselect the Event |
@@ -151,7 +164,7 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Event details | Sheet with title, time, venue, price, audience, description when available, ticket link and Add to Itinerary |
 | Skipping a Meal | **Skip this Meal** frees the block so Events in that time appear again |
 | Budget defaults | Onboarding asks for Lunch (Meal 1), Dinner (Meal 2) and total Events budgets using the four brackets, plus an optional Late-night snack add-on that is off by default |
-| Budget overrides | A Budget step follows Date and time. It shows the current Lunch, Dinner, Events and Late-night budgets with **Keep this budget** or **Change for this outing**. Changes apply to this Itinerary and its Meal Blocks only. Meal choice shows an editable budget beside each selected Meal. The Profile is unchanged. **Revisit and lock this down after the first implementation** |
+| Budget overrides | No Budget step. Meal choice shows each Meal's inherited budget with **Modifier le budget**, which reveals the brackets. The Event budget comes from the Profile. Drafts saved on the old Budget step resume at Districts (revision 2026-11-22) |
 | Day total | Event budget plus the budgets of selected Meals, shown as a running total during selection |
 | Event prices | Events are never hidden by budget. Free counts as $0. Users can enter a ticket price, which updates shared data so other users see it |
 | Shared ticket prices | One editable report per signed-in user and Event. The app shows the median and clearly labels it as the median of user-reported prices. Reports accept $0 to $500 CAD, never show who submitted them, tell users the price is shared, and apply to all showtimes of the same title and venue that day |

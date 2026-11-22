@@ -52,6 +52,8 @@ class UnderwayChrome(
     val demoControl: (@Composable () -> Unit)? = null,
     /** Demo mode only: the Quitter le mode démo menu item. */
     val onExitDemo: (() -> Unit)? = null,
+    /** Sends a copy of this Itinerary to a nearby phone, so a friend can join. */
+    val onShare: (() -> Unit)? = null,
 )
 
 @Composable
@@ -71,7 +73,7 @@ internal fun UnderwayActivePage(
         onBack = chrome.onBack,
         containerColor = if (hero) colors.hero else scheme.surface,
         contentColor = if (hero) colors.onHeroCard else scheme.onSurface,
-        actions = { UnderwayOverflowMenu(chrome.onEndItinerary, chrome.onExitDemo) },
+        actions = { UnderwayOverflowMenu(chrome.onEndItinerary, chrome.onExitDemo, chrome.onShare) },
         belowTopBar = chrome.demoControl,
         bottomActions = bottomActions,
         content = {
@@ -84,13 +86,22 @@ internal fun UnderwayActivePage(
 }
 
 @Composable
-private fun UnderwayOverflowMenu(onEndItinerary: () -> Unit, onExitDemo: (() -> Unit)?) {
+private fun UnderwayOverflowMenu(onEndItinerary: () -> Unit, onExitDemo: (() -> Unit)?, onShare: (() -> Unit)?) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.underway_more_options))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            if (onShare != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_share)) },
+                    onClick = {
+                        expanded = false
+                        onShare()
+                    },
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.end_of_day_finish)) },
                 onClick = {

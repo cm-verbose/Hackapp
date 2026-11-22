@@ -462,4 +462,31 @@
     <string name="demo_error">Couldn’t do that.</string>
 
     <!-- Planning: engine messages -->
+    <!-- Itinerary sharing -->
+    <string name="share_title">Share itinerary</string>
+    <string name="share_receive_title">Receive an itinerary</string>
+    <string name="home_receive_itinerary">Receive an itinerary</string>
+    <string name="action_share">Share</string>
+    <string name="share_permissions_needed">Allow nearby sharing to continue.</string>
+    <string name="share_unavailable">This itinerary can’t be shared.</string>
+    <string name="share_searching">No phones nearby. Open this page on the other phone.</string>
+    <string name="share_open_settings">Open settings</string>
+    <string name="share_received_from">%1$s sent you an itinerary</string>
+    <string name="share_received">Itinerary received</string>
+    <string name="share_add">Add to my itineraries</string>
+    <string name="share_decline">Decline</string>
+    <string name="share_sent_to">Sent to %1$s</string>
+    <string name="share_sent">Sent</string>
+    <string name="share_no_peers">No phone connected.</string>
+    <string name="share_no_target">No phone in that direction.</string>
+    <string name="share_receive_error">This itinerary can’t be opened here.</string>
+    <string name="share_save_error">Couldn’t save the itinerary. Try again.</string>
+    <plurals name="share_ready_to_send">
+        <item quantity="one">%d phone ready. Flick the card toward it.</item>
+        <item quantity="other">%d phones ready. Flick the card toward one.</item>
+    </plurals>
+    <plurals name="share_ready_to_receive">
+        <item quantity="one">%d phone connected</item>
+        <item quantity="other">%d phones connected</item>
+    </plurals>
 </resources>

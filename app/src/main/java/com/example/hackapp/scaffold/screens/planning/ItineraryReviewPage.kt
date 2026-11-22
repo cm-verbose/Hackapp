@@ -1,5 +1,7 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.IconButton
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -123,6 +125,7 @@ fun ItineraryReviewScreen(
     onStarted: (String) -> Unit,
     onBackToSelection: (ReviewNavigation.BackToSelection) -> Unit,
     onChangeDateTime: (String) -> Unit,
+    onShare: (String) -> Unit = {},
 ) {
     val services = LocalCityServices.current
     val auth = LocalAuthService.current
@@ -245,6 +248,7 @@ fun ItineraryReviewScreen(
             viewModel.start()
         },
         onChangeDateTime = { onChangeDateTime(itineraryId) },
+        onShare = { onShare(itineraryId) },
         onConfirmDialog = viewModel::confirmDialog,
         onDismissDialog = viewModel::dismissDialog,
         onReschedule = viewModel::reschedule,
@@ -291,6 +295,7 @@ fun ItineraryReviewPage(
     onReorganize: () -> Unit,
     onPickShowtime: (String) -> Unit,
     onCancelReschedule: () -> Unit,
+    onShare: (() -> Unit)? = null,
 ) {
     val ready = !state.loading && !state.loadFailed
     val districtNames = remember(map) { map?.districts?.associate { it.id to it.name }.orEmpty() }
@@ -299,6 +304,13 @@ fun ItineraryReviewPage(
         onBack = onBack,
         step = REVIEW_STEP,
         totalSteps = PLANNING_STEPS,
+        actions = {
+            if (ready && onShare != null) {
+                IconButton(onClick = onShare) {
+                    Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))
+                }
+            }
+        },
         bottomActions = if (ready) {
             { ReviewActions(state, onStart, onChangeDateTime) }
         } else {

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +39,7 @@ import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.composables.mainbottombar.MainBottomBar
 import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
+import com.example.hackapp.scaffold.navigation.ShareItineraryRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.itinerary.DeleteErrorNote
 import com.example.hackapp.scaffold.screens.itinerary.DeleteItineraryDialog
@@ -98,6 +100,7 @@ fun ScreenHome(
             onOpenSettings = onOpenSettings,
             onRetry = viewModel::retry,
             onRequestDelete = viewModel::requestDelete,
+            onReceiveItinerary = { controller.navigate(ShareItineraryRoute()) },
             modifier = Modifier.padding(paddingValues),
         )
         if (state.pendingDeleteId != null) {
@@ -117,6 +120,7 @@ fun HomePage(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     onRequestDelete: (String) -> Unit = {},
+    onReceiveItinerary: () -> Unit = {},
 ) {
     val content = state.itineraries
     Column(
@@ -135,6 +139,9 @@ fun HomePage(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = onReceiveItinerary) {
+                Icon(Icons.Filled.Download, contentDescription = stringResource(R.string.home_receive_itinerary))
+            }
             IconButton(onClick = onOpenSettings) {
                 Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.settings_title))
             }

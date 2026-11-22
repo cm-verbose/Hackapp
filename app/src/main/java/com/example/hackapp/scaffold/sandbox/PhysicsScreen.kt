@@ -150,6 +150,10 @@ class SandboxSharing(
     val channel: ThrowChannel?,
     val onThrow: (ThrowOutcome) -> Unit,
     val onReceive: (item: SandboxItem?, fromName: String?) -> Unit,
+    /** Data sent with a thrown object, by its [SandboxItem.key]. Null sends the shape alone. */
+    val payloadFor: (key: Any) -> String? = { null },
+    /** Called with the data of every received throw that carried any. */
+    val onPayload: (payload: String, fromName: String?) -> Unit = { _, _ -> },
 )
 
 /**
@@ -264,7 +268,7 @@ fun PhysicsScreen(
                         sandbox.stepScale()
                         grabber.update(fixedDt)
                         val share = currentSharing
-                        val outcome = sandbox.checkThrow(nowNanos, share?.channel, orientation.rotationMatrix)
+                        val outcome = sandbox.checkThrow(nowNanos, share?.channel, orientation.rotationMatrix, share?.payloadFor)
                         if (outcome != null) share?.onThrow?.invoke(outcome)
                         world.step(fixedDt, 8, 3)
                         accumulator -= fixedDt
@@ -296,6 +300,7 @@ fun PhysicsScreen(
                     val spec = sandbox.receive(incoming.message, orientation.rotationMatrix, grabber.grabbed)
                     shareHaptics.received()
                     currentSharing?.onReceive?.invoke(spec, incoming.fromName)
+                    incoming.message.payload?.let { currentSharing?.onPayload?.invoke(it, incoming.fromName) }
                 }
             }
             LaunchedEffect(channel, lifecycle) {

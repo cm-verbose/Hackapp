@@ -13,6 +13,7 @@ import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.navigation.PlanningStopSelectionRoute
+import com.example.hackapp.scaffold.navigation.ShareItineraryRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.navigation.flowComposable
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
@@ -75,6 +76,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             },
             onBackToSelection = { target -> controller.returnToSelection(target) },
             onChangeDateTime = { id -> controller.returnToDateTimeFromReview(id) },
+            onShare = { id -> controller.navigate(ShareItineraryRoute(id)) },
         )
     }
 }

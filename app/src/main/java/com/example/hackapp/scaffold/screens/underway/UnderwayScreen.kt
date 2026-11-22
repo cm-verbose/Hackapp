@@ -59,7 +59,7 @@ private class UnderwayItineraryInfo(val itinerary: Itinerary, val stops: Underwa
  * notification action taken outside the app can never leave a stale page on screen.
  */
 @Composable
-fun UnderwayScreen(onExitToHome: () -> Unit) {
+fun UnderwayScreen(onExitToHome: () -> Unit, onShare: (String) -> Unit = {}) {
     BackHandler(onBack = onExitToHome)
     val uid = LocalAuthService.current.currentUser?.uid
     if (uid == null) {
@@ -176,6 +176,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                     onDismissBanner = { viewModel.dispatch(UnderwayEvent.NotificationBannerHandled) },
                     demoControl = demoControl,
                     onExitDemo = onExitDemo,
+                    onShare = { onShare(view.itineraryId) },
                 )
                 // Same phase and Stop keeps the page in place; the content still gets each new view.
                 AnimatedContent(

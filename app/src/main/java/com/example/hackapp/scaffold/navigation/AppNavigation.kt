@@ -1,5 +1,7 @@
 package com.example.hackapp.scaffold.navigation
 
+import com.example.hackapp.scaffold.screens.share.ItineraryShareScreen
+import androidx.navigation.toRoute
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -73,7 +75,21 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
         planningGraph(controller)
 
         composable<UnderwayLegRoute> {
-            UnderwayScreen(onExitToHome = { controller.exitToHome() })
+            UnderwayScreen(
+                onExitToHome = { controller.exitToHome() },
+                onShare = { id -> controller.navigate(ShareItineraryRoute(id)) },
+            )
+        }
+        composable<ShareItineraryRoute> { entry ->
+            ItineraryShareScreen(
+                itineraryId = entry.toRoute<ShareItineraryRoute>().itineraryId,
+                onBack = { controller.popBackStack() },
+                onOpenReceived = { route ->
+                    controller.navigate(route) {
+                        popUpTo<ShareItineraryRoute> { inclusive = true }
+                    }
+                },
+            )
         }
     }
 }

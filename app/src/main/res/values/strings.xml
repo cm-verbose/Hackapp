@@ -473,4 +473,31 @@
     <string name="demo_error">Action impossible.</string>
 
     <!-- Planning: engine messages -->
+    <!-- Itinerary sharing -->
+    <string name="share_title">Partager l’itinéraire</string>
+    <string name="share_receive_title">Recevoir un itinéraire</string>
+    <string name="home_receive_itinerary">Recevoir un itinéraire</string>
+    <string name="action_share">Partager</string>
+    <string name="share_permissions_needed">Autorisez le partage à proximité pour continuer.</string>
+    <string name="share_unavailable">Cet itinéraire ne peut pas être partagé.</string>
+    <string name="share_searching">Aucun téléphone à proximité. Ouvrez cette page sur l’autre téléphone.</string>
+    <string name="share_open_settings">Ouvrir les paramètres</string>
+    <string name="share_received_from">%1$s vous envoie un itinéraire</string>
+    <string name="share_received">Itinéraire reçu</string>
+    <string name="share_add">Ajouter à mes itinéraires</string>
+    <string name="share_decline">Refuser</string>
+    <string name="share_sent_to">Envoyé à %1$s</string>
+    <string name="share_sent">Envoyé</string>
+    <string name="share_no_peers">Aucun téléphone connecté.</string>
+    <string name="share_no_target">Aucun téléphone dans cette direction.</string>
+    <string name="share_receive_error">Impossible d’ouvrir cet itinéraire ici.</string>
+    <string name="share_save_error">Impossible d’enregistrer l’itinéraire. Réessayez.</string>
+    <plurals name="share_ready_to_send">
+        <item quantity="one">%d téléphone prêt. Lancez la carte vers lui.</item>
+        <item quantity="other">%d téléphones prêts. Lancez la carte vers l’un d’eux.</item>
+    </plurals>
+    <plurals name="share_ready_to_receive">
+        <item quantity="one">%d téléphone connecté</item>
+        <item quantity="other">%d téléphones connectés</item>
+    </plurals>
 </resources>

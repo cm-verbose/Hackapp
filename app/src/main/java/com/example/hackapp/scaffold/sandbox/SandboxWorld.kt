@@ -494,6 +494,7 @@ class SandboxWorld(
         nowNanos: Long,
         share: ThrowChannel?,
         rotation: FloatArray?,
+        payloadFor: ((Any) -> String?)? = null,
     ): ThrowOutcome? {
         val item = throwCandidate ?: return null
         throwCandidate = null
@@ -527,6 +528,7 @@ class SandboxWorld(
                 bearing = bearing,
                 speed = speed,
                 angularVelocity = body.angularVelocity,
+                payload = payloadFor?.invoke(item.spec.key),
             ),
         )
         // Let it pass through the walls and fly straight off screen.
