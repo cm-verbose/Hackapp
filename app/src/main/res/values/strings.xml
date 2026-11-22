@@ -26,6 +26,7 @@
     <string name="leg_arrive">Arrivée</string>
     <string name="leg_now">Maintenant</string>
     <string name="leg_walk_minutes">≈ %1$d min</string>
+    <string name="leg_time_district" translatable="false">%1$s · %2$s</string>
     <plurals name="stamps_count">
         <item quantity="one">%d timbre</item>
         <item quantity="other">%d timbres</item>

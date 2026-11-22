@@ -95,3 +95,9 @@ Each must read on a lock screen with no app context. Android shows the app name 
 | `leg_google_maps_directions` | Ouvrir dans Google Maps / Open in Google Maps | Secondary Leg button, transit only |
 | `app_name_google_maps` (`translatable="false"`, default file only) | Google Maps | Replaces the `DIRECTIONS_APP_NAME` constant in `UnderwayScreen.kt:46` through `stringResource`, as the `%1$s` of `handoff_unavailable` |
 | `handoff_unavailable` | Impossible d’ouvrir %1$s. Essayez une autre option. / Couldn’t open %1$s. Try another option. | Handoff error for Chrono, Uber or Google Maps |
+
+## Separator
+
+| Key | Text | Where |
+|---|---|---|
+| `leg_time_district` (`translatable="false"`, default file only) | `%1$s` U+00A0 `· %2$s` | Leg line with the time and the District name, such as `19:15 · Plateau-Mont-Royal`. U+00A0 sits before the `·`, as in the other separator strings |
