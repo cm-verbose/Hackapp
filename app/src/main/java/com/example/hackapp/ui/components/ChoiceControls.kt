@@ -16,6 +16,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonColors
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
@@ -108,6 +109,7 @@ fun <T> HackappSegmentedButton(
     onSelectedChange: (T) -> Unit,
     modifier: Modifier = Modifier,
     maxLines: Int = 2,
+    colors: SegmentedButtonColors = SegmentedButtonDefaults.colors(),
 ) {
     // Labels may wrap; the row takes the tallest segment's height and the others fill it.
     SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
@@ -116,6 +118,7 @@ fun <T> HackappSegmentedButton(
                 selected = option.value == selected,
                 onClick = { onSelectedChange(option.value) },
                 enabled = option.enabled,
+                colors = colors,
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
                 modifier = Modifier.fillMaxHeight(),
                 icon = {},

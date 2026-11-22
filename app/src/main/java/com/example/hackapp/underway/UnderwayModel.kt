@@ -61,6 +61,8 @@ data class UnderwayState(
     val originDistrictId: String? = null,
     /** True once the person picked a way to travel for this Leg: the default mode no longer applies. */
     val legTransportChosen: Boolean = false,
+    /** The person chose to leave now for this Leg, at this moment. Null means the planned Leave By. */
+    val legDepartAtMillis: Long? = null,
 )
 
 /** Everything the engine needs besides the state. The Itinerary is read-only here. */
@@ -76,6 +78,8 @@ class UnderwayContext(
 sealed interface UnderwayEvent {
     data class OpenTransport(val choice: TransportChoice, val stopId: String? = null) : UnderwayEvent
     data object ReturnToLeg : UnderwayEvent
+    /** On the Leg: leave now ([now] true) or at the planned Leave By. */
+    data class ChooseDeparture(val now: Boolean, val stopId: String? = null) : UnderwayEvent
     data class ConfirmArrival(val stopId: String? = null) : UnderwayEvent
     data class Leaving(val stopId: String? = null) : UnderwayEvent
     /** On Leg and Arrival the current Stop. At the Stop, the next Stop. */
@@ -132,6 +136,8 @@ data class UnderwayView(
     val legFrom: Stop?,
     val expectedArrival: OffsetDateTime?,
     val leaveBy: OffsetDateTime?,
+    /** On the Leg: when the person chose to leave now. Null means they leave at [leaveBy]. */
+    val departAt: OffsetDateTime? = null,
     val nextStop: Stop?,
     val isLastStop: Boolean,
     val transport: TransportChoice,

@@ -17,11 +17,12 @@ import com.example.hackapp.ui.theme.HackappTheme
 
 /**
  * Figma "LegTimes" (53:1090): Depart · Travel · Arrive, shown on the dark hero card.
- * Values are data (times, walk estimate); labels come from strings.xml.
+ * Values are data (times, walk estimate); labels come from strings.xml. A null [departValue]
+ * leaves Depart out, for a Leg that shows it as a [DepartureChoice] instead.
  */
 @Composable
 fun LegTimes(
-    departValue: String,
+    departValue: String?,
     travelValue: String,
     arriveValue: String,
     modifier: Modifier = Modifier,
@@ -31,7 +32,7 @@ fun LegTimes(
     color: Color = HackappTheme.appColors.onHeroCard,
 ) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        LegTimeColumn(departLabel, departValue, color)
+        departValue?.let { LegTimeColumn(departLabel, it, color) }
         LegTimeColumn(travelLabel, travelValue, color)
         LegTimeColumn(arriveLabel, arriveValue, color)
     }

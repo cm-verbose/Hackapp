@@ -37,9 +37,9 @@ data class UnderwayStopUi(
     val districtName: String?,
 )
 
-/** The Leg hero's times. [departTime] null means leave now. */
+/** The Leg hero's times: travel and the arrival for the chosen departure. */
 @Immutable
-data class LegTimesUi(val departTime: String?, val travelMinutes: Int, val arriveTime: String)
+data class LegTimesUi(val travelMinutes: Int, val arriveTime: String)
 
 @Immutable
 data class LegUi(
@@ -53,6 +53,8 @@ data class LegUi(
     val currentIndex: Int?,
     /** Leave By has passed: show Départ, Maintenant. */
     val leaveNow: Boolean = false,
+    /** The person chose to leave now instead of at [leaveBy]. */
+    val departsNow: Boolean = false,
 )
 
 @Immutable
@@ -137,10 +139,8 @@ internal fun legUi(
     val hero = view.legFrom?.let { from ->
         val minutes = estimator.estimate(from.point, stop.point, if (walking) LegMode.WALK else transport.legMode()).travelMinutes
         val leaveAt = view.leaveBy?.toInstant()
-        val waits = leaveAt != null && leaveAt.isAfter(now)
-        val departs = if (waits) leaveAt else now
+        val departs = view.departAt?.toInstant() ?: leaveAt?.takeIf { it.isAfter(now) } ?: now
         LegTimesUi(
-            departTime = if (waits) view.leaveBy?.let(info::time) else null,
             travelMinutes = minutes,
             arriveTime = info.time(departs.plusSeconds(minutes * 60L).atZone(info.zone).toOffsetDateTime()),
         )
@@ -154,6 +154,7 @@ internal fun legUi(
         strip = info.stops.map { StripStop(info.time(it.start), info.ui(it).type) },
         currentIndex = index.takeIf { it >= 0 },
         leaveNow = view.isPastLeaveBy(now),
+        departsNow = view.departAt != null,
     )
 }
 

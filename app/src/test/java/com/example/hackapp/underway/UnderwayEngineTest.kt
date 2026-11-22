@@ -318,6 +318,20 @@ class UnderwayEngineTest {
     }
 
     @Test
+    fun `leaving now moves the expected arrival and resets on the next Leg`() {
+        val leg = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 40) to E.Leaving())
+        val now = reduce(leg, E.ChooseDeparture(now = true, stopId = "b"), t(20, 41)).state
+        // Leaves at 20:41 instead of the 21:00 Leave By, and the time no longer follows the clock.
+        assertEquals(at(Nov28, 20, 51), UnderwayEngine.view(ctx, now, t(20, 45), true).expectedArrival)
+        assertEquals(at(Nov28, 20, 41), UnderwayEngine.view(ctx, now, t(20, 45), true).departAt)
+        val planned = reduce(now, E.ChooseDeparture(now = false, stopId = "b"), t(20, 46)).state
+        assertEquals(at(Nov28, 21, 10), UnderwayEngine.view(ctx, planned, t(20, 46), true).expectedArrival)
+        assertEquals(Rejection.StaleStop, reduce(leg, E.ChooseDeparture(true, "a"), t(20, 41)).rejection)
+        val arrived = reduce(now, E.ConfirmArrival(), t(20, 52)).state
+        assertNull(arrived.legDepartAtMillis)
+    }
+
+    @Test
     fun `expected arrival is the later of now and Leave By plus the travel time`() {
         val leg = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 50) to E.Leaving())
         // Leave By from A is 21:00 and the Leg travels 10 minutes (the other 10 are buffer).

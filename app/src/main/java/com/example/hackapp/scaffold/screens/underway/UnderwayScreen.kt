@@ -450,6 +450,7 @@ private fun LegContent(
         onSkip = { onAskSkip(stop.id) },
         onArrived = { dispatch(UnderwayEvent.ConfirmArrival(stop.id)) },
         walking = walking,
+        onChooseDeparture = { now -> dispatch(UnderwayEvent.ChooseDeparture(now, stop.id)) },
         onOpenWalking = {
             handoff(directionsAppName, com.example.hackapp.underway.TransportChoice.Walk) {
                 services.transit.openWalkingDirections(destination)

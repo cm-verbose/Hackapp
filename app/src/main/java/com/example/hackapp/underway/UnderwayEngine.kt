@@ -117,6 +117,11 @@ object UnderwayEngine {
                     else done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice, handoffAtMillis = nowMs, legTransportChosen = true))
                 else -> rejectOriginal(Rejection.WrongPhase)
             }
+            is UnderwayEvent.ChooseDeparture -> when {
+                s.phase != UnderwayPhase.Leg -> rejectOriginal(Rejection.WrongPhase)
+                event.stopId != null && event.stopId != current -> rejectOriginal(Rejection.StaleStop)
+                else -> Transition(s.copy(legDepartAtMillis = if (event.now) nowMs else null), effects)
+            }
             UnderwayEvent.ReturnToLeg ->
                 if (s.phase == UnderwayPhase.Arrival) done(s.copy(phase = UnderwayPhase.Leg, handoffAtMillis = null))
                 else rejectOriginal(Rejection.WrongPhase)
@@ -128,6 +133,7 @@ object UnderwayEngine {
                         phase = UnderwayPhase.AtStop,
                         handoffAtMillis = null,
                         legTransportChosen = false,
+                        legDepartAtMillis = null,
                         records = s.records + (current!! to s.record(current).copy(arrivedAtMillis = nowMs)),
                     ),
                 )
@@ -141,6 +147,7 @@ object UnderwayEngine {
                         currentStopId = next,
                         handoffAtMillis = null,
                         legTransportChosen = false,
+                        legDepartAtMillis = null,
                         records = s.records + (current!! to s.record(current).copy(leftAtMillis = nowMs)),
                     ),
                 )
@@ -158,7 +165,7 @@ object UnderwayEngine {
                             val ended = endDay(ctx, skipped, now, EndReason.Finished)
                             done(ended, listOf(UnderwayEffect.DayEnded))
                         } else {
-                            done(skipped.copy(phase = UnderwayPhase.Leg, currentStopId = next, handoffAtMillis = null, legTransportChosen = false))
+                            done(skipped.copy(phase = UnderwayPhase.Leg, currentStopId = next, handoffAtMillis = null, legTransportChosen = false, legDepartAtMillis = null))
                         }
                     }
                 }
@@ -320,7 +327,8 @@ object UnderwayEngine {
         val leave = shown.leaveBy?.toInstant()
         leave?.let { moments += it }
         // On the Leg the arrival follows the clock once Leave By has passed: it is not a fixed moment.
-        val arrivalIsFixed = state.phase == UnderwayPhase.Arrival || (leave != null && !time.isAfter(leave))
+        val arrivalIsFixed = state.phase == UnderwayPhase.Arrival || state.legDepartAtMillis != null ||
+            (leave != null && !time.isAfter(leave))
         if (arrivalIsFixed) shown.expectedArrival?.let { moments += it.toInstant() }
         // A late warning falls 1 second after its Leave By: one press covers both, never a 1-second step.
         val ahead = moments.filter { it.isAfter(time) }.sorted()
@@ -390,7 +398,8 @@ object UnderwayEngine {
             } else {
                 now
             }
-            val departs = maxOf(from, leave.toInstant())
+            // Leaving now was chosen: the Leg starts then, not at the planned Leave By.
+            val departs = state.legDepartAtMillis?.let(Instant::ofEpochMilli) ?: maxOf(from, leave.toInstant())
             departs.plusSeconds(minutes * 60L).atZone(ctx.zone).toOffsetDateTime()
         } else {
             null
@@ -414,6 +423,8 @@ object UnderwayEngine {
             legFrom = legFrom,
             expectedArrival = expected,
             leaveBy = leave,
+            departAt = state.legDepartAtMillis?.takeIf { state.phase == UnderwayPhase.Leg }
+                ?.let { Instant.ofEpochMilli(it).atZone(ctx.zone).toOffsetDateTime() },
             nextStop = next,
             isLastStop = current != null && next == null,
             transport = if (state.transport == TransportChoice.Uber) TransportChoice.Uber else TransportChoice.Transit,

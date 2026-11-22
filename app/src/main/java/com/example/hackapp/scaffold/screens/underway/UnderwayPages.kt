@@ -34,6 +34,7 @@ import com.example.hackapp.R
 import com.example.hackapp.scaffold.screens.itinerary.itineraryShortDate
 import com.example.hackapp.ui.components.ArrivalStatusCard
 import com.example.hackapp.ui.components.DataAttribution
+import com.example.hackapp.ui.components.DepartureChoice
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappOutlineButton
 import com.example.hackapp.ui.components.HackappPage
@@ -83,6 +84,7 @@ fun UnderwayLegPage(
     onArrived: () -> Unit,
     walking: Boolean = false,
     onOpenWalking: () -> Unit = {},
+    onChooseDeparture: (now: Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val hero = ui.hero
@@ -130,11 +132,26 @@ fun UnderwayLegPage(
                     ?: ui.stop.time,
                 stopTypeTag = { StopTypeTag(ui.stop.type) },
                 legTimes = {
-                    LegTimes(
-                        departValue = hero.departTime ?: stringResource(R.string.leg_now),
-                        travelValue = stringResource(R.string.leg_walk_minutes, hero.travelMinutes),
-                        arriveValue = hero.arriveTime,
-                    )
+                    val colors = HackappTheme.appColors
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        ui.leaveBy?.let { planned ->
+                            DepartureChoice(
+                                plannedTime = planned,
+                                departsNow = ui.departsNow,
+                                onChoose = onChooseDeparture,
+                                color = colors.onHeroCard,
+                                background = colors.heroCard,
+                                plannedAvailable = !ui.leaveNow,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        LegTimes(
+                            // Without a planned time there is no choice: the Leg starts now.
+                            departValue = if (ui.leaveBy == null) stringResource(R.string.leg_now) else null,
+                            travelValue = stringResource(R.string.leg_walk_minutes, hero.travelMinutes),
+                            arriveValue = hero.arriveTime,
+                        )
+                    }
                 },
             )
             Box(
@@ -152,7 +169,7 @@ fun UnderwayLegPage(
                 stopDetails = stringResource(R.string.leg_start_from_location, ui.stop.time),
                 modifier = Modifier.fillMaxWidth(),
             )
-            ui.leaveBy?.let { LegLeaveBy(it, ui.leaveNow) }
+            ui.leaveBy?.let { LegLeaveBy(it, ui.leaveNow, ui.departsNow, onChooseDeparture) }
         }
         TransportChoiceCard(
             selected = transport.takeUnless { walking },
@@ -165,29 +182,23 @@ fun UnderwayLegPage(
     }
 }
 
+/** The first Leg's departure: the planned time or Now, as a split pill. */
 @Composable
-private fun LegLeaveBy(time: String, leaveNow: Boolean) {
-    val color = MaterialTheme.colorScheme.onPrimaryContainer
-    Column(
-        Modifier
+private fun LegLeaveBy(time: String, leaveNow: Boolean, departsNow: Boolean, onChoose: (Boolean) -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    DepartureChoice(
+        plannedTime = time,
+        departsNow = departsNow,
+        onChoose = onChoose,
+        color = scheme.onPrimaryContainer,
+        background = scheme.primaryContainer,
+        plannedAvailable = !leaveNow,
+        modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(HackappCorners.ExtraLarge))
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(20.dp)
-            .semantics(mergeDescendants = true) {},
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            stringResource(if (leaveNow) R.string.leg_depart else R.string.at_stop_leave_by),
-            style = MaterialTheme.typography.labelLarge,
-            color = color,
-        )
-        Text(
-            if (leaveNow) stringResource(R.string.leg_now) else time,
-            style = if (leaveNow) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
-            color = color,
-        )
-    }
+            .background(scheme.primaryContainer)
+            .padding(20.dp),
+    )
 }
 
 @Composable

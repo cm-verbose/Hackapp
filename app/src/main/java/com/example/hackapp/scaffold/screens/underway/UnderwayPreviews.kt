@@ -34,7 +34,7 @@ private val Strip = listOf(
     StripStop("23:30", StopType.Cinema),
 )
 private val FirstLeg = LegUi(Jazz, 1, 4, hero = null, leaveBy = null, strip = Strip, currentIndex = 0)
-private val HeroLeg = FirstLeg.copy(stop = Bistro, stopIndex = 2, hero = LegTimesUi(null, 8, "19:23"), currentIndex = 1)
+private val HeroLeg = FirstLeg.copy(stop = Bistro, stopIndex = 2, hero = LegTimesUi(8, "19:23"), currentIndex = 1)
 private val AtJazz = AtStopUi(Jazz, false, "19:15", "Bistro du coin", 10, lateStop = null)
 
 private fun chrome(banner: Boolean = false) = UnderwayChrome(banner, {}, {}, {}, {})
