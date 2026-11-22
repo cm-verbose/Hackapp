@@ -52,6 +52,7 @@ import com.example.hackapp.itinerary.EventHourGroup
 import com.example.hackapp.itinerary.EventTypeGroup
 import com.example.hackapp.itinerary.InMemoryTicketPriceRepository
 import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.itinerary.MealAmount
 import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.PriceRank
 import com.example.hackapp.itinerary.ReachableShowtime
@@ -248,7 +249,7 @@ fun PlanningStopSelectionPage(
         bottomActions = if (ready) {
             {
                 if (state.saveFailed) SaveError(onRetrySave)
-                state.budget?.let { RunningTotal(it, state.stops) }
+                state.budget?.let { RunningTotal(it) }
                 SelectionActions(state, onNextDistrict, onFinish)
             }
         } else {
@@ -467,7 +468,7 @@ private fun MealPromptRow(prompt: MealPrompt, onChooseMeal: () -> Unit, onSkipMe
 
 /** Figma "RunningTotal" (141:4091). Over budget warns only, so the actions below stay available. */
 @Composable
-private fun RunningTotal(budget: BudgetSummary, stops: List<Stop>) {
+private fun RunningTotal(budget: BudgetSummary) {
     val scheme = MaterialTheme.colorScheme
     val over = budget.isOverBudget
     val container = if (over) scheme.errorContainer else scheme.surfaceContainerHigh
@@ -500,7 +501,7 @@ private fun RunningTotal(budget: BudgetSummary, stops: List<Stop>) {
                 color = quiet,
             )
             Text(totalAmount(budget), style = MaterialTheme.typography.titleMedium, color = strong)
-            val detail = if (over) stringResource(R.string.running_total_over_hint) else totalBreakdown(budget, stops)
+            val detail = if (over) stringResource(R.string.running_total_over_hint) else totalBreakdown(budget)
             Text(detail, style = MaterialTheme.typography.bodySmall, color = quiet)
         }
         limit?.let {
@@ -524,25 +525,25 @@ private fun totalAmount(budget: BudgetSummary): String {
 }
 
 /**
- * "Events 20 $ · Lunch 50 $". The summary has one Meal amount, so it is named only when a single
- * Meal Stop explains it. With several, the line keeps the Events amount alone.
+ * "Events 20 $ · Lunch 50 $ · Dinner 30 $". A Meal with an unknown price is left out, because the
+ * total already says "+ unknown price".
  */
 @Composable
-private fun totalBreakdown(budget: BudgetSummary, stops: List<Stop>): String {
+private fun totalBreakdown(budget: BudgetSummary): String {
     val events = stringResource(R.string.running_total_events, formatCad(budget.eventsCad))
-    if (budget.mealsCad <= 0.0) return events
-    val meal = stops.filter { it.kind == StopKind.Meal }.singleOrNull() ?: return events
-    val kind = MealKind.entries.firstOrNull { it.defaultBlockId() == meal.mealBlockId } ?: return events
-    val amount = formatCad(budget.mealsCad)
-    val mealPart = stringResource(
-        when (kind) {
-            MealKind.Lunch -> R.string.running_total_lunch
-            MealKind.Dinner -> R.string.running_total_dinner
-            MealKind.LateBite -> R.string.running_total_late_bite
-        },
-        amount,
-    )
-    return events + DETAIL_SEPARATOR + mealPart
+    val meals = budget.meals.mapNotNull { meal ->
+        val kind = meal.kind ?: return@mapNotNull null
+        val price = meal.priceCad ?: return@mapNotNull null
+        stringResource(
+            when (kind) {
+                MealKind.Lunch -> R.string.running_total_lunch
+                MealKind.Dinner -> R.string.running_total_dinner
+                MealKind.LateBite -> R.string.running_total_late_bite
+            },
+            formatCad(price),
+        )
+    }
+    return (listOf(events) + meals).joinToString(DETAIL_SEPARATOR)
 }
 
 /** A failed autosave, announced politely, with the way to save again. */
@@ -706,7 +707,16 @@ private fun previewStop(kind: StopKind, blockId: String? = null): Stop {
 
 private val PreviewStops = listOf(previewStop(StopKind.Event), previewStop(StopKind.Meal, MealKind.Lunch.defaultBlockId()))
 
-private fun previewBudget(events: Double, meals: Double, unknown: Int = 0, over: Boolean = false) = BudgetSummary(
+private fun previewMeal(kind: MealKind, price: Double?) =
+    MealAmount("stop-${kind.defaultBlockId()}", kind.defaultBlockId(), kind, price, 50)
+
+private fun previewBudget(
+    events: Double,
+    meals: Double,
+    unknown: Int = 0,
+    over: Boolean = false,
+    mealAmounts: List<MealAmount> = listOf(previewMeal(MealKind.Lunch, meals)),
+) = BudgetSummary(
     eventBudgetCad = 50,
     mealBudgetCad = 50,
     totalBudgetCad = 100,
@@ -714,6 +724,7 @@ private fun previewBudget(events: Double, meals: Double, unknown: Int = 0, over:
     mealsCad = meals,
     unknownPriceCount = unknown,
     isOverBudget = over,
+    meals = mealAmounts,
 )
 
 private val PreviewState = PlanningStopSelectionUiState(
@@ -788,6 +799,23 @@ private fun SelectionOverBudgetPreview() = PreviewPage(
 @Composable
 private fun SelectionOverBudgetLargeTextPreview() = PreviewPage(
     PreviewState.copy(budget = previewBudget(120.0, 50.0, unknown = 1, over = true)),
+)
+
+@Preview(name = "Selection · several Meals, 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 917, fontScale = 1.3f)
+@Composable
+private fun SelectionSeveralMealsPreview() = PreviewPage(
+    PreviewState.copy(
+        budget = previewBudget(
+            events = 20.0,
+            meals = 50.0,
+            unknown = 1,
+            mealAmounts = listOf(
+                previewMeal(MealKind.Lunch, 20.0),
+                previewMeal(MealKind.Dinner, 30.0),
+                previewMeal(MealKind.LateBite, null),
+            ),
+        ),
+    ),
 )
 
 @Preview(name = "Selection · empty gap (141:3952)", showBackground = true, widthDp = 412, heightDp = 917)
