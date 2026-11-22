@@ -220,6 +220,7 @@
     <string name="notification_channel_late">Retards possibles</string>
     <string name="notification_late_title">Vous risquez d’être en retard</string>
     <string name="notification_late_body">%1$s commence à %2$s</string>
+    <string name="notification_action_open">Ouvrir</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passeport</string>

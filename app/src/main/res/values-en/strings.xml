@@ -215,6 +215,7 @@
     <string name="notification_channel_late">Possible delays</string>
     <string name="notification_late_title">You may be late</string>
     <string name="notification_late_body">%1$s starts at %2$s</string>
+    <string name="notification_action_open">Open</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passport</string>

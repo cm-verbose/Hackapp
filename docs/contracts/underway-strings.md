@@ -31,7 +31,8 @@ Time arguments: sentences and notification titles use `19 h 15` in French and `1
 | `underway_skip_confirm` | Sauter | Skip | Skip confirmation button |
 | `underway_skip_body` | Il ne donnera pas de timbre. | It won’t earn a stamp. | Skip confirmation body |
 | `underway_more_options` | Plus d’options | More options | Overflow menu accessibility label |
-| `underway_last_stop` | Dernier arrêt | Last stop | Label on the last Stop |#; s#^| Skip confirmation | .*#| Skip confirmation | `underway_skip_title`, `underway_skip_body`, `underway_skip_confirm`, `action_cancel` |#
+| `underway_last_stop` | Dernier arrêt | Last stop | Label on the last Stop |
+| `notification_action_open` | Ouvrir | Open | Leave By notification action, opens the app |
 | `underway_end_early_title` | Terminer l’itinéraire? | End itinerary? | End-early dialog title |
 | `underway_end_early_body` | Les arrêts restants seront marqués comme sautés. | Remaining stops will be marked as skipped. | End-early dialog body |
 | `end_of_day_status_visited` | Visité | Visited | Result label, Stop attended with a Stamp or not |
@@ -73,8 +74,8 @@ Each must read on a lock screen with no app context. Android shows the app name 
 | Notification | Channel | Title | Body | Actions |
 |---|---|---|---|---|
 | Arrival reminder | `notification_channel_arrival` | `notification_arrival_title`: Êtes-vous sur place? / Have you arrived? | `notification_arrival_body`: Stop name · time | `action_arrived`, `action_skip_stop` |
-| Leave By alert | `notification_channel_leave` | `notification_leave_title`: Partez avant 19 h 15 / Leave by 19:15 | `notification_leave_body`: Prochain arrêt : name / Next stop: name | `action_leaving`, `action_skip_stop` |
-| Late alert | `notification_channel_late` | `notification_late_title` | `notification_late_body` | `action_skip_stop` |
+| Leave By alert | `notification_channel_leave` | `notification_leave_title`: Partez avant 19 h 15 / Leave by 19:15 | `notification_leave_body`: Prochain arrêt : name / Next stop: name | `action_leaving`, `notification_action_open` |
+| Late alert | `notification_channel_late` | `notification_late_title` | `notification_late_body` | `action_go_anyway`, `action_skip_stop` |
 
 ## Overlaps and notes
 
