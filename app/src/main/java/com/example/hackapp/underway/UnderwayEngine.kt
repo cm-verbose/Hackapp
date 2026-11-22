@@ -109,11 +109,11 @@ object UnderwayEngine {
             is UnderwayEvent.OpenTransport -> when (s.phase) {
                 UnderwayPhase.Leg, UnderwayPhase.Arrival ->
                     if (event.stopId != null && event.stopId != current) rejectOriginal(Rejection.StaleStop)
-                    else done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice))
+                    else done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice, handoffAtMillis = nowMs))
                 else -> rejectOriginal(Rejection.WrongPhase)
             }
             UnderwayEvent.ReturnToLeg ->
-                if (s.phase == UnderwayPhase.Arrival) done(s.copy(phase = UnderwayPhase.Leg))
+                if (s.phase == UnderwayPhase.Arrival) done(s.copy(phase = UnderwayPhase.Leg, handoffAtMillis = null))
                 else rejectOriginal(Rejection.WrongPhase)
             is UnderwayEvent.ConfirmArrival -> when {
                 s.phase != UnderwayPhase.Leg && s.phase != UnderwayPhase.Arrival -> rejectOriginal(Rejection.WrongPhase)
@@ -121,6 +121,7 @@ object UnderwayEngine {
                 else -> done(
                     s.copy(
                         phase = UnderwayPhase.AtStop,
+                        handoffAtMillis = null,
                         records = s.records + (current!! to s.record(current).copy(arrivedAtMillis = nowMs)),
                     ),
                 )
@@ -132,6 +133,7 @@ object UnderwayEngine {
                     s.copy(
                         phase = UnderwayPhase.Leg,
                         currentStopId = next,
+                        handoffAtMillis = null,
                         records = s.records + (current!! to s.record(current).copy(leftAtMillis = nowMs)),
                     ),
                 )
@@ -149,7 +151,7 @@ object UnderwayEngine {
                             val ended = endDay(ctx, skipped, now, EndReason.Finished)
                             done(ended, listOf(UnderwayEffect.DayEnded))
                         } else {
-                            done(skipped.copy(phase = UnderwayPhase.Leg, currentStopId = next))
+                            done(skipped.copy(phase = UnderwayPhase.Leg, currentStopId = next, handoffAtMillis = null))
                         }
                     }
                 }
@@ -340,7 +342,13 @@ object UnderwayEngine {
         val expected = if (current != null && legFrom != null && leave != null) {
             val mode = if (state.transport == TransportChoice.Uber) LegMode.RIDE_HAIL else LegMode.TRANSIT
             val minutes = ctx.estimator.estimate(legFrom.latLng, current.latLng, mode).travelMinutes
-            val departs = maxOf(now, leave.toInstant())
+            // On Arrival the clock stops at the handoff, so the time does not move every minute.
+            val from = if (state.phase == UnderwayPhase.Arrival) {
+                state.handoffAtMillis?.let(Instant::ofEpochMilli) ?: now
+            } else {
+                now
+            }
+            val departs = maxOf(from, leave.toInstant())
             departs.plusSeconds(minutes * 60L).atZone(ctx.zone).toOffsetDateTime()
         } else {
             null

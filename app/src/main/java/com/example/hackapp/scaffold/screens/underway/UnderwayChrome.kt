@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -117,7 +118,12 @@ internal fun NotificationsOffBanner(onOpenSettings: () -> Unit, onDismiss: () ->
                 color = scheme.onSurfaceVariant,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
-            HackappSmallTextButton(stringResource(R.string.underway_notifications_open_settings), onOpenSettings)
+            // The button's own padding would indent its label from the text above.
+            HackappSmallTextButton(
+                stringResource(R.string.underway_notifications_open_settings),
+                onOpenSettings,
+                Modifier.offset(x = (-16).dp),
+            )
         }
         IconButton(onClick = onDismiss) {
             Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.underway_banner_dismiss))

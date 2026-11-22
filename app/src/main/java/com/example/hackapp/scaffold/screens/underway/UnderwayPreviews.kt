@@ -117,7 +117,7 @@ private fun AtLastStopPreview() = AtStop(AtStopUi(Wine, true, null, null, null, 
 
 @Preview(name = "At the Stop · late (159:2712)", widthDp = 360, heightDp = 800)
 @Composable
-private fun AtStopLatePreview() = AtStop(AtJazz.copy(lateStop = Bistro))
+private fun AtStopLatePreview() = AtStop(AtJazz.copy(lateStop = Bistro, leaveNow = true))
 
 @Preview(name = "At the Stop · late, Leave By passed, 360 dp at 1.3x", widthDp = 360, heightDp = 800, fontScale = 1.3f)
 @Composable

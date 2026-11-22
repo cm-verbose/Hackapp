@@ -58,7 +58,7 @@ fun LateArrivalWarning(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            HackappSmallTonalButton(text = goAnywayLabel, onClick = onGoAnyway)
+            HackappSmallTextButton(text = goAnywayLabel, onClick = onGoAnyway)
             HackappSmallTextButton(text = skipStopLabel, onClick = onSkipStop)
         }
     }

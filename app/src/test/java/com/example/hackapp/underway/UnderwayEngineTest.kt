@@ -411,4 +411,40 @@ class UnderwayEngineTest {
         // A notification Skip is fine while Stops remain.
         assertEquals("b", reduce(begin(), E.SkipStop("a", fromNotification = true), t(19)).state.currentStopId)
     }
+
+    @Test
+    fun `on Arrival the expected arrival stays fixed at the handoff`() {
+        val leg = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 50) to E.Leaving())
+        val arrival = reduce(leg, E.OpenTransport(TransportChoice.Transit, "b"), t(21, 20)).state
+        assertEquals(t(21, 20).toEpochMilli(), arrival.handoffAtMillis)
+        // Handoff 21:20 is after Leave By 21:00: 21:20 + 10 minutes, whatever the time now.
+        assertEquals(at(Nov28, 21, 30), UnderwayEngine.view(ctx, arrival, t(21, 20), true).expectedArrival)
+        assertEquals(at(Nov28, 21, 30), UnderwayEngine.view(ctx, arrival, t(21, 45), true).expectedArrival)
+        // The Leg itself still follows the clock.
+        assertEquals(at(Nov28, 21, 55), UnderwayEngine.view(ctx, leg, t(21, 45), true).expectedArrival)
+    }
+
+    @Test
+    fun `an early handoff waits for Leave By and a new handoff replaces the time`() {
+        val leg = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 30) to E.Leaving())
+        val arrival = reduce(leg, E.OpenTransport(TransportChoice.Transit), t(20, 40)).state
+        assertEquals(at(Nov28, 21, 10), UnderwayEngine.view(ctx, arrival, t(21, 30), true).expectedArrival)
+        val again = reduce(arrival, E.OpenTransport(TransportChoice.Uber), t(21, 15)).state
+        assertEquals(t(21, 15).toEpochMilli(), again.handoffAtMillis)
+        assertEquals(at(Nov28, 21, 25), UnderwayEngine.view(ctx, again, t(22), true).expectedArrival)
+    }
+
+    @Test
+    fun `the handoff is cleared on return, arrival and skip, and older state still works`() {
+        val leg = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 50) to E.Leaving())
+        val arrival = reduce(leg, E.OpenTransport(TransportChoice.Transit), t(21)).state
+        assertNull(reduce(arrival, E.ReturnToLeg, t(21, 1)).state.handoffAtMillis)
+        assertNull(reduce(arrival, E.ConfirmArrival(), t(21, 2)).state.handoffAtMillis)
+        assertNull(reduce(arrival, E.SkipStop(), t(21, 3)).state.handoffAtMillis)
+        // A state saved before the field existed falls back to now.
+        val legacy = arrival.copy(handoffAtMillis = null)
+        assertEquals(at(Nov28, 21, 40), UnderwayEngine.view(ctx, legacy, t(21, 30), true).expectedArrival)
+        val old = UnderwayCodec.encode(arrival).replace(Regex(",?\"handoffAtMillis\":\\d+"), "")
+        assertNull(UnderwayCodec.decode(old)!!.handoffAtMillis)
+    }
 }

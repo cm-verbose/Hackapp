@@ -23,6 +23,7 @@ Start -> Leg -> Arrival -> AtStop -> Leg (next Stop) ... -> AtStop (last) -> End
 ```
 
 - `transport` (`Transit` or `Uber`): first Leg `Transit`, later Legs keep the last choice. Leave By always uses the transit estimate.
+- `handoffAtMillis` is set by `OpenTransport` and cleared on return to the Leg, arrival, leaving and skip. Older saved state without it falls back to now.
 - Each Stop has a `StopRecord`: `arrivedAtMillis`, `leftAtMillis`, `skippedAtMillis`, `nextActionAtMillis`.
 - State is saved after every event. After process death, `coordinator.onAppOpen(uid)` resumes it, so Home shows the Underway card.
 - The Itinerary is synced from the state after every event: arrived Stops are `Confirmed`, skipped and unvisited Stops `Skipped`. The Itinerary becomes `Completed` at the end. A visited Event that was too brief stays `Confirmed` (Past shows it visited), so **never recount Stamps from Itinerary statuses: use `EndOfDay`**.
@@ -55,7 +56,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
 
 ## `UnderwayView` (what pages draw)
 
-`phase`, `currentStop`, `legFrom` (previous Stop or null), `expectedArrival`, `leaveBy` (Leg: when to leave to arrive on time, null for the first Leg when the District of stay is unknown; AtStop: this Stop's Leave By), `nextStop`, `isLastStop`, `transport`, `remainingStops`, `lateWarningStop` (AtStop, next Stop that can no longer be reached on time and was not dismissed), `endNeedsConfirmation`, `showNotificationBanner` (notifications off and not yet handled for this Itinerary), `endedReason`.
+`phase`, `currentStop`, `legFrom` (previous Stop or null), `expectedArrival` (on the Leg: max(now, Leave By) + travel; on Arrival: max(handoff time, Leave By) + travel, fixed at the moment transit or Uber was opened; null with no previous Stop), `leaveBy` (Leg: when to leave to arrive on time, null for the first Leg when the District of stay is unknown; AtStop: this Stop's Leave By), `nextStop`, `isLastStop`, `transport`, `remainingStops`, `lateWarningStop` (AtStop, next Stop that can no longer be reached on time and was not dismissed), `endNeedsConfirmation`, `showNotificationBanner` (notifications off and not yet handled for this Itinerary), `endedReason`.
 
 ## End of day (`EndOfDay`)
 

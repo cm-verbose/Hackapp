@@ -53,6 +53,8 @@ data class UnderwayState(
     val endedAtMillis: Long? = null,
     val outcomes: Map<String, StopOutcome> = emptyMap(),
     val stampsAwarded: Boolean = false,
+    /** When transit or Uber was opened for the current Leg. Null on the Leg and in older saved state. */
+    val handoffAtMillis: Long? = null,
 )
 
 /** Everything the engine needs besides the state. The Itinerary is read-only here. */
