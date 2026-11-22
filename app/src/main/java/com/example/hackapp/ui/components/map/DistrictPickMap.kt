@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -160,10 +161,12 @@ fun DistrictPickMap(
         val districtNames = remember(districts) { districts.associate { it.id to it.shape.name } }
         // Pinned markers come last, so they draw on top.
         shown.sortedBy { it.second.pinned }.forEach { (placed, label) ->
-            if (label.id !in visible) return@forEach
+            val marker = placed.marker
+            // A marker hidden by overlap keeps an invisible node, so TalkBack can still reach the District.
+            val hidden = label.id !in visible
+            if (hidden && !marker.pickable) return@forEach
             key(label.id) {
-                val marker = placed.marker
-                val showsName = showNames
+                val showsName = showNames && !hidden
                 val background = when {
                     marker.order != null -> cs.secondaryContainer
                     marker.previewed -> cs.primary
@@ -179,7 +182,7 @@ fun DistrictPickMap(
                 val name = districtNames[label.id].orEmpty()
                 val description = when {
                     marker.order != null -> pluralStringResource(R.plurals.map_district_selected, marker.count, name, marker.order, marker.count)
-                    !marker.pickable -> pluralStringResource(R.plurals.map_district_unavailable, marker.count, name, marker.count)
+                    !marker.pickable -> stringResource(R.string.map_district_unavailable, name)
                     else -> pluralStringResource(R.plurals.map_district_description, marker.count, name, marker.count)
                 }
                 Box(
@@ -210,7 +213,7 @@ fun DistrictPickMap(
                             }
                         },
                 ) {
-                    if (!showsName) {
+                    if (!showsName && !hidden) {
                         if (marker.order != null) {
                             DistrictEventCount(
                                 result = marker.order,

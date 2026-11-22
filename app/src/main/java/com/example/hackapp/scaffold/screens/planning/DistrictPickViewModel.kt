@@ -42,7 +42,12 @@ data class DistrictPickUiState(
     /** Set once Continue has saved. The route navigates, then clears it. */
     val continueToId: String? = null,
 ) {
-    val canContinue: Boolean get() = !loading && !loadFailed && !saving && selected.size in 1..MAX_DISTRICTS
+    /** The maximum-reached sheet is open: a new District waits for a replacement choice. */
+    val replacing: Boolean
+        get() = previewId != null && previewId !in selected && selected.size >= MAX_DISTRICTS
+
+    val canContinue: Boolean
+        get() = !loading && !loadFailed && !saving && !replacing && selected.size in 1..MAX_DISTRICTS
 
     fun nameOf(id: String): String = map?.districts?.firstOrNull { it.id == id }?.name ?: id
 

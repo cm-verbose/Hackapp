@@ -19,7 +19,18 @@ const val MAX_DISTRICTS = 3
 /** The group id of independent linked cities in districts.json. */
 const val LINKED_CITY_GROUP = "linked"
 
-enum class TimeWindowError { TooShort, EndsTooLate }
+/**
+ * [TooShort]: the end is after the start but less than 2 hours later. [EndOutOfRange]: the end is
+ * before the start or after 04:00, so it must fall between [earliestEnd] and 04:00.
+ * [StartsTooLate]: the start is after [LATEST_START], so no end can satisfy both rules.
+ */
+enum class TimeWindowError { TooShort, EndOutOfRange, StartsTooLate }
+
+/** The latest start that still leaves a 2-hour window before 04:00. */
+val LATEST_START: LocalTime = LocalTime.of(2, 0)
+
+/** The earliest valid end for [start]: 2 hours later. */
+fun earliestEnd(start: LocalTime): LocalTime = start.plusMinutes(MIN_WINDOW_MINUTES.toLong())
 
 fun OutingKind.defaultStart(): LocalTime = when (this) {
     OutingKind.Day -> LocalTime.of(10, 0)
@@ -33,11 +44,12 @@ fun OutingKind.defaultEnd(): LocalTime = when (this) {
 
 /** Checks a window of at least 2 hours that ends no later than 04:00. */
 fun validateTimeWindow(start: LocalTime, end: LocalTime): TimeWindowError? {
-    if (start == end) return TimeWindowError.TooShort
     val startMinutes = minutesAfterBoundary(start)
     val endMinutes = minutesAfterBoundary(end).let { if (it == 0) MINUTES_PER_DAY else it }
     return when {
-        endMinutes <= startMinutes -> TimeWindowError.EndsTooLate
+        startMinutes > MINUTES_PER_DAY - MIN_WINDOW_MINUTES -> TimeWindowError.StartsTooLate
+        start == end -> TimeWindowError.TooShort
+        endMinutes <= startMinutes -> TimeWindowError.EndOutOfRange
         endMinutes - startMinutes < MIN_WINDOW_MINUTES -> TimeWindowError.TooShort
         else -> null
     }

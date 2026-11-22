@@ -146,7 +146,7 @@
     <string name="interests_event_types">Types d’événements</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Événement</string>
-    <string name="planning_stops_title">Choix des arrêts</string>
+    <string name="planning_stops_title">Arrêts</string>
     <string name="stop_kind_meal">Repas</string>
 
     <!-- Cuisines (align with restaurant data) -->
@@ -221,13 +221,10 @@
         <item quantity="other">%1$s, %2$d événements</item>
     </plurals>
     <plurals name="map_district_selected">
-        <item quantity="one">%1$s, position %2$d, %3$d événement</item>
-        <item quantity="other">%1$s, position %2$d, %3$d événements</item>
+        <item quantity="one">%1$s, choix %2$d, %3$d événement</item>
+        <item quantity="other">%1$s, choix %2$d, %3$d événements</item>
     </plurals>
-    <plurals name="map_district_unavailable">
-        <item quantity="one">%1$s, indisponible, %2$d événement</item>
-        <item quantity="other">%1$s, indisponible, %2$d événements</item>
-    </plurals>
+    <string name="map_district_unavailable">%1$s, indisponible</string>
     <plurals name="map_route_description">
         <item quantity="one">Carte de l’itinéraire, %d arrêt</item>
         <item quantity="other">Carte de l’itinéraire, %d arrêts</item>
@@ -263,7 +260,8 @@
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">Prévoyez au moins 2 h.</string>
-    <string name="planning_error_latest_end">Terminez au plus tard à 4 h.</string>
+    <string name="planning_error_end_range">Choisissez une fin entre %1$s et 4 h.</string>
+    <string name="planning_error_start_latest">Commencez au plus tard à 2 h.</string>
     <string name="planning_save_error">Impossible d’enregistrer. Réessayez.</string>
     <string name="district_add_first">Ajouter en 1re</string>
     <string name="district_max_title">Maximum de %1$d %2$s</string>
@@ -277,7 +275,7 @@
     <string name="planning_budget_title">Budget</string>
     <string name="planning_budget_keep">Garder ce budget</string>
     <string name="planning_budget_change">Modifier pour cet itinéraire</string>
-    <string name="planning_budget_edit_title">Pour cet itinéraire seulement</string>
+    <string name="planning_budget_edit_subtitle">Par personne, pour cet itinéraire</string>
     <string name="budget_off">Désactivée</string>
     <string name="budget_not_set">Non défini</string>
 
