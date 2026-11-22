@@ -1,4 +1,4 @@
-package com.example.hackapp.scaffold.screens.home.bottombar
+package com.example.hackapp.scaffold.composables.mainbottombar
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,10 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -27,40 +23,13 @@ import com.example.hackapp.R
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.scaffold.screens.itinerary.ScreenItineraryDestination
 import com.example.hackapp.scaffold.screens.passport.ScreenPassportDestination
-import kotlin.reflect.KClass
-
-private sealed class NavigationItem(
-    val title: String,
-    val target: Any,
-    val targetClass: KClass<*>
-) {
-    @Composable
-    abstract fun painter(): Painter
-
-    class VectorItem(
-        title: String,
-        target: Any,
-        targetClass: KClass<*>,
-        private val icon: ImageVector
-    ) : NavigationItem(title, target, targetClass) {
-        @Composable
-        override fun painter(): Painter = rememberVectorPainter(icon)
-    }
-
-    class ResourceItem(
-        title: String,
-        target: Any,
-        targetClass: KClass<*>,
-        private val iconRes: Int
-    ) : NavigationItem(title, target, targetClass) {
-        @Composable
-        override fun painter(): Painter = painterResource(iconRes)
-    }
-}
 
 /** Home screen bottom app bar. */
 @Composable
 fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
+    val navBackStackEntry by controller.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
     val items = listOf(
         NavigationItem.VectorItem(
             title = stringResource(R.string.nav_home),
@@ -81,9 +50,6 @@ fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
             iconRes = R.drawable.ic_passport
         )
     )
-
-    val navBackStackEntry by controller.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
 
     val selectedIndex = items.indexOfFirst { item ->
         currentDestination?.hasRoute(item.targetClass) == true

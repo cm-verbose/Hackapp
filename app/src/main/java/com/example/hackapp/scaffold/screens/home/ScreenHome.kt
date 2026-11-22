@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.hackapp.citypack.LocalCityPack
-import com.example.hackapp.scaffold.screens.home.bottombar.MainBottomBar
+import com.example.hackapp.scaffold.composables.mainbottombar.MainBottomBar
 import com.example.hackapp.scaffold.screens.planning.GoogleLogoffButton
 import com.example.hackapp.ui.components.PlanItineraryCard
 import kotlinx.serialization.Serializable
