@@ -3,6 +3,7 @@ package com.example.hackapp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -21,15 +22,20 @@ import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.ActiveCityPack
 import com.example.hackapp.itinerary.InMemoryItineraryRepository
 import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.profile.AgeRange
+import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
+import com.example.hackapp.profile.VisitorType
 import com.example.hackapp.scaffold.navigation.AppNavigation
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -42,6 +48,7 @@ class AppNavigationTest {
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val cityServices = CityServicesFactory.create(context, ActiveCityPack)
+    private val itineraries = InMemoryItineraryRepository()
     private lateinit var controller: TestNavHostController
 
     @Before
@@ -51,10 +58,10 @@ class AppNavigationTest {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
             CompositionLocalProvider(
-                LocalProfileRepository provides NoProfiles,
+                LocalProfileRepository provides TestProfiles,
                 LocalAuthService provides SignedInAuth,
                 LocalCityServices provides cityServices,
-                LocalItineraryRepository provides InMemoryItineraryRepository(),
+                LocalItineraryRepository provides itineraries,
             ) {
                 HackappTheme { AppNavigation(controller, PaddingValues()) }
             }
@@ -72,10 +79,19 @@ class AppNavigationTest {
         click(R.string.action_continue)
         keepBudgetAndAwaitDistrictPick()
         // District pick needs a tap on the map, so the walk resumes at the next page.
-        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute("draft")) }
-        compose.waitForIdle()
-        repeat(PAGES_AFTER_DISTRICT_PICK) { click(R.string.action_continue) }
+        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute(savedDraftId())) }
+        awaitContinueEnabled()
+        // A first open preselects every Meal that fits: Lunch fits the default day window.
+        compose.onNodeWithText(context.getString(R.string.meal_lunch_at, "12:00")).assertIsSelected()
+        click(R.string.action_continue)
+        awaitText(R.string.planning_stops_title)
+        repeat(PAGES_AFTER_MEAL_CHOICE) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    /** The draft that Date and time saved. */
+    private fun savedDraftId(): String = runBlocking {
+        itineraries.observeItineraries(TEST_UID).first().single().id
     }
 
     @Test
@@ -107,6 +123,10 @@ class AppNavigationTest {
             .fetchSemanticsNodes().isNotEmpty()
     }
 
+    private fun awaitText(resId: Int) = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+        compose.onAllNodes(hasText(context.getString(resId))).fetchSemanticsNodes().isNotEmpty()
+    }
+
     @Test
     fun bottomTabsSwitchPages() {
         click(R.string.nav_passport)
@@ -124,17 +144,29 @@ class AppNavigationTest {
     }
 
     private companion object {
-        /** Meal choice, Stop selection, Review and the four Underway pages. */
-        const val PAGES_AFTER_DISTRICT_PICK = 7
+        /** Stop selection, Review and the four Underway pages. */
+        const val PAGES_AFTER_MEAL_CHOICE = 6
         const val LOAD_TIMEOUT_MILLIS = 10_000L
+        const val TEST_UID = "test-user"
 
-        val NoProfiles = object : ProfileRepository {
-            override suspend fun getProfile(uid: String): Profile? = null
+        /** Meal choice needs a Profile for its budget defaults. */
+        val TestProfiles = object : ProfileRepository {
+            override suspend fun getProfile(uid: String): Profile? = Profile(
+                visitorType = VisitorType.Visitor,
+                name = "Test",
+                email = "test@example.com",
+                ageRange = AgeRange.From25To34,
+                districtOfStayId = "ville-marie",
+                lunchBudget = BudgetBracket.Under20,
+                dinnerBudget = BudgetBracket.Under50,
+                eventBudget = BudgetBracket.Under50,
+            )
+
             override suspend fun saveProfile(uid: String, profile: Profile) = Unit
         }
 
         val SignedInAuth = object : AuthService {
-            override val currentUser = AuthUser("test-user", null, null)
+            override val currentUser = AuthUser(TEST_UID, null, null)
             override suspend fun signIn(email: String, password: String) = AuthResult.Success
             override suspend fun register(email: String, password: String) = AuthResult.Success
             override suspend fun sendPasswordReset(email: String) = AuthResult.Success
