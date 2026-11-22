@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,35 +64,36 @@ fun HackappTopBar(
     )
 }
 
-/** Figma's progress bar under the app bar: a filled segment and the remaining track. */
+/**
+ * Figma's progress bar under the app bar: one segment per step, the first [current] filled,
+ * plus the step count as text. TalkBack reads the text once for the whole control.
+ */
 @Composable
 fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
     val done = current.coerceIn(0, total)
-    val description = stringResource(R.string.onboarding_step, done, total)
-    Row(
+    Column(
         modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .semantics { contentDescription = description },
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (done > 0) {
-            Box(
-                Modifier
-                    .weight(done.toFloat())
-                    .height(4.dp)
-                    .background(scheme.primary, CircleShape),
-            )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(total) { index ->
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .background(if (index < done) scheme.primary else scheme.surfaceContainerHighest, CircleShape),
+                )
+            }
         }
-        if (done < total) {
-            Box(
-                Modifier
-                    .weight((total - done).toFloat())
-                    .height(4.dp)
-                    .background(scheme.secondaryContainer, CircleShape),
-            )
-        }
+        Text(
+            stringResource(R.string.onboarding_step, done, total),
+            style = MaterialTheme.typography.labelMedium,
+            color = scheme.onSurfaceVariant,
+        )
     }
 }
 

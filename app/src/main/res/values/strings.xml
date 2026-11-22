@@ -133,7 +133,7 @@
     <string name="budget_100_plus">100 $ +</string>
     <string name="budget_lunch">Dîner</string>
     <string name="budget_dinner">Souper</string>
-    <string name="budget_events">Événements (total)</string>
+    <string name="budget_events">Tous les événements</string>
     <string name="budget_late_night">Bouchée tardive</string>
     <string name="onboarding_save_error">Impossible d’enregistrer votre profil. Réessayez.</string>
     <string name="audience_title">Public</string>
@@ -259,7 +259,7 @@
     <string name="stop_status_skipped">Sauté</string>
     <string name="archived_choose_new_date">Choisir une nouvelle date</string>
     <string name="settings_no_preferences">Aucune préférence</string>
-    <string name="settings_events_budget">Événements : %1$s</string>
+    <string name="settings_events_budget">Tous les événements : %1$s</string>
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">Prévoyez au moins 2 h.</string>
@@ -271,7 +271,9 @@
     <string name="district_replace_action">Remplacer</string>
     <string name="district_map_reset">Réinitialiser la carte</string>
     <string name="time_hour">Heure</string>
+    <string name="time_hour_value">Heure : %1$s</string>
     <string name="time_minute">Minute</string>
+    <string name="time_minute_value">Minute : %1$s</string>
     <string name="planning_budget_title">Budget</string>
     <string name="planning_budget_keep">Garder ce budget</string>
     <string name="planning_budget_change">Modifier pour cet itinéraire</string>

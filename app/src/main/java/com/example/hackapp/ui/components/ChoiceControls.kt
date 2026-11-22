@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -101,15 +105,19 @@ fun <T> HackappSegmentedButton(
     onSelectedChange: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
+    // Labels may wrap to two lines; the row takes the tallest segment's height and the others fill it.
+    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         options.forEachIndexed { index, option ->
             SegmentedButton(
                 selected = option.value == selected,
                 onClick = { onSelectedChange(option.value) },
                 enabled = option.enabled,
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                modifier = Modifier.fillMaxHeight(),
                 icon = {},
-                label = { Text(option.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                label = {
+                    Text(option.label, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                },
             )
         }
     }
