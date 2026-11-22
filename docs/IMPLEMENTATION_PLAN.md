@@ -10,28 +10,27 @@ Living checklist for the current implementation step. Update it in the same chan
 
 ## Current status and handoff
 
-Last updated 2026-11-22 05:20. Start here if you are picking up this work.
+Last updated 2026-11-22 05:30. Start here if you are picking up this work.
 
-**Where the code is.** `origin/feat/ui-foundation` is at `5d0eb80` and does **not** contain Planning, Underway, demo mode or the new Passport. That work is on local team branches on Niko's computer until it is merged and pushed:
+**Where the code is.** Use **`origin/team/integration`**. It contains Planning, Underway, the dark-mode and travel-time fixes, demo mode and the physics Passport. `origin/feat/ui-foundation` is still at `5d0eb80` and contains none of these until Niko approves the milestone on the phone.
 
-| Branch | Head | Contains | State |
-|---|---|---|---|
-| `team/planning-fixes` | `9f2cebd` | Meals, Sheets, Selection, Review, Underway, Start, District of stay origin, dark card fix, walking and transit Legs | 457 unit and 9 emulator tests pass. Last build installed for phone review |
-| `team/demo` | `bf9a8dd` | `team/planning-fixes` plus demo engine, Settings switch, Underway control and exit | 478 unit tests pass. Engine code review running. Not run on a device |
-| `team/passport-integration` | `e1ca9ce` | `team/underway` at `c330de1` plus `cmvb`'s `shape-playground` merge, real Stamps, all six shapes, details, list | Builds and passes unit tests. Shrink-as-you-collect sizing in progress. Not run on a device |
-| `team/firestore` (pushed) | `cb16a88` | Firestore repositories, flag off | Not deployed. Needs rule tests, a Cloud Function aggregate and a product decision on the `eventSources` rule |
+| Branch | Contains | State |
+|---|---|---|
+| `team/integration` | Everything below except Firestore | **Start here.** 525 unit and 9 emulator tests pass, and it opens on the emulator. Not yet approved on the phone. Demo and Passport UX review is running |
+| `team/planning-fixes` | Meals, Sheets, Selection, Review, Underway, Start, District of stay origin, dark card fix, walking and transit Legs | Superseded by `team/integration` |
+| `team/demo` | Demo engine, Settings switch, Underway control and exit | Superseded by `team/integration`, which also has the code review fixes |
+| `team/passport-integration` | `cmvb`'s `shape-playground` merge, real Stamps, all six shapes, shrink-as-you-collect, details and list | Merged into `team/integration` |
+| `team/firestore` | Firestore repositories, flag off | Not merged or deployed. Needs rule tests, a Cloud Function aggregate and a product decision on the `eventSources` rule |
 
 **Next steps, in order:**
-1. Finish the Passport sizing and the two small demo control refinements, then apply the demo code review findings.
-2. Merge `team/demo` and `team/passport-integration`. Expect one conflict in `HackappApplication.kt`, and keep both sets of wiring.
-3. Run unit and emulator tests, capture screens in French and English, and run UX review on the demo control and Passport.
-4. Install on the phone. Niko approves the milestone there.
-5. Only after that approval, merge into `feat/ui-foundation` and push.
-6. Then do Firestore switch-on, Itinerary sharing through the flicking code (`ThrowChannel`, `ShareMessage.Throw.payload`), the ETL `is_chain=0` chain rows, and the page-by-page review.
+1. Apply the Demo and Passport UX review findings on `team/integration`.
+2. Install on the phone. Niko runs a full demo Itinerary, earns Stamps and approves the milestone.
+3. Only after that approval, merge into `feat/ui-foundation` and push.
+4. Then do Firestore switch-on, Itinerary sharing through the flicking code (`ThrowChannel`, `ShareMessage.Throw.payload`), the ETL `is_chain=0` chain rows, and the page-by-page review.
 
-**Not yet checked on a real device:** notifications and exact alarms, transit, Uber and walking handoffs, demo mode, Passport physics and tilt, TalkBack, two-device sharing, and an R8 release build.
+**Not yet checked on a real device:** demo mode, Passport physics, tilt and small Stamp initials, notifications and exact alarms, transit, Uber and walking handoffs, sign-out during a demo, TalkBack, two-device sharing, and an R8 release build.
 
-**Where teammates should start:** create your own branch from `origin/team/planning-fixes`, the last build tested on the phone. Do not commit to `team/planning-fixes`, `team/demo` or `team/passport-integration`, because Niko's teams are still working from them. For Passport or sharing work, look at `origin/team/passport-integration`, and rebase or merge once Demo and Passport are integrated.
+**Where teammates should start:** create your own branch from `origin/team/integration`. Do not commit directly to any `team/*` branch, because Niko's teams are still working from them. Flicking is switched off in the Passport and has no sharing control yet. A later Itinerary share must use `ShareMessage.Throw.payload`.
 
 **Rules for agents taking over:**
 - Never push or open a PR into `main`. Push `feat/ui-foundation` only after Niko approves a milestone on the phone.
