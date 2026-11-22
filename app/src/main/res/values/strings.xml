@@ -148,7 +148,6 @@
     <string name="audience_adults_only">18+ seulement</string>
     <string name="audience_family_friendly">Familial</string>
     <string name="audience_no_alcohol">Sans alcool</string>
-    <string name="audience_bars_hidden_note">Bars masqués</string>
     <string name="interests_title">Intérêts et cuisines</string>
     <string name="interests_subtitle">Classe les résultats sans rien masquer</string>
     <string name="interests_event_types">Types d’événements</string>

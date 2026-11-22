@@ -33,7 +33,6 @@ import com.example.hackapp.profile.AudiencePreference
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Interest
 import com.example.hackapp.profile.VisitorType
-import com.example.hackapp.profile.hidesBars
 import com.example.hackapp.scaffold.screens.BudgetFields
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
@@ -191,7 +190,6 @@ fun OnboardingBudgetAudiencePage(
         )
         SectionTitle(stringResource(R.string.audience_title))
         MultiChoiceChips(audienceOptions(), draft.audience, onAudienceChange)
-        if (draft.audience.hidesBars) BodyText(stringResource(R.string.audience_bars_hidden_note))
     }
 }
 

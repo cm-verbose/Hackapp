@@ -143,7 +143,6 @@
     <string name="audience_adults_only">18+ only</string>
     <string name="audience_family_friendly">Family-friendly</string>
     <string name="audience_no_alcohol">No alcohol</string>
-    <string name="audience_bars_hidden_note">Bars hidden</string>
     <string name="interests_title">Interests and cuisines</string>
     <string name="interests_subtitle">Ranks results without hiding any</string>
     <string name="interests_event_types">Event types</string>
