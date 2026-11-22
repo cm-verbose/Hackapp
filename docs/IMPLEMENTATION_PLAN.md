@@ -46,6 +46,16 @@ Living checklist for the current implementation step. Update it in the same chan
 | Missing end times | Planned Departure sheet opens prefilled with a typical stay for the Event type, and the user can change it |
 | Planning travel time | Public transit estimate plus buffer |
 | Editing earlier steps | Warn which Stops will be removed and keep those that still fit. **May change during implementation** |
+| Borough order | Change it only by removing and re-adding a borough. No drag-to-reorder |
+| Borough sheet content | Name and Event types only, with no description. **Revisit borough descriptions later** |
+| 3-borough limit | Add shows a maximum-reached message and offers to replace a selected borough |
+| Date | Nov 21 to Dec 6, defaulting to the next date with data. Demo mode can pin Sat Nov 28 |
+| Time window | At least 2 hours, ending no later than 04:00. Day/night switch resets to 10:00–18:00 or 18:00–02:00 |
+| Meal choice | Multi-select within the window: lunch 12:00, dinner 18:30, late bite 22:00, with editable times. Lunch and dinner reserve 90 minutes. Late bite is 45 minutes |
+| Meal Block conflicts | Events overlapping a reserved Meal Block are hidden. The Meal prompt appears when planning reaches the block |
+| Meal location | Options come from the current borough. If another borough follows, the user can choose to eat there instead, after transit |
+| Removing a Stop | Return to selection for that gap, keep later reachable Stops, and warn before removing others |
+| One Underway Itinerary | Starting a new Itinerary warns that the current one will end |
 
 ## Checklist
 
