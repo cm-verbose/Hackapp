@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    City Pack logo, Montréal: the "MTL" mark from Figma CityPack/mtl ("Logo/Montréal · MTL"),
+    traced to vector from the 135 x 78 source image and cropped to the glyphs (no padding), so
+    layouts centre the mark itself. Source SVG: prep/design/citypacks/mtl/logo.svg.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="106.2dp"
+    android:height="69dp"
+    android:viewportWidth="106.2"
+    android:viewportHeight="69">
+    <path
+        android:name="accent"
+        android:fillColor="#E77488"
+        android:pathData="M41.7,0 L49.7,0 L39,26.4 L31,26.4 Z" />
+    <path
+        android:name="M"
+        android:fillColor="#E77488"
+        android:pathData="M0,69 L3.2,35 L11.2,35 L19.2,55 L28.2,35 L36.2,35 L39.3,69 L31.5,69 L29.3,50.8 L23.7,65.4 L15.3,65.4 L8.7,50.8 L7.8,69 Z" />
+    <path
+        android:name="T"
+        android:fillColor="#E77488"
+        android:pathData="M44.9,35 L72.3,35 L72.3,43 L62.6,43 L62.6,69 L54.8,69 L54.8,43 L44.9,43 Z" />
+    <path
+        android:name="L"
+        android:fillColor="#E77488"
+        android:pathData="M82.3,35 L90.2,35 L90.2,61 L106.2,61 L106.2,69 L82.3,69 Z" />
+</vector>

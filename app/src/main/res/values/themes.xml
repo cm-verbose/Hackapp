@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.AndroidTemplate" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- System splash on app open: the Hero background only; CitySplashScreen then draws the
+         City Pack splash (Figma "SplashScreen · Montréal") over the first screen. -->
+    <style name="Theme.AndroidTemplate.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/citypack_hero</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.AndroidTemplate</item>
+    </style>
 </resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Empty icon for the system splash screen, so it shows only the Hero background (without it,
+    Android shows the launcher icon). The City Pack logo and branding are drawn right after by
+    CitySplashScreen: some phones (e.g. Samsung) draw the system icon larger than requested and
+    clip it, so the logo would jump in size and lose its corners.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <size
+        android:width="240dp"
+        android:height="240dp" />
+    <solid android:color="@android:color/transparent" />
+</shape>

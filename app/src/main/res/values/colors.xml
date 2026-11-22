@@ -7,4 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- AppColors.hero, for the system splash screen (XML cannot read Compose theme values). -->
+    <color name="citypack_hero">#FF5D002C</color>
 </resources>

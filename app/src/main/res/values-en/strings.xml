@@ -103,8 +103,6 @@
     <string name="nav_passport">Passport</string>
 
     <!-- Authentication: WelcomeScreen, RegisterScreen -->
-    <string name="welcome_title">Your outing, made to measure</string>
-    <string name="welcome_tagline">Plan, follow each stop, collect your stamps.</string>
     <string name="auth_continue_with_google">Continue with Google</string>
     <string name="auth_email">Email</string>
     <string name="auth_password">Password</string>
