@@ -52,3 +52,25 @@ Sign-in itself (session pre-existing), onboarding, notifications firing (alarms 
 | T10c (ignore a start fix more than 50 km from the city) | **APPROVED** | StartLocationTest. Device: Travel shows "–" instead of 17661 min. Even after the geo fix the first Leg shows no estimate (the GPS last-known is apparently null and the stale CA network fix is rejected), so the demo shows "–" on Leg 1, not a time. Acceptable |
 
 - Note for the demo device: T4 sent the signed-in emulator through onboarding once, because its profile had never been onboarded. It is now onboarded as "Demo". The test trip was ended; the app is on Home. Font scale reset to 1.0, night mode off. No crash in logcat.
+
+## APK #2 smoke (2026-11-22 01:54-01:59): installed package lastUpdateTime 01:51:18 = `plan-montreal-debug-demo-a32be92.apk`
+| Step | Result |
+|---|---|
+| Launch | PASS: "Hello Demo" (onboarded, Home) |
+| Plan: date | PASS: default Sun 22 Nov; Night out 18:00-02:00 |
+| Boroughs | PASS: Rosemont (11) added as #1 |
+| Meal | PASS: Dinner 18:30 chosen; meal list from places.db; Pizzeria Bros |
+| Events | PASS: comedy 20:00 picked, departure sheet Confirm 22:00 |
+| Review -> Start | PASS: 2 stops, Start; 3 alarms pending |
+| Leg 1 | PASS (no absurd value): Travel "–", Arrive 18:30 (T10c rejects the saved California fix; even with the Montréal geo fix there is no GPS last-known, so there is no estimate). Header card readable |
+| Arrived -> At stop | PASS |
+| Swipe away in Recents + relaunch mid-trip | PASS: UNDERWAY card, Resume opens At stop; **3 alarms still pending** (swipe-away keeps reminders, unlike force-stop) |
+| Leaving -> Leg 2 -> Arrived -> Leaving | PASS: Leg 2 "13 min" |
+| End of day | PASS: "2 stops confirmed", 2 stamps, district line shows **"Rosemont-La Petite-Patrie"** |
+| End the day | PASS: Home, 0 alarms pending; no crash in logcat |
+- Discrepancy: this APK is labelled a32be92 ("without T10d"), but the stamp shows the borough name, which is T10d behaviour. It was apparently built from the working tree while the T10d edit was uncommitted. APK `...-0b4ad38.apk` (01:52) is the one that matches commit T10d. Recommendation: demo with the 0b4ad38 APK (or rebuild from a clean tree) so the build matches a commit.
+
+## APK #3 smoke (final, `plan-montreal-debug-demo-0b4ad38.apk`, package lastUpdateTime 01:53:50), 2026-11-22 01:59-02:03: ALL PASS
+Launch "Hello Demo" -> today Night out -> Rosemont #1 -> Dinner 18:30, Pizzeria Bros -> comedy 20:00 (Confirm 22:00) -> review (2 stops) -> Start (3 alarms) -> Leg 1 (Travel "–", Arrive 18:30, readable header) -> I've arrived -> At stop -> swipe away in Recents + relaunch: UNDERWAY card, 3 alarms kept -> Resume -> I'm leaving -> Leg 2 "13 min" -> I've arrived -> I'm leaving -> End of day: "2 stops confirmed", 2 stamps, district line **"Rosemont-La Petite-Patrie"** (T10d) -> End the day -> Home, 0 alarms, no AndroidRuntime errors. Device left on Home, trip ended.
+
+**Correction to the APK #2 section:** the package lastUpdateTime moved from 01:51:18 (read at the start of that run) to 01:53:50, which is when APK #3 was installed. That is during my APK #2 run, which began about 01:53. So the steps after that point, including the End of day stamp names, most likely ran on 0b4ad38, not on the a32be92 file. My "a32be92 contains T10d" observation is therefore **not proven**; it may be an artefact of the install happening mid-run. The demo uses 0b4ad38 (SHA-256 recorded in docs/demo-script.md, rebuild byte-identical), so this does not affect the demo.
