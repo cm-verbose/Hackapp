@@ -13,7 +13,7 @@ Start any planned Itinerary whatever its date, move through the day quickly, and
 | `DemoModeRepository` | Persists the simulated time. Read synchronously at process start |
 | `DemoClock` | The one `UnderwayClock` (`HackappApplication.underwayClock`). Real time when off. When on, simulated time runs only in the foreground |
 | `DemoController` | `enable`, `exit`, `startFor`, `nextMoment`, `observe`. `HackappApplication.demoController` |
-| `DemoControlsViewModel` | Holder for the UI: `state` (`enabled`, `simulatedNow`, `canAdvance`), `lastResult`, `exitFailed`, `enable()`, `nextMoment()`, `exit()` |
+| `DemoControlsViewModel` | Holder for the UI: `state` (`enabled`, `simulatedNow`, `canAdvance`), `lastResult`, `actionFailed`, `exitFailed`, `enable()`, `nextMoment()`, `exit()`, `retry()` |
 
 Demo mode is on exactly when `clock.isSimulated` is true. There is no second flag.
 
@@ -80,4 +80,8 @@ val state by vm.state.collectAsState()   // enabled, simulatedNow, canAdvance
 vm.enable()         // vm.lastResult reports RealItineraryUnderway
 vm.nextMoment()     // Moment suivant
 vm.exit()           // vm.exitFailed reports a failure
+vm.actionFailed     // StateFlow<Boolean>: enable or nextMoment failed, show demo_error with Retry
+vm.retry()          // repeats the action that failed last, including exit
 ```
+
+Any new attempt clears `actionFailed` and `exitFailed`. A refused enable (`RealItineraryUnderway`) is not a failure. If `nextMoment` fails after the clock has moved, Retry goes to the following moment, and alerts already due still fire.

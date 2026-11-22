@@ -33,6 +33,12 @@ class DemoControlsViewModel(
     /** The last [exit] failed: demo mode is still on and it can be tried again. */
     val exitFailed: StateFlow<Boolean> = _exitFailed.asStateFlow()
 
+    private val _actionFailed = MutableStateFlow(false)
+    /** The last [enable] or [nextMoment] failed: show `demo_error` with Retry. Cleared on the next attempt. */
+    val actionFailed: StateFlow<Boolean> = _actionFailed.asStateFlow()
+
+    private var failedAction: (() -> Unit)? = null
+
     private var canAdvance = false
 
     init {
@@ -50,34 +56,31 @@ class DemoControlsViewModel(
         }
     }
 
-    fun enable() = act { _lastResult.value = controller.enable(uid) }
+    fun enable() = attempt(_actionFailed) { _lastResult.value = controller.enable(uid) }
 
     /** Exit demo mode. An unfinished run ends and moves to Past with its Stamps. */
-    fun exit() {
-        viewModelScope.launch {
-            _exitFailed.value = false
-            try {
-                controller.exit(uid)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                _exitFailed.value = true
-            }
-            _state.value = controller.status(canAdvance)
-        }
+    fun exit() = attempt(_exitFailed) { controller.exit(uid) }
+
+    fun nextMoment() = attempt(_actionFailed) { controller.nextMoment(uid) }
+
+    /** Repeats the action that failed last. Does nothing when none did. */
+    fun retry() {
+        failedAction?.invoke()
     }
 
-    fun nextMoment() = act { controller.nextMoment(uid) }
-
-    /** A failed action changes nothing and can be tried again. */
-    private fun act(block: suspend () -> Unit) {
+    /** Runs [block]. Any new attempt clears earlier failures; a failure here sets [failedFlag]. */
+    private fun attempt(failedFlag: MutableStateFlow<Boolean>, block: suspend () -> Unit) {
+        failedAction = null
+        _actionFailed.value = false
+        _exitFailed.value = false
         viewModelScope.launch {
             try {
                 block()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                // The state below still shows what is stored.
+                failedAction = { attempt(failedFlag, block) }
+                failedFlag.value = true
             }
             _state.value = controller.status(canAdvance)
         }
