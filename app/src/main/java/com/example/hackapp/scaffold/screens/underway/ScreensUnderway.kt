@@ -25,6 +25,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
+import com.example.hackapp.citypack.rememberDistrictMap
 import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.domain.FlowViewModel
 import com.example.hackapp.domain.StartLocation
@@ -275,6 +276,9 @@ fun ScreenUnderwayAtStop(vm: FlowViewModel, onBack: () -> Unit, onLeft: (Underwa
 fun ScreenUnderwayEndOfDay(vm: FlowViewModel, onDone: () -> Unit) {
     val page = rememberPageProgress(vm)
     val p = (page as? PageProgress.Shown)?.progress
+    // Stamps store the district id; show its City Pack name (the id only if the pack has none).
+    val districtMap by rememberDistrictMap()
+    val districtNames = remember(districtMap) { districtMap?.districts?.associate { it.id to it.name }.orEmpty() }
     HackappPage(
         title = stringResource(R.string.end_of_day_title),
         bottomActions = {
@@ -306,7 +310,7 @@ fun ScreenUnderwayEndOfDay(vm: FlowViewModel, onDone: () -> Unit) {
             Text(pluralStringResource(R.plurals.new_stamps_in_passport, stamps.size, stamps.size), style = MaterialTheme.typography.bodyMedium)
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 stamps.forEachIndexed { i, s ->
-                    Stamp(stampInitials(s.name), s.name, s.date, s.district, Modifier.entrance(i + 1, stepMillis = 90))
+                    Stamp(stampInitials(s.name), s.name, s.date, districtNames[s.district] ?: s.district, Modifier.entrance(i + 1, stepMillis = 90))
                 }
             }
         }
