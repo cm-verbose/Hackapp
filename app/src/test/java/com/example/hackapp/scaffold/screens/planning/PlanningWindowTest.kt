@@ -54,6 +54,16 @@ class PlanningWindowTest {
     }
 
     @Test
+    fun continueWaitsForTheReplacementChoice() {
+        val base = DistrictPickUiState(loading = false, selected = listOf("a", "b", "c"))
+        assertTrue(base.canContinue)
+        assertTrue(base.copy(previewId = "b").canContinue)
+        assertFalse(base.copy(previewId = "d").canContinue)
+        assertFalse(base.copy(previewId = "d", replaceTargetId = "b").canContinue)
+        assertTrue(base.copy(selected = listOf("a", "b"), previewId = "d").canContinue)
+    }
+
+    @Test
     fun defaultDateIsNextDateWithData() {
         val data = setOf(LocalDate.of(2026, 11, 21), LocalDate.of(2026, 11, 24))
         assertEquals(LocalDate.of(2026, 11, 24), defaultPlanningDate(LocalDate.of(2026, 11, 22), coverage, data))
