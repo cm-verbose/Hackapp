@@ -199,6 +199,15 @@ class StopSelectionTest {
     }
 
     @Test
+    fun `a rescheduled drop-in Stop starts at the arrival, not the published start`() {
+        val option = found(night(), false, allDay).single()
+        val saved = rescheduled(night(), stop("old", at(Nov28, 18), at(Nov28, 19)), option)!!
+        val moved = saved.stops.single { it.id == "event-all-day" }
+        assertEquals(at(Nov28, 18).toInstant(), moved.start.toInstant())
+        assertEquals(at(Nov28, 19).toInstant(), moved.plannedDeparture.toInstant())
+    }
+
+    @Test
     fun `a drop-in ending too soon after arrival is hidden`() {
         val ending = event("soon", start = at(Nov28, 10).toString(), end = at(Nov28, 18, 59).toString())
         assertTrue(found(night(), false, ending).isEmpty())

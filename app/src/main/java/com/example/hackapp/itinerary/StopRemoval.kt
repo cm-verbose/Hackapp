@@ -68,7 +68,7 @@ fun rescheduleOptions(
 
 /** [base] with [affected] replaced by [option]. Null when the option cannot become a Stop. */
 fun rescheduled(base: Itinerary, affected: Stop, option: ReachableShowtime): Itinerary? {
-    val stop = eventStop(option.event, option.suggestedDeparture.plannedDeparture, affected.ticketPriceCad)
+    val stop = eventStop(option.event, option.suggestedDeparture.plannedDeparture, affected.ticketPriceCad, option.arrivalAt)
         ?: return null
     return base.withStop(stop)
 }
