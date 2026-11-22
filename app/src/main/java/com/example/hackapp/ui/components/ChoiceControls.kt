@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -20,6 +18,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,7 +27,12 @@ import com.example.hackapp.R
 import com.example.hackapp.ui.theme.HackappTheme
 
 /** One option of a choice control. A disabled option stays visible but cannot be picked. */
-data class ChoiceOption<T>(val value: T, val label: String, val enabled: Boolean = true)
+data class ChoiceOption<T>(
+    val value: T,
+    val label: String,
+    val enabled: Boolean = true,
+    val icon: ImageVector? = null,
+)
 
 /** Figma "Filter chip" group, multi-select. Used for Interests and cuisines. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -74,6 +78,7 @@ fun <T> SingleChoiceChips(
     }
 }
 
+/** Selection is shown by colour only, so choosing an option never changes the chip's width. */
 @Composable
 private fun <T> HackappChoiceChip(option: ChoiceOption<T>, selected: Boolean, onClick: () -> Unit) {
     FilterChip(
@@ -81,10 +86,8 @@ private fun <T> HackappChoiceChip(option: ChoiceOption<T>, selected: Boolean, on
         onClick = onClick,
         enabled = option.enabled,
         label = { Text(option.label, style = MaterialTheme.typography.labelLarge) },
-        leadingIcon = if (selected) {
-            { Icon(Icons.Filled.Done, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-        } else {
-            null
+        leadingIcon = option.icon?.let { icon ->
+            { Icon(icon, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
         },
     )
 }
@@ -105,6 +108,7 @@ fun <T> HackappSegmentedButton(
                 onClick = { onSelectedChange(option.value) },
                 enabled = option.enabled,
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                icon = {},
                 label = { Text(option.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             )
         }

@@ -33,6 +33,8 @@ import com.example.hackapp.scaffold.navigation.OnboardingInterestsRoute
 import com.example.hackapp.scaffold.navigation.OnboardingProfileRoute
 import com.example.hackapp.scaffold.navigation.OnboardingVisitorTypeRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
+import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
+import com.example.hackapp.scaffold.screens.planning.rememberSignOut
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.LoadingState
@@ -46,7 +48,18 @@ fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
         composable<OnboardingVisitorTypeRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)
             val state by viewModel.state.collectAsState()
-            OnboardingVisitorTypePage(state, onContinue = { controller.navigate(OnboardingProfileRoute) })
+            val signOut = rememberSignOut {
+                // Clearing the whole stack also discards this account's onboarding draft.
+                controller.navigate(ScreenLoginDestination) {
+                    popUpTo(controller.graph.id) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+            OnboardingVisitorTypePage(
+                state = state,
+                onContinue = { controller.navigate(OnboardingProfileRoute) },
+                onSignOut = signOut,
+            )
         }
         composable<OnboardingProfileRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)

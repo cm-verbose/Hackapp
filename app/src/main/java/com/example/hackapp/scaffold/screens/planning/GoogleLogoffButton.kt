@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -18,11 +21,11 @@ import kotlinx.coroutines.launch
 
 /** Signs the user out of Firebase and clears the saved Google credential choice. */
 @Composable
-fun GoogleLogoffButton(onLogOff: () -> Unit, modifier: Modifier = Modifier) {
+fun rememberSignOut(onSignedOut: () -> Unit): () -> Unit {
     val application = LocalContext.current.applicationContext as HackappApplication
-    OutlinedButton(
-        modifier = modifier,
-        onClick = {
+    val latestOnSignedOut by rememberUpdatedState(onSignedOut)
+    return remember(application) {
+        {
             FirebaseAuth.getInstance().signOut()
             // Play Services can be slow, and this must outlive the screen we are leaving.
             application.applicationScope.launch {
@@ -32,9 +35,14 @@ fun GoogleLogoffButton(onLogOff: () -> Unit, modifier: Modifier = Modifier) {
                     Log.w(AUTH_TAG, "Could not clear the saved credential", e)
                 }
             }
-            onLogOff()
-        },
-    ) {
+            latestOnSignedOut()
+        }
+    }
+}
+
+@Composable
+fun GoogleLogoffButton(onLogOff: () -> Unit, modifier: Modifier = Modifier) {
+    OutlinedButton(onClick = rememberSignOut(onLogOff), modifier = modifier) {
         Text(stringResource(R.string.settings_sign_out))
     }
 }

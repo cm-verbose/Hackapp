@@ -38,6 +38,7 @@ import com.example.hackapp.profile.Interest
 import com.example.hackapp.profile.VisitorType
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
+import com.example.hackapp.ui.components.HackappIcon
 import com.example.hackapp.ui.components.HackappPage
 import com.example.hackapp.ui.components.HackappPickerField
 import com.example.hackapp.ui.components.HackappPrimaryButton
@@ -53,12 +54,15 @@ import com.example.hackapp.ui.theme.HackappTheme
 internal const val ONBOARDING_STEPS = 4
 
 @Composable
-fun OnboardingVisitorTypePage(state: OnboardingUiState, onContinue: () -> Unit) {
+fun OnboardingVisitorTypePage(state: OnboardingUiState, onContinue: () -> Unit, onSignOut: () -> Unit) {
     HackappPage(
         title = stringResource(R.string.onboarding_step, 1, ONBOARDING_STEPS),
         step = 1,
         totalSteps = ONBOARDING_STEPS,
-        bottomActions = { HackappPrimaryButton(stringResource(R.string.action_continue), onContinue) },
+        bottomActions = {
+            HackappPrimaryButton(stringResource(R.string.action_continue), onContinue)
+            HackappTextActionButton(stringResource(R.string.settings_sign_out), onSignOut)
+        },
     ) {
         PageHeading(stringResource(R.string.onboarding_visitor_type_title))
         BodyText(stringResource(R.string.onboarding_visitor_type_subtitle))
@@ -183,11 +187,11 @@ fun OnboardingBudgetAudiencePage(
         PageHeading(stringResource(R.string.budget_audience_title))
         BodyText(stringResource(R.string.budget_subtitle))
         SectionTitle(stringResource(R.string.budget_lunch))
-        SingleChoiceChips(brackets, draft.lunchBudget, onLunchChange)
+        SingleChoiceChips(brackets, draft.lunchBudget, onLunchChange, allowDeselect = true)
         SectionTitle(stringResource(R.string.budget_dinner))
-        SingleChoiceChips(brackets, draft.dinnerBudget, onDinnerChange)
+        SingleChoiceChips(brackets, draft.dinnerBudget, onDinnerChange, allowDeselect = true)
         SectionTitle(stringResource(R.string.budget_events))
-        SingleChoiceChips(brackets, draft.eventBudget, onEventsChange)
+        SingleChoiceChips(brackets, draft.eventBudget, onEventsChange, allowDeselect = true)
         Row(
             Modifier
                 .fillMaxWidth()
@@ -200,7 +204,9 @@ fun OnboardingBudgetAudiencePage(
             }
             Switch(checked = draft.lateNightEnabled, onCheckedChange = null)
         }
-        if (draft.lateNightEnabled) SingleChoiceChips(brackets, draft.lateNightBudget, onLateNightChange)
+        if (draft.lateNightEnabled) {
+            SingleChoiceChips(brackets, draft.lateNightBudget, onLateNightChange, allowDeselect = true)
+        }
         SectionTitle(stringResource(R.string.audience_title))
         MultiChoiceChips(audienceOptions(), draft.audience, onAudienceChange)
         BodyText(stringResource(R.string.audience_bars_hidden_note))
@@ -251,7 +257,11 @@ fun OnboardingInterestsPage(
                 val language = cuisineLanguage()
                 MultiChoiceChips(
                     options = visibleCuisineGroups(cuisines.value, draft.audience).map {
-                        ChoiceOption(it.code, "${it.emoji} ${it.label.get(language) ?: it.code}")
+                        ChoiceOption(
+                            value = it.code,
+                            label = it.label.get(language) ?: it.code,
+                            icon = HackappIcon.forCuisineGroup(it.icon).vector,
+                        )
                     },
                     selected = draft.cuisineGroups,
                     onSelectedChange = onCuisinesChange,
@@ -322,13 +332,15 @@ private val PreviewState = OnboardingUiState(
     ),
     districts = LoadState.Ready(listOf(DistrictOption("district-a", "District A"))),
     cuisines = LoadState.Ready(
-        listOf(CuisineGroup("group-a", "🍽️", LocalizedText("Groupe A", "Group A"), emptySet(), null)),
+        listOf(CuisineGroup("group-a", "restaurant_menu", LocalizedText("Groupe A", "Group A"), emptySet(), null)),
     ),
 )
 
 @Preview(name = "Onboarding 1 Visitor type", showBackground = true, widthDp = 412, heightDp = 720)
 @Composable
-private fun OnboardingVisitorTypePreview() = HackappTheme { OnboardingVisitorTypePage(PreviewState, onContinue = {}) }
+private fun OnboardingVisitorTypePreview() = HackappTheme {
+    OnboardingVisitorTypePage(PreviewState, onContinue = {}, onSignOut = {})
+}
 
 @Preview(name = "Onboarding 2 Profile", showBackground = true, widthDp = 412, heightDp = 720)
 @Composable

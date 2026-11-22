@@ -15,6 +15,9 @@ Living checklist for the current implementation step. Update it in the same chan
 - Screens reach data and external apps through interfaces (`CityServices`, `AuthService`), never a specific provider or city.
 - User-facing text comes from `strings.xml`, in French and English.
 - Do not run device tests on the phone, because they uninstall the app and clear its data.
+- Never push into `main`. Keep updates on this branch.
+- Use Material icons, never emojis, in the UI and its source data.
+- Selected chips and segmented controls show state by colour only, with no checkmark. Selected price brackets toggle off when tapped again.
 
 ## Ownership
 
@@ -90,7 +93,8 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Replace "Hackapp" with Plan[City] in Figma
 - [x] Merge `cmvb`'s latest `layout` refactor and `main`
 - [x] Update `screen-list.md` with the grilling decisions
-- [ ] Open a PR from `feat/ui-foundation` into `main`
+- [x] Replace cuisine emojis with Material icons in data, UI and design docs
+- [x] Remove selection checkmarks from chips and segmented controls in the app and Figma
 - [x] Update the old data attribution in Figma
 
 ### 1. Authentication
@@ -113,7 +117,7 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Save the Profile behind a `ProfileRepository`
 - [x] Route accounts with no Profile to onboarding
 - [ ] Confirm the onboarding flow on the phone
-- [ ] Decide how someone signed in to the wrong account leaves onboarding
+- [x] Add Sign out to onboarding step 1
 
 ### 3. Design decisions (grilling)
 
