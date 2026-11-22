@@ -1,6 +1,5 @@
 package com.example.hackapp.scaffold.screens.passport
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -85,8 +84,8 @@ fun ScreenPassport(controller: NavHostController, outerPaddingValues: PaddingVal
                 SimulationGravityLockButton(
                     isLocked = isGravityLocked,
                     onLockedChange = { isGravityLocked = it },
-                    lockedDescription = pendingString("passport_gravity_unlock"),
-                    unlockedDescription = pendingString("passport_gravity_lock"),
+                    lockedDescription = stringResource(R.string.passport_gravity_unlock),
+                    unlockedDescription = stringResource(R.string.passport_gravity_lock),
                 )
             }
         },
@@ -99,8 +98,8 @@ fun ScreenPassport(controller: NavHostController, outerPaddingValues: PaddingVal
                     if (stamps.isEmpty()) {
                         EmptyState(
                             modifier = Modifier.fillMaxSize(),
-                            title = stringResource(R.string.end_of_day_no_stamp),
-                            body = pendingString("passport_empty_body"),
+                            title = stringResource(R.string.passport_empty_title),
+                            body = stringResource(R.string.passport_empty_body),
                         )
                     } else {
                         StampSandbox(stamps, isGravityLocked)
@@ -179,16 +178,4 @@ private fun StampSandbox(stamps: List<PassportStamp>, gravityLocked: Boolean) {
             )
         }
     }
-}
-
-/**
- * Text the Copy Editor is adding to strings.xml. Returns null until the key exists, so no text is
- * hardcoded. Replace each call with stringResource(R.string.key) once the keys are in.
- */
-@SuppressLint("DiscouragedApi", "LocalContextResourcesRead")
-@Composable
-private fun pendingString(name: String): String? {
-    val context = LocalContext.current
-    val id = context.resources.getIdentifier(name, "string", context.packageName)
-    return if (id != 0) stringResource(id) else null
 }
