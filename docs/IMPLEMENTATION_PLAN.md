@@ -53,9 +53,13 @@ Living checklist for the current implementation step. Update it in the same chan
 | Time window | At least 2 hours, ending no later than 04:00. Day/night switch resets to 10:00–18:00 or 18:00–02:00 |
 | Meal choice | Multi-select within the window: lunch 12:00, dinner 18:30, late bite 22:00, with editable times. Lunch and dinner reserve 90 minutes. Late bite is 45 minutes |
 | Meal Block conflicts | Events overlapping a reserved Meal Block are hidden. The Meal prompt appears when planning reaches the block |
-| Meal location | Options come from the current borough. If another borough follows, the user can choose to eat there instead, after transit |
+| Meal location | Meal list has **Here** and **In [next borough]** tabs. The second shows only restaurants reachable by the block's start after transit. Choosing one moves planning to that borough after the Meal, and Back can undo it |
+| Advancing boroughs | **Next borough** moves on. **Finish here** skips remaining boroughs and goes to Review, and needs at least one Event. The last borough shows only **Finish**. Back keeps Stops. A borough left with no Stops is dropped |
+| Replacing a borough | The maximum-reached message lists the 3 selected boroughs, and the new one takes the replaced borough's position |
+| Late bite | 45 minutes total, including its shorter margins |
 | Removing a Stop | Return to selection for that gap, keep later reachable Stops, and warn before removing others |
-| One Underway Itinerary | Starting a new Itinerary warns that the current one will end |
+| One Underway Itinerary | Starting a new Itinerary warns that the current one will end. The old one moves to Past, keeps Stamps for confirmed Stops, and marks remaining Stops as skipped |
+| Start date | **Start** works only on the Itinerary's date, except in demo mode |
 
 ## Checklist
 
