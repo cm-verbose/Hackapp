@@ -24,7 +24,9 @@ import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyDef
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
-import kotlin.math.floor
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 private const val TAG = "SandboxWorld"
 
@@ -47,39 +49,62 @@ private const val MAX_RECEIVED_ITEMS = 8
 private const val MIN_RECEIVED_SPEED = 6f
 private const val MAX_RECEIVED_SPEED = 25f
 
-/** Gap between items in the starting grid, in pixels per density unit. */
-private const val GRID_GAP_DP = 2f
+/** Gap kept between items when they are placed, in dp. */
+private const val PLACEMENT_GAP_DP = 2f
+
+/** Distance between the spots tried when placing an item, in dp. */
+private const val PLACEMENT_STEP_DP = 8f
+
+/** The screen box of a placed item, by its center and half size. */
+internal data class PlacedBox(val x: Float, val y: Float, val halfWidth: Float, val halfHeight: Float)
 
 /**
- * Starting spots for items of [itemPx], filling from the bottom row up and skipping any cell that
- * touches the [keepOutPx] square in the bottom-end corner.
+ * The first free spot for an item of this size, from the bottom row up and left to right, clear of
+ * [placed] and of the [keepOutPx] square in the bottom-end corner. Null when none is left.
  */
-internal fun sandboxSlots(
+internal fun firstFreeSpot(
+    itemWidth: Float,
+    itemHeight: Float,
+    placed: List<PlacedBox>,
     widthPx: Float,
     heightPx: Float,
-    itemPx: Float,
     density: Float,
     keepOutPx: Float = 0f,
-): List<Pair<Float, Float>> {
-    val cell = itemPx + GRID_GAP_DP * density
-    if (cell <= 0f) return emptyList()
-    val cols = floor(widthPx / cell).toInt().coerceAtLeast(0)
-    val rows = floor(heightPx / cell).toInt().coerceAtLeast(0)
-    val left = (widthPx - cols * cell) / 2f
-    val top = (heightPx - rows * cell) / 2f
-    return buildList {
-        for (row in rows - 1 downTo 0) for (col in 0 until cols) {
-            val x = left + (col + 0.5f) * cell
-            val y = top + (row + 0.5f) * cell
-            val blocked = keepOutPx > 0f && x + itemPx / 2f > widthPx - keepOutPx && y + itemPx / 2f > heightPx - keepOutPx
-            if (!blocked) add(x to y)
+): PlacedBox? {
+    val gap = PLACEMENT_GAP_DP * density
+    val step = PLACEMENT_STEP_DP * density
+    val halfW = itemWidth / 2f
+    val halfH = itemHeight / 2f
+    var y = heightPx - halfH - gap
+    while (y >= halfH + gap) {
+        var x = halfW + gap
+        while (x <= widthPx - halfW - gap) {
+            val inKeepOut = keepOutPx > 0f && x + halfW + gap > widthPx - keepOutPx && y + halfH + gap > heightPx - keepOutPx
+            val clear = !inKeepOut && placed.none {
+                abs(it.x - x) < it.halfWidth + halfW + gap && abs(it.y - y) < it.halfHeight + halfH + gap
+            }
+            if (clear) return PlacedBox(x, y, halfW, halfH)
+            x += step
         }
+        y -= step
     }
+    return null
 }
 
-/** How many items of [itemPx] fit in the starting grid. */
-fun sandboxCapacity(widthPx: Float, heightPx: Float, itemPx: Float, density: Float, keepOutPx: Float = 0f): Int =
-    sandboxSlots(widthPx, heightPx, itemPx, density, keepOutPx).size
+/** How many of [sizesPx], in order, fit the area without touching. Stops at the first that does not. */
+fun sandboxFitCount(
+    sizesPx: List<Pair<Float, Float>>,
+    widthPx: Float,
+    heightPx: Float,
+    density: Float,
+    keepOutPx: Float = 0f,
+): Int {
+    val placed = ArrayList<PlacedBox>()
+    for ((itemWidth, itemHeight) in sizesPx) {
+        placed += firstFreeSpot(itemWidth, itemHeight, placed, widthPx, heightPx, density, keepOutPx) ?: break
+    }
+    return placed.size
+}
 
 /** What happened when a fast shape was released. */
 sealed interface ThrowOutcome {
@@ -197,17 +222,22 @@ class SandboxWorld(
         body.createFixture(PolygonShape().apply { setAsBox(half, half) }, 0f)
     }
 
-    /** The first grid cell with no shape on it, or the screen center when the grid is full. */
+    /** The first free spot, or the center when full, where the physics pushes shapes apart. */
     private fun freeSlot(spec: SandboxItem): Pair<Float, Float> {
-        val itemPx = with(density) { maxOf(spec.width, spec.height).toPx() }
-        val minDistance = itemPx * 0.9f
-        return sandboxSlots(widthPx, heightPx, itemPx, density.density, keepOutPx).firstOrNull { (x, y) ->
-            items.none {
-                val dx = it.physicalShape.body.position.x.toPixels() - x
-                val dy = it.physicalShape.body.position.y.toPixels() - y
-                dx * dx + dy * dy < minDistance * minDistance
-            }
-        } ?: (widthPx / 2f to heightPx / 2f)
+        val placed = items.map { item ->
+            val shape = item.physicalShape
+            val c = abs(cos(shape.body.angle))
+            val s = abs(sin(shape.body.angle))
+            PlacedBox(
+                x = shape.body.position.x.toPixels(),
+                y = shape.body.position.y.toPixels(),
+                halfWidth = (c * shape.widthPx + s * shape.heightPx) / 2f,
+                halfHeight = (s * shape.widthPx + c * shape.heightPx) / 2f,
+            )
+        }
+        val (itemWidth, itemHeight) = with(density) { spec.width.toPx() to spec.height.toPx() }
+        val spot = firstFreeSpot(itemWidth, itemHeight, placed, widthPx, heightPx, density.density, keepOutPx)
+        return if (spot != null) spot.x to spot.y else widthPx / 2f to heightPx / 2f
     }
 
     fun setDamping(linear: Float, angular: Float) {
@@ -394,10 +424,6 @@ class SandboxWorld(
             friction = 0.02f, // Low friction prevents shapes sticking to each other or walls
         )
         velocity?.let { shape.body.linearVelocity = it }
-        if (spec.angleDegrees != 0f) {
-            shape.body.setTransform(shape.body.position, Math.toRadians(spec.angleDegrees.toDouble()).toFloat())
-            shape.syncFromBody()
-        }
         shape.body.angularVelocity = angularVelocity
         items += CreatedPhysicsItem(nextId++, spec, shape, isOwn, popIn)
     }

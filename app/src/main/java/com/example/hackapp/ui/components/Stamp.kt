@@ -16,12 +16,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,23 +70,25 @@ fun Stamp(
 /** Diameter of the Stamp disc. */
 val StampDiscSize = 72.dp
 
-/** The Stamp's lemon disc with its dashed ink border and initials. Fills [modifier]'s size. */
+/** The Stamp's filled [shape] with its dashed ink border and initials. Fills [modifier]'s size. */
 @Composable
 fun StampDisc(
     initials: String,
     modifier: Modifier = Modifier,
     discColor: Color = HackappPalette.AccentLemon,
     inkColor: Color = HackappPalette.Ink,
+    shape: Shape = CircleShape,
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium,
 ) {
     Box(
         modifier
-            .background(discColor, CircleShape)
-            .dashedCircleBorder(2.dp, inkColor),
+            .background(discColor, shape)
+            .dashedBorder(2.dp, inkColor, shape),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             initials,
-            style = MaterialTheme.typography.titleMedium,
+            style = textStyle,
             color = inkColor,
             maxLines = 1,
             modifier = Modifier.clearAndSetSemantics {},
@@ -97,14 +103,11 @@ fun stampInitials(name: String): String =
         .take(2)
         .joinToString("") { it.first().uppercase() }
 
-private fun Modifier.dashedCircleBorder(width: Dp, color: Color): Modifier = drawBehind {
+private fun Modifier.dashedBorder(width: Dp, color: Color, shape: Shape): Modifier = drawWithCache {
     val stroke = width.toPx()
-    drawCircle(
-        color = color,
-        radius = (size.minDimension - stroke) / 2f,
-        center = Offset(size.width / 2f, size.height / 2f),
-        style = Stroke(width = stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
-    )
+    val outline = shape.createOutline(Size(size.width - stroke, size.height - stroke), layoutDirection, this)
+    val style = Stroke(width = stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())))
+    onDrawBehind { translate(stroke / 2f, stroke / 2f) { drawOutline(outline, color, style = style) } }
 }
 
 @Preview(name = "Stamp", showBackground = true)

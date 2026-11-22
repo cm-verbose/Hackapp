@@ -10,6 +10,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.jbox2d.common.Vec2
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 class SandboxWorldTest {
@@ -56,14 +57,31 @@ class SandboxWorldTest {
     }
 
     @Test
-    fun `capacity counts the cells that fit`() {
-        assertEquals(4 * 8, sandboxCapacity(1080f, 1920f, 216f, 3f))
-        assertEquals(0, sandboxCapacity(100f, 1920f, 216f, 3f))
+    fun `capacity counts what fits`() {
+        val stamps = List(40) { 216f to 216f }
+        assertEquals(32, sandboxFitCount(stamps, 1080f, 1920f, 3f))
+        assertEquals(0, sandboxFitCount(stamps, 100f, 1920f, 3f))
     }
 
     @Test
-    fun `the corner control takes one cell from the capacity`() {
-        assertEquals(31, sandboxCapacity(1080f, 1920f, 216f, 3f, keepOutPx = 204f))
+    fun `the corner control takes room from the capacity`() {
+        val stamps = List(40) { 216f to 216f }
+        assertEquals(31, sandboxFitCount(stamps, 1080f, 1920f, 3f, keepOutPx = 204f))
+    }
+
+    @Test
+    fun `mixed sizes never start overlapping or under the control`() {
+        val sizes = listOf(540f to 540f, 480f to 480f, 300f to 300f, 450f to 240f, 480f to 240f, 330f to 330f)
+        val placed = ArrayList<PlacedBox>()
+        repeat(12) { index ->
+            val (w, h) = sizes[index % sizes.size]
+            firstFreeSpot(w, h, placed, 1080f, 1920f, 3f, keepOutPx = 204f)?.let { spot ->
+                assertFalse(placed.any { abs(it.x - spot.x) < it.halfWidth + spot.halfWidth && abs(it.y - spot.y) < it.halfHeight + spot.halfHeight })
+                assertFalse(spot.x + spot.halfWidth > 876f && spot.y + spot.halfHeight > 1716f)
+                placed += spot
+            }
+        }
+        assertTrue(placed.size >= 6)
     }
 
     @Test

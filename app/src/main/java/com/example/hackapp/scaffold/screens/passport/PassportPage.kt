@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,12 +27,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,8 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -50,6 +55,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -57,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.scaffold.sandbox.PhysicsScreen
 import com.example.hackapp.scaffold.sandbox.SandboxItem
-import com.example.hackapp.scaffold.sandbox.sandboxCapacity
+import com.example.hackapp.scaffold.sandbox.sandboxFitCount
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappSegmentedButton
@@ -65,7 +71,6 @@ import com.example.hackapp.ui.components.HackappSmallTextButton
 import com.example.hackapp.ui.components.HeroHeader
 import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.StampDisc
-import com.example.hackapp.ui.components.StampDiscSize
 import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.ui.theme.StopType
@@ -79,6 +84,9 @@ private val GravityKeepOut = GravityButtonSize + GravityButtonInset
 /** Below this height the page scrolls and the field keeps [ScrollingFieldHeight]. */
 private val MinFullPageHeight = 480.dp
 private val ScrollingFieldHeight = 240.dp
+
+private val DetailsShapeSize = 96.dp
+private val ListShapeSize = 64.dp
 
 /** Figma PassportScreen: Physics (188:3044), Details (188:3383), Empty (188:3475), Dark (188:3548). */
 @Composable
@@ -168,7 +176,7 @@ private fun StampField(
 ) {
     BoxWithConstraints(modifier) {
         // Measured without the link's row, so showing the link cannot flip this decision.
-        val overflows = stamps.size > fieldCapacity(maxWidth, maxHeight)
+        val overflows = stamps.size > fieldCapacity(stamps, maxWidth, maxHeight)
         Column(Modifier.fillMaxSize()) {
             if (overflows) {
                 Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterEnd) {
@@ -182,24 +190,26 @@ private fun StampField(
                     .clip(RoundedCornerShape(HackappCorners.Large))
                     .background(MaterialTheme.colorScheme.surfaceContainerLow),
             ) {
-                val capacity = fieldCapacity(maxWidth, maxHeight)
+                val capacity = fieldCapacity(stamps, maxWidth, maxHeight)
                 val shown = remember(stamps, capacity) { stamps.take(capacity) }
                 val colors = HackappTheme.stopTypeColors
+                val outlines = StampShape.entries.associateWith { it.outline() }
                 val items = remember(shown, colors) {
                     shown.map { stamp ->
                         val disc = colors[stamp.type]
+                        val outline = outlines.getValue(stamp.shape)
                         SandboxItem(
                             key = stamp.key,
                             color = disc,
-                            shape = CircleShape,
-                            width = StampDiscSize,
-                            height = StampDiscSize,
-                            angleDegrees = stamp.tiltDegrees,
+                            shape = outline,
+                            width = stamp.shape.widthDp.dp,
+                            height = stamp.shape.heightDp.dp,
                         ) {
                             StampDisc(
                                 initials = stamp.initials,
                                 discColor = disc,
                                 inkColor = colors.onStopType,
+                                shape = outline,
                                 modifier = Modifier.fillMaxSize().clearAndSetSemantics {
                                     contentDescription = stamp.description
                                     role = Role.Button
@@ -229,11 +239,51 @@ private fun StampField(
 }
 
 @Composable
-private fun fieldCapacity(width: Dp, height: Dp): Int {
+private fun fieldCapacity(stamps: List<PassportStampUi>, width: Dp, height: Dp): Int {
     val density = LocalDensity.current
-    return with(density) {
-        sandboxCapacity(width.toPx(), height.toPx(), StampDiscSize.toPx(), this.density, GravityKeepOut.toPx())
+    return remember(stamps, width, height, density) {
+        with(density) {
+            sandboxFitCount(
+                stamps.map { it.shape.widthDp.dp.toPx() to it.shape.heightDp.dp.toPx() },
+                width.toPx(),
+                height.toPx(),
+                this.density,
+                GravityKeepOut.toPx(),
+            )
+        }
     }
+}
+
+/** The Material shape. [scale] keeps the rounded squares' corners in proportion when smaller. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StampShape.outline(scale: Float = 1f): Shape = when (this) {
+    StampShape.VerySunny -> MaterialShapes.VerySunny.toShape()
+    StampShape.Cookie9Sided -> MaterialShapes.Cookie9Sided.toShape()
+    StampShape.Cookie7Sided -> MaterialShapes.Cookie7Sided.toShape()
+    StampShape.RoundedLarge -> RoundedCornerShape(24.dp * scale)
+    StampShape.RoundedMedium -> RoundedCornerShape(16.dp * scale)
+    StampShape.Circle -> CircleShape
+}
+
+/** A Stamp in its own shape and proportions, with its longest side at [longestSide]. */
+@Composable
+private fun StampBadge(
+    stamp: PassportStampUi,
+    longestSide: Dp,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium,
+) {
+    val colors = HackappTheme.stopTypeColors
+    val scale = longestSide.value / maxOf(stamp.shape.widthDp, stamp.shape.heightDp)
+    StampDisc(
+        initials = stamp.initials,
+        discColor = colors[stamp.type],
+        inkColor = colors.onStopType,
+        shape = stamp.shape.outline(scale),
+        textStyle = textStyle,
+        modifier = modifier.size(stamp.shape.widthDp.dp * scale, stamp.shape.heightDp.dp * scale),
+    )
 }
 
 @Composable
@@ -293,7 +343,6 @@ private fun StampDetailsSheet(stamp: PassportStampUi, onDismiss: () -> Unit) {
 
 @Composable
 private fun StampDetails(stamp: PassportStampUi, modifier: Modifier = Modifier) {
-    val colors = HackappTheme.stopTypeColors
     Row(
         modifier
             .fillMaxWidth()
@@ -302,12 +351,9 @@ private fun StampDetails(stamp: PassportStampUi, modifier: Modifier = Modifier) 
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StampDisc(
-            initials = stamp.initials,
-            discColor = colors[stamp.type],
-            inkColor = colors.onStopType,
-            modifier = Modifier.size(StampDiscSize).rotate(stamp.tiltDegrees),
-        )
+        Box(Modifier.size(DetailsShapeSize), contentAlignment = Alignment.Center) {
+            StampBadge(stamp, DetailsShapeSize)
+        }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stamp.name, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
             Text(stamp.district, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -326,7 +372,6 @@ private fun AllStampsSheet(stamps: List<PassportStampUi>, onOpen: (String) -> Un
 
 @Composable
 private fun AllStampsList(stamps: List<PassportStampUi>, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
-    val colors = HackappTheme.stopTypeColors
     Column(modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.passport_all_stamps),
@@ -345,12 +390,9 @@ private fun AllStampsList(stamps: List<PassportStampUi>, onOpen: (String) -> Uni
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    StampDisc(
-                        initials = stamp.initials,
-                        discColor = colors[stamp.type],
-                        inkColor = colors.onStopType,
-                        modifier = Modifier.size(48.dp),
-                    )
+                    Box(Modifier.size(ListShapeSize), contentAlignment = Alignment.Center) {
+                        StampBadge(stamp, ListShapeSize, textStyle = MaterialTheme.typography.labelLarge)
+                    }
                     Column(Modifier.weight(1f)) {
                         Text(stamp.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(
@@ -375,7 +417,7 @@ private fun previewStamps(count: Int) = List(count) { index ->
         district = "Le Plateau",
         date = "28 nov. 2026",
         type = PreviewTypes[index % PreviewTypes.size],
-        tiltDegrees = (index % 21 - 10).toFloat(),
+        shape = StampShape.entries[index % StampShape.entries.size],
     )
 }
 
@@ -432,3 +474,25 @@ private fun StampDetailsPreview() = HackappTheme { StampDetails(previewStamps(1)
 @Preview(name = "All Stamps", showBackground = true, widthDp = 360, heightDp = 480)
 @Composable
 private fun AllStampsPreview() = HackappTheme { AllStampsList(previewStamps(6), {}) }
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AllShapes(darkTheme: Boolean) = HackappTheme(darkTheme = darkTheme) {
+    FlowRow(
+        Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow).padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        previewStamps(StampShape.entries.size).forEach { stamp ->
+            StampBadge(stamp, maxOf(stamp.shape.widthDp, stamp.shape.heightDp).dp)
+        }
+    }
+}
+
+@Preview(name = "Stamp shapes", showBackground = true, widthDp = 360)
+@Composable
+private fun StampShapesPreview() = AllShapes(darkTheme = false)
+
+@Preview(name = "Stamp shapes · dark", showBackground = true, widthDp = 360, fontScale = 1.3f, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun StampShapesDarkPreview() = AllShapes(darkTheme = true)

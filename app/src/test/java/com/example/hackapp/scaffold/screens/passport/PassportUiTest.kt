@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class PassportUiTest {
+
     private val format = DateTimeFormatter.ISO_LOCAL_DATE
 
     private fun stamp(key: String, city: String = "mtl", district: String = "ville-marie") = PassportStamp(
@@ -52,10 +53,18 @@ class PassportUiTest {
     }
 
     @Test
-    fun `tilt is stable and small`() {
-        listOf("a", "mtl:place:123", "mtl:chain:boustan").forEach {
-            assertEquals(stampTilt(it), stampTilt(it), 0f)
-            assertTrue(stampTilt(it) in -20f..20f)
-        }
+    fun `a Stamp always gets the same shape`() {
+        // Fixed values: if one changes, every person's Stamps change shape.
+        assertEquals(StampShape.RoundedLarge, stampShapeFor("mtl:place:123"))
+        assertEquals(StampShape.Cookie9Sided, stampShapeFor("mtl:chain:boustan"))
+        assertEquals(StampShape.VerySunny, stampShapeFor("mtl:event:jazz:45.507:-73.554"))
+    }
+
+    @Test
+    fun `similar keys cover all six shapes in a good mix`() {
+        val counts = (1..600).map { stampShapeFor("mtl:place:$it") }.groupingBy { it }.eachCount()
+        assertEquals(StampShape.entries.toSet(), counts.keys)
+        counts.values.forEach { assertTrue("uneven mix: $counts", it in 60..140) }
+        assertEquals(StampShape.entries.toSet(), (1..40).map { stampShapeFor("mtl:event:show$it:45.507:-73.554") }.toSet())
     }
 }

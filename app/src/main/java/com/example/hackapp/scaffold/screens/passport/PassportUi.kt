@@ -18,7 +18,7 @@ data class PassportStampUi(
     val district: String,
     val date: String,
     val type: StopType,
-    val tiltDegrees: Float,
+    val shape: StampShape,
 ) {
     /** What TalkBack reads for the Stamp. */
     val description: String get() = listOf(name, district, date).joinToString(", ")
@@ -57,7 +57,7 @@ private fun PassportStamp.toUi(districtNames: Map<String, String>, dateFormat: D
     district = districtNames[districtId] ?: districtId,
     date = date.format(dateFormat),
     type = stampStopType(kind, category),
-    tiltDegrees = stampTilt(key),
+    shape = stampShapeFor(key),
 )
 
 internal fun stampStopType(kind: StampKind, category: String?): StopType = when (kind) {
@@ -65,5 +65,27 @@ internal fun stampStopType(kind: StampKind, category: String?): StopType = when 
     StampKind.Meal -> if (category == "bar") StopType.Bar else StopType.Meal
 }
 
-/** A small rotation that stays the same for a Stamp, within 20 degrees either way. */
-internal fun stampTilt(key: String): Float = (key.hashCode() % 21).toFloat()
+/**
+ * The playground's six Material shapes, with their sizes in dp. Constant names are not stored: a
+ * Stamp's shape is always worked out from its key.
+ */
+enum class StampShape(val widthDp: Int, val heightDp: Int) {
+    VerySunny(180, 180),
+    Cookie9Sided(160, 160),
+    Cookie7Sided(100, 100),
+    RoundedLarge(150, 80),
+    RoundedMedium(160, 80),
+    Circle(110, 110),
+}
+
+/**
+ * The same key always gets the same shape, on every launch. [String.hashCode] is fixed by the
+ * language, and the extra mixing spreads keys that differ only by a few digits across the set.
+ */
+internal fun stampShapeFor(key: String): StampShape {
+    var hash = key.hashCode()
+    hash = (hash xor (hash ushr 16)) * -0x7a143595
+    hash = (hash xor (hash ushr 13)) * -0x3d4d51cb
+    hash = hash xor (hash ushr 16)
+    return StampShape.entries[Math.floorMod(hash, StampShape.entries.size)]
+}
