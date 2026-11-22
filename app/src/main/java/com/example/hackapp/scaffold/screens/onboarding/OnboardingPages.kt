@@ -139,6 +139,7 @@ fun OnboardingProfilePage(
                 value = districts.value.firstOrNull { it.id == draft.districtOfStayId }?.name.orEmpty(),
                 label = districtLabel,
                 onClick = { pickingDistrict = true },
+                choiceList = true,
             )
         }
     }
