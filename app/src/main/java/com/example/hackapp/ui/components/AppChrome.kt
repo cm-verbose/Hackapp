@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +47,7 @@ fun HackappTopBar(
     onBack: (() -> Unit)? = null,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
         title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -57,10 +59,12 @@ fun HackappTopBar(
                 }
             }
         },
+        actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = containerColor,
             titleContentColor = contentColor,
             navigationIconContentColor = contentColor,
+            actionIconContentColor = contentColor,
         ),
     )
 }
@@ -125,6 +129,7 @@ fun HackappPage(
     totalSteps: Int? = null,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    actions: @Composable RowScope.() -> Unit = {},
     bottomActions: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -134,7 +139,7 @@ fun HackappPage(
             .background(containerColor)
             .imePadding(),
     ) {
-        HackappTopBar(title, onBack = onBack, containerColor = containerColor, contentColor = contentColor)
+        HackappTopBar(title, onBack = onBack, containerColor = containerColor, contentColor = contentColor, actions = actions)
         if (step != null && totalSteps != null) StepProgress(step, totalSteps)
         val scrollState = rememberScrollState()
         Column(
