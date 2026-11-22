@@ -16,12 +16,14 @@ import com.example.hackapp.passport.StampRepository
 import com.example.hackapp.passport.StopStampResult
 import com.example.hackapp.services.LegEstimator
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
 sealed interface UnderwayStartResult {
@@ -62,20 +64,22 @@ class UnderwayCoordinator(
         confirmEndCurrent: Boolean = false,
         originDistrictId: String? = null,
     ): UnderwayStartResult = lock.withLock {
-        val demoClock = (clock as? DemoClock)?.takeIf { demoMode && it.isSimulated }
-        val current = if (demoMode) clock.now() else clock.realNow()
+        // Demo mode belongs to the account that turned it on.
+        val demoClock = (clock as? DemoClock)?.takeIf { demoMode && it.isSimulated && it.ownerUid == uid }
+        val demoAllowed = demoMode && (clock !is DemoClock || demoClock != null)
+        val current = if (demoAllowed) clock.now() else clock.realNow()
         val draft = itineraries.getItinerary(uid, itineraryId) ?: return UnderwayStartResult.NotFound
-        startBlock(draft, current, clock.zone, demoMode)?.let { return UnderwayStartResult.Blocked(it) }
+        startBlock(draft, current, clock.zone, demoAllowed)?.let { return UnderwayStartResult.Blocked(it) }
         val others = underwayItineraries(uid).filter { it.id != itineraryId }
         if (others.isNotEmpty() && !confirmEndCurrent) return UnderwayStartResult.NeedsConfirmation(others.first())
         others.forEach { endCurrent(uid, it, UnderwayEvent.EndForReplacement) }
         // Only now, after any confirmation: the old Itinerary has ended at its own time.
         val now = demoClock?.let { demo ->
             val at = demoStartInstant(draft, origin, originDistrictId, estimator, clock.zone) ?: current
-            demo.moveTo(at)
+            demo.moveTo(at, itineraryId)
             at
         } ?: current
-        val started = when (val r = startItinerary(itineraries, uid, itineraryId, now, clock.zone, demoMode, true)) {
+        val started = when (val r = startItinerary(itineraries, uid, itineraryId, clock.realNow(), clock.zone, demoAllowed, true)) {
             is StartResult.Started -> r.itinerary
             is StartResult.Blocked -> return UnderwayStartResult.Blocked(r.reason)
             is StartResult.NeedsConfirmation -> return UnderwayStartResult.NeedsConfirmation(r.current)
@@ -162,31 +166,54 @@ class UnderwayCoordinator(
 
     /** Signing out: this account's alarms and notifications must not outlive the session. */
     suspend fun onSignOut(uid: String): Unit = lock.withLock {
-        states.all().filter { it.ownerUid == uid }.forEach {
-            scheduler.cancelAll(it.itineraryId)
-            notifier.cancelAll(it.itineraryId)
+        withContext(NonCancellable) {
+            states.all().filter { it.ownerUid == uid }.forEach {
+                scheduler.cancelAll(it.itineraryId)
+                notifier.cancelAll(it.itineraryId)
+            }
+            // Demo mode never outlives the session. Its run ends here, keeping its Stamps.
+            if ((clock as? DemoClock)?.isSimulated == true) exitDemo(uid, force = true)
         }
     }
 
     // ---- demo mode (see docs/contracts/demo.md) ----
 
-    /** Opens demo mode on its pinned date and reopens archived drafts. Refused while an Itinerary is Underway. */
+    /** Opens demo mode on its pinned date and reopens archived drafts. Refused while a real Itinerary is Underway. */
     suspend fun enableDemo(uid: String): DemoEnableResult = lock.withLock {
         val demo = demoClock()
+        underwayItineraries(uid).firstOrNull { !isDemoRun(uid, it) }
+            ?.let { return DemoEnableResult.RealItineraryUnderway(it) }
         if (demo.isSimulated) return DemoEnableResult.Enabled
-        underwayItineraries(uid).firstOrNull()?.let { return DemoEnableResult.RealItineraryUnderway(it) }
         reopenArchivedDrafts(itineraries, uid)
-        demo.moveTo(demo.pinnedStart())
+        demo.open(demo.pinnedStart(), uid)
         DemoEnableResult.Enabled
     }
 
     /** Ends every unfinished demo run at its simulated time, then returns to real time. */
     suspend fun disableDemo(uid: String): Unit = lock.withLock {
+        withContext(NonCancellable) { exitDemo(uid, force = false) }
+    }
+
+    /**
+     * Ends unfinished demo runs, including one left half done by an earlier failed exit, then
+     * returns to real time. With [force] the clock stops even if a run could not be saved: that
+     * run then ends on its owner's next app open.
+     */
+    private suspend fun exitDemo(uid: String, force: Boolean) {
         val demo = demoClock()
-        states.all().filter { it.demoRun && it.phase != UnderwayPhase.Ended }.forEach { state ->
-            val itinerary = itineraries.getItinerary(state.ownerUid, state.itineraryId) ?: return@forEach
-            run(state.ownerUid, itinerary, state, UnderwayEvent.EndItinerary(confirmed = true))
+        var failure: Exception? = null
+        states.all().filter { it.demoRun }.forEach { state ->
+            try {
+                val itinerary = itineraries.getItinerary(state.ownerUid, state.itineraryId) ?: return@forEach
+                if (state.phase == UnderwayPhase.Ended && itinerary.phase != ItineraryPhase.Underway) return@forEach
+                run(state.ownerUid, itinerary, state, UnderwayEvent.EndItinerary(confirmed = true))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                failure = failure ?: e
+            }
         }
+        if (!force) failure?.let { throw it }
         // Reopened drafts whose date has passed go back. This also runs on the next launch.
         try {
             archiveExpiredDrafts(itineraries, uid, clock.realNow(), clock.zone)
@@ -224,16 +251,37 @@ class UnderwayCoordinator(
     /** A demo run reads simulated time. A real Itinerary always reads real time. */
     private fun nowFor(state: UnderwayState): Instant = if (state.demoRun) clock.now() else clock.realNow()
 
-    /** The state of an Itinerary that lost it. While simulating, it can only be a demo run. */
+    /** True for the Itinerary demo Start recorded. A real run with missing state is never one. */
+    private fun wasStartedInDemo(itinerary: Itinerary): Boolean =
+        (clock as? DemoClock)?.let {
+            it.isSimulated && it.ownerUid == itinerary.ownerUid && it.runItineraryId == itinerary.id
+        } == true
+
+    private suspend fun isDemoRun(uid: String, itinerary: Itinerary): Boolean =
+        states.get(uid, itinerary.id)?.demoRun ?: wasStartedInDemo(itinerary)
+
+    /** The state of an Itinerary that lost it. */
     private fun beginMissing(itinerary: Itinerary): UnderwayState? {
-        val demo = clock.isSimulated
+        val demo = wasStartedInDemo(itinerary)
         return UnderwayEngine.begin(itinerary, if (demo) clock.now() else clock.realNow(), null)?.copy(demoRun = demo)
+    }
+
+    /** The latest time this run recorded. Simulated, so it can be later than real time. */
+    private fun latestRecorded(state: UnderwayState): Instant {
+        val times = state.records.values.flatMap {
+            listOfNotNull(it.arrivedAtMillis, it.leftAtMillis, it.skippedAtMillis, it.nextActionAtMillis)
+        } + listOfNotNull(state.startedAtMillis, state.handoffAtMillis)
+        return Instant.ofEpochMilli(times.max())
     }
 
     private suspend fun underwayItineraries(uid: String): List<Itinerary> =
         itineraries.observeItineraries(uid).first().filter { it.phase == ItineraryPhase.Underway }
 
     private suspend fun reconcile(uid: String) {
+        // Sign-out may not have finished (process death, expired session): never cross accounts.
+        (clock as? DemoClock)?.takeIf { it.isSimulated && it.ownerUid != uid }?.let {
+            exitDemo(it.ownerUid ?: uid, force = true)
+        }
         underwayItineraries(uid).forEach { itinerary ->
             if (states.get(uid, itinerary.id) == null) {
                 beginMissing(itinerary)?.let { states.save(it) }
@@ -246,7 +294,12 @@ class UnderwayCoordinator(
             if (finished) return@forEach
             // Demo settings were lost: a demo run must not stay Underway with no alarms.
             val orphan = state.demoRun && !clock.isSimulated && state.phase != UnderwayPhase.Ended
-            run(uid, itinerary, state, if (orphan) UnderwayEvent.EndItinerary(confirmed = true) else UnderwayEvent.Tick)
+            if (orphan) {
+                val at = maxOf(clock.realNow(), latestRecorded(state))
+                run(uid, itinerary, state, UnderwayEvent.EndItinerary(confirmed = true), at)
+            } else {
+                run(uid, itinerary, state, UnderwayEvent.Tick)
+            }
         }
     }
 
@@ -257,19 +310,26 @@ class UnderwayCoordinator(
         run(uid, itinerary, state, event)
     }
 
-    private suspend fun run(uid: String, itinerary: Itinerary, state: UnderwayState, event: UnderwayEvent): Transition {
-        val now = nowFor(state)
+    private suspend fun run(
+        uid: String,
+        itinerary: Itinerary,
+        state: UnderwayState,
+        event: UnderwayEvent,
+        now: Instant = nowFor(state),
+    ): Transition {
         // Saved at or after every recorded time, so a killed process never restarts before them.
         if (state.demoRun) (clock as? DemoClock)?.checkpoint()
         val t = UnderwayEngine.reduce(ctx(itinerary), state, event, now)
         // State first: it is the source of truth. The Itinerary is re-synced by [reconcile] if we die here.
         if (t.state != state) states.save(t.state)
-        val synced = UnderwayEngine.syncItinerary(itinerary, t.state, now)
+        // A demo run keeps real time here, so lists sorted by last change stay truthful.
+        val computed = UnderwayEngine.syncItinerary(itinerary, t.state, now)
+        val synced = if (state.demoRun) computed.copy(updatedAtMillis = itinerary.updatedAtMillis) else computed
         // A failed sync must not drop the alerts or the notifications: run them, then rethrow.
         var syncFailure: Exception? = null
         if (synced != itinerary) {
             try {
-                itineraries.saveItinerary(synced)
+                itineraries.saveItinerary(if (state.demoRun) synced.copy(updatedAtMillis = clock.realNow().toEpochMilli()) else synced)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
