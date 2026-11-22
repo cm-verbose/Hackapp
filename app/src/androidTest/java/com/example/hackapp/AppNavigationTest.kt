@@ -102,7 +102,9 @@ class AppNavigationTest {
         // One District, so the page offers only Finish, enabled by the seeded Event Stop.
         awaitEnabled(R.string.action_finish)
         click(R.string.action_finish)
-        awaitText(R.string.review_start)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(context.getString(R.string.review_start))).fetchSemanticsNodes().isNotEmpty()
+        }
         assertEquals(PlanningStep.Review, savedDraft().step)
         compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
         compose.waitForIdle()
