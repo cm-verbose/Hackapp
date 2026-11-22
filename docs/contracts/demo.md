@@ -25,21 +25,25 @@ Demo mode is on exactly when `clock.isSimulated` is true. There is no second fla
 - `clock.planningNow()`: the first day of Event coverage when on, so no Event of any date reads as past while planning.
 - **The simulated clock runs only while the app is in the foreground.** It pauses when the last Activity stops and restarts paused at its saved time after process death. A demo left overnight does not move, so it cannot auto-end.
 - The time is saved on every jump, every Underway event of a demo run and every pause, so a restart is never earlier than a recorded arrival or departure.
-- A wall clock moved backward never moves simulated time back.
+- Foreground time is measured with `elapsedRealtime`, so a wall-clock change never moves simulated time.
+- `coordinator.displayNow(uid)` is the time an Underway page draws: simulated for a demo run, real for a real Itinerary.
 
 ## Rules
 
 | Situation | Rule |
 |---|---|
-| Enable | Jumps to `CityPack.demoDate`, 10:00, and reopens this account's archived drafts. **Refused with `RealItineraryUnderway` while this account has an Itinerary Underway** |
+| Enable | Jumps to `CityPack.demoDate`, 10:00, and reopens this account's archived drafts. **Refused with `RealItineraryUnderway` while this account has a real Itinerary Underway, even if demo mode is already on.** A demo run does not count |
+| Accounts | Demo mode belongs to the account that enabled it. **Signing out exits demo mode** under the coordinator lock, ending that person's run with Stamps kept. If sign-out did not finish (process death, expired session), the next account's app open exits it first. Another account can never start in it |
 | Start in demo mode | No date check. The clock moves to the first Stop's Leave By from the District of stay, in the default Leg mode (walking inside a District, otherwise transit), or 30 minutes before the first Stop with no origin. The time stays on the Itinerary's date and before its window ends, so the normal Start rule would accept it too |
 | Start while another is Underway | Same warning as outside demo mode. The clock does not move until it is confirmed, and the old Itinerary ends at its own time. Start is the only move that can go backward, because the next Itinerary may be on an earlier date |
 | Demo run | `UnderwayState.demoRun = true`. It reads simulated time, **never schedules a real alarm** and does not ask for exact alarms. Legs use the same default mode as real Itineraries |
 | Real Itinerary | Always reads real time and keeps its real alarms, even while the clock is simulated (for example, another account on the device) |
-| Moment suivant | Goes to the next of: alert, Leave By, expected arrival, Stop start, Planned Departure of the last Stop, automatic end. **It never moves backward.** It then runs `Tick`, so due alerts show immediately as normal notifications. It does not confirm arrivals or departures: the person still acts |
+| Moment suivant | Goes to the next of: alert, Leave By, expected arrival, Stop start, Planned Departure of the last Stop, automatic end. **It never moves backward.** A Late warning 1 second after a Leave By shares its press, so it never advances by only 1 second. It then runs `Tick`, so due alerts show immediately as normal notifications. It does not confirm arrivals or departures: the person still acts |
 | Draft archiving | Paused while demo mode is on, so any planned Itinerary stays startable |
 | Exit demo mode | See below |
-| Demo run with no demo clock (lost settings) | Ended on the next app open |
+| Demo run with no demo clock (lost settings) | Ended on the next app open, at the later of real time and its latest recorded time |
+| Run with missing state | A real run is never marked as a demo run. Only the Itinerary recorded by demo Start is rebuilt as one |
+| Last-change time | `updatedAtMillis` stays real for demo runs, so sorted lists stay truthful |
 
 ## Exit demo mode (Underway menu)
 
@@ -50,7 +54,7 @@ Demo mode is on exactly when `clock.isSimulated` is true. There is no second fla
 3. Reopened drafts whose date has passed in real time return to Archived.
 4. The clock returns to real time.
 
-If storage fails, `exit` throws and demo mode stays on, so it can be retried (`exitFailed` in the holder). When a run was Underway, the Underway page then shows End of day, because `UnderwayViewModel` loads it once the Itinerary is no longer Underway. Show a confirmation only when `state.canAdvance` is true, since only then is a run ended.
+Exit cannot be cancelled once it holds the lock. If storage fails, `exit` throws and demo mode stays on, so it can be retried (`exitFailed` in the holder). A retry also finishes an Itinerary a failed exit left Underway. Sign-out is the exception: the clock always stops, and a run that could not be saved ends on its owner's next app open. When a run was Underway, the Underway page then shows End of day, because `UnderwayViewModel` loads it once the Itinerary is no longer Underway. Show a confirmation only when `state.canAdvance` is true, since only then is a run ended.
 
 ## Stamps
 
