@@ -296,7 +296,8 @@ fun ItineraryReviewPage(
                     }
                 }
                 ReviewBudgetCard(budgetRows)
-                state.budget?.let { ReviewRunningTotal(it) }
+                // Over budget moves to the bottom actions, so it stays visible above Start.
+                state.budget?.takeUnless { it.isOverBudget }?.let { ReviewRunningTotal(it) }
             }
         }
     }
@@ -370,6 +371,7 @@ private fun ColumnScope.ReviewActions(
                 .semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
+    state.budget?.takeIf { it.isOverBudget }?.let { ReviewRunningTotal(it) }
     if (start is ReviewStartState.NotPlanning) return
     val blockedReason = when (start) {
         is ReviewStartState.NotToday -> stringResource(R.string.review_start_only_on, reviewDate(start.date, appLocale()))
@@ -382,12 +384,14 @@ private fun ColumnScope.ReviewActions(
         onClick = onStart,
         enabled = start is ReviewStartState.Ready && !state.busy,
     )
-    Text(
-        blockedReason ?: stringResource(R.string.review_notification_note),
-        style = MaterialTheme.typography.bodySmall,
-        color = if (blockedReason != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    if (blockedReason != null) {
+        Text(
+            blockedReason,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
     if (start is ReviewStartState.WindowEnded) {
         HackappOutlineButton(text = stringResource(R.string.review_change_date), onClick = onChangeDateTime)
     }
@@ -483,13 +487,6 @@ private fun ReviewRunningTotal(budget: BudgetSummary) {
                 style = MaterialTheme.typography.titleMedium,
                 color = strong,
             )
-            if (over) {
-                Text(
-                    stringResource(R.string.running_total_over_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = quiet,
-                )
-            }
         }
         limit?.let {
             Text(
@@ -896,6 +893,25 @@ private fun ReviewOverBudgetPreview() = PreviewPage(
         ),
     ),
 )
+
+@Preview(name = "Running total", showBackground = true, widthDp = 380)
+@Composable
+private fun ReviewRunningTotalPreview() = HackappTheme {
+    val within = BudgetSummary(
+        eventBudgetCad = 100,
+        mealBudgetCad = 70,
+        totalBudgetCad = 170,
+        eventsCad = 60.0,
+        mealsCad = 30.0,
+        unknownPriceCount = 0,
+        isOverBudget = false,
+    )
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ReviewRunningTotal(within)
+        ReviewRunningTotal(within.copy(unknownPriceCount = 1))
+        ReviewRunningTotal(within.copy(eventsCad = 170.0, unknownPriceCount = 1, isOverBudget = true))
+    }
+}
 
 @Preview(name = "Review · 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 800, fontScale = 1.3f)
 @Composable
