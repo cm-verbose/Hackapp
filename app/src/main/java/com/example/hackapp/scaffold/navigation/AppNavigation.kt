@@ -1,19 +1,14 @@
 package com.example.hackapp.scaffold.navigation
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.hackapp.R
 import com.example.hackapp.profile.SessionDestination
-import com.example.hackapp.scaffold.screens.RoutePlaceholder
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.scaffold.screens.home.mainTabsGraph
 import com.example.hackapp.scaffold.screens.login.ScreenLogin
@@ -29,13 +24,13 @@ import com.example.hackapp.scaffold.screens.places.PlacesScreen
 import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
 import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
 import com.example.hackapp.scaffold.screens.planning.planningGraph
+import com.example.hackapp.scaffold.screens.underway.UnderwayScreen
 
 /**
  * Handles the navigation between screens which allows for dividing content
  * across different screens.
  *
  * Flow: Session gate -> Login or onboarding -> Home -> Planning -> Underway -> Home.
- * Pages not built yet use a placeholder.
  * PlacesScreen (restaurant browse) stays registered as a route but is not the start destination.
  */
 @Composable
@@ -77,15 +72,8 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
         onboardingGraph(controller)
         planningGraph(controller)
 
-        placeholder<UnderwayLegRoute>(controller, R.string.leg_next_stop_label, next = UnderwayArrivalRoute)
-        placeholder<UnderwayArrivalRoute>(controller, R.string.arrival_en_route, next = UnderwayAtStopRoute)
-        placeholder<UnderwayAtStopRoute>(controller, R.string.at_stop_leave_by, next = UnderwayEndOfDayRoute)
-        composable<UnderwayEndOfDayRoute> {
-            RoutePlaceholder(
-                title = stringResource(R.string.end_of_day_title),
-                onBack = { controller.popBackStack() },
-                onNext = { controller.popBackStack(ScreenHomeDestination, inclusive = false) },
-            )
+        composable<UnderwayLegRoute> {
+            UnderwayScreen(onExitToHome = { controller.exitToHome() })
         }
     }
 }
@@ -110,20 +98,12 @@ private fun NavHostController.openSessionDestination(destination: SessionDestina
     }
 }
 
-private inline fun <reified T : Any> NavGraphBuilder.placeholder(
-    controller: NavHostController,
-    @StringRes title: Int,
-    step: Int? = null,
-    totalSteps: Int? = null,
-    next: Any? = null,
-) {
-    composable<T> {
-        RoutePlaceholder(
-            title = stringResource(title),
-            onBack = { controller.popBackStack() },
-            step = step,
-            totalSteps = totalSteps,
-            onNext = next?.let { route -> { controller.navigate(route) } },
-        )
+/** Leaves Underway without ending the Itinerary. Home's Underway card resumes it. */
+private fun NavHostController.exitToHome() {
+    if (!popBackStack(ScreenHomeDestination, inclusive = false)) {
+        navigate(ScreenHomeDestination) {
+            popUpTo(graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
     }
 }

@@ -26,6 +26,7 @@ import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.scaffold.navigation.AppNavigation
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
+import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
@@ -75,7 +76,23 @@ class AppNavigationTest {
         compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute("draft")) }
         compose.waitForIdle()
         repeat(PAGES_AFTER_DISTRICT_PICK) { click(R.string.action_continue) }
+        // The Review placeholder does not start the Itinerary, so Underway has nothing to show.
+        awaitUnderwayError()
+        compose.onNodeWithContentDescription(context.getString(R.string.action_back)).performClick()
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    @Test
+    fun systemBackLeavesUnderwayForHome() {
+        compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
+        awaitUnderwayError()
+        Espresso.pressBack()
+        compose.waitForIdle()
+        compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    private fun awaitUnderwayError() = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+        compose.onAllNodes(hasText(context.getString(R.string.action_retry))).fetchSemanticsNodes().isNotEmpty()
     }
 
     @Test
@@ -124,8 +141,8 @@ class AppNavigationTest {
     }
 
     private companion object {
-        /** Meal choice, Stop selection, Review and the four Underway pages. */
-        const val PAGES_AFTER_DISTRICT_PICK = 7
+        /** Meal choice, Stop selection and Review. */
+        const val PAGES_AFTER_DISTRICT_PICK = 3
         const val LOAD_TIMEOUT_MILLIS = 10_000L
 
         val NoProfiles = object : ProfileRepository {

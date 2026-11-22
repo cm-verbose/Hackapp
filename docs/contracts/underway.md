@@ -101,4 +101,22 @@ Permissions at Start, in this order, neither blocking Start:
 1. `POST_NOTIFICATIONS` (API 33+): request with the standard launcher before calling `start`. If denied, do nothing more: pass `notificationsAllowed = { NotificationManagerCompat.from(ctx).areNotificationsEnabled() }` to the ViewModel and the banner (`view.showNotificationBanner`) appears once. Its button opens `Settings.ACTION_APP_NOTIFICATION_SETTINGS`. Send `NotificationBannerHandled` when it is dismissed or the button is used.
 2. Exact alarms: after `start`, if `askExactAlarm` is true, show the `underway_exact_alarm_*` strings. On Allow, `startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))`. On refusal do nothing. The next `onResume` reschedules with the new permission.
 
+The Start button uses the helper in `scaffold/screens/underway/UnderwayPermissions.kt`, which does both steps:
+
+```kotlin
+val permissions = rememberUnderwayStartPermissions()
+// Place once in the Start screen. Any answer continues to Underway.
+UnderwayExactAlarmRationale(permissions, onClosed = { controller.navigate(UnderwayLegRoute) })
+
+// On Start:
+permissions.requestNotifications()
+when (val result = coordinator.start(uid, itinerary.id, origin)) {
+    is UnderwayStartResult.Started ->
+        if (result.askExactAlarm) permissions.offerExactAlarm() else controller.navigate(UnderwayLegRoute)
+    // NeedsConfirmation, Blocked and NotFound as above.
+}
+```
+
+Do not navigate while the rationale is showing: it lives in the Start screen and would disappear unseen. `UnderwayLegRoute` is the only Underway route: `UnderwayScreen` draws Leg, Arrival, At the Stop or End of day from the phase.
+
 Screens call `UnderwayViewModel.create(uid, coordinator, SystemUnderwayClock(), notificationsAllowed)` (a Composable, in `scaffold/screens/underway/`, one shared ViewModel for Leg, Arrival, At the Stop and End of day; `factory(...)` is the same for a `ViewModelProvider`). It exposes `state: StateFlow<LoadState<UnderwayScreenData(view, now)>>`, where `now` comes from the injected clock and moves on a minute ticker: pages never read time themselves. Also `endOfDay: StateFlow<LoadState<EndOfDay>>`, `retry()` (reloads End of day and retries Stamp awarding after `stampsAvailable = false`), `rejections: SharedFlow<Rejection>`, `dispatch(event)` and `onResume()` (call on every resume). `state` is `Failed` when nothing is Underway. When the day ends, `state` keeps its last value and `endOfDay` loads: navigate to End of day when it is `Ready`.
