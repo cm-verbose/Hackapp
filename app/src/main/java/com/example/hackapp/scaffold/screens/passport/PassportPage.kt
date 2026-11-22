@@ -144,6 +144,7 @@ fun PassportPage(
                         onGravityLockedChange = onGravityLockedChange,
                         onOpen = { openKey = it },
                         onShowAll = { showAll = true },
+                        dragOnSwipe = !scrolls,
                         modifier = if (scrolls) Modifier.fillMaxWidth().height(ScrollingFieldHeight) else rest,
                     )
                 }
@@ -174,6 +175,7 @@ private fun StampField(
     onGravityLockedChange: (Boolean) -> Unit,
     onOpen: (String) -> Unit,
     onShowAll: () -> Unit,
+    dragOnSwipe: Boolean,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier) {
@@ -234,6 +236,7 @@ private fun StampField(
                     gravityLocked = gravityLocked,
                     keepOutBottomEnd = GravityKeepOut,
                     itemScale = layout.scale,
+                    dragOnSwipe = dragOnSwipe,
                     onItemClick = { onOpen(it.key as String) },
                 )
                 GravityLockButton(

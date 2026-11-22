@@ -11,6 +11,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
@@ -25,11 +26,13 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalContext
@@ -47,6 +50,8 @@ import com.example.hackapp.scaffold.sandbox.share.ThrowGeometry
 import com.example.hackapp.scaffold.sandbox.share.rememberDeviceOrientation
 import com.example.hackapp.scaffold.sandbox.share.rememberShareHaptics
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import org.jbox2d.common.Vec2
 
 private const val FREE_LINEAR_DAMPING = 0.05f
@@ -153,6 +158,8 @@ class SandboxSharing(
  * @param items What to show, matched by [SandboxItem.key] so updates keep positions.
  * @param keepOutBottomEnd Side of a solid corner square, so no object can rest under a control.
  * @param itemScale Size of every object as a fraction of its full size. Changes are animated.
+ * @param dragOnSwipe A normal swipe moves an object. False needs a long press first, for a page that
+ *   scrolls and must keep swipes for itself.
  * @param sharing Null keeps every object on this device: a fast flick simply bounces.
  * @param onItemClick Called when an object is tapped.
  */
@@ -163,6 +170,7 @@ fun PhysicsScreen(
     gravityLocked: Boolean = false,
     keepOutBottomEnd: Dp = 0.dp,
     itemScale: Float = 1f,
+    dragOnSwipe: Boolean = true,
     sharing: SandboxSharing? = null,
     onItemClick: (SandboxItem) -> Unit = {},
 ) {
@@ -191,6 +199,7 @@ fun PhysicsScreen(
         val world = sandbox.world
         val grabber = remember(world) { ShapeGrabber(world) }
         val itemScaleReader = remember(sandbox) { { sandbox.itemScale } }
+        val downPosition = remember(sandbox) { arrayOf(Offset.Zero) }
 
         LaunchedEffect(sandbox, items, itemScale) {
             grabber.grabbed?.let { if (!sandbox.isListed(it, items)) grabber.release() }
@@ -271,7 +280,8 @@ fun PhysicsScreen(
                     while (sandbox.isAtRest() && grabber.grabbed == null && isGravityLocked == appliedLock &&
                         (isGravityLocked || !tiltMoved(tilt, gravity, gravityStrength, wakeThreshold))
                     ) {
-                        delay(IDLE_POLL_MS)
+                        // A grab ends the wait at once, so a swipe never starts with a lag.
+                        withTimeoutOrNull(IDLE_POLL_MS) { snapshotFlow { grabber.grabbed }.first { it != null } }
                         lastFrameNanos = withFrameNanos { it }
                     }
                 }
@@ -307,27 +317,29 @@ fun PhysicsScreen(
                     // Watches without consuming, so it never competes with the drag below.
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
+                        downPosition[0] = down.position
                         val up = waitForUpOrCancellation() ?: return@awaitEachGesture
                         val quick = up.uptimeMillis - down.uptimeMillis < viewConfiguration.longPressTimeoutMillis
                         val still = (up.position - down.position).getDistance() < viewConfiguration.touchSlop
                         if (quick && still) sandbox.itemAt(up.position)?.let { currentOnItemClick(it.spec) }
                     }
                 }
-                .pointerInput(grabber, sandbox) {
+                .pointerInput(grabber, sandbox, dragOnSwipe) {
                     // The finger's speed, not the shape's, decides a throw: a shape flicked
                     // against the edge is stopped by the wall while the finger keeps going.
                     val fingerVelocity = VelocityTracker()
                     // Whether the held shape is currently moving fast enough to be sent.
                     var readyToSend = false
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { position ->
-                            fingerVelocity.resetTracking()
-                            readyToSend = false
-                            if (grabber.grab(sandbox.grabbableShapes(), position)) {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            }
-                        },
-                        onDrag = { change, _ ->
+                    val onStart: (Offset) -> Unit = { position ->
+                        fingerVelocity.resetTracking()
+                        readyToSend = false
+                        // A swipe is recognised after some travel: pick up what was under the first touch.
+                        val grabAt = if (dragOnSwipe) downPosition[0] else position
+                        if (grabber.grab(sandbox.grabbableShapes(), grabAt) && !dragOnSwipe) {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                    }
+                    val onMove: (PointerInputChange, Offset) -> Unit = { change, _ ->
                             if (grabber.grabbed != null) {
                                 change.consume()
                                 fingerVelocity.addPosition(change.uptimeMillis, change.position)
@@ -345,13 +357,17 @@ fun PhysicsScreen(
                                     readyToSend = false
                                 }
                             }
-                        },
-                        onDragEnd = {
-                            val v = fingerVelocity.calculateVelocity()
-                            sandbox.onReleased(grabber.release(), Offset(v.x, v.y))
-                        },
-                        onDragCancel = { grabber.release() },
-                    )
+                    }
+                    val onEnd: () -> Unit = {
+                        val v = fingerVelocity.calculateVelocity()
+                        sandbox.onReleased(grabber.release(), Offset(v.x, v.y))
+                    }
+                    val onCancel: () -> Unit = { grabber.release() }
+                    if (dragOnSwipe) {
+                        detectDragGestures(onDragStart = onStart, onDragEnd = onEnd, onDragCancel = onCancel, onDrag = onMove)
+                    } else {
+                        detectDragGesturesAfterLongPress(onDragStart = onStart, onDragEnd = onEnd, onDragCancel = onCancel, onDrag = onMove)
+                    }
                 },
         ) {
             sandbox.items.forEach { item ->
