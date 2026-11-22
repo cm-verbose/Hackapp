@@ -244,6 +244,24 @@
     </plurals>
 
     <!-- Main tabs -->
+    <string name="home_greeting_anonymous">Hello</string>
+    <string name="itinerary_title_in">%1$s in %2$s</string>
+    <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
+    <string name="itineraries_past">Past</string>
+    <string name="itineraries_archived">Archived</string>
+    <string name="itineraries_archived_note">Archived because its date has passed.</string>
+    <string name="itineraries_empty_body">Your planned and past itineraries will appear here.</string>
+    <string name="itinerary_menu">Itinerary options</string>
+    <string name="itinerary_not_found">Itinerary not found</string>
+    <string name="action_delete">Delete</string>
+    <string name="itinerary_delete_title">Delete this itinerary?</string>
+    <string name="itinerary_delete_body">This draft will be permanently deleted.</string>
+    <string name="itinerary_delete_error">Could not delete this itinerary. Try again.</string>
+    <string name="past_stamps_earned">Stamps earned</string>
+    <string name="stop_status_confirmed">Confirmed</string>
+    <string name="stop_status_skipped">Skipped</string>
+    <string name="archived_choose_new_date">Choose a new date</string>
+    <string name="settings_no_preferences">No preferences</string>
 
     <!-- Planning: date and District map -->
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
@@ -15,6 +16,7 @@ import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.scaffold.navigation.AppNavigation
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
+import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
 import org.junit.Before
 import org.junit.Rule
@@ -35,7 +37,10 @@ class AppNavigationTest {
             controller = TestNavHostController(context).apply {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
-            CompositionLocalProvider(LocalProfileRepository provides NoProfiles) {
+            CompositionLocalProvider(
+                LocalProfileRepository provides NoProfiles,
+                LocalCityServices provides (context.applicationContext as HackappApplication).cityServices,
+            ) {
                 HackappTheme { AppNavigation(controller, PaddingValues()) }
             }
         }
@@ -57,6 +62,14 @@ class AppNavigationTest {
         click(R.string.nav_passport)
         click(R.string.nav_itineraries)
         click(R.string.nav_home)
+        compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsOpensFromHomeAndReturns() {
+        compose.onNodeWithContentDescription(context.getString(R.string.settings_title)).performClick()
+        compose.onNodeWithText(context.getString(R.string.settings_sign_out)).assertIsDisplayed()
+        compose.onNodeWithContentDescription(context.getString(R.string.action_back)).performClick()
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 

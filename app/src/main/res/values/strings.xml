@@ -252,6 +252,25 @@
     </plurals>
 
     <!-- Main tabs -->
+    <string name="home_greeting_anonymous">Bonjour</string>
+    <string name="itinerary_title_in">%1$s à %2$s</string>
+    <string name="itinerary_date_pattern" translatable="false">d MMM</string>
+    <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
+    <string name="itineraries_past">Passés</string>
+    <string name="itineraries_archived">Archivés</string>
+    <string name="itineraries_archived_note">Archivé, car sa date est passée.</string>
+    <string name="itineraries_empty_body">Vos itinéraires planifiés et passés apparaîtront ici.</string>
+    <string name="itinerary_menu">Options de l’itinéraire</string>
+    <string name="itinerary_not_found">Itinéraire introuvable</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="itinerary_delete_title">Supprimer cet itinéraire?</string>
+    <string name="itinerary_delete_body">Ce brouillon sera supprimé définitivement.</string>
+    <string name="itinerary_delete_error">Impossible de supprimer cet itinéraire. Réessayez.</string>
+    <string name="past_stamps_earned">Timbres obtenus</string>
+    <string name="stop_status_confirmed">Confirmé</string>
+    <string name="stop_status_skipped">Sauté</string>
+    <string name="archived_choose_new_date">Choisir une nouvelle date</string>
+    <string name="settings_no_preferences">Aucune préférence</string>
 
     <!-- Planning: date and District map -->
 
