@@ -29,6 +29,8 @@ data class Place(
     val openingHours: OpeningHours?,
     val photoRef: String?,
     val googlePlaceId: String?,
+    /** Stable id from the City file (`city_id`). `id` is positional and changes with each ETL run. */
+    val cityId: String? = null,
     /** Filled by queries that have a reference point. */
     val distanceMeters: Double? = null,
 )

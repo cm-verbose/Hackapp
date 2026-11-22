@@ -128,6 +128,7 @@ class RoomPlaceRepository(
             openingHours = OpeningHours.parse(p.openingHours),
             photoRef = p.photoRef,
             googlePlaceId = p.googlePlaceId,
+            cityId = p.cityId,
             distanceMeters = from?.let { Geo.distanceMeters(it, loc) },
         )
     }

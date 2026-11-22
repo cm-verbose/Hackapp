@@ -16,7 +16,7 @@ enum class StampKind { Event, Meal }
  */
 @Serializable
 data class PassportStamp(
-    /** `<cityId>:event:<id>`, `<cityId>:place:<id>` or `<cityId>:chain:<name>`. */
+    /** `<cityId>:event:<name>:<lat>:<lng>`, `<cityId>:place:<city_id>` or `<cityId>:chain:<brand>`. */
     val key: String,
     val ownerUid: String,
     val cityId: String,

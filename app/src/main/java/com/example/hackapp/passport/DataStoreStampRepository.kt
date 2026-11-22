@@ -8,10 +8,12 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.hackapp.itinerary.Itinerary
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import java.io.IOException
 import java.time.DateTimeException
 
 internal object StampCodec {
@@ -37,16 +39,36 @@ internal object StampCodec {
 /** Stores one record per account and Stamp key. Awarding runs inside one DataStore edit. */
 class DataStoreStampRepository(private val store: DataStore<Preferences>) : StampRepository {
 
-    override fun observeStamps(uid: String): Flow<List<PassportStamp>> = store.data
-        .map { decodeAll(it, uid) }
+    override fun observeStamps(uid: String): Flow<List<PassportStamp>> = observePassport(uid)
+        .map { (it as? PassportState.Loaded)?.stamps.orEmpty() }
+
+    override fun observePassport(uid: String): Flow<PassportState> = store.data
+        .map<Preferences, PassportState> { PassportState.Loaded(decodeAll(it, uid)) }
+        .catch { if (it is IOException) emit(PassportState.Unavailable) else throw it }
         .distinctUntilChanged()
 
+    /**
+     * Never replaces an unreadable file: the store has no corruption handler, so a bad file makes
+     * the edit throw before anything is written. A Stamp whose key is already stored, even as an
+     * unreadable record, is not overwritten and its Stop is reported as already in the Passport.
+     */
     override suspend fun award(itinerary: Itinerary, resolver: StampIdentityResolver, awardedAtMillis: Long): StampAward {
         lateinit var award: StampAward
-        store.edit { preferences ->
-            val existing = decodeAll(preferences, itinerary.ownerUid)
-            award = awardStamps(itinerary, existing, resolver, awardedAtMillis)
-            award.created.forEach { preferences[keyFor(it.ownerUid, it.key)] = StampCodec.encode(it) }
+        try {
+            store.edit { preferences ->
+                val computed = awardStamps(itinerary, decodeAll(preferences, itinerary.ownerUid), resolver, awardedAtMillis)
+                val (clashes, fresh) = computed.created.partition { preferences.contains(keyFor(it.ownerUid, it.key)) }
+                fresh.forEach { preferences[keyFor(it.ownerUid, it.key)] = StampCodec.encode(it) }
+                val blocked = clashes.associateBy { it.stopId }
+                award = StampAward(
+                    outcomes = computed.outcomes.map { outcome ->
+                        blocked[outcome.stopId]?.let { StopStampOutcome(outcome.stopId, StopStampResult.AlreadyInPassport(it)) } ?: outcome
+                    },
+                    created = fresh,
+                )
+            }
+        } catch (e: IOException) {
+            throw PassportUnavailableException(e)
         }
         return award
     }
