@@ -67,10 +67,11 @@ fun HackappTopBar(
 
 /**
  * Figma's progress bar under the app bar: one segment per step, the first [current] filled,
- * plus the step count as text. TalkBack reads the text once for the whole control.
+ * plus the step count as text, or [label] when the page has a fuller progress line. TalkBack reads
+ * the text once for the whole control.
  */
 @Composable
-fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier) {
+fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier, label: String? = null) {
     val scheme = MaterialTheme.colorScheme
     val done = current.coerceIn(0, total)
     Column(
@@ -91,7 +92,7 @@ fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier) {
             }
         }
         Text(
-            stringResource(R.string.onboarding_step, done, total),
+            label ?: stringResource(R.string.onboarding_step, done, total),
             style = MaterialTheme.typography.labelMedium,
             color = scheme.onSurfaceVariant,
         )
@@ -123,6 +124,7 @@ fun HackappPage(
     onBack: (() -> Unit)? = null,
     step: Int? = null,
     totalSteps: Int? = null,
+    stepLabel: String? = null,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     bottomActions: (@Composable ColumnScope.() -> Unit)? = null,
@@ -135,7 +137,7 @@ fun HackappPage(
             .imePadding(),
     ) {
         HackappTopBar(title, onBack = onBack, containerColor = containerColor, contentColor = contentColor)
-        if (step != null && totalSteps != null) StepProgress(step, totalSteps)
+        if (step != null && totalSteps != null) StepProgress(step, totalSteps, label = stepLabel)
         val scrollState = rememberScrollState()
         Column(
             Modifier
