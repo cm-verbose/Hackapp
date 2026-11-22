@@ -276,7 +276,7 @@
     <string name="planning_budget_title">Budget</string>
     <string name="planning_budget_keep">Garder ce budget</string>
     <string name="planning_budget_change">Modifier pour cet itinéraire</string>
-    <string name="planning_budget_edit_title">Pour cet itinéraire seulement</string>
+    <string name="planning_budget_edit_subtitle">Par personne, pour cet itinéraire</string>
     <string name="budget_off">Désactivée</string>
     <string name="budget_not_set">Non défini</string>
 

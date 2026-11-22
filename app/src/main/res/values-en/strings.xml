@@ -268,7 +268,7 @@
     <string name="planning_budget_title">Budget</string>
     <string name="planning_budget_keep">Keep this budget</string>
     <string name="planning_budget_change">Change for this itinerary</string>
-    <string name="planning_budget_edit_title">For this itinerary only</string>
+    <string name="planning_budget_edit_subtitle">Per person, for this itinerary</string>
     <string name="budget_off">Off</string>
     <string name="budget_not_set">Not set</string>
 
