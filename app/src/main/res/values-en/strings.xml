@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Plan Montreal</string>
     <!-- English. French (values/) is the default locale. Source: Figma page "strings.xml". -->
     <string name="app_widget_description">A simple widget</string>
     <!-- Design system: strings used by the Qindong components -->
@@ -58,4 +59,6 @@
     <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
     <string name="late_warning">You may arrive late at %1$s.</string>
     <string name="late_no_replanning">No automatic replanning.</string>
+    <!-- Authentication (layout branch) -->
+    <string name="text_sign_in_with_google">Sign in with Google</string>
 </resources>

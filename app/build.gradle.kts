@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
 
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -15,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.androidtemplate"
+        applicationId = "com.example.hackapp"
         minSdk = 29
         targetSdk = 37
         versionCode = 1
@@ -55,6 +56,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.google.googleid)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -103,4 +105,12 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    /* Credentials */
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+
+    /* Firebase */
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 }
