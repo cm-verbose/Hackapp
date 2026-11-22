@@ -219,6 +219,17 @@ class StopSelectionTest {
     }
 
     @Test
+    fun `Reschedule offers a drop-in already running and hides a past showtime`() {
+        val affected = stop("event-show", at(Nov28, 18), at(Nov28, 19), sourceId = "show")
+        val show = event("show", start = at(Nov28, 18).toString(), end = at(Nov28, 19).toString(), title = "Expo", venue = "Musee")
+        val running = event("running", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), title = "Expo", venue = "Musee", type = "exhibition")
+        val past = event("past", start = at(Nov28, 11).toString(), end = at(Nov28, 12).toString(), title = "Expo", venue = "Musee")
+        val options = rescheduleOptions(night(), affected, listOf(show, running, past), context(now), legs)
+        assertEquals(listOf("running"), options.map { it.event.id })
+        assertEquals(at(Nov28, 18).toInstant(), options.single().arrivalAt.toInstant())
+    }
+
+    @Test
     fun `a drop-in ending too soon after arrival is hidden`() {
         val ending = event("soon", start = at(Nov28, 10).toString(), end = at(Nov28, 18, 59).toString())
         assertTrue(found(night(), false, ending).isEmpty())

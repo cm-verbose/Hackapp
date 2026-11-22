@@ -151,7 +151,8 @@ fun ItineraryReviewScreen(
             loadEvents = { itinerary ->
                 services.events.search(
                     EventQuery(
-                        startsAtOrAfter = itinerary.windowStart(zone).toOffsetDateTime(),
+                        // No lower bound, as in Selection: reachableShowtimes keeps only drop-ins still running.
+                        startsAtOrAfter = null,
                         startsBefore = itinerary.windowEnd(zone).toOffsetDateTime(),
                     ),
                 )
