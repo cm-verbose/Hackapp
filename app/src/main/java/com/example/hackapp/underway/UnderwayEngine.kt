@@ -307,19 +307,20 @@ object UnderwayEngine {
     }
 
     /**
-     * The next moment after [time] when something happens: an alert, a Stop start, a Leave By or
-     * the automatic end. A demo clock jumps here. Null once the day has ended.
+     * The next moment after [time] when something happens: an alert, a Leave By, an expected
+     * arrival, a Stop start or the automatic end. A demo clock jumps here. Null once the day has ended.
      */
     fun nextMomentAfter(ctx: UnderwayContext, state: UnderwayState, time: Instant): Instant? {
         if (state.phase == UnderwayPhase.Ended) return null
         val moments = mutableListOf(autoEndAt(ctx))
         scheduledAlerts(ctx, state).forEach { moments += it.at }
         pending(state).forEach { id -> ctx.stop(id)?.let { moments += it.start.toInstant() } }
-        val current = ctx.stopOf(state.currentStopId)
-        val next = nextStop(ctx, state)
-        if (state.phase == UnderwayPhase.AtStop && current != null && next != null) {
-            moments += leaveBy(current, next, ctx.estimator).toInstant()
-        }
+        val shown = view(ctx, state, time, notificationsAllowed = true)
+        val leave = shown.leaveBy?.toInstant()
+        leave?.let { moments += it }
+        // On the Leg the arrival follows the clock once Leave By has passed: it is not a fixed moment.
+        val arrivalIsFixed = state.phase == UnderwayPhase.Arrival || (leave != null && !time.isAfter(leave))
+        if (arrivalIsFixed) shown.expectedArrival?.let { moments += it.toInstant() }
         return moments.filter { it.isAfter(time) }.minOrNull()
     }
 
