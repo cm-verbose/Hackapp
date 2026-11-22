@@ -91,7 +91,7 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Merge `cmvb`'s latest `layout` refactor and `main`
 - [x] Update `screen-list.md` with the grilling decisions
 - [ ] Open a PR from `feat/ui-foundation` into `main`
-- [ ] Update the old data attribution in Figma
+- [x] Update the old data attribution in Figma
 
 ### 1. Authentication
 
@@ -107,18 +107,19 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Shared onboarding state and step navigation
 - [x] Resident or Visitor
 - [x] Profile
-- [ ] Update the Budget maquette for Lunch, Dinner, Events and Late-night snack
+- [x] Update the Budget maquette for Lunch, Dinner, Events and Late-night snack
 - [x] Budget and Audience Preference
 - [x] Interests and cuisines
 - [x] Save the Profile behind a `ProfileRepository`
 - [x] Route accounts with no Profile to onboarding
 - [ ] Confirm the onboarding flow on the phone
+- [ ] Decide how someone signed in to the wrong account leaves onboarding
 
 ### 3. Design decisions (grilling)
 
 - [x] District map behavior
 - [x] Itinerary draft and Planning flow
-- [ ] Update maquettes from these decisions
+- [x] Update maquettes from these decisions (map badges still show counts for selected boroughs, to fix in the District map pass)
 - [ ] Underway pages (grill when we get there)
 
 ### 4. Main tabs
