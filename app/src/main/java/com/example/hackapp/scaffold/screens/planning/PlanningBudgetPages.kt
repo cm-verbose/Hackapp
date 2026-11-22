@@ -24,6 +24,7 @@ import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
+import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.scaffold.screens.BudgetFields
 import com.example.hackapp.scaffold.screens.budgetBracketLabel
 import com.example.hackapp.ui.components.ErrorState
@@ -43,6 +44,7 @@ private fun planningBudgetViewModel(itineraryId: String): PlanningBudgetViewMode
         auth = LocalAuthService.current,
         itineraries = LocalItineraryRepository.current,
         profiles = LocalProfileRepository.current,
+        reconciler = LocalCityServices.current.stopFitReconciler(),
     ),
 )
 
@@ -63,6 +65,7 @@ fun PlanningBudgetChoiceScreen(
             onKept(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningBudgetChoicePage(state, onBack, viewModel::retry, viewModel::keep, onChange)
 }
 
@@ -160,6 +163,7 @@ fun PlanningBudgetEditScreen(
             onSaved(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningBudgetEditPage(
         state = state,
         onBack = onBack,

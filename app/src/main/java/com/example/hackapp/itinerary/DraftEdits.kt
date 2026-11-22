@@ -27,6 +27,9 @@ enum class StopRemovalReason {
     MealBlockRemoved,
     MealClosed,
     NoLongerReachable,
+
+    /** The Meal's price is above the new budget for its Meal Block. */
+    MealOverBudget,
 }
 
 data class RemovedStop(val stop: Stop, val reason: StopRemovalReason)

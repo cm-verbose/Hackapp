@@ -77,14 +77,38 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             onReview = { id -> controller.navigate(ItineraryReviewRoute(id)) },
         )
     }
-    planningPage<ItineraryReviewRoute>(controller) {
-        RoutePlaceholder(
-            title = stringResource(R.string.review_title),
+    planningPage<ItineraryReviewRoute>(controller) { entry ->
+        val route = entry.toRoute<ItineraryReviewRoute>()
+        ItineraryReviewScreen(
+            itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            step = 6,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(UnderwayLegRoute) },
+            // A started Itinerary has left Planning, so its steps leave the back stack.
+            onStarted = {
+                controller.navigate(UnderwayLegRoute) {
+                    popUpTo(ScreenHomeDestination)
+                    launchSingleTop = true
+                }
+            },
+            onBackToSelection = { id -> controller.returnToSelection(id) },
+            onChangeDateTime = { id -> controller.returnToDateTimeFromReview(id) },
         )
+    }
+}
+
+/** Back to the Selection entry, or Selection in place of Review when the draft was resumed here. */
+private fun NavHostController.returnToSelection(itineraryId: String) {
+    if (!popBackStack<PlanningStopSelectionRoute>(inclusive = false)) {
+        navigate(PlanningStopSelectionRoute(itineraryId)) {
+            popUpTo<ItineraryReviewRoute> { inclusive = true }
+        }
+    }
+}
+
+private fun NavHostController.returnToDateTimeFromReview(itineraryId: String) {
+    if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) {
+        navigate(PlanningDateTimeRoute(itineraryId)) {
+            popUpTo<ItineraryReviewRoute> { inclusive = true }
+        }
     }
 }
 

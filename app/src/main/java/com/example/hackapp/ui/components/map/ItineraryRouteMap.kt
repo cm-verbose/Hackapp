@@ -2,6 +2,7 @@ package com.example.hackapp.ui.components.map
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,11 +25,17 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.example.hackapp.R
 import com.example.hackapp.citypack.CityPack
 import com.example.hackapp.citypack.DistrictMapData
@@ -39,12 +46,20 @@ import com.example.hackapp.ui.theme.StopType
 import kotlin.math.roundToInt
 
 /** One Stop of the Itinerary, in visiting order (glossary: Stop = Event or Meal). */
-data class RouteStop(val order: Int, val districtId: String, val type: StopType, val location: GeoPoint? = null)
+data class RouteStop(
+    val order: Int,
+    val districtId: String,
+    val type: StopType,
+    val location: GeoPoint? = null,
+    /** The Stop's name, read by TalkBack when the marker can be tapped. */
+    val name: String? = null,
+)
 
 /**
  * Figma: ItineraryRouteMap — the City Pack DistrictMap zoomed to the Itinerary's Districts,
  * Legs drawn as a dashed line, Stops as numbered StopMarkers coloured by StopType.
  * Positions use the pack's geo projection when the Stop has coordinates, otherwise the District's label anchor.
+ * With [onStopClick] the markers can be tapped, and the one at [highlightedOrder] is enlarged and outlined.
  */
 @Composable
 fun ItineraryRouteMap(
@@ -52,6 +67,8 @@ fun ItineraryRouteMap(
     stops: List<RouteStop>,
     modifier: Modifier = Modifier,
     cityPack: CityPack = LocalCityPack.current,
+    highlightedOrder: Int? = null,
+    onStopClick: ((RouteStop) -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val stopColors = HackappTheme.stopTypeColors
@@ -90,22 +107,48 @@ fun ItineraryRouteMap(
             }
         },
     ) { t, _ ->
-        val half = with(LocalDensity.current) { 12.dp.toPx() }
+        val half = with(LocalDensity.current) { MarkerTouchSize.toPx() / 2 }
         points.forEach { (stop, p) ->
             val c = stopColors[stop.type]
             val s = t.toScreen(p)
+            val highlighted = stop.order == highlightedOrder
+            val markerLabel = stringResource(R.string.strip_stop, stop.order.toString(), stop.name.orEmpty())
+            val interaction = if (onStopClick == null) {
+                Modifier.clearAndSetSemantics {}
+            } else {
+                Modifier
+                    .clearAndSetSemantics {
+                        contentDescription = markerLabel
+                        role = Role.Button
+                        selected = highlighted
+                        onClick {
+                            onStopClick(stop)
+                            true
+                        }
+                    }
+                    .clickable { onStopClick(stop) }
+            }
             Box(
                 Modifier
-                    .clearAndSetSemantics {}
-                    .size(24.dp)
+                    .zIndex(if (highlighted) 1f else 0f)
+                    .size(MarkerTouchSize)
                     .offset { IntOffset((s.x - half).roundToInt(), (s.y - half).roundToInt()) }
-                    .background(c, CircleShape)
-                    .border(2.dp, cs.surface, CircleShape),
+                    .then(interaction),
                 contentAlignment = Alignment.Center,
-            ) { Text("${stop.order}", style = MaterialTheme.typography.labelMedium, color = stopColors.onStopType) }
+            ) {
+                Box(
+                    Modifier
+                        .size(if (highlighted) 32.dp else 24.dp)
+                        .background(c, CircleShape)
+                        .border(2.dp, if (highlighted) cs.onSurface else cs.surface, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) { Text("${stop.order}", style = MaterialTheme.typography.labelMedium, color = stopColors.onStopType) }
+            }
         }
     }
 }
+
+private val MarkerTouchSize = 48.dp
 
 @Preview(name = "ItineraryRouteMap", showBackground = true, backgroundColor = 0xFFF0F0F1, widthDp = 380)
 @Composable

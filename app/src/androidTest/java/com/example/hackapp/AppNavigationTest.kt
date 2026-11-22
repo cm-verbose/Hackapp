@@ -3,6 +3,7 @@ package com.example.hackapp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
@@ -35,6 +36,7 @@ import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.profile.VisitorType
 import com.example.hackapp.scaffold.navigation.AppNavigation
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
+import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
@@ -100,9 +102,11 @@ class AppNavigationTest {
         // One District, so the page offers only Finish, enabled by the seeded Event Stop.
         awaitEnabled(R.string.action_finish)
         click(R.string.action_finish)
-        awaitContinueEnabled()
+        awaitText(R.string.review_start)
         assertEquals(PlanningStep.Review, savedDraft().step)
-        repeat(PAGES_AFTER_SELECTION) { click(R.string.action_continue) }
+        compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
+        compose.waitForIdle()
+        repeat(UNDERWAY_PAGES) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
@@ -194,8 +198,7 @@ class AppNavigationTest {
     }
 
     private companion object {
-        /** Review and the four Underway pages. */
-        const val PAGES_AFTER_SELECTION = 5
+        const val UNDERWAY_PAGES = 4
         const val TEST_DISTRICT = "ville-marie"
         const val LOAD_TIMEOUT_MILLIS = 10_000L
         const val TEST_UID = "test-user"
