@@ -37,7 +37,7 @@ Living checklist for the current implementation step. Update it in the same chan
 | Event data | Bundled `events.json` behind `EventRepository` |
 | City services | Manual `CityServices` container built from the City Pack |
 | Past Itinerary | Tapping one opens a read-only summary with route map, Stops and earned Stamps |
-| "Other" events | Show them in their own tab or group for now. If their label cannot be made clearer than "Other", hide them for the demo |
+| "Other" events | Hidden for the demo, because no clearer label exists |
 | District map technology | Keep the custom Canvas map |
 | District map layout | Full-height map, selected boroughs as chips on top, details in a bottom sheet |
 | District map gestures | Pinch zoom 1x to 6x, two-finger rotation, one-finger drag, double-tap zoom, bounded edges, reset button (also resets rotation) |
@@ -63,7 +63,22 @@ Living checklist for the current implementation step. Update it in the same chan
 | Advancing boroughs | **Next borough** moves on. **Finish here** skips remaining boroughs and goes to Review, and needs at least one Event. The last borough shows only **Finish**. Back keeps Stops. A borough left with no Stops is dropped |
 | Replacing a borough | The maximum-reached message lists the 3 selected boroughs, and the new one takes the replaced borough's position |
 | Late bite | 45 minutes total, including its shorter margins |
-| Removing a Stop | Return to selection for that gap, keep later reachable Stops, and warn before removing others |
+| Removing a Stop | Return to selection for that gap and keep later reachable Stops. If a later Stop can no longer be reached by transit in time, warn the user and offer to reschedule or reorganize their day instead of removing it silently |
+| Planning progress | Every Planning page uses the 6-segment bar with "Étape N sur 6" |
+| Late-night Meal name | "Bouchée tardive" everywhere |
+| Meal time field | Opens the same hour and minute rectangles as Date and time |
+| Meal with no bracket | Falls back to the Profile budget for that Meal |
+| Running total | Chosen Event prices plus the top of each chosen restaurant's range, compared with the Event budget plus selected Meal budgets |
+| Time gaps | A gap ends when the next Meal Block starts, including its margins |
+| Finish here | Disabled until at least one Event is added |
+| Event with no reported price | Show "Prix inconnu" and keep the optional price field |
+| Meal choice with no Meal that fits | Offer "Modifier l'horaire", which returns to Date and time |
+| App writing | Concise, clear and not redundant in French and English. Text that the UI or interaction already makes clear appears only as a last resort |
+| Onboarding start | Starts at Profile with 3 steps until Resident ships. The Visitor or Resident page stays in the code |
+| Age notice | "18 ans et plus" on Register only |
+| Home suggestions | Not tappable until Event selection can preselect the Event |
+| End of day | Neutral title "Itinéraire terminé". A repeat visit shows "Déjà dans votre passeport" |
+| French and English times | French uses 18:30 in controls and 18 h 30 in sentences. English stays 24-hour |
 | One Underway Itinerary | Starting a new Itinerary warns that the current one will end. The old one moves to Past, keeps Stamps for confirmed Stops, and marks remaining Stops as skipped |
 | Start date | **Start** works only on the Itinerary's date, except in demo mode |
 | Resuming drafts | Tapping a draft reopens its last step with all choices kept |
@@ -146,6 +161,7 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Date and time
 - [x] District map with zoom, drag and selection
 - [x] Review pass 1: system Back to Home, sliding transitions, time wheels, optional Budget step, map rotation, borough names
+- [x] App-wide French and English writing pass, UX review and accessibility fixes
 - [ ] Confirm Date and time, Budget and District map gestures on the phone
 - [ ] Meal choice
 - [ ] Event and Meal selection
