@@ -176,8 +176,8 @@
     <string name="meal_none_reserved">No meal blocks reserved.</string>
     <string name="meal_none_fit">No meal fits this time slot. Extend it, or choose “I’ll handle it”.</string>
     <string name="meal_change_time">Change time</string>
-    <string name="meal_error_outside_window">This meal doesn’t fit the time slot.</string>
-    <string name="meal_error_overlaps">This meal overlaps another meal.</string>
+    <string name="meal_error_outside_window">Outside the itinerary. Change the time.</string>
+    <string name="meal_error_overlaps">Overlaps another meal. Change the time.</string>
     <string name="meal_error_summary">Fix a meal time.</string>
     <string name="meal_none_selected">Choose a meal or “I’ll handle it”.</string>
     <string name="meal_start_description">%1$s, start</string>
