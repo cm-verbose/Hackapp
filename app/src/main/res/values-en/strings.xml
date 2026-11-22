@@ -193,6 +193,25 @@
     <string name="end_itinerary_warning">End itinerary? Remaining stops will be marked as skipped.</string>
     <string name="handoff_unavailable">Couldn’t open %1$s. Try another option.</string>
     <string name="end_of_day_done">Back to Home</string>
+    <string name="underway_skip_title">Skip %1$s?</string>
+    <string name="underway_skip_confirm">Skip</string>
+    <string name="underway_end_early_title">End itinerary?</string>
+    <string name="underway_end_early_body">Remaining stops will be marked as skipped.</string>
+    <string name="end_of_day_status_visited">Visited</string>
+    <string name="end_of_day_too_brief">Too brief for a stamp</string>
+    <string name="end_of_day_stamp_new">New stamp</string>
+    <string name="arrival_change_transport">Change transport</string>
+    <string name="underway_notifications_off">Notifications are off. You will miss your reminders.</string>
+    <string name="underway_notifications_open_settings">Open settings</string>
+    <string name="underway_banner_dismiss">Dismiss</string>
+    <string name="underway_exact_alarm_rationale">Allow exact alarms so reminders arrive on time.</string>
+    <string name="underway_exact_alarm_allow">Allow</string>
+    <string name="underway_exact_alarm_later">Not now</string>
+    <string name="notification_channel_arrival">Arrival reminders</string>
+    <string name="notification_channel_leave">Leave by alerts</string>
+    <string name="notification_channel_late">Possible delays</string>
+    <string name="notification_late_title">You may be late</string>
+    <string name="notification_late_body">%1$s starts at %2$s</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passport</string>

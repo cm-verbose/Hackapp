@@ -198,6 +198,25 @@
     <string name="end_itinerary_warning">Terminer l’itinéraire? Les arrêts restants seront marqués comme sautés.</string>
     <string name="handoff_unavailable">Impossible d’ouvrir %1$s. Essayez une autre option.</string>
     <string name="end_of_day_done">Retour à l’accueil</string>
+    <string name="underway_skip_title">Sauter %1$s?</string>
+    <string name="underway_skip_confirm">Sauter</string>
+    <string name="underway_end_early_title">Terminer l’itinéraire?</string>
+    <string name="underway_end_early_body">Les arrêts restants seront marqués comme sautés.</string>
+    <string name="end_of_day_status_visited">Visité</string>
+    <string name="end_of_day_too_brief">Trop bref pour un timbre</string>
+    <string name="end_of_day_stamp_new">Nouveau timbre</string>
+    <string name="arrival_change_transport">Changer de transport</string>
+    <string name="underway_notifications_off">Notifications désactivées. Vous manquerez vos rappels.</string>
+    <string name="underway_notifications_open_settings">Ouvrir les paramètres</string>
+    <string name="underway_banner_dismiss">Fermer</string>
+    <string name="underway_exact_alarm_rationale">Autorisez les alarmes précises pour recevoir vos rappels à l’heure.</string>
+    <string name="underway_exact_alarm_allow">Autoriser</string>
+    <string name="underway_exact_alarm_later">Pas maintenant</string>
+    <string name="notification_channel_arrival">Rappels d’arrivée</string>
+    <string name="notification_channel_leave">Heures de départ</string>
+    <string name="notification_channel_late">Retards possibles</string>
+    <string name="notification_late_title">Vous risquez d’être en retard</string>
+    <string name="notification_late_body">%1$s commence à %2$s</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passeport</string>
