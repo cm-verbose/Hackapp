@@ -104,12 +104,26 @@ fun StampDisc(
     }
 }
 
-/** Stamp initials from a place name: first letters of the first two words ("Jazz sur le toit" -> "JS"). */
-fun stampInitials(name: String): String =
-    name.split(' ', '-', '’', '\'')
-        .filter { it.isNotBlank() && it.first().isLetterOrDigit() }
-        .take(2)
-        .joinToString("") { it.first().uppercase() }
+/**
+ * Stamp initials from a name: the first letters of its first two words ("Jazz sur le toit" -> "JS").
+ * An apostrophe separates words only after a one-letter elision ("L'Avenue" -> "LA"), so a possessive
+ * stays one word ("Schwartz's" -> "S"). Leading punctuation is ignored, and the result is never blank.
+ */
+fun stampInitials(name: String): String {
+    val words = name.split(Regex("[\\s\\-–—]+"))
+        .map { word -> word.dropWhile { !it.isLetterOrDigit() } }
+        .flatMap { word ->
+            if (word.length > 2 && word[0].isLetter() && word[1] in "'’") {
+                listOf(word.substring(0, 1), word.substring(2).dropWhile { !it.isLetterOrDigit() })
+            } else {
+                listOf(word)
+            }
+        }
+        .filter { it.isNotEmpty() }
+    if (words.isNotEmpty()) return words.take(2).joinToString("") { it.first().uppercase() }
+    val text = name.trim()
+    return if (text.isEmpty()) "?" else text.substring(0, text.offsetByCodePoints(0, 1))
+}
 
 private fun Modifier.dashedBorder(width: Dp, color: Color, shape: Shape): Modifier = drawWithCache {
     val stroke = width.toPx()
