@@ -72,13 +72,6 @@ dependencies {
     /* Data store */
     implementation(libs.androidx.datastore.preferences)
 
-    /* Glance: Widget creation */
-    implementation(libs.androidx.glance)
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
-    implementation(libs.androidx.glance.material)
-    implementation(libs.androidx.glance.wear.tiles)
-
     /* Jetpack Navigation */
     implementation(libs.androidx.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)

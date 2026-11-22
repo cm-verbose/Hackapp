@@ -59,7 +59,7 @@ fun HackappTextField(
         trailingIcon = if (value.isNotEmpty() && enabled) {
             {
                 IconButton(onClick = { onValueChange("") }) {
-                    Icon(Icons.Outlined.Cancel, contentDescription = stringResource(R.string.action_clear))
+                    Icon(Icons.Outlined.Cancel, contentDescription = stringResource(R.string.action_clear_field, label))
                 }
             }
         } else {
@@ -91,7 +91,7 @@ fun HackappPickerField(
         Box(
             Modifier
                 .matchParentSize()
-                .clickable(enabled = enabled, role = Role.DropdownList, onClickLabel = label, onClick = onClick),
+                .clickable(enabled = enabled, role = Role.DropdownList, onClick = onClick),
         )
     }
 }

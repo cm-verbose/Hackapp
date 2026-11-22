@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Plan Montréal</string>
-    <string name="app_widget_description">Un widget simple</string>
     <!-- Design system (Figma page "strings.xml"): strings used by the Qindong components -->
     <string name="stop_type_music">Musique</string>
     <string name="stop_type_festival">Festival</string>
@@ -39,8 +38,7 @@
         <item quantity="other">%d arrondissements</item>
     </plurals>
     <!-- Qindong 2 components -->
-    <string name="data_attribution">Données : Has Things (hasthings.com), Ville de Montréal, © contributeurs OpenStreetMap</string>
-    <string name="map_district_boundaries">Carte · limites des arrondissements</string>
+    <string name="data_attribution">Données : Has Things (hasthings.com), Ville de Montréal, © les contributeurs d’OpenStreetMap</string>
     <string name="district_add_as_position">Ajouter en %1$de</string>
     <string name="district_choose_another">Choisir un autre</string>
     <string name="meal_plan_yes">Oui, planifiez mes repas</string>
@@ -55,8 +53,7 @@
     <string name="action_go_anyway">Y aller quand même</string>
     <string name="at_stop_leave_by">Partez avant</string>
     <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
-    <string name="late_warning">Vous risquez d’arriver en retard à %1$s.</string>
-    <string name="late_no_replanning">Pas de replanification automatique.</string>
+    <string name="late_warning">Retard possible : %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
     <string name="password_reset_body">Entrez votre courriel et nous vous enverrons un lien pour choisir un nouveau mot de passe.</string>
     <string name="password_reset_sent">Si un compte existe pour ce courriel, le lien vient d’être envoyé.</string>
@@ -71,7 +68,7 @@
     <string name="auth_error_unknown">Une erreur est survenue. Réessayez.</string>
     <!-- First Eric Group components -->
     <string name="action_remove">Retirer</string>
-    <string name="action_arrived">Je suis arrivé·e</string>
+    <string name="action_arrived">Je suis sur place</string>
     <string name="action_leaving">Je pars</string>
     <string name="notification_preview_header">%1$s · maintenant</string>
     <string name="notification_arrival_title">Êtes-vous arrivé·e?</string>
@@ -81,24 +78,22 @@
 
     <!-- Shared controls and states (not on the Figma strings page) -->
     <string name="action_back">Retour</string>
-    <string name="action_clear">Effacer</string>
+    <string name="action_clear_field">Effacer le champ %1$s</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_confirm">Confirmer</string>
     <string name="action_retry">Réessayer</string>
     <string name="state_loading">Chargement…</string>
-    <string name="state_error_title">Une erreur est survenue</string>
-    <string name="state_empty_title">Rien à afficher pour le moment</string>
+    <string name="state_error_title">Chargement impossible</string>
+    <string name="state_empty_title">Rien à afficher</string>
 
     <!-- Common (Figma frame 55:3) -->
     <string name="action_continue">Continuer</string>
     <string name="action_finish">Terminer</string>
     <string name="action_skip">Passer</string>
-    <string name="action_add">+ Ajouter</string>
-    <string name="action_open">Ouvrir</string>
     <string name="label_or">ou</string>
     <string name="label_coming_soon">Bientôt disponible</string>
     <string name="price_unknown">prix inconnu</string>
-    <string name="price_free">Gratuit</string>
+    <string name="price_free">gratuit</string>
     <string name="end_time_unpublished">fin non publiée</string>
     <string name="nav_home">Accueil</string>
     <string name="nav_itineraries">Itinéraires</string>
@@ -244,8 +239,8 @@
         <item quantity="other">%d arrêts sautés</item>
     </plurals>
     <plurals name="new_stamps_in_passport">
-        <item quantity="one">%d nouveau timbre dans votre passeport.</item>
-        <item quantity="other">%d nouveaux timbres dans votre passeport.</item>
+        <item quantity="one">%d nouveau timbre</item>
+        <item quantity="other">%d nouveaux timbres</item>
     </plurals>
 
     <!-- Main tabs -->

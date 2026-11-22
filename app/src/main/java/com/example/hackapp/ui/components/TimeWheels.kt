@@ -121,7 +121,7 @@ private fun TimeUnitWheel(value: Int, count: Int, label: String, onValueChange: 
                     Box(
                         Modifier
                             .fillMaxSize()
-                            .clickable(role = Role.Button, onClickLabel = label) { editing = true },
+                            .clickable(role = Role.Button) { editing = true },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -133,7 +133,6 @@ private fun TimeUnitWheel(value: Int, count: Int, label: String, onValueChange: 
                 }
             }
         }
-        Text(label, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
     }
 }
 

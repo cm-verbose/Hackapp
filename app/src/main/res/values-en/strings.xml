@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Plan Montreal</string>
     <!-- English. French (values/) is the default locale. Source: Figma page "strings.xml". -->
-    <string name="app_widget_description">A simple widget</string>
     <!-- Design system: strings used by the Qindong components -->
     <string name="stop_type_music">Music</string>
     <string name="stop_type_festival">Festival</string>
@@ -42,7 +41,6 @@
     </plurals>
     <!-- Qindong 2 components -->
     <string name="data_attribution">Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors</string>
-    <string name="map_district_boundaries">Map · borough boundaries</string>
     <string name="district_add_as_position">Add as #%1$d</string>
     <string name="district_choose_another">Choose another</string>
     <string name="meal_plan_yes">Yes, plan my meals</string>
@@ -57,8 +55,7 @@
     <string name="action_go_anyway">Go anyway</string>
     <string name="at_stop_leave_by">Leave by</string>
     <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
-    <string name="late_warning">You may arrive late at %1$s.</string>
-    <string name="late_no_replanning">No automatic replanning.</string>
+    <string name="late_warning">You may be late for %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
     <string name="password_reset_body">Enter your email and we’ll send you a link to choose a new password.</string>
     <string name="password_reset_sent">If an account exists for this email, the link has been sent.</string>
@@ -73,7 +70,7 @@
     <string name="auth_error_unknown">Something went wrong. Try again.</string>
     <!-- First Eric Group components -->
     <string name="action_remove">Remove</string>
-    <string name="action_arrived">I’ve arrived</string>
+    <string name="action_arrived">I’m here</string>
     <string name="action_leaving">I’m leaving</string>
     <string name="notification_preview_header">%1$s · now</string>
     <string name="notification_arrival_title">Have you arrived?</string>
@@ -83,24 +80,22 @@
 
     <!-- Shared controls and states (not on the Figma strings page) -->
     <string name="action_back">Back</string>
-    <string name="action_clear">Clear</string>
+    <string name="action_clear_field">Clear %1$s field</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_retry">Try again</string>
     <string name="state_loading">Loading…</string>
-    <string name="state_error_title">Something went wrong</string>
-    <string name="state_empty_title">Nothing to show yet</string>
+    <string name="state_error_title">Couldn’t load</string>
+    <string name="state_empty_title">Nothing to show</string>
 
     <!-- Common (Figma frame 55:7) -->
     <string name="action_continue">Continue</string>
     <string name="action_finish">Finish</string>
     <string name="action_skip">Skip</string>
-    <string name="action_add">+ Add</string>
-    <string name="action_open">Open</string>
     <string name="label_or">or</string>
     <string name="label_coming_soon">Coming soon</string>
     <string name="price_unknown">price unknown</string>
-    <string name="price_free">Free</string>
+    <string name="price_free">free</string>
     <string name="end_time_unpublished">end time not published</string>
     <string name="nav_home">Home</string>
     <string name="nav_itineraries">Itineraries</string>
@@ -236,8 +231,8 @@
         <item quantity="other">%d stops skipped</item>
     </plurals>
     <plurals name="new_stamps_in_passport">
-        <item quantity="one">%d new stamp in your passport.</item>
-        <item quantity="other">%d new stamps in your passport.</item>
+        <item quantity="one">%d new stamp</item>
+        <item quantity="other">%d new stamps</item>
     </plurals>
 
     <!-- Main tabs -->

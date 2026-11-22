@@ -78,7 +78,7 @@ val MontrealCityPack = CityPack(
     ),
     rideHail = RideHailConfig(displayName = "Uber", packageName = "com.ubercab"),
     attribution = LocalizedText(
-        fr = "Données : Has Things (hasthings.com), Ville de Montréal, © contributeurs OpenStreetMap",
+        fr = "Données\u00A0: Has Things (hasthings.com), Ville de Montréal, © les contributeurs d’OpenStreetMap",
         en = "Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors",
     ),
     labels = mapOf(
