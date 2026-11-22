@@ -68,6 +68,18 @@ class PassportUiTest {
     }
 
     @Test
+    fun `a 360x640 phone keeps the field on screen with large text`() {
+        assertEquals(false, passportNeedsScroll(424f, 1f, hasCitySelector = false))
+        assertEquals(false, passportNeedsScroll(424f, 1.3f, hasCitySelector = false))
+    }
+
+    @Test
+    fun `a very short page scrolls`() {
+        assertEquals(true, passportNeedsScroll(280f, 1f, hasCitySelector = false))
+        assertEquals(true, passportNeedsScroll(400f, 1.3f, hasCitySelector = true))
+    }
+
+    @Test
     fun `similar keys cover all six shapes in a good mix`() {
         val counts = (1..600).map { stampShapeFor("mtl:place:$it") }.groupingBy { it }.eachCount()
         assertEquals(StampShape.entries.toSet(), counts.keys)

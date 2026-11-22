@@ -66,6 +66,16 @@ internal fun stampStopType(kind: StampKind, category: String?): StopType = when 
 }
 
 /**
+ * Whether the page is too short to keep a usable field on screen and must scroll. Counts the page
+ * padding and gaps, the optional city selector, the hero at this text size and a 200 dp field.
+ */
+internal fun passportNeedsScroll(heightDp: Float, fontScale: Float, hasCitySelector: Boolean): Boolean {
+    val selector = if (hasCitySelector) 64f else 0f
+    val hero = 52f + 72f * fontScale
+    return heightDp < 16f + selector + hero + 16f + 200f + 16f
+}
+
+/**
  * How much to enlarge initials inside a Stamp drawn at [itemScale], so they never look smaller
  * than label large (14 sp, against title medium's 16 sp) and still follow the system text size.
  */

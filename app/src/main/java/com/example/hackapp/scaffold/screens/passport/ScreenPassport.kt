@@ -74,7 +74,6 @@ fun ScreenPassport(controller: NavHostController, outerPaddingValues: PaddingVal
             content = content,
             cities = cities,
             selectedCity = selectedCity,
-            cityName = cityName,
             gravityLocked = gravityLocked,
             onCityChange = { selectedCity = it },
             onGravityLockedChange = { gravityLocked = it },

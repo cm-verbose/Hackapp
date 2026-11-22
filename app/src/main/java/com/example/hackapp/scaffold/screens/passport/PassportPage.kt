@@ -83,8 +83,7 @@ private val GravityButtonInset = 12.dp
 /** The solid corner under the gravity button, so a Stamp can never rest beneath it. */
 private val GravityKeepOut = GravityButtonSize + GravityButtonInset
 
-/** Below this height the page scrolls and the field keeps [ScrollingFieldHeight]. */
-private val MinFullPageHeight = 480.dp
+/** The field's height when the page is too short and scrolls. */
 private val ScrollingFieldHeight = 240.dp
 
 private val DetailsShapeSize = 96.dp
@@ -96,7 +95,6 @@ fun PassportPage(
     content: PassportContent,
     cities: List<ChoiceOption<String>>,
     selectedCity: String,
-    cityName: String,
     gravityLocked: Boolean,
     onCityChange: (String) -> Unit,
     onGravityLockedChange: (Boolean) -> Unit,
@@ -108,7 +106,7 @@ fun PassportPage(
     val stamps = (content as? PassportContent.Ready)?.stamps.orEmpty()
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
-        val scrolls = maxHeight < MinFullPageHeight
+        val scrolls = passportNeedsScroll(maxHeight.value, LocalDensity.current.fontScale, cities.size > 1)
         Column(
             Modifier
                 .fillMaxSize()
@@ -116,12 +114,14 @@ fun PassportPage(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            HackappSegmentedButton(
-                options = cities,
-                selected = selectedCity,
-                onSelectedChange = onCityChange,
-                maxLines = 1,
-            )
+            if (cities.size > 1) {
+                HackappSegmentedButton(
+                    options = cities,
+                    selected = selectedCity,
+                    onSelectedChange = onCityChange,
+                    maxLines = 1,
+                )
+            }
             val rest = if (scrolls) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().weight(1f)
             when (content) {
                 PassportContent.Loading -> LoadingState(rest)
@@ -131,11 +131,7 @@ fun PassportPage(
                 } else {
                     HeroHeader(
                         title = pluralStringResource(R.plurals.stamps_count, content.stamps.size, content.stamps.size),
-                        subtitle = stringResource(
-                            R.string.leg_time_district,
-                            pluralStringResource(R.plurals.districts_count, content.districtCount, content.districtCount),
-                            cityName,
-                        ),
+                        subtitle = pluralStringResource(R.plurals.districts_count, content.districtCount, content.districtCount),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     StampField(
@@ -438,7 +434,6 @@ private fun PassportPreview(content: PassportContent, darkTheme: Boolean = false
         content = content,
         cities = listOf(ChoiceOption("mtl", "Montréal")),
         selectedCity = "mtl",
-        cityName = "Montréal",
         gravityLocked = true,
         onCityChange = {},
         onGravityLockedChange = {},
