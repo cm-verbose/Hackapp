@@ -161,4 +161,30 @@ class StopSelectionTest {
         val window = night().planningWindow(Toronto)
         assertEquals(mapOf(HERE to 1), countEligibleByDistrict(listOf(allDay), window, context(now)))
     }
+
+    @Test
+    fun `the budget lists each Meal Stop with its own amount and limit`() {
+        val lunch = MealBlock("l", MealKind.Lunch, LocalTime.of(18, 0), com.example.hackapp.profile.BudgetBracket.Under20)
+        val late = MealBlock("s", MealKind.LateBite, LocalTime.of(22, 0), null)
+        val stops = listOf(
+            stop("m1", at(Nov28, 18), at(Nov28, 19, 30), kind = StopKind.Meal, sourceId = "7", mealBlockId = "l"),
+            stop("m2", at(Nov28, 22), at(Nov28, 22, 45), kind = StopKind.Meal, sourceId = "8", mealBlockId = "s"),
+            stop("m3", at(Nov28, 23), at(Nov28, 23, 30), kind = StopKind.Meal, sourceId = "9"),
+        )
+        val prices = BudgetPrices(mealPrices = mapOf(7L to com.example.hackapp.data.model.PriceRange(10, 30, false), 8L to null, 9L to com.example.hackapp.data.model.PriceRange(10, 15, false)))
+        val summary = budgetSummary(night(blocks = listOf(lunch, late), stops = stops), context(now), prices)
+        assertEquals(
+            listOf(
+                MealAmount("m1", "l", MealKind.Lunch, 30.0, 20),
+                MealAmount("m2", "s", MealKind.LateBite, null, null),
+                MealAmount("m3", null, null, 15.0, null),
+            ),
+            summary.meals,
+        )
+        // A Meal with no budget still adds its price but not a limit.
+        assertEquals(45.0, summary.mealsCad, 0.0)
+        assertEquals(20, summary.mealBudgetCad)
+        assertEquals(1, summary.unknownPriceCount)
+        assertTrue(budgetSummary(night(), context(now), BudgetPrices()).meals.isEmpty())
+    }
 }

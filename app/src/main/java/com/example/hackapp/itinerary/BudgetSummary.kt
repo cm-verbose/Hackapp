@@ -11,6 +11,15 @@ data class BudgetPrices(
     val mealPrices: Map<Long, PriceRange?> = emptyMap(),
 )
 
+/** One Meal Stop in the running total. [priceCad] is null when unknown. [budgetCad] is null with no bracket or no top. */
+data class MealAmount(
+    val stopId: String,
+    val mealBlockId: String?,
+    val kind: MealKind?,
+    val priceCad: Double?,
+    val budgetCad: Int?,
+)
+
 data class BudgetSummary(
     /** Null when the Event budget has no upper limit. */
     val eventBudgetCad: Int?,
@@ -24,6 +33,8 @@ data class BudgetSummary(
     val unknownPriceCount: Int,
     /** Warns only. Nothing in Planning is blocked by this flag. */
     val isOverBudget: Boolean,
+    /** Each active Meal Stop with its own amount, in visit order. Empty by default for older callers. */
+    val meals: List<MealAmount> = emptyList(),
 ) {
     val runningTotalCad: Double get() = eventsCad + mealsCad
     val hasUnknownPrices: Boolean get() = unknownPriceCount > 0
@@ -40,6 +51,7 @@ fun budgetSummary(itinerary: Itinerary, context: PlanningContext, prices: Budget
     var eventsCad = 0.0
     var mealsCad = 0.0
     var unknown = 0
+    val mealAmounts = mutableListOf<MealAmount>()
     itinerary.activeStops.forEach { stop ->
         val cost = when (stop.kind) {
             StopKind.Event -> {
@@ -47,7 +59,11 @@ fun budgetSummary(itinerary: Itinerary, context: PlanningContext, prices: Budget
                 val median = event?.let { prices.medianPrices[it.showtimeKey()] }
                 knownEventPrice(event, stop.ticketPriceCad, median)
             }
-            StopKind.Meal -> stop.sourceId.toLongOrNull()?.let { prices.mealPrices[it]?.max?.toDouble() }
+            StopKind.Meal -> stop.sourceId.toLongOrNull()?.let { prices.mealPrices[it]?.max?.toDouble() }.also { price ->
+                val block = itinerary.mealBlocks.firstOrNull { it.id == stop.mealBlockId }
+                val bracket = block?.let { it.budget ?: itinerary.mealBudget(it.kind, context) }
+                mealAmounts += MealAmount(stop.id, block?.id, block?.kind, price, bracket?.maxPrice)
+            }
         }
         when {
             cost == null -> unknown++
@@ -63,5 +79,6 @@ fun budgetSummary(itinerary: Itinerary, context: PlanningContext, prices: Budget
         mealsCad = mealsCad,
         unknownPriceCount = unknown,
         isOverBudget = total != null && eventsCad + mealsCad > total,
+        meals = mealAmounts,
     )
 }

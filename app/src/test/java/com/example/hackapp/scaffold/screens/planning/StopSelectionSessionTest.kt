@@ -390,6 +390,19 @@ class StopSelectionSessionTest {
     }
 
     @Test
+    fun `the Meal prompt is reached when only drop-in cards remain`() = runBlocking {
+        val allDay = event("all-day", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), type = "exhibition")
+        val onlyDropIn = session(night(blocks = listOf(dinner)), listOf(allDay))
+        onlyDropIn.load()
+        assertEquals(listOf("all-day"), ids(onlyDropIn.state.value))
+        assertTrue(onlyDropIn.state.value.mealPrompt!!.reached)
+        val mixed = StopSelectionSession("it-1", { UID }, repo, NoProfile, FakeEvents(listOf(allDay, early)), FakePlaces(emptyList()),
+            InMemoryTicketPriceRepository(), fixedLegs(), Toronto, { instant(Nov28, 8).toEpochMilli() })
+        mixed.load()
+        assertFalse(mixed.state.value.mealPrompt!!.reached)
+    }
+
+    @Test
     fun `an unreadable draft is a load error`() = runBlocking {
         val s = session(night(), saved = false)
         s.load()

@@ -61,7 +61,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-/** The next Meal Block that still needs a Meal or a skip. [reached]: no Event is left before it. */
+/** The next Meal Block that still needs a Meal or a skip. [reached]: no fixed-time Event is left before it; drop-in cards are ignored. */
 data class MealPrompt(
     val blockId: String,
     val kind: MealKind,
@@ -107,6 +107,10 @@ data class PlanningStopSelectionUiState(
     /** Set by Back at the first District. Navigate to the previous step, then call `onNavigated()`. */
     val leaveId: String? = null,
 )
+
+/** True when no fixed-time card is left: nothing, or only drop-in cards that stay available across the block. */
+fun List<EventHourGroup>.onlyDropIns(): Boolean =
+    all { hour -> hour.types.all { type -> type.cards.all { it.isDropIn } } }
 
 /** "Other" Events are hidden for the demo. Empty groups are dropped. */
 fun hideOtherEvents(groups: List<EventHourGroup>): List<EventHourGroup> = groups
@@ -395,7 +399,7 @@ class StopSelectionSession(
                 groups = groups,
                 mealPrompt = pending?.let { block ->
                     val span = block.interval(itinerary, zone)
-                    MealPrompt(block.id, block.kind, span.start.atZone(zone), span.end.atZone(zone), groups.isEmpty())
+                    MealPrompt(block.id, block.kind, span.start.atZone(zone), span.end.atZone(zone), groups.onlyDropIns())
                 },
                 stops = itinerary.activeStops,
                 budget = engine.budget(itinerary, context, prices),

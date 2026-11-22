@@ -35,7 +35,7 @@ Owner: Domain Engineer, team Selection. Consumer: Feature Engineer. File:
 | Field | Meaning |
 |---|---|
 | `blockId`, `kind`, `start`, `end` | The reserved Meal Block (`end` = start + block length). |
-| `reached` | No Event remains before the block in this gap. Make **Choose a Meal** the main action. When false, show the prompt below the Events as a secondary row. |
+| `reached` | No fixed-time Event remains before the block. Drop-in cards are ignored, so when only drop-ins are left the Meal Block is the main action and the drop-ins stay listed. Make **Choose a Meal** the main action. When false, show the prompt below the Events as a secondary row. |
 
 Both actions are always available: `openMealPicker()` and `skipMeal()`.
 
@@ -82,7 +82,7 @@ Both actions are always available: `openMealPicker()` and `skipMeal()`.
 
 **Advancing.** `nextDistrict()` works at any time, even with a Meal unresolved (the prompt then follows to the next District). A District left with no active Stop is removed from `Itinerary.districtIds`, when leaving it forward, back to the previous District, or at Finish (unvisited Districts then go too). Back from the first District to the previous step never drops it. The last District shows only **Finish**. Both finish buttons need `canFinish` (an Event Stop exists).
 
-**Running total.** `budget` is `PlanningEngine.budget`: chosen Event prices (own report, else median, else published, free = 0) plus the top of each chosen restaurant's range, compared with `totalBudgetCad` (Event budget plus selected Meal budgets). A Meal with no budget adds its price and nothing to the limit. A range with no top ("$100+"), and any Stop with no known price, is not added and counts in `unknownPriceCount`; show "+ prix inconnu" when `hasUnknownPrices`. `isOverBudget` warns only and never blocks.
+**Running total.** `budget.meals` lists every active Meal Stop as `MealAmount(stopId, mealBlockId, kind, priceCad, budgetCad)` for a per-Meal breakdown: `priceCad` is the top of its range (null when unknown or "$100+"), `budgetCad` is its block bracket limit (null with no bracket or no top). The field defaults to empty, so other callers are unaffected. `budget` is `PlanningEngine.budget`: chosen Event prices (own report, else median, else published, free = 0) plus the top of each chosen restaurant's range, compared with `totalBudgetCad` (Event budget plus selected Meal budgets). A Meal with no budget adds its price and nothing to the limit. A range with no top ("$100+"), and any Stop with no known price, is not added and counts in `unknownPriceCount`; show "+ prix inconnu" when `hasUnknownPrices`. `isOverBudget` warns only and never blocks.
 
 **Autosave and resume.** Every change saves the Itinerary (`stops`, `mealBlocks` skip flags, `districtIds`, `planningDistrictId`, `step = max(step, Stops)`). A reopened draft resumes in `planningDistrictId` (else the District of the last Stop, else the first) with all Stops, skipped blocks and removed Districts. Finish sets `step = Review`.
 
