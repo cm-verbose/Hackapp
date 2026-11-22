@@ -14,7 +14,8 @@ import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.PlanningChangePreview
 import com.example.hackapp.itinerary.PlanningStep
-import com.example.hackapp.itinerary.eventEligibility
+import com.example.hackapp.itinerary.districtCountFilter
+import com.example.hackapp.itinerary.planningWindow
 import com.example.hackapp.profile.ProfileRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 data class DistrictPickUiState(
     val loading: Boolean = true,
@@ -215,9 +217,10 @@ class DistrictPickViewModel(
                 val uid = checkNotNull(auth.currentUser?.uid)
                 val draft = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                 val map = loadMap()
-                val eligibility = eventEligibility(profiles, uid, cityPack.timeZone)
+                val zone = cityPack.timeZone
+                val counts = districtCountFilter(profiles, uid, draft.planningWindow(zone), zone, Instant.ofEpochMilli(nowMillis()))
                 val summary = withContext(Dispatchers.Default) {
-                    summarizeDistrictEvents(events.search(windowQuery(draft)), eligibility)
+                    summarizeDistrictEvents(events.search(windowQuery(draft)), counts)
                 }
                 _state.update {
                     it.copy(
@@ -235,8 +238,9 @@ class DistrictPickViewModel(
         }
     }
 
+    /** No lower bound: a drop-in that began before the window can still be running in it. */
     private fun windowQuery(itinerary: Itinerary) = EventQuery(
-        startsAtOrAfter = itinerary.windowStart(cityPack.timeZone).toOffsetDateTime(),
+        startsAtOrAfter = null,
         startsBefore = itinerary.windowEnd(cityPack.timeZone).toOffsetDateTime(),
     )
 

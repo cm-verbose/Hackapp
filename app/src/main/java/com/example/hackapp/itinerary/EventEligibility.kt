@@ -73,10 +73,23 @@ suspend fun eventEligibility(
  * Event already in progress is not counted, but a drop-in still running with time left is.
  */
 fun districtCountPredicate(window: PlanningWindow, context: PlanningContext): (Event) -> Boolean = { event ->
-    isEligible(event, context) &&
-        (event.startTime()?.toInstant()?.let { it in window && !it.isBefore(context.now) } == true ||
-            event.runsIn(window, context.now))
+    isEligible(event, context) && event.countsIn(window, context.now)
 }
+
+/** [districtCountPredicate] for this person. Without a saved Profile, only the time rules apply. */
+suspend fun districtCountFilter(
+    profiles: ProfileRepository,
+    uid: String?,
+    window: PlanningWindow,
+    zone: ZoneId,
+    now: Instant,
+): (Event) -> Boolean {
+    val profile = uid?.let { profiles.getProfile(it) } ?: return { it.countsIn(window, now) }
+    return districtCountPredicate(window, PlanningContext.from(profile, now, zone))
+}
+
+private fun Event.countsIn(window: PlanningWindow, now: Instant): Boolean =
+    startTime()?.toInstant()?.let { it in window && !it.isBefore(now) } == true || runsIn(window, now)
 
 /** A drop-in already running that still leaves a meaningful stay inside [window]. */
 private fun Event.runsIn(window: PlanningWindow, now: java.time.Instant): Boolean {
