@@ -9,7 +9,9 @@ import com.example.hackapp.itinerary.activeStops
 import com.example.hackapp.itinerary.completeUnderway
 import com.example.hackapp.itinerary.latLng
 import com.example.hackapp.itinerary.leaveBy
+import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.itinerary.transit
+import com.example.hackapp.services.LegMode
 import java.time.Duration
 import java.time.Instant
 
@@ -229,6 +231,7 @@ object UnderwayEngine {
                     stopName = current.name,
                     stopStart = current.start,
                     skipStopId = current.id,
+                    isMeal = current.kind == StopKind.Meal,
                 ),
             )
             UnderwayPhase.AtStop -> {
@@ -246,6 +249,7 @@ object UnderwayEngine {
                         leaveBy = leave,
                         nextStopName = next.name,
                         skipStopId = next.id,
+                        isMeal = next.kind == StopKind.Meal,
                     ),
                 )
                 if (next.id !in state.dismissedLateWarnings) {
@@ -258,6 +262,7 @@ object UnderwayEngine {
                         stopName = next.name,
                         stopStart = next.start,
                         skipStopId = next.id,
+                        isMeal = next.kind == StopKind.Meal,
                     )
                 }
                 alerts
@@ -327,6 +332,16 @@ object UnderwayEngine {
             )
             else -> null
         }
+        // As the Leg hero shows it: leave at Leave By (or now if later) plus the travel time of the
+        // chosen transport. With no previous Stop there is no estimate, so it stays null.
+        val expected = if (current != null && legFrom != null && leave != null) {
+            val mode = if (state.transport == TransportChoice.Uber) LegMode.RIDE_HAIL else LegMode.TRANSIT
+            val minutes = ctx.estimator.estimate(legFrom.latLng, current.latLng, mode).travelMinutes
+            val departs = maxOf(now, leave.toInstant())
+            departs.plusSeconds(minutes * 60L).atZone(ctx.zone).toOffsetDateTime()
+        } else {
+            null
+        }
         val late = if (state.phase == UnderwayPhase.AtStop && current != null && next != null &&
             next.id !in state.dismissedLateWarnings && now.isAfter(lateSince(ctx, current, next))
         ) {
@@ -339,7 +354,7 @@ object UnderwayEngine {
             phase = state.phase,
             currentStop = current,
             legFrom = legFrom,
-            expectedArrival = current?.start,
+            expectedArrival = expected,
             leaveBy = leave,
             nextStop = next,
             isLastStop = current != null && next == null,

@@ -94,7 +94,7 @@ class AndroidUnderwayNotifier(context: Context, private val zone: java.time.Zone
             }
         } else {
             alert.skipStopId?.let {
-                builder.addAction(0, appContext.getString(R.string.action_skip_stop), action(uid, itineraryId, UnderwayAndroid.ACTION_SKIP, it, alert.id))
+                builder.addAction(0, appContext.getString(if (alert.isMeal) R.string.action_skip_meal else R.string.action_skip_stop), action(uid, itineraryId, UnderwayAndroid.ACTION_SKIP, it, alert.id))
             }
         }
         val id = notificationId(itineraryId, alert.id)

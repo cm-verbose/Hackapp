@@ -358,4 +358,36 @@ class UnderwayEngineTest {
         assertNull(ok.rejection)
         assertEquals(UnderwayPhase.Arrival, ok.state.phase)
     }
+
+    @Test
+    fun `expected arrival is the later of now and Leave By plus the travel time`() {
+        val leg = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 50) to E.Leaving())
+        // Leave By from A is 21:00 and the Leg travels 10 minutes (the other 10 are buffer).
+        assertEquals(at(Nov28, 21, 10), UnderwayEngine.view(ctx, leg, t(20, 51), true).expectedArrival)
+        assertEquals(at(Nov28, 21, 30), UnderwayEngine.view(ctx, leg, t(21, 20), true).expectedArrival)
+        val arrival = reduce(leg, E.OpenTransport(TransportChoice.Uber, "b"), t(21, 20)).state
+        assertEquals(at(Nov28, 21, 30), UnderwayEngine.view(ctx, arrival, t(21, 20), true).expectedArrival)
+    }
+
+    @Test
+    fun `expected arrival is null with no previous Stop or at a Stop`() {
+        val first = begin(origin = LatLng(45.5, -73.6))
+        assertNull(UnderwayEngine.view(ctx, first, t(18), true).expectedArrival)
+        val atA = ctx.run(first, t(19) to E.ConfirmArrival())
+        assertNull(UnderwayEngine.view(ctx, atA, t(19, 5), true).expectedArrival)
+    }
+
+    @Test
+    fun `alerts know when the Stop to skip is a Meal`() {
+        val first = UnderwayEngine.scheduledAlerts(ctx, begin()).single()
+        assertFalse(first.isMeal)
+        val atA = ctx.run(begin(), t(19) to E.ConfirmArrival())
+        val alerts = UnderwayEngine.scheduledAlerts(ctx, atA)
+        assertTrue(alerts.single { it.kind == AlertKind.LeaveBy }.isMeal)
+        assertTrue(alerts.single { it.kind == AlertKind.LateWarning }.isMeal)
+        val atB = ctx.run(begin(), t(19) to E.ConfirmArrival(), t(20, 50) to E.Leaving(), t(21, 30) to E.ConfirmArrival())
+        assertFalse(UnderwayEngine.scheduledAlerts(ctx, atB).single { it.kind == AlertKind.LeaveBy }.isMeal)
+        val meal = UnderwayEngine.scheduledAlerts(ctx, ctx.run(begin(), t(19) to E.SkipStop())).single()
+        assertTrue(meal.isMeal)
+    }
 }

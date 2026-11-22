@@ -99,6 +99,8 @@ data class PlannedAlert(
     val nextStopName: String? = null,
     /** The Stop that Skip this Stop skips from the notification. */
     val skipStopId: String? = null,
+    /** The Stop that Skip skips is a Meal: the action reads "Skip this Meal". */
+    val isMeal: Boolean = false,
 )
 
 sealed interface UnderwayEffect {
