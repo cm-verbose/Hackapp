@@ -29,10 +29,10 @@ import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappSegmentedButton
 import com.example.hackapp.ui.components.HackappTimeField
 import com.example.hackapp.ui.components.LoadingState
+import com.example.hackapp.ui.components.formatSentenceTime
 import com.example.hackapp.ui.theme.HackappTheme
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 /** Connects the Date and time page to its ViewModel and to navigation. */
 @Composable
@@ -130,7 +130,7 @@ fun PlanningDateTimePage(
                         when (error) {
                             TimeWindowError.TooShort -> stringResource(R.string.planning_error_min_duration)
                             TimeWindowError.EndOutOfRange ->
-                                stringResource(R.string.planning_error_end_range, sentenceTime(earliestEnd(state.start)))
+                                stringResource(R.string.planning_error_end_range, formatSentenceTime(earliestEnd(state.start), LocalConfiguration.current.locales[0]))
                             TimeWindowError.StartsTooLate -> stringResource(R.string.planning_error_start_latest)
                         },
                         style = MaterialTheme.typography.bodySmall,
@@ -143,17 +143,6 @@ fun PlanningDateTimePage(
 }
 
 /** A time inside a sentence: `20 h` / `20 h 30` in French, `20:00` / `20:30` in English. */
-@Composable
-private fun sentenceTime(time: LocalTime): String {
-    val locale = LocalConfiguration.current.locales[0]
-    val pattern = when {
-        locale.language != "fr" -> "HH:mm"
-        time.minute == 0 -> "H 'h'"
-        else -> "H 'h' mm"
-    }
-    return time.format(DateTimeFormatter.ofPattern(pattern, locale))
-}
-
 private val PreviewCoverage = EventCoverage(LocalDate.of(2026, 11, 21), LocalDate.of(2026, 12, 6))
 
 @Composable
