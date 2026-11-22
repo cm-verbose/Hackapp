@@ -40,7 +40,7 @@ Owner: Domain Engineer, team Selection. Consumer: Feature Engineer. File:
 
 Both actions are always available: `openMealPicker()` and `skipMeal()`.
 
-`EventCard` (from `itinerary/EventSelection.kt`): `title`, `venueName`, `type`, `showtimes` (selectable times in order), `matchesInterest`, `priceRank`, `priceCad` (null = unknown, 0 = free), `travelMinutes`, and `isDropIn`.
+`EventCard` (from `itinerary/EventSelection.kt`): `title`, `venueName`, `type`, `showtimes` (selectable times in order), `matchesInterest`, `priceRank`, `priceCad` (null = unknown, 0 = free), `priceIsMedian` (the price is the shared median of user reports), `travelMinutes`, and `isDropIn`.
 
 `SelectionSheet` (sealed). Each holds the sheet's holder; collect `holder.state` and forward its callbacks through the ViewModel methods below.
 - `EventDetails(holder: EventDetailsHolder)`

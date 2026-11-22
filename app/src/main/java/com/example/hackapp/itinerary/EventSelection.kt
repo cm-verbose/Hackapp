@@ -72,6 +72,8 @@ data class EventCard(
     val travelMinutes: Int?,
     /** A long Event with a published end that may be joined at any time, see [isDropIn]. */
     val isDropIn: Boolean = false,
+    /** [priceCad] is the shared median of user reports. */
+    val priceIsMedian: Boolean = false,
 ) {
     val firstStart: ZonedDateTime get() = showtimes.first().arrivalAt
 }
@@ -169,7 +171,8 @@ fun rankedEventCards(search: EventSearch, estimator: LegEstimator): List<EventCa
         .groupBy { it.event.showtimeKey() }
         .map { (key, showtimes) ->
             val first = showtimes.first().event
-            val price = knownEventPrice(first, ownReport = null, median = search.medianPrices[key])
+            val median = search.medianPrices[key]
+            val price = knownEventPrice(first, ownReport = null, median = median)
             EventCard(
                 key = key,
                 title = first.title,
@@ -180,6 +183,7 @@ fun rankedEventCards(search: EventSearch, estimator: LegEstimator): List<EventCa
                 matchesInterest = interestOf(first.type) in search.context.interests,
                 priceRank = priceRank(price, budget),
                 priceCad = price,
+                priceIsMedian = median != null && first.cost.status != CostStatus.FREE,
                 travelMinutes = showtimes.first().leg?.totalMinutes,
             )
         }

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -87,6 +88,7 @@ import com.example.hackapp.ui.components.PlannedDepartureSheet
 import com.example.hackapp.ui.components.PriceLabel
 import com.example.hackapp.ui.components.StopTypeTag
 import com.example.hackapp.ui.components.formatCad
+import com.example.hackapp.ui.components.formatSentenceTime
 import com.example.hackapp.ui.components.text
 import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
@@ -202,7 +204,10 @@ fun PlanningStopSelectionScreen(
                 onSignIn = viewModel::dismissSheet,
                 onAddToItinerary = viewModel::addToItinerary,
                 onAddWithoutPrice = viewModel::addWithoutPrice,
-                onDismiss = viewModel::dismissSheet,
+                onDismiss = {
+                    choose(details.showtimes.map { it.eventId }, null)
+                    viewModel.dismissSheet()
+                },
             )
         }
         is SelectionSheet.PlannedDeparture -> {
@@ -212,7 +217,10 @@ fun PlanningStopSelectionScreen(
                 venueName = sheet.event.location.venueName,
                 onTimeChange = viewModel::setDeparture,
                 onConfirm = viewModel::confirmDeparture,
-                onDismiss = viewModel::dismissSheet,
+                onDismiss = {
+                    choose(listOf(sheet.event.id), null)
+                    viewModel.dismissSheet()
+                },
             )
         }
         is SelectionSheet.MealPicker -> {
@@ -278,21 +286,30 @@ fun PlanningStopSelectionPage(
             else -> {
                 val prompt = state.mealPrompt
                 val atMeal = prompt?.reached == true
+                // Listed Events belong to the open gap, so the Meal time moves to its card.
+                val headingIsMeal = atMeal && state.groups.isEmpty()
                 SlotHeader(
-                    start = if (atMeal) prompt.start else state.gapStart,
-                    end = if (atMeal) prompt.end else state.gapEnd,
-                    showFrom = !atMeal,
+                    start = if (headingIsMeal) prompt.start else state.gapStart,
+                    end = if (headingIsMeal) prompt.end else state.gapEnd,
+                    districtName = districtName,
                 )
                 if (atMeal) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        MealBlockPrompt(onChooseMeal = onChooseMeal, modifier = Modifier.fillMaxWidth())
+                        MealBlockPrompt(
+                            onChooseMeal = onChooseMeal,
+                            modifier = Modifier.fillMaxWidth(),
+                            title = mealTitle(prompt),
+                        )
                         HackappSmallTextButton(stringResource(R.string.action_skip_meal), onSkipMeal)
                     }
                 }
                 EventGroups(state.groups, chosenShowtimes, onOpenEvent, onShowtimeChange)
                 when {
                     atMeal -> InfoCallout(stringResource(R.string.selection_fixed_hidden))
-                    state.groups.isEmpty() -> EmptyGap()
+                    state.groups.isEmpty() -> EmptyGap(
+                        hasStops = state.stops.isNotEmpty(),
+                        onBack = onBack.takeUnless { state.hasNextDistrict },
+                    )
                 }
                 if (prompt != null && !atMeal) MealPromptRow(prompt, onChooseMeal, onSkipMeal)
                 if (state.groups.isNotEmpty()) DataAttribution()
@@ -301,31 +318,34 @@ fun PlanningStopSelectionPage(
     }
 }
 
-/** The time slot being filled. It is announced when adding a Stop moves it. */
+/** The time slot being filled. It is announced with the borough when either one changes. */
 @Composable
-private fun SlotHeader(start: ZonedDateTime?, end: ZonedDateTime?, showFrom: Boolean) {
+private fun SlotHeader(start: ZonedDateTime?, end: ZonedDateTime?, districtName: String?) {
     if (start == null || end == null) return
-    Column(
-        Modifier.semantics(mergeDescendants = true) {
+    val title = stringResource(R.string.selection_slot_title, start.timeText(), end.timeText())
+    val announcement = listOfNotNull(districtName, title).joinToString(", ")
+    Text(
+        title,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.semantics {
             heading()
+            contentDescription = announcement
             liveRegion = LiveRegionMode.Polite
         },
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            stringResource(R.string.selection_slot_title, start.timeText(), end.timeText()),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        if (showFrom) {
-            Text(
-                stringResource(R.string.selection_slot_from, start.timeText()),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    )
 }
+
+/** "Dinner · 7:00 p.m.", for the Meal card and row. */
+@Composable
+private fun mealTitle(prompt: MealPrompt): String = stringResource(
+    when (prompt.kind) {
+        MealKind.Lunch -> R.string.meal_lunch_at
+        MealKind.Dinner -> R.string.meal_dinner_at
+        MealKind.LateBite -> R.string.meal_late_bite_at
+    },
+    formatSentenceTime(prompt.start.toLocalTime()),
+)
 
 /** Fixed showtimes by hour and type, then the drop-in Events under "Ongoing". */
 @Composable
@@ -406,7 +426,9 @@ private fun cardDetails(card: EventCard): String {
     val price = when (val cad = card.priceCad) {
         null -> PriceLabel.Unknown
         0.0 -> PriceLabel.Free
-        else -> PriceLabel.Amount(formatCad(cad))
+        else -> PriceLabel.Amount(
+            if (card.priceIsMedian) stringResource(R.string.selection_price_median, formatCad(cad)) else formatCad(cad),
+        )
     }
     val parts = buildList {
         single?.let { add(it.start.timeText()) }
@@ -428,10 +450,18 @@ private fun dropInLabel(card: EventCard): String {
     return stringResource(R.string.selection_no_fixed_time, range)
 }
 
-/** Figma empty gap (141:3952). The next actions stay visible in the footer. */
+/**
+ * Figma empty gap (141:3952). The next actions stay visible in the footer. [onBack] is set on the
+ * last borough, where no Next borough action is left. The reason needs a previous Stop.
+ */
 @Composable
-private fun EmptyGap() {
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+private fun EmptyGap(hasStops: Boolean, onBack: (() -> Unit)?) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Icon(
             Icons.Filled.EventBusy,
             contentDescription = null,
@@ -442,7 +472,9 @@ private fun EmptyGap() {
         )
         EmptyState(
             title = stringResource(R.string.selection_empty_title),
-            body = stringResource(R.string.selection_empty_body),
+            body = if (hasStops) stringResource(R.string.selection_empty_body) else null,
+            actionLabel = onBack?.let { stringResource(R.string.action_back) },
+            onAction = onBack,
         )
     }
 }
@@ -459,18 +491,7 @@ private fun MealPromptRow(prompt: MealPrompt, onChooseMeal: () -> Unit, onSkipMe
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(Modifier.semantics(mergeDescendants = true) {}) {
-            Text(
-                stringResource(R.string.selection_meal_block_title),
-                style = MaterialTheme.typography.titleSmall,
-                color = scheme.onSurface,
-            )
-            Text(
-                stringResource(R.string.selection_time_block, prompt.start.timeText(), prompt.end.timeText()),
-                style = MaterialTheme.typography.bodyMedium,
-                color = scheme.onSurfaceVariant,
-            )
-        }
+        Text(mealTitle(prompt), style = MaterialTheme.typography.titleSmall, color = scheme.onSurface)
         FlowRow(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -507,25 +528,28 @@ private fun RunningTotal(budget: BudgetSummary) {
             modifier = Modifier.size(24.dp),
         )
         Column(Modifier.weight(1f)) {
-            Text(
-                if (over && limit != null) {
-                    stringResource(R.string.running_total_over, formatCad(budget.runningTotalCad - limit))
-                } else {
-                    stringResource(R.string.running_total_label)
-                },
-                style = MaterialTheme.typography.labelMedium,
-                color = quiet,
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    if (over && limit != null) {
+                        stringResource(R.string.running_total_over, formatCad(budget.runningTotalCad - limit))
+                    } else {
+                        stringResource(R.string.running_total_label)
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = quiet,
+                    modifier = Modifier.weight(1f),
+                )
+                limit?.let {
+                    Text(
+                        stringResource(R.string.running_total_budget, formatCad(it)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = quiet,
+                    )
+                }
+            }
             Text(totalAmount(budget), style = MaterialTheme.typography.titleMedium, color = strong)
             val detail = if (over) stringResource(R.string.running_total_over_hint) else totalBreakdown(budget)
-            Text(detail, style = MaterialTheme.typography.bodySmall, color = quiet)
-        }
-        limit?.let {
-            Text(
-                stringResource(R.string.running_total_budget, formatCad(it)),
-                style = MaterialTheme.typography.labelMedium,
-                color = quiet,
-            )
+            if (detail.isNotEmpty()) Text(detail, style = MaterialTheme.typography.bodySmall, color = quiet)
         }
     }
 }
@@ -542,11 +566,12 @@ private fun totalAmount(budget: BudgetSummary): String {
 
 /**
  * "Events 20 $ · Lunch 50 $ · Dinner 30 $". A Meal with an unknown price is left out, because the
- * total already says "+ unknown price".
+ * total already says "+ unknown price". So are Events when none has a known price.
  */
 @Composable
 private fun totalBreakdown(budget: BudgetSummary): String {
     val events = stringResource(R.string.running_total_events, formatCad(budget.eventsCad))
+        .takeUnless { budget.eventsCad == 0.0 && budget.hasUnknownPrices }
     val meals = budget.meals.mapNotNull { meal ->
         val kind = meal.kind ?: return@mapNotNull null
         val price = meal.priceCad ?: return@mapNotNull null
@@ -559,7 +584,7 @@ private fun totalBreakdown(budget: BudgetSummary): String {
             formatCad(price),
         )
     }
-    return (listOf(events) + meals).joinToString(DETAIL_SEPARATOR)
+    return (listOfNotNull(events) + meals).joinToString(DETAIL_SEPARATOR)
 }
 
 /** A failed autosave, announced politely, with the way to save again. */
@@ -572,7 +597,7 @@ private fun SaveError(onRetrySave: () -> Unit) {
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            stringResource(R.string.planning_save_error),
+            stringResource(R.string.selection_save_error),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
@@ -600,7 +625,7 @@ private fun SelectionActions(
     }
     FlowRow(
         Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
@@ -611,7 +636,7 @@ private fun SelectionActions(
         } else {
             HackappSmallButton(finishHere, onFinish, enabled = false)
         }
-        HackappSmallButton(stringResource(R.string.selection_next_district), onNextDistrict)
+        HackappSmallButton(stringResource(R.string.selection_next_district), onNextDistrict, Modifier.weight(1f))
     }
 }
 
@@ -624,7 +649,13 @@ private val PreviewZone: ZoneId = ZoneId.of("America/Toronto")
 private fun previewTime(hour: Int, minute: Int = 0): ZonedDateTime =
     ZonedDateTime.of(2026, 12, 5, hour, minute, 0, 0, PreviewZone)
 
-private fun previewShowtime(id: String, title: String, start: ZonedDateTime, end: ZonedDateTime?) = ReachableShowtime(
+private fun previewShowtime(
+    id: String,
+    title: String,
+    start: ZonedDateTime,
+    end: ZonedDateTime?,
+    arrival: ZonedDateTime = start,
+) = ReachableShowtime(
     event = Event(
         id = id,
         title = title,
@@ -640,6 +671,7 @@ private fun previewShowtime(id: String, title: String, start: ZonedDateTime, end
     start = start,
     suggestedDeparture = DepartureSuggestion(end ?: start.plusMinutes(90), end != null),
     leg = null,
+    arrivalAt = arrival,
 )
 
 private fun previewCard(
@@ -650,17 +682,20 @@ private fun previewCard(
     starts: List<ZonedDateTime>,
     end: ZonedDateTime? = null,
     dropIn: Boolean = false,
+    arrival: ZonedDateTime? = null,
+    median: Boolean = false,
 ) = EventCard(
     key = ShowtimeKey(title),
     title = title,
     venueName = venue,
     type = type,
-    showtimes = starts.mapIndexed { index, start -> previewShowtime("$title-$index", title, start, end) },
+    showtimes = starts.mapIndexed { index, start -> previewShowtime("$title-$index", title, start, end, arrival ?: start) },
     matchesInterest = false,
     priceRank = if (price == null) PriceRank.Unknown else PriceRank.KnownWithinBudget,
     priceCad = price,
     travelMinutes = null,
     isDropIn = dropIn,
+    priceIsMedian = median,
 )
 
 private val PreviewDropIn = previewCard(
@@ -671,6 +706,7 @@ private val PreviewDropIn = previewCard(
     listOf(previewTime(10)),
     end = previewTime(21),
     dropIn = true,
+    arrival = previewTime(17, 30),
 )
 
 private fun previewHour(hour: Int, type: String, vararg cards: EventCard) =
@@ -702,8 +738,21 @@ private val PreviewGroups = listOf(
         PreviewPocketConcert,
     ),
     previewHour(18, "comedy", PreviewComedy),
-    EventHourGroup(previewTime(10), listOf(EventTypeGroup("exhibition", listOf(PreviewDropIn)))),
+    EventHourGroup(previewTime(17), listOf(EventTypeGroup("exhibition", listOf(PreviewDropIn)))),
 )
+
+/** Only Events that end before the 19:00 Meal Block, as the list would really show. */
+private val PreviewGroupsBeforeMeal = listOf(
+    previewHour(
+        17,
+        "music",
+        previewCard("Jazz sur le toit", "Salle Rosemont", "music", 20.0, listOf(previewTime(17, 30)), median = true),
+        PreviewPocketConcert,
+    ),
+    EventHourGroup(previewTime(17), listOf(EventTypeGroup("exhibition", listOf(PreviewDropIn)))),
+)
+
+private val PreviewDinner = MealPrompt("meal-dinner", MealKind.Dinner, previewTime(19), previewTime(20, 30), reached = false)
 
 private fun previewStop(kind: StopKind, blockId: String? = null): Stop {
     val start: OffsetDateTime = previewTime(12).toOffsetDateTime()
@@ -770,27 +819,50 @@ private fun PreviewPage(
 @Composable
 private fun SelectionEventsPreview() = PreviewPage(PreviewState)
 
-@Preview(name = "Selection · 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 917, fontScale = 1.3f)
+@Preview(name = "Selection · 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 1500, fontScale = 1.3f)
 @Composable
-private fun SelectionLargeTextPreview() = PreviewPage(PreviewState)
+private fun SelectionLargeTextPreview() = PreviewPage(
+    PreviewState.copy(groups = PreviewGroupsBeforeMeal, mealPrompt = PreviewDinner),
+)
 
 @Preview(name = "Selection · Meal Block (141:3868)", showBackground = true, widthDp = 412, heightDp = 917)
 @Composable
 private fun SelectionMealBlockPreview() = PreviewPage(
     PreviewState.copy(
-        gapStart = previewTime(19),
-        gapEnd = previewTime(20, 30),
-        groups = listOf(EventHourGroup(previewTime(10), listOf(EventTypeGroup("exhibition", listOf(PreviewDropIn))))),
-        mealPrompt = MealPrompt("meal-dinner", MealKind.Dinner, previewTime(19), previewTime(20, 30), reached = true),
+        gapStart = previewTime(17, 30),
+        gapEnd = previewTime(19),
+        groups = listOf(EventHourGroup(previewTime(17), listOf(EventTypeGroup("exhibition", listOf(PreviewDropIn))))),
+        mealPrompt = PreviewDinner.copy(reached = true),
     ),
 )
 
-@Preview(name = "Selection · Meal ahead", showBackground = true, widthDp = 412, heightDp = 1100)
+@Preview(name = "Selection · Meal Block, no Event", showBackground = true, widthDp = 412, heightDp = 917)
+@Composable
+private fun SelectionMealOnlyPreview() = PreviewPage(
+    PreviewState.copy(
+        gapStart = previewTime(18, 45),
+        gapEnd = previewTime(19),
+        groups = emptyList(),
+        mealPrompt = PreviewDinner.copy(reached = true),
+    ),
+)
+
+@Preview(name = "Selection · Meal ahead", showBackground = true, widthDp = 412, heightDp = 1300)
 @Composable
 private fun SelectionMealAheadPreview() = PreviewPage(
-    PreviewState.copy(
-        mealPrompt = MealPrompt("meal-dinner", MealKind.Dinner, previewTime(19), previewTime(20, 30), reached = false),
-    ),
+    PreviewState.copy(groups = PreviewGroupsBeforeMeal, mealPrompt = PreviewDinner),
+)
+
+@Preview(name = "Selection · unknown prices only", showBackground = true, widthDp = 412, heightDp = 917)
+@Composable
+private fun SelectionUnknownOnlyPreview() = PreviewPage(
+    PreviewState.copy(budget = previewBudget(0.0, 0.0, unknown = 2, mealAmounts = emptyList())),
+)
+
+@Preview(name = "Selection · unknown prices only, 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 917, fontScale = 1.3f)
+@Composable
+private fun SelectionUnknownOnlyLargeTextPreview() = PreviewPage(
+    PreviewState.copy(budget = previewBudget(0.0, 0.0, unknown = 2, mealAmounts = emptyList())),
 )
 
 @Preview(name = "Selection · over budget (141:3910)", showBackground = true, widthDp = 412, heightDp = 917)
@@ -874,6 +946,23 @@ private fun SelectionLastBoroughPreview() = PreviewPage(
     ),
     districtName = "Ville-Marie",
     chosen = setOf("Pièce « Le dernier métro »-0"),
+)
+
+@Preview(name = "Selection · last borough, no Event", showBackground = true, widthDp = 412, heightDp = 917)
+@Composable
+private fun SelectionLastBoroughEmptyPreview() = PreviewPage(
+    PreviewState.copy(
+        districtId = "ville-marie",
+        districtNumber = 2,
+        hasNextDistrict = false,
+        canFinish = false,
+        gapStart = previewTime(21),
+        gapEnd = previewTime(23, 30),
+        groups = emptyList(),
+        stops = emptyList(),
+        budget = previewBudget(0.0, 0.0, mealAmounts = emptyList()),
+    ),
+    districtName = "Ville-Marie",
 )
 
 @Preview(name = "Selection · save error", showBackground = true, widthDp = 412, heightDp = 917)

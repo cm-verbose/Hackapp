@@ -208,6 +208,17 @@ class StopSelectionTest {
     }
 
     @Test
+    fun `a card is marked as a median only when the median sets its price`() {
+        val paid = event("paid", cost = com.example.hackapp.data.Cost(com.example.hackapp.data.CostStatus.PAID, 10.0, 20.0))
+        val free = event("free", start = at(Nov28, 20).toString(), cost = com.example.hackapp.data.Cost(com.example.hackapp.data.CostStatus.FREE))
+        fun card(e: com.example.hackapp.data.Event, medians: Map<ShowtimeKey, Double>) =
+            rankedEventCards(EventSearch(night(), listOf(e), context(now), HERE, medianPrices = medians), legs).single()
+        assertTrue(card(paid, mapOf(paid.showtimeKey() to 15.0)).priceIsMedian)
+        assertFalse(card(paid, emptyMap()).priceIsMedian)
+        assertFalse(card(free, mapOf(free.showtimeKey() to 15.0)).priceIsMedian)
+    }
+
+    @Test
     fun `a drop-in ending too soon after arrival is hidden`() {
         val ending = event("soon", start = at(Nov28, 10).toString(), end = at(Nov28, 18, 59).toString())
         assertTrue(found(night(), false, ending).isEmpty())
