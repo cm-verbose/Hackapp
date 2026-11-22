@@ -15,7 +15,7 @@ Single entry point for AI agents. Read this first. If anything here is unclear o
 | Path | What |
 |---|---|
 | `app/src/main/java/com/example/hackapp/data/{model,local,repository}` | Restaurant data layer (Room). See section 4 |
-| `app/src/main/assets/databases/places.db` | Prepackaged SQLite built by the ETL: 5,694 places, Google-enriched, all with a polygon borough, `user_version = 4` (2026-11-21) |
+| `app/src/main/assets/databases/places.db` | Prepackaged SQLite built by the ETL: 5,694 places, Google-enriched, all with a polygon borough, `user_version = 5` |
 | `app/schemas/` | Room exported schema JSON (commit it) |
 | `app/src/androidTest/.../data/PlacesDatabaseTest.kt` | Instrumented smoke test for the DB and a sample search |
 | `app/src/main/java/com/example/hackapp/scaffold/restaurant/mtl-food/etl/` | Python ETL that builds `places.db` (section 5). Source of truth for data rules. `data/`, `cache/`, `out/` are git-ignored |

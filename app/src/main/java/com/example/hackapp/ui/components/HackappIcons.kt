@@ -6,18 +6,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.LocalBar
 import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocalPizza
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.OutdoorGrill
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.RamenDining
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.filled.RiceBowl
 import androidx.compose.material.icons.filled.SentimentSatisfied
+import androidx.compose.material.icons.filled.SetMeal
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -52,6 +60,35 @@ enum class HackappIcon(val vector: ImageVector) {
     LocalBar(Icons.Filled.LocalBar),
     Movie(Icons.Filled.Movie),
     ConfirmationNumber(Icons.Filled.ConfirmationNumber),
+
+    // Cuisine groups
+    RestaurantMenu(Icons.Filled.RestaurantMenu),
+    BakeryDining(Icons.Filled.BakeryDining),
+    SetMeal(Icons.Filled.SetMeal),
+    RamenDining(Icons.Filled.RamenDining),
+    OutdoorGrill(Icons.Filled.OutdoorGrill),
+    LocalFireDepartment(Icons.Filled.LocalFireDepartment),
+    RiceBowl(Icons.Filled.RiceBowl),
+    Fastfood(Icons.Filled.Fastfood),
+    ;
+
+    companion object {
+        /** Resolves a Material icon name stored in the `cuisine_group.icon` column. */
+        fun forCuisineGroup(iconName: String): HackappIcon = when (iconName) {
+            "restaurant_menu" -> RestaurantMenu
+            "bakery_dining" -> BakeryDining
+            "set_meal" -> SetMeal
+            "ramen_dining" -> RamenDining
+            "local_pizza" -> LocalPizza
+            "outdoor_grill" -> OutdoorGrill
+            "local_fire_department" -> LocalFireDepartment
+            "rice_bowl" -> RiceBowl
+            "fastfood" -> Fastfood
+            "local_cafe" -> LocalCafe
+            "local_bar" -> LocalBar
+            else -> Restaurant
+        }
+    }
 }
 
 /** Decorative icon (24 dp in Figma). Pass a [contentDescription] when it carries meaning. */

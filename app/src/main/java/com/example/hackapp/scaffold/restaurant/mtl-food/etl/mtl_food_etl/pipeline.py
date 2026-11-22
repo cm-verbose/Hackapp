@@ -35,7 +35,7 @@ from .google_enrich import STATUS_MAP, GoogleEnricher, parse_description, parse_
 from .rules import BrandMatcher, CuisineNormalizer, Reference, dietary_from_osm, merge_dietary
 from .text import name_similarity, norm_name, title_case, trade_name
 
-DB_VERSION = 4  # must equal @Database(version = ...) in the app
+DB_VERSION = 5  # must equal @Database(version = ...) in the app
 ROOT = Path(__file__).resolve().parent.parent
 
 VENUE_LABEL = {
@@ -354,7 +354,7 @@ def export_sqlite(df, ref, out_path: Path):
                     [(code, "BOROUGH", v[0], v[1]) for code, v in ref.boroughs.items()])
     for i, g in enumerate(ref["cuisine_groups"]):
         con.execute("INSERT INTO cuisine_group VALUES (?,?,?,?,?,?)",
-                    (g["code"], g["emoji"], g["fr"], g["en"], g.get("venue_type"), i))
+                    (g["code"], g["icon"], g["fr"], g["en"], g.get("venue_type"), i))
         con.executemany("INSERT INTO cuisine_group_member VALUES (?,?)",
                         [(g["code"], c) for c in g.get("cuisines", [])])
     con.executemany("INSERT INTO price_bracket VALUES (?,?,?,?)",

@@ -44,7 +44,8 @@ data class LocalizedText(val fr: String?, val en: String?) {
 
 data class CuisineGroup(
     val code: String,
-    val emoji: String,
+    /** Material icon name, e.g. "ramen_dining". */
+    val icon: String,
     val label: LocalizedText,
     val cuisines: Set<String>,
     val venueType: VenueType?,

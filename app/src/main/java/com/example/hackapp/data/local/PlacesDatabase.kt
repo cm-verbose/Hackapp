@@ -30,7 +30,7 @@ abstract class PlacesDatabase : RoomDatabase() {
     abstract fun referenceDao(): ReferenceDao
 
     companion object {
-        const val VERSION = 4
+        const val VERSION = 5
         private const val ASSET = "databases/places.db"
 
         @Volatile private var instance: PlacesDatabase? = null

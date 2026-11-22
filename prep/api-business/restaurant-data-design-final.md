@@ -107,8 +107,8 @@ Two different questions, kept separate:
 
 | Question | Field | Stored? |
 |---|---|---|
-| Does this business still exist? | `status` | ✅ `ACTIVE` · `TEMPORARILY_CLOSED` · `CLOSED` |
-| Is it open at time *t*? | none | ❌ Computed from `opening_hours` at query time |
+| Does this business still exist? | `status` | Yes: `ACTIVE` · `TEMPORARILY_CLOSED` · `CLOSED` |
+| Is it open at time *t*? | none | No: computed from `opening_hours` at query time |
 
 | City `statut` | Google `businessStatus` | Our `status` |
 |---|---|---|
@@ -191,19 +191,21 @@ Codes come from one controlled vocabulary. They are filled in this order:
 
 ### 6.3 Reference table: `cuisine_group` (onboarding chips)
 
-| Group | Chip | Codes |
-|---|---|---|
-| `taste_of_mtl` | 🥯 Taste of Montréal | bagel, poutine, quebecois, deli, smoked_meat |
-| `french` | 🥐 French & Bistro | french, bistro, crepe |
-| `japanese_korean` | 🍣 Japanese & Korean | japanese, sushi, ramen, korean, poke |
-| `chinese_se_asian` | 🍜 Chinese & SE Asian | chinese, dumplings, vietnamese, thai, cambodian, asian |
-| `italian_pizza` | 🍝 Italian & Pizza | italian, pizza, pasta |
-| `middle_eastern` | 🧆 Middle Eastern & Mediterranean | lebanese, greek, mediterranean, middle_eastern, turkish, kebab, shawarma |
-| `latin_caribbean` | 🌶️ Latin & Caribbean | mexican, caribbean, haitian, peruvian, portuguese |
-| `south_asian` | 🍛 Indian & South Asian | indian |
-| `quick_bites` | 🍔 Quick Bites | burger, chicken, sandwich, hot_dog, fries |
-| `cafe_sweets` | ☕ Cafés & Sweets | coffee, tea, bubble_tea, cake, pastry, dessert, ice_cream, donut |
-| `bars` | 🍸 Bars & Pubs | *(matches `venue_type = bar`)* |
+Chips use Material icons, never emojis. `cuisine_group.icon` stores the Material icon name.
+
+| Group | Material icon | Chip | Codes |
+|---|---|---|---|
+| `taste_of_mtl` | `restaurant_menu` | Taste of Montréal | bagel, poutine, quebecois, deli, smoked_meat |
+| `french` | `bakery_dining` | French & Bistro | french, bistro, crepe |
+| `japanese_korean` | `set_meal` | Japanese & Korean | japanese, sushi, ramen, korean, poke |
+| `chinese_se_asian` | `ramen_dining` | Chinese & SE Asian | chinese, dumplings, vietnamese, thai, cambodian, asian |
+| `italian_pizza` | `local_pizza` | Italian & Pizza | italian, pizza, pasta |
+| `middle_eastern` | `outdoor_grill` | Middle Eastern & Mediterranean | lebanese, greek, mediterranean, middle_eastern, turkish, kebab, shawarma |
+| `latin_caribbean` | `local_fire_department` | Latin & Caribbean | mexican, caribbean, haitian, peruvian, portuguese |
+| `south_asian` | `rice_bowl` | Indian & South Asian | indian |
+| `quick_bites` | `fastfood` | Quick Bites | burger, chicken, sandwich, hot_dog, fries |
+| `cafe_sweets` | `local_cafe` | Cafés & Sweets | coffee, tea, bubble_tea, cake, pastry, dessert, ice_cream, donut |
+| `bars` | `local_bar` | Bars & Pubs | *(matches `venue_type = bar`)* |
 
 ---
 

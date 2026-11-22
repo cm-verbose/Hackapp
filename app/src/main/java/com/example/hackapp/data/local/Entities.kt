@@ -96,7 +96,8 @@ data class AreaEntity(
 @Entity(tableName = "cuisine_group")
 data class CuisineGroupEntity(
     @PrimaryKey @ColumnInfo(name = "code") val code: String,
-    @ColumnInfo(name = "emoji") val emoji: String,
+    /** Material icon name, e.g. "ramen_dining". */
+    @ColumnInfo(name = "icon") val icon: String,
     @ColumnInfo(name = "label_fr") val labelFr: String,
     @ColumnInfo(name = "label_en") val labelEn: String,
     /** Set for groups that match a venue type instead of cuisines (e.g. "bars"). */

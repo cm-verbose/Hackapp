@@ -88,7 +88,7 @@ class RoomPlaceRepository(
         groupsCache ?: referenceDao.cuisineGroups().map {
             CuisineGroup(
                 code = it.group.code,
-                emoji = it.group.emoji,
+                icon = it.group.icon,
                 label = LocalizedText(it.group.labelFr, it.group.labelEn),
                 cuisines = it.cuisines.toSet(),
                 venueType = it.group.venueType,

@@ -196,17 +196,17 @@ google_type_to_dietary:
   vegetarian_restaurant: VEGETARIAN
 
 cuisine_groups:                # onboarding chips; order = display order
-  - {code: taste_of_mtl,     emoji: "🥯", fr: "Saveurs de Montréal",          en: "Taste of Montréal",               cuisines: [bagel, poutine, quebecois, deli, smoked_meat]}
-  - {code: french,           emoji: "🥐", fr: "Français et bistro",           en: "French & Bistro",                 cuisines: [french, bistro, crepe]}
-  - {code: japanese_korean,  emoji: "🍣", fr: "Japonais et coréen",           en: "Japanese & Korean",               cuisines: [japanese, sushi, ramen, korean, poke]}
-  - {code: chinese_se_asian, emoji: "🍜", fr: "Chinois et Asie du Sud-Est",   en: "Chinese & SE Asian",              cuisines: [chinese, dumplings, vietnamese, thai, cambodian, asian, taiwanese, noodles, cantonese, sichuan, hot_pot, laotian, malaysian, indonesian, filipino]}
-  - {code: italian_pizza,    emoji: "🍝", fr: "Italien et pizza",             en: "Italian & Pizza",                 cuisines: [italian, pizza, pasta]}
-  - {code: middle_eastern,   emoji: "🧆", fr: "Moyen-Orient et Méditerranée", en: "Middle Eastern & Mediterranean",  cuisines: [lebanese, greek, mediterranean, middle_eastern, turkish, kebab, shawarma, falafel, syrian, persian, iranian, moroccan, tunisian, arab, armenian, israeli]}
-  - {code: latin_caribbean,  emoji: "🌶️", fr: "Latino et Caraïbes",          en: "Latin & Caribbean",               cuisines: [mexican, caribbean, haitian, peruvian, portuguese, latin, brazilian, tacos, creole, jamaican, cuban, salvadorian, colombian, venezuelan, argentinian]}
-  - {code: south_asian,      emoji: "🍛", fr: "Indien et Asie du Sud",        en: "Indian & South Asian",            cuisines: [indian, pakistani, nepalese, sri_lankan, bangladeshi, afghan, tibetan]}
-  - {code: quick_bites,      emoji: "🍔", fr: "Sur le pouce",                 en: "Quick Bites",                     cuisines: [burger, chicken, sandwich, hot_dog, fries]}
-  - {code: cafe_sweets,      emoji: "☕", fr: "Cafés et douceurs",            en: "Cafés & Sweets",                  cuisines: [coffee, tea, bubble_tea, cake, pastry, dessert, ice_cream, donut, waffle, crepe, juice, smoothie]}
-  - {code: bars,             emoji: "🍸", fr: "Bars et pubs",                 en: "Bars & Pubs",                     venue_type: BAR}
+  - {code: taste_of_mtl,     icon: "restaurant_menu", fr: "Saveurs de Montréal",          en: "Taste of Montréal",               cuisines: [bagel, poutine, quebecois, deli, smoked_meat]}
+  - {code: french,           icon: "bakery_dining", fr: "Français et bistro",           en: "French & Bistro",                 cuisines: [french, bistro, crepe]}
+  - {code: japanese_korean,  icon: "set_meal", fr: "Japonais et coréen",           en: "Japanese & Korean",               cuisines: [japanese, sushi, ramen, korean, poke]}
+  - {code: chinese_se_asian, icon: "ramen_dining", fr: "Chinois et Asie du Sud-Est",   en: "Chinese & SE Asian",              cuisines: [chinese, dumplings, vietnamese, thai, cambodian, asian, taiwanese, noodles, cantonese, sichuan, hot_pot, laotian, malaysian, indonesian, filipino]}
+  - {code: italian_pizza,    icon: "local_pizza", fr: "Italien et pizza",             en: "Italian & Pizza",                 cuisines: [italian, pizza, pasta]}
+  - {code: middle_eastern,   icon: "outdoor_grill", fr: "Moyen-Orient et Méditerranée", en: "Middle Eastern & Mediterranean",  cuisines: [lebanese, greek, mediterranean, middle_eastern, turkish, kebab, shawarma, falafel, syrian, persian, iranian, moroccan, tunisian, arab, armenian, israeli]}
+  - {code: latin_caribbean,  icon: "local_fire_department", fr: "Latino et Caraïbes",          en: "Latin & Caribbean",               cuisines: [mexican, caribbean, haitian, peruvian, portuguese, latin, brazilian, tacos, creole, jamaican, cuban, salvadorian, colombian, venezuelan, argentinian]}
+  - {code: south_asian,      icon: "rice_bowl", fr: "Indien et Asie du Sud",        en: "Indian & South Asian",            cuisines: [indian, pakistani, nepalese, sri_lankan, bangladeshi, afghan, tibetan]}
+  - {code: quick_bites,      icon: "fastfood", fr: "Sur le pouce",                 en: "Quick Bites",                     cuisines: [burger, chicken, sandwich, hot_dog, fries]}
+  - {code: cafe_sweets,      icon: "local_cafe", fr: "Cafés et douceurs",            en: "Cafés & Sweets",                  cuisines: [coffee, tea, bubble_tea, cake, pastry, dessert, ice_cream, donut, waffle, crepe, juice, smoothie]}
+  - {code: bars,             icon: "local_bar", fr: "Bars et pubs",                 en: "Bars & Pubs",                     venue_type: BAR}
 
 # ---------------------------------------------------------------- price
 price_brackets:                # per person, CAD; max is exclusive, matched on the place's price_max

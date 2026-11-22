@@ -104,7 +104,7 @@ private fun PlaceCard(p: Place) {
                 p.venueType.name.lowercase().replace('_', ' '),
                 p.borough,
                 p.cuisines.takeIf { it.isNotEmpty() }?.joinToString(", "),
-                p.rating?.let { "★ $it (${p.ratingCount ?: 0})" },
+                p.rating?.let { "$it/5 (${p.ratingCount ?: 0})" },
                 if (p.isChain) "chain" else null,
             )
             Text(meta.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)

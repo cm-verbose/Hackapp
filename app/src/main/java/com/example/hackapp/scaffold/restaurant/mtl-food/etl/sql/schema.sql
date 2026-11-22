@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `area` (
 
 CREATE TABLE IF NOT EXISTS `cuisine_group` (
   `code` TEXT NOT NULL,
-  `emoji` TEXT NOT NULL,
+  `icon` TEXT NOT NULL,
   `label_fr` TEXT NOT NULL,
   `label_en` TEXT NOT NULL,
   `venue_type` TEXT,
