@@ -124,7 +124,7 @@ fun OnboardingProfilePage(
             },
         )
         SectionTitle(stringResource(R.string.profile_age_range))
-        SingleChoiceChips(ageRangeOptions(), draft.ageRange, onAgeRangeChange)
+        SingleChoiceChips(ageRangeOptions(), draft.ageRange, onAgeRangeChange, allowDeselect = true)
         when (val districts = state.districts) {
             LoadState.Loading -> LoadingState()
             LoadState.Failed -> ErrorState(onRetry = onRetryDistricts, body = districtLabel)
