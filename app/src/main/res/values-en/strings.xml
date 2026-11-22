@@ -242,4 +242,10 @@
         <item quantity="one">%d new stamp in your passport.</item>
         <item quantity="other">%d new stamps in your passport.</item>
     </plurals>
+
+    <!-- Main tabs -->
+
+    <!-- Planning: date and District map -->
+
+    <!-- Planning: engine messages -->
 </resources>

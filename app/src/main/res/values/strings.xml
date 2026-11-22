@@ -250,4 +250,10 @@
         <item quantity="one">%d nouveau timbre dans votre passeport.</item>
         <item quantity="other">%d nouveaux timbres dans votre passeport.</item>
     </plurals>
+
+    <!-- Main tabs -->
+
+    <!-- Planning: date and District map -->
+
+    <!-- Planning: engine messages -->
 </resources>

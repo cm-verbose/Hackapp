@@ -26,6 +26,14 @@ Living checklist for the current implementation step. Update it in the same chan
 | Passport | `cmvb` |
 | Onboarding, then Home, Itineraries, Settings, Planning and Underway | Niko and Claude |
 
+Current agent wave, based on the shared `itinerary/` models:
+
+| Agent | Scope |
+|---|---|
+| Planning core | Persistent `ItineraryRepository`, planning engine, budgets and ticket price logic |
+| Main tabs | Home, Itineraries, Past and Archived views, Settings |
+| District map | Date and time, interactive District map and District pick |
+
 ## Decisions
 
 | Topic | Decision |

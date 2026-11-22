@@ -14,10 +14,8 @@ import androidx.navigation.compose.composable
 import com.example.hackapp.R
 import com.example.hackapp.profile.SessionDestination
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
-import com.example.hackapp.scaffold.screens.home.ScreenHome
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
-import com.example.hackapp.scaffold.screens.itinerary.ScreenItinerary
-import com.example.hackapp.scaffold.screens.itinerary.ScreenItineraryDestination
+import com.example.hackapp.scaffold.screens.home.mainTabsGraph
 import com.example.hackapp.scaffold.screens.login.ScreenLogin
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
 import com.example.hackapp.scaffold.screens.login.ScreenPasswordReset
@@ -30,8 +28,7 @@ import com.example.hackapp.scaffold.screens.places.PlacesDestination
 import com.example.hackapp.scaffold.screens.places.PlacesScreen
 import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
 import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
-
-private const val PLANNING_STEPS = 5
+import com.example.hackapp.scaffold.screens.planning.planningGraph
 
 /**
  * Handles the navigation between screens which allows for dividing content
@@ -72,35 +69,13 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
             Box(Modifier.padding(padding)) { PlacesScreen() }
         }
 
-        composable<ScreenHomeDestination> {
-            ScreenHome(
-                controller = controller,
-                outerPaddingValues = padding,
-                onPlanItinerary = { controller.navigate(PlanningDateTimeRoute) },
-                onLogOff = {
-                    controller.navigate(ScreenLoginDestination) {
-                        popUpTo(controller.graph.id) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-            )
-        }
-        composable<ScreenItineraryDestination> {
-            ScreenItinerary(controller, padding)
-        }
+        mainTabsGraph(controller, padding)
         composable<ScreenPassportDestination> {
             ScreenPassport(controller, padding)
         }
 
-        placeholder<SettingsRoute>(controller, R.string.settings_title)
-
         onboardingGraph(controller)
-
-        placeholder<PlanningDateTimeRoute>(controller, R.string.planning_new_itinerary, 1, PLANNING_STEPS, PlanningDistrictPickRoute)
-        placeholder<PlanningDistrictPickRoute>(controller, R.string.district_pick_title, 2, PLANNING_STEPS, PlanningMealChoiceRoute)
-        placeholder<PlanningMealChoiceRoute>(controller, R.string.meal_title, 3, PLANNING_STEPS, PlanningStopSelectionRoute)
-        placeholder<PlanningStopSelectionRoute>(controller, R.string.stop_kind_event, 4, PLANNING_STEPS, ItineraryReviewRoute)
-        placeholder<ItineraryReviewRoute>(controller, R.string.review_title, 5, PLANNING_STEPS, UnderwayLegRoute)
+        planningGraph(controller)
 
         placeholder<UnderwayLegRoute>(controller, R.string.leg_next_stop_label, next = UnderwayArrivalRoute)
         placeholder<UnderwayArrivalRoute>(controller, R.string.arrival_en_route, next = UnderwayAtStopRoute)

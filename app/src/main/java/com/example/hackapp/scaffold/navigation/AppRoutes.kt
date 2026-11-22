@@ -25,11 +25,12 @@ import kotlinx.serialization.Serializable
 @Serializable data object SettingsRoute
 
 // Planning
-@Serializable data object PlanningDateTimeRoute
-@Serializable data object PlanningDistrictPickRoute
-@Serializable data object PlanningMealChoiceRoute
-@Serializable data object PlanningStopSelectionRoute
-@Serializable data object ItineraryReviewRoute
+/** A null [itineraryId] starts a new draft. */
+@Serializable data class PlanningDateTimeRoute(val itineraryId: String? = null)
+@Serializable data class PlanningDistrictPickRoute(val itineraryId: String)
+@Serializable data class PlanningMealChoiceRoute(val itineraryId: String)
+@Serializable data class PlanningStopSelectionRoute(val itineraryId: String)
+@Serializable data class ItineraryReviewRoute(val itineraryId: String)
 
 // Underway
 @Serializable data object UnderwayLegRoute
