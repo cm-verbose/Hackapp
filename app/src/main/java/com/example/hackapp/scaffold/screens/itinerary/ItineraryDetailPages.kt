@@ -167,7 +167,7 @@ fun ArchivedItineraryPage(
         DetailBody(state.detail, onRetry) { loaded ->
             DateLine(loaded)
             InfoCallout(stringResource(R.string.itineraries_archived_note))
-            if (state.deleteFailed) InfoCallout(stringResource(R.string.itinerary_delete_error))
+            if (state.deleteFailed) DeleteErrorNote()
             RouteMap(map, loaded.routeStops)
             loaded.stops.forEach { StatusStopRow(it, showStatus = false) }
             DataAttribution()
