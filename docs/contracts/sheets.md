@@ -136,6 +136,7 @@ PlannedDepartureContent(state, venueName, onTimeChange, onConfirm, onCancel, mod
 - Uses `HackappTimeWheels`; every wheel move calls `onTimeChange` (wire it to `holder.setTime`). The wheels show `rejectedTime` while there is an error, else `departure`.
 - `venueName` fills the subtitle's middle part; the Event type label stands in when null. The state has no venue field.
 - The duration row reads `planned_departure_typical` while `isTypicalStay`, else `planned_departure_duration`, and adds `planned_departure_next_day` when `crossesMidnight`. It is hidden while `error != null`; both errors show `planned_departure_error_range(earliestDeparture, latestDeparture)` as sentence times.
+- When `hasValidTime` is false the wheels, duration and range error are replaced by `planned_departure_no_time` (a live region); Confirm is disabled through `canConfirm`.
 - **Confirm** is disabled while `!canConfirm`. **Cancel** dismisses.
 
 ### `EventDetailsSheet.kt`
