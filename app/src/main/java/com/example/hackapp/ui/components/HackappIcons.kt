@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.BakeryDining
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.LocalBar
 import androidx.compose.material.icons.filled.LocalCafe
@@ -20,13 +24,17 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.OutdoorGrill
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.RamenDining
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.RiceBowl
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Sell
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.SetMeal
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -70,6 +78,16 @@ enum class HackappIcon(val vector: ImageVector) {
     LocalFireDepartment(Icons.Filled.LocalFireDepartment),
     RiceBowl(Icons.Filled.RiceBowl),
     Fastfood(Icons.Filled.Fastfood),
+
+    // Planning sheets (maquettes 141:2520, 141:2614, 141:3622)
+    DirectionsWalk(Icons.AutoMirrored.Filled.DirectionsWalk),
+    Schedule(Icons.Filled.Schedule),
+    Place(Icons.Filled.Place),
+    Sell(Icons.Filled.Sell),
+    Group(Icons.Filled.Group),
+    OpenInNew(Icons.AutoMirrored.Filled.OpenInNew),
+    Info(Icons.Outlined.Info),
+    Close(Icons.Filled.Close),
     ;
 
     companion object {
