@@ -50,7 +50,7 @@ Create: `PlannedDepartureHolder.create(event, itinerary, zone, latestDeparture):
 | `hasPublishedEnd` | Always false when the sheet is needed |
 | `isTypicalStay` | `stayMinutes` equals `typicalStayMinutes` and no end was published. False when clamped to the limit or edited |
 | `crossesMidnight` | `departure` is on a later day than `start`: show an after-midnight hint |
-| `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists at all). The invalid pick leaves `departure` unchanged |
+| `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists: `hasValidTime` is false, `latestDeparture` is not after `earliestDeparture`; never show the range, show a no-time-left message, disable Confirm). The invalid pick leaves `departure` unchanged |
 | `canConfirm` | `error == null` |
 
 Callbacks
@@ -86,7 +86,7 @@ Create: `EventDetailsHolder(showtimes: List<ReachableShowtime>, initialEventId, 
 - `Unknown`: unknown-price state (no reports and no published price).
 
 `TicketPriceFieldState`
-- `applicable`: false for Free Events. Hide the whole section: nothing can be entered or saved, and no report goes with the Stop.
+- `applicable`: false for Free Events (`inputError` is then always null). Hide the whole section: nothing can be entered or saved, and no report goes with the Stop.
 - `signedIn`: false means hide the field or show a sign-in prompt. Nobody else is ever shown a name.
 - `input`, `inputError` (`NotANumber`, `OutOfRange`), `minCad` 0, `maxCad` 500. Blank is valid and means no report. `$` before or after the amount and a comma decimal are accepted (`25 $`, `12,50 $`), at most 2 decimals, ASCII digits only. A leading minus is `OutOfRange`.
 - `ownReportCad`: this person's own saved report, loaded by `load()`; the field is prefilled with it.
@@ -136,6 +136,7 @@ PlannedDepartureContent(state, venueName, onTimeChange, onConfirm, onCancel, mod
 - Uses `HackappTimeWheels`; every wheel move calls `onTimeChange` (wire it to `holder.setTime`). The wheels show `rejectedTime` while there is an error, else `departure`.
 - `venueName` fills the subtitle's middle part; the Event type label stands in when null. The state has no venue field.
 - The duration row reads `planned_departure_typical` while `isTypicalStay`, else `planned_departure_duration`, and adds `planned_departure_next_day` when `crossesMidnight`. It is hidden while `error != null`; both errors show `planned_departure_error_range(earliestDeparture, latestDeparture)` as sentence times.
+- When `hasValidTime` is false the wheels, duration and range error are replaced by `planned_departure_no_time` (a live region); Confirm is disabled through `canConfirm`.
 - **Confirm** is disabled while `!canConfirm`. **Cancel** dismisses.
 
 ### `EventDetailsSheet.kt`

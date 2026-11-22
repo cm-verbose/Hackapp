@@ -25,7 +25,7 @@ enum class DepartureError {
     /** The pick is not inside the range [PlannedDepartureUiState.earliestDeparture] to [PlannedDepartureUiState.latestDeparture], including a stay of zero or less. */
     OutsideWindow,
 
-    /** No time is valid: the Event leaves no room before the latest departure. */
+    /** No time is valid: `latestDeparture` is not after the Event start. Do not show the range. */
     NotAfterStart,
 }
 
@@ -54,7 +54,10 @@ data class PlannedDepartureUiState(
     val rejectedTime: LocalTime? = null,
     val error: DepartureError? = null,
 ) {
-    val canConfirm: Boolean get() = error == null
+    /** False when [latestDeparture] is not after [earliestDeparture]: no time is valid. Never show the range. */
+    val hasValidTime: Boolean get() = latestDeparture.isAfter(earliestDeparture)
+
+    val canConfirm: Boolean get() = error == null && hasValidTime
 }
 
 /**
@@ -104,6 +107,7 @@ class PlannedDepartureHolder private constructor(
      */
     fun setTime(time: LocalTime) {
         val current = _state.value
+        if (!current.hasValidTime) return
         if (current.error == null && time == current.departure.toLocalTime()) return
         var candidate = start.toLocalDate().atTime(time).atZone(zone)
         if (!candidate.isAfter(start)) candidate = start.toLocalDate().plusDays(1).atTime(time).atZone(zone)
@@ -116,6 +120,7 @@ class PlannedDepartureHolder private constructor(
 
     /** Sets the stay length, for steppers. */
     fun setStayMinutes(minutes: Int) {
+        if (!_state.value.hasValidTime) return
         if (minutes <= 0) {
             _state.update { it.copy(error = DepartureError.OutsideWindow, rejectedTime = null) }
             return
@@ -129,7 +134,9 @@ class PlannedDepartureHolder private constructor(
     }
 
     /** Goes back to the typical stay. */
-    fun reset() = apply(prefill)
+    fun reset() {
+        if (_state.value.hasValidTime) apply(prefill)
+    }
 
     /** The Planned Departure to pass to `eventStop`, or null while there is an error. */
     fun confirm(): ZonedDateTime? = _state.value.takeIf { it.canConfirm }?.departure
@@ -174,7 +181,7 @@ class PlannedDepartureHolder private constructor(
                 hasPublishedEnd = suggestion.hasPublishedEnd,
                 isTypicalStay = !suggestion.hasPublishedEnd && stay == typicalStayMinutes(event.type),
                 crossesMidnight = departure.toLocalDate() != start.toLocalDate(),
-                error = if (!departure.isAfter(start)) DepartureError.NotAfterStart else null,
+                error = if (!latestDeparture.isAfter(start)) DepartureError.NotAfterStart else null,
             )
             return PlannedDepartureHolder(zone, latestDeparture, start, departure, state)
         }

@@ -231,6 +231,7 @@
     <string name="planned_departure_duration">Duration: %1$s</string>
     <string name="planned_departure_next_day">Next day</string>
     <string name="planned_departure_error_range">Choose a time from %1$s to %2$s.</string>
+    <string name="planned_departure_no_time">No time left before the next stop.</string>
     <!-- Event details sheet -->
     <string name="event_close">Close</string>
     <string name="event_end_unknown">End time not published</string>

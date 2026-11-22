@@ -103,16 +103,26 @@ fun PlannedDepartureContent(
             color = scheme.onSurface,
         )
 
-        HackappTimeWheels(
-            hour = shown.hour,
-            minute = shown.minute,
-            onHourChange = { onTimeChange(LocalTime.of(it, shown.minute)) },
-            onMinuteChange = { onTimeChange(LocalTime.of(shown.hour, it)) },
-            modifier = Modifier.padding(vertical = 4.dp),
-        )
-
         val error = state.error
-        if (error != null) {
+        if (!state.hasValidTime) {
+            // The next Stop leaves no room: nothing to pick, so the wheels and duration stay hidden.
+            Text(
+                stringResource(R.string.planned_departure_no_time),
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        } else {
+            HackappTimeWheels(
+                hour = shown.hour,
+                minute = shown.minute,
+                onHourChange = { onTimeChange(LocalTime.of(it, shown.minute)) },
+                onMinuteChange = { onTimeChange(LocalTime.of(shown.hour, it)) },
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+        }
+
+        if (state.hasValidTime && error != null) {
             // Both errors mean the same thing to the person: pick a time inside the allowed range.
             Text(
                 when (error) {
@@ -126,7 +136,7 @@ fun PlannedDepartureContent(
                 color = scheme.error,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
-        } else {
+        } else if (state.hasValidTime) {
             // The duration describes the last valid choice, which the error message would contradict.
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 HackappIconView(HackappIcon.Schedule, tint = scheme.onSurfaceVariant)
@@ -228,6 +238,16 @@ private fun PlannedDepartureAfterMidnightPreview() = PlannedDeparturePreview(
         stayMinutes = 150,
         start = ZonedDateTime.of(2026, 11, 28, 23, 0, 0, 0, PreviewZone),
         windowEnd = ZonedDateTime.of(2026, 11, 29, 3, 0, 0, 0, PreviewZone),
+    ),
+)
+
+@Preview(name = "PlannedDeparture · no time left", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun PlannedDepartureNoTimePreview() = PlannedDeparturePreview(
+    previewState(
+        stayMinutes = 0,
+        error = DepartureError.NotAfterStart,
+        windowEnd = ZonedDateTime.of(2026, 11, 28, 14, 0, 0, 0, PreviewZone),
     ),
 )
 

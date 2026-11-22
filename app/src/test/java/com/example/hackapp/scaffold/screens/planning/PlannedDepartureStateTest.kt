@@ -190,4 +190,22 @@ class PlannedDepartureStateTest {
         h.setStayMinutes(150)
         assertTrue(h.state.value.isTypicalStay)
     }
+
+    @Test
+    fun `an empty range exposes no valid time and blocks Confirm`() {
+        val ev = event("e", start = at(Nov28, 20).toString())
+        val latest = at(Nov28, 19, 30).atZoneSameInstant(Toronto)
+        val h = PlannedDepartureHolder.create(ev, night(), Toronto, latest)!!
+        assertFalse(h.state.value.hasValidTime)
+        assertEquals(DepartureError.NotAfterStart, h.state.value.error)
+        assertFalse(h.state.value.canConfirm)
+        h.setTime(LocalTime.of(23, 0))
+        h.setStayMinutes(30)
+        h.reset()
+        assertEquals(DepartureError.NotAfterStart, h.state.value.error)
+        assertNull(h.confirm())
+        val equal = PlannedDepartureHolder.create(ev, night(), Toronto, at(Nov28, 20).atZoneSameInstant(Toronto))!!
+        assertFalse(equal.state.value.hasValidTime)
+        assertTrue(holder(20).state.value.hasValidTime)
+    }
 }
