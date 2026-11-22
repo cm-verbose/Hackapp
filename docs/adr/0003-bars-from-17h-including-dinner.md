@@ -1,0 +1,3 @@
+# Bars count as meals from 17:00, including dinner
+
+`prep/design/screen-list.md` says bars count as Meals from 17:00 on day and night Itineraries, while `prep/api-business/restaurant-data-design-final.md` (decision 2) limits bars to evening slots, and the code followed the data design, so an 18:30 dinner never offered a bar. On 2026-11-22 the user chose the screen-list rule: bars are offered for Meals from 17:00, including the dinner slot, and only to adults-only audiences (never family-friendly or no-alcohol profiles). This supersedes decision 2 of the data design on this point. While `places.db` is frozen pending the Google data decision (ADR 0002 conflict), the rule is applied in the app's slot logic; `reference.yaml` is updated so the next database build matches.

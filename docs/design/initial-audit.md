@@ -76,6 +76,29 @@ Nothing is implemented yet. The fixes listed above go into the Phase 2 plan afte
   - Suggested CLAUDE.md 6.1 edit (for team-lead): "Assumed (not in Figma): dark canvas `#19120E`, dark onSurfaceVariant `#D7C2BA`" becomes "Assumed (not in Figma): dark canvas `#19120E`, dark card `#251E1B` (= surfaceContainer), dark onSurfaceVariant `#D7C2BA`". Also in 6.1, "card" in the AppColors list can read "card (white light / `#251E1B` dark)".
 - **D4 Corner rule:** hero or feature cards 32 (`ExtraLarge`), content cards and callouts 24 (`Large`), list items and option cards 16 (`Medium`). Padding: 20 / 16 / 16 (list item content 16 h, 12 v).
 
+- **D6 Red text contrast: FINAL** (team-lead, 2026-11-22; supersedes every earlier D6 version. There is no #D60028 and no redText() accessor: #D60028 would need exceptions on dialogs (4.40:1) and errorContainer and a dark-mode branch, while `onPrimaryContainer` is one existing token that passes everywhere and already has a dark value.) Red **text** must reach at least 4.5:1 on its actual background, using one theme token:
+  - Red text on a white `card` may use `primary` #E4002B (4.85:1).
+  - Red text anywhere else (canvas, sheets, dialogs, chips) uses `onPrimaryContainer`: #930018 in light (8.2:1 on canvas, 7.6:1 on surfaceContainerHigh), #FFDAD5 in dark.
+  - Text on `primaryContainer` is always `onPrimaryContainer`, never `primary` or a brighter red.
+  - On `errorContainer`, use `onErrorContainer`.
+  - `primary` stays the Figma value for fills, borders, icons and progress; non-text needs only 3:1.
+  - Wrapped `TextButton` and `AlertDialog` buttons pass `contentColor` explicitly, because the M3 default is `primary`.
+  - Not used: `HackappPalette.SesameRedAccessible`.
+
+  | Element | Background | Today | Ratio today | T11 colour |
+  |---|---|---|---|---|
+  | Outline button "Arrondissement suivant" (`ScreensPlanning.kt:288`) | canvas | `onSurface` (`HackappButtons.kt:58`) | about 15 | Unchanged (not red) |
+  | `StopTypeHeader` (`StopOptionCards.kt:36-41`) | canvas | primary | 4.25 | onPrimaryContainer |
+  | `HackappTextActionButton` default (`HackappButtons.kt:77`): "Passer", "Passer cet arrêt", "Itinéraire Google Maps" | canvas | primary | 4.25 | onPrimaryContainer (default contentColor) |
+  | Login text buttons | hero, forced dark | dark primary | about 8.2 | The new default gives #FFDAD5 on hero, which also passes |
+  | "Retirer" (`StopRow.kt:67`, raw `Text`) | canvas | primary | 4.25 | onPrimaryContainer; becomes `HackappSmallTextButton` (A3-21), which needs a `contentColor` parameter |
+  | "Choisir un autre" (`DistrictPreviewSheet`) | sheet surfaceContainerLow | primary | 4.4 | onPrimaryContainer |
+  | `LateArrivalWarning` text button | errorContainer | primary | **3.8** | `onErrorContainer`. Time-critical choice: same task as the other D6 fixes (ux-designer) |
+  | AlertDialog buttons (`DateTimeFields.kt:107`, replace-trip dialog) | surfaceContainerHigh | primary | **3.95** | onPrimaryContainer |
+  | Focused `HackappTextField` label | canvas | primary | 4.25 | `focusedLabelColor = onPrimaryContainer`; border and cursor stay primary |
+  | `PlacesScreen.kt:110` meta line | white Card | primary | 4.85 | Unchanged (debug) |
+  | "Repas" `StopTypeTag` on the Leg hero card | own fill #FFBABF | #151515 | 11.3 | Unchanged |
+
 ## Design-system decisions requested (team-lead) (answered above)
 1. **secondaryContainer** (item 4): keep it = hero burgundy (Figma as implemented), or change it to a light container so M3 defaults look right.
 2. **Page buttons** (items 6, 8): full width in `BottomActions`, one label style (`titleMedium` or `labelLarge`).

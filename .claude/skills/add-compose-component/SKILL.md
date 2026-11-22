@@ -1,12 +1,12 @@
 ---
 name: add-compose-component
-description: Checklist for adding or changing a reusable Jetpack Compose component in Hackapp (ui/components/), usually from a Figma frame. Use when creating a new composable card, row, chip, sheet or map widget, or when adding user-facing strings to one. Covers theme tokens, French-default/English strings, @Preview with HackappTheme, and the KDoc "/*" build trap.
+description: Checklist for adding or changing a reusable Jetpack Compose component in Hackapp (ui/components/), usually from a Figma frame. Use when creating a new composable card, row, chip, sheet or map widget, or when adding user-facing strings to one. Covers theme tokens, the team's design decisions (corners, colours, buttons, spacing), French-default/English strings, @Preview with HackappTheme, and the KDoc "/*" build trap.
 ---
 
 # add-compose-component
 
 Background: CLAUDE.md section 6 (6.1 theme, 6.2 component conventions, 6.3 strings). Figma file `ETS-HackApp` (fileKey `VXMqds2RqjgaZ0JXHNNM6o`), Components page `53:1079`, strings page `55:2` (FR frame `55:3`, EN frame `55:7`).
-Reference example to copy the shape from: `app\src\main\java\com\example\hackapp\ui\components\InfoCallout.kt`.
+Reference example to copy the structure from (KDoc, parameters, preview): `app\src\main\java\com\example\hackapp\ui\components\InfoCallout.kt`. Its corner (`Medium`) and background predate the design decisions in step 4a; follow step 4a, not the example, for those.
 
 ## Before writing
 1. Search `ui\components\` (and `ui\components\map\`) for an existing component; extend it rather than duplicating it. Check `HackappSmallButton.kt`, `HackappButtons.kt`, `HackappIcons.kt`, `StopTypeTag.kt`, `ItineraryStrip.kt`, `StopRow.kt`.
@@ -20,6 +20,18 @@ Reference example to copy the shape from: `app\src\main\java\com\example\hackapp
    - Corners: `RoundedCornerShape(HackappCorners.<Size>)`, where the sizes are ExtraSmall 4, Small 8, Medium 16, LargeIncreased 20, Large 24, ExtraLarge 32, ExtraExtraLarge 48.
    - Spacing in `dp` is fine (no spacing tokens exist).
    - It must work in dark theme too: check the preview with `darkTheme = true` if the component uses surfaces or hero colours.
+4a. **Design decisions.** Source: the "Decisions" section of `docs/design/initial-audit.md`, approved by team-lead; read it for the reasons. They apply to **new and changed components now**. Existing components are brought in line by tasks T10-T12, so do not refactor unrelated files.
+   - Corners by role (D4): hero/feature card `ExtraLarge` 32 with padding 20; content card or callout `Large` 24 with padding 16; list item or option card `Medium` 16 (content 16 horizontal, 12 vertical).
+   - Never rely on M3 defaults that use `secondaryContainer`, which is dark burgundy #5D002C (D1). Examples: `FilledTonalButton`, the `NavigationBar` indicator, a `SegmentedButton` active container, `Badge`, chip selected containers. Pass explicit colours, e.g. `primaryContainer` / `onPrimaryContainer`.
+   - Content cards are `AppColors.card` on a `AppColors.canvas` page (D3, D5). Use `onHero` / `onHeroCard` text only inside a component that draws its own `hero` / `heroCard` background, never relying on the caller's page.
+   - Buttons (D2): reuse `HackappButtons` / `HackappSmallButton`. Labels use `labelLarge`. Size with `heightIn(min = ...)` only (56 page, 40 small, touch target at least 48). No fixed `height` and no `maxLines = 1`.
+   - Red text (D6, final): red text must reach at least 4.5:1 on the background it actually sits on.
+     - `primary` is for fills, borders, icons and progress. Use it for text only on a white `card` (4.85:1).
+     - Red text anywhere else (canvas, sheets, dialogs, chips) and all text on `primaryContainer` use `onPrimaryContainer`.
+     - On `errorContainer`, use `onErrorContainer`.
+     - Do not use `SesameRedAccessible` / #D60028.
+     - Always pass `contentColor` explicitly to `TextButton` and dialog buttons, because the M3 default is `primary`.
+   - Spacing grid: 4 / 8 / 12 / 16 / 24 dp (no 10).
 5. Icons: through the `HackappIcon` enum / `HackappIconView` in `HackappIcons.kt`. Add an enum entry rather than using Material icons directly.
 6. **Strings:** user-facing text comes from `stringResource(R.string.x)`, passed as a parameter default so callers can override it (`label: String = stringResource(R.string.x)`).
    - Add every key to **both** `app\src\main\res\values\strings.xml` (French, the default, copied from Figma frame `55:3`) and `app\src\main\res\values-en\strings.xml` (English, from frame `55:7`).
@@ -31,7 +43,7 @@ Reference example to copy the shape from: `app\src\main\java\com\example\hackapp
 ## Preview
 8. Add at least one private preview, wrapped in `HackappTheme`, using `PreviewDefaults`:
    `@Preview(name = "<Name>", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)`
-   Use `PreviewDefaults.HERO_CARD` as the background for dark hero cards. Add extra previews for important states (selected, disabled, long text in French).
+   Preview on the background the screen actually uses (`CANVAS` for pages, D3). A component that does not draw its own hero background must also have a `CANVAS` preview, because a `HERO_CARD` preview background hid defect A3-1. Use `PreviewDefaults.HERO_CARD` only for components shown on a hero card. Add extra previews for important states (selected, disabled, long text in French).
 
 ## Verify
 9. Compile: `.\gradlew.bat :app:compileDebugKotlin`. Run Gradle from one agent at a time. During audits only workflow-auditor runs Gradle (`docs/implementation-plan.md`).

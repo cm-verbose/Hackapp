@@ -47,6 +47,7 @@ XML escaping: write the apostrophes as the typographic ’ (as the existing stri
 ## Accessibility
 - `AlertDialog` gives a dialog role and focus trapping. The title is read first.
 - Both buttons use M3 `TextButton`, which already meets the 48 dp minimum touch target.
+- Button text colour (D6, `docs/design/initial-audit.md`): set `contentColor = onPrimaryContainer` (#930018) on both TextButtons. The default primary on the dialog's `surfaceContainerHigh` is only 3.95:1 and fails AA.
 - The FR confirm label ("Terminer et planifier", 21 characters) fits one line at 100 % font. At 200 % the M3 dialog stacks the buttons, which is acceptable.
 
 ## Acceptance

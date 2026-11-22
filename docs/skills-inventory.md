@@ -113,6 +113,9 @@ Gradle troubleshooting: covered by CLAUDE.md notes (`.\gradlew.bat`, compose BOM
 
 Frontmatter was checked by hand: valid `name` and `description`, no `: ` or ` #` sequences in plain scalars. PyYAML is not installed, so no parser check was run. Claude Code lists new project skills only after a session restart, so discovery still has to be confirmed in a fresh session. kotlin-lsp needs user approval; run-android is deferred until a device test task exists.
 
+## 5b. Screenshot testing pilot (SC1)
+Research is in `docs/engineering/screenshot-testing.md`. Recommendation: AGP screenshot test suites, with Roborazzi as the fallback. It needs a `LocalInspectionMode` guard in `Modifier.entrance()`. No Gradle changes were made.
+
 ## 6. Teammate input
 Asked feature-engineer, ux-designer and visual-designer for missing capabilities (one message each). All three replied.
 
