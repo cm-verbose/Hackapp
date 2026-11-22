@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cached event sources. The marker doc is create-only, so once a source
+    // has been stored it can't be replaced from a client.
+    match /eventSources/{sourceKey} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['sourceKey', 'eventCount', 'storedAt'])
+        && request.resource.data.sourceKey == sourceKey
+        && request.resource.data.eventCount is int
+        && request.resource.data.storedAt == request.time;
+      allow update, delete: if false;
+
+      match /events/{eventId} {
+        allow read: if request.auth != null;
+        // Writes are only needed during the first fill. Updates are allowed so a fill
+        // interrupted mid-way can be retried, but the ids/fields must look like an Event.
+        allow create, update: if request.auth != null
+          && request.resource.data.id is string
+          && request.resource.data.title is string
+          && request.resource.data.type is string
+          && request.resource.data.location is map
+          && request.resource.data.schedule is map
+          && request.resource.data.cost is map;
+        allow delete: if false;
+      }
+    }
+  }
+}
