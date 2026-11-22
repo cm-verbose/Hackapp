@@ -67,3 +67,34 @@ Shown on Step 1 when a date or time change makes Stops no longer fit.
 
 - Times in the dialogs' Stop rows use `18:30`. The sentence time in `review_unreachable_body` uses `19 h 30` (non-breaking spaces from the formatter).
 - Maquette text left out: "Dîner (repas 1)" and similar labels are replaced by the `budget_*` keys. Maquette "Seront aussi retirés" is now "Arrêts touchés"; the frame's layer name is not text.
+
+## Removal reasons (`StopRemovalReason`)
+
+Shown beside a Stop in the `stop_edit_removed` list. One key per enum value.
+
+| Reason | Key |
+|---|---|
+| `RemovedByPerson` | `stop_edit_reason_removed_by_person` |
+| `DateChanged` | `stop_edit_reason_date_changed` |
+| `OutsideWindow` | `stop_edit_reason_outside_window` |
+| `DistrictRemoved` | `stop_edit_reason_district_removed` |
+| `MealBlockRemoved` | `stop_edit_reason_meal_block_removed` |
+| `MealClosed` | `stop_edit_reason_meal_closed` |
+| `NoLongerReachable` | `stop_edit_reason_no_longer_reachable` |
+| `MealOverBudget` | `stop_edit_reason_meal_over_budget` |
+
+`RemovedByPerson` never triggers a warning (`needsWarning` ignores it), so its key is a fallback only.
+
+## Reschedule picker and Review states (`docs/contracts/review.md`)
+
+| Element | Key | Arguments / note |
+|---|---|---|
+| Picker title | `review_reschedule_title` | The affected Stop's name is data |
+| Progress "2 sur 3" | `review_reschedule_progress` | `%1$d` index (1-based), `%2$d` total |
+| Option row | none | Start time from data, plus `review_planned_departure` when the option has no published end |
+| Empty state | `review_reschedule_empty` | Actions `action_reorganize` and `action_cancel` |
+| Start `WindowEnded` | `review_start_window_ended`, button `review_change_date` | Replaces the notification note, error colour |
+| Start `NoEvents` | `review_start_no_events` | Same slot |
+| Start `NotToday` | `review_start_only_on` | See above |
+| Load error | `review_load_failed`, button `action_retry` | |
+| Save error (`actionFailed`) | `planning_save_error` | Existing |
