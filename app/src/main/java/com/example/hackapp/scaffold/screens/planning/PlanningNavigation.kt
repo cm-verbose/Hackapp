@@ -3,7 +3,6 @@ package com.example.hackapp.scaffold.screens.planning
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.hackapp.R
 import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
@@ -12,13 +11,14 @@ import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.navigation.PlanningStopSelectionRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
+import com.example.hackapp.scaffold.navigation.flowComposable
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
 
 internal const val PLANNING_STEPS = 5
 
 /** The five Planning routes. Each page after Date and time receives its Itinerary id. */
 fun NavGraphBuilder.planningGraph(controller: NavHostController) {
-    composable<PlanningDateTimeRoute> { entry ->
+    flowComposable<PlanningDateTimeRoute> { entry ->
         val route = entry.toRoute<PlanningDateTimeRoute>()
         PlanningDateTimeScreen(
             itineraryId = route.itineraryId,
@@ -26,7 +26,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             onContinue = { id -> controller.navigate(PlanningDistrictPickRoute(id)) },
         )
     }
-    composable<PlanningDistrictPickRoute> { entry ->
+    flowComposable<PlanningDistrictPickRoute> { entry ->
         val route = entry.toRoute<PlanningDistrictPickRoute>()
         DistrictPickScreen(
             itineraryId = route.itineraryId,
@@ -34,7 +34,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             onContinue = { id -> controller.navigate(PlanningMealChoiceRoute(id)) },
         )
     }
-    composable<PlanningMealChoiceRoute> { entry ->
+    flowComposable<PlanningMealChoiceRoute> { entry ->
         val route = entry.toRoute<PlanningMealChoiceRoute>()
         RoutePlaceholder(
             title = stringResource(R.string.meal_title),
@@ -44,7 +44,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             onNext = { controller.navigate(PlanningStopSelectionRoute(route.itineraryId)) },
         )
     }
-    composable<PlanningStopSelectionRoute> { entry ->
+    flowComposable<PlanningStopSelectionRoute> { entry ->
         val route = entry.toRoute<PlanningStopSelectionRoute>()
         RoutePlaceholder(
             title = stringResource(R.string.stop_kind_event),
@@ -54,7 +54,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             onNext = { controller.navigate(ItineraryReviewRoute(route.itineraryId)) },
         )
     }
-    composable<ItineraryReviewRoute> {
+    flowComposable<ItineraryReviewRoute> {
         RoutePlaceholder(
             title = stringResource(R.string.review_title),
             onBack = { controller.popBackStack() },

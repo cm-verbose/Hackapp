@@ -9,6 +9,10 @@ import com.example.hackapp.scaffold.navigation.ArchivedItineraryRoute
 import com.example.hackapp.scaffold.navigation.PastItineraryRoute
 import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.navigation.SettingsRoute
+import com.example.hackapp.scaffold.navigation.flowBackEnter
+import com.example.hackapp.scaffold.navigation.flowForwardEnter
+import com.example.hackapp.scaffold.navigation.flowForwardExit
+import com.example.hackapp.scaffold.navigation.isProgressFlow
 import com.example.hackapp.scaffold.screens.itinerary.ScreenArchivedItinerary
 import com.example.hackapp.scaffold.screens.itinerary.ScreenItinerary
 import com.example.hackapp.scaffold.screens.itinerary.ScreenItineraryDestination
@@ -18,7 +22,11 @@ import com.example.hackapp.scaffold.screens.settings.ScreenSettings
 
 /** Home, Itineraries and Settings. Passport stays in AppNavigation and is owned separately. */
 fun NavGraphBuilder.mainTabsGraph(controller: NavHostController, padding: PaddingValues) {
-    composable<ScreenHomeDestination> {
+    composable<ScreenHomeDestination>(
+        enterTransition = { if (initialState.destination.isProgressFlow()) flowForwardEnter() else null },
+        exitTransition = { if (targetState.destination.isProgressFlow()) flowForwardExit() else null },
+        popEnterTransition = { if (initialState.destination.isProgressFlow()) flowBackEnter() else null },
+    ) {
         ScreenHome(
             controller = controller,
             outerPaddingValues = padding,

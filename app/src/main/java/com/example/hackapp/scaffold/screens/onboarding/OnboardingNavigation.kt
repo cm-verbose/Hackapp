@@ -20,7 +20,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.LocalCityPack
@@ -35,6 +34,7 @@ import com.example.hackapp.scaffold.navigation.OnboardingGraphRoute
 import com.example.hackapp.scaffold.navigation.OnboardingInterestsRoute
 import com.example.hackapp.scaffold.navigation.OnboardingProfileRoute
 import com.example.hackapp.scaffold.navigation.OnboardingVisitorTypeRoute
+import com.example.hackapp.scaffold.navigation.flowComposable
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
 import com.example.hackapp.scaffold.screens.planning.rememberSignOut
@@ -49,7 +49,7 @@ import java.time.Instant
 /** The four onboarding routes. Their nested graph owns the shared [OnboardingViewModel]. */
 fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
     navigation<OnboardingGraphRoute>(startDestination = OnboardingVisitorTypeRoute) {
-        composable<OnboardingVisitorTypeRoute> { entry ->
+        flowComposable<OnboardingVisitorTypeRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)
             val state by viewModel.state.collectAsState()
             val signOut = rememberSignOut {
@@ -65,7 +65,7 @@ fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
                 onSignOut = signOut,
             )
         }
-        composable<OnboardingProfileRoute> { entry ->
+        flowComposable<OnboardingProfileRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)
             val state by viewModel.state.collectAsState()
             OnboardingProfilePage(
@@ -79,7 +79,7 @@ fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
                 onContinue = { controller.navigate(OnboardingBudgetAudienceRoute) },
             )
         }
-        composable<OnboardingBudgetAudienceRoute> { entry ->
+        flowComposable<OnboardingBudgetAudienceRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)
             val state by viewModel.state.collectAsState()
             OnboardingBudgetAudiencePage(
@@ -94,7 +94,7 @@ fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
                 onContinue = { controller.navigate(OnboardingInterestsRoute) },
             )
         }
-        composable<OnboardingInterestsRoute> { entry ->
+        flowComposable<OnboardingInterestsRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)
             val state by viewModel.state.collectAsState()
             LaunchedEffect(state.finished) {
