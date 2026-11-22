@@ -1,11 +1,13 @@
 package com.example.hackapp.citypack
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import com.example.hackapp.data.model.LocalizedText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -86,17 +88,25 @@ val LocalCityPack = staticCompositionLocalOf { ActiveCityPack }
 
 private val DistrictJson = Json { ignoreUnknownKeys = true }
 
+/** Reads the pack's districts.json off the main thread. Throws if it cannot be read. */
+suspend fun loadDistrictMap(context: Context, cityPack: CityPack): DistrictMapData =
+    withContext(Dispatchers.IO) {
+        context.assets.open(cityPack.districtMapAsset).bufferedReader(Charsets.UTF_8).use {
+            DistrictJson.decodeFromString<DistrictMapData>(it.readText())
+        }
+    }
+
 /** Loads the active pack's districts.json from assets (null while loading or if it cannot be read). */
 @Composable
 fun rememberDistrictMap(cityPack: CityPack = LocalCityPack.current): State<DistrictMapData?> {
     val context = LocalContext.current
     return produceState<DistrictMapData?>(initialValue = null, cityPack.districtMapAsset) {
-        value = withContext(Dispatchers.IO) {
-            runCatching {
-                context.assets.open(cityPack.districtMapAsset).bufferedReader(Charsets.UTF_8).use {
-                    DistrictJson.decodeFromString<DistrictMapData>(it.readText())
-                }
-            }.getOrNull()
+        value = try {
+            loadDistrictMap(context, cityPack)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
         }
     }
 }
