@@ -1,6 +1,7 @@
 package com.example.hackapp.passport
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.Nov28
 import com.example.hackapp.itinerary.StopStatus
 import com.example.hackapp.itinerary.at
@@ -28,7 +29,7 @@ class StampRepositoryTest {
         PreferenceDataStoreFactory.create(scope = scope) { folder.root.resolve("stamps.preferences_pb") }
     }
     private val resolver = StampIdentityResolver { stop, _ -> StampIdentity("event:${stop.sourceId}", "music") }
-    private val itinerary = night(stops = listOf(
+    private val itinerary = night(phase = ItineraryPhase.Completed, stops = listOf(
         stop("a", at(Nov28, 19), at(Nov28, 20), status = StopStatus.Confirmed),
         stop("b", at(Nov28, 21), at(Nov28, 22), status = StopStatus.Skipped),
     ))
