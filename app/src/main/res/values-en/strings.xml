@@ -265,9 +265,10 @@
     <string name="event_add_without_price">Add without price</string>
     <string name="review_title">Review</string>
     <string name="review_planned_departure">planned departure %1$s</string>
+    <string name="review_leave_by">leave by %1$s</string>
     <string name="review_start">Start itinerary</string>
     <string name="review_notification_note">We’ll ask you to allow notifications.</string>
-    <string name="review_start_only_on">Can only be started on %1$s.</string>
+    <string name="review_start_only_on">Available on %1$s.</string>
     <string name="review_start_warning_title">End the current itinerary?</string>
     <string name="review_start_warning_body">“%1$s” moves to Past. Confirmed stops keep their stamps. The others are marked skipped.</string>
     <string name="review_start_warning_confirm">End and start</string>
@@ -289,7 +290,7 @@
     <string name="stop_edit_reason_meal_over_budget">Over the meal budget</string>
     <string name="review_reschedule_title">Choose another showtime</string>
     <string name="review_reschedule_progress">Stop %1$d of %2$d</string>
-    <string name="review_reschedule_empty">No other reachable showtime.</string>
+    <string name="review_reschedule_empty">No other reachable showtime. Reorganize removes these stops.</string>
     <string name="review_reschedule_unavailable">These stops can’t be rescheduled.</string>
     <string name="review_start_window_ended">The time slot has ended.</string>
     <string name="review_change_date">Change date and time</string>

@@ -270,9 +270,10 @@
     <string name="event_add_without_price">Ajouter sans prix</string>
     <string name="review_title">Révision</string>
     <string name="review_planned_departure">départ prévu %1$s</string>
+    <string name="review_leave_by">partez avant %1$s</string>
     <string name="review_start">Démarrer l’itinéraire</string>
     <string name="review_notification_note">On vous demandera d’autoriser les notifications.</string>
-    <string name="review_start_only_on">Démarrage possible seulement le %1$s.</string>
+    <string name="review_start_only_on">Disponible le %1$s.</string>
     <string name="review_start_warning_title">Terminer l’itinéraire en cours?</string>
     <string name="review_start_warning_body">« %1$s » sera déplacé dans Passés. Les arrêts confirmés garderont leur timbre, les autres seront marqués comme sautés.</string>
     <string name="review_start_warning_confirm">Terminer et démarrer</string>
@@ -294,7 +295,7 @@
     <string name="stop_edit_reason_meal_over_budget">Dépasse le budget du repas</string>
     <string name="review_reschedule_title">Choisir une autre séance</string>
     <string name="review_reschedule_progress">Arrêt %1$d sur %2$d</string>
-    <string name="review_reschedule_empty">Aucune autre séance accessible.</string>
+    <string name="review_reschedule_empty">Aucune autre séance accessible. Réorganiser retire ces arrêts.</string>
     <string name="review_reschedule_unavailable">Ces arrêts ne peuvent pas être replanifiés.</string>
     <string name="review_start_window_ended">La plage horaire est terminée.</string>
     <string name="review_change_date">Changer la date et l’heure</string>

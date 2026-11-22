@@ -16,7 +16,6 @@ Maps each maquette element to its string key. Keys exist in `values/strings.xml`
 | Budget card title | `planning_budget_title` | Existing "Budget" |
 | Budget rows | `budget_lunch`, `budget_dinner`, `budget_late_night`, `budget_events` | Existing. Show only the Meals planned. Values (`< 50 $`) come from `budget_under_*` |
 | Primary button | `review_start` | Existing |
-| Note under button | `review_notification_note` | Existing |
 
 States:
 
@@ -93,7 +92,8 @@ Shown beside a Stop in the `stop_edit_removed` list. One key per enum value.
 | Progress "Arrêt 2 sur 3" | `review_reschedule_progress` | `%1$d` index (1-based), `%2$d` total |
 | Option row | none | Start time from data, plus `review_planned_departure` when the option has no published end |
 | Reschedule unavailable | `review_reschedule_unavailable` | Shown when the affected Stops cannot be rescheduled |
-| Empty state | `review_reschedule_empty` | Actions `action_reorganize` and `action_cancel` |
+| Empty state | `review_reschedule_empty` | Says that Reorganize removes the Stops. Actions `action_reorganize` and `action_cancel` |
+| Leave-by hint | `review_leave_by` | `%1$s` time. Lowercase fragment, like `review_planned_departure`, which stays for the picker |
 | Start `WindowEnded` | `review_start_window_ended`, button `review_change_date` | Replaces the notification note, error colour |
 | Start `NoEvents` | `review_start_no_events` | Same slot |
 | Start `NotToday` | `review_start_only_on` | See above |
