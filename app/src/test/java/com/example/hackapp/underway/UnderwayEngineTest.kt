@@ -347,4 +347,15 @@ class UnderwayEngineTest {
         val ended = reduce(s, E.EndItinerary(true), t(19)).state
         assertTrue(UnderwayEngine.alarmsToSchedule(ctx, ended).isEmpty())
     }
+
+    @Test
+    fun `a stale transport tap for another Stop changes nothing`() {
+        val s = begin()
+        val stale = reduce(s, E.OpenTransport(TransportChoice.Uber, "b"), t(18, 30))
+        assertEquals(Rejection.StaleStop, stale.rejection)
+        assertEquals(s, stale.state)
+        val ok = reduce(s, E.OpenTransport(TransportChoice.Uber, "a"), t(18, 30))
+        assertNull(ok.rejection)
+        assertEquals(UnderwayPhase.Arrival, ok.state.phase)
+    }
 }

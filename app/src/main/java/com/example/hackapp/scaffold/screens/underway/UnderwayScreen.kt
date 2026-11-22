@@ -295,7 +295,7 @@ private fun LegContent(
                     failedApp = appName
                 } else {
                     failedApp = null
-                    dispatch(UnderwayEvent.OpenTransport(choice.toEngine()))
+                    dispatch(UnderwayEvent.OpenTransport(choice.toEngine(), stop.id))
                 }
             } finally {
                 opening = false

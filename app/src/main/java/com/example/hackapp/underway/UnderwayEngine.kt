@@ -106,7 +106,8 @@ object UnderwayEngine {
         return when (event) {
             is UnderwayEvent.OpenTransport -> when (s.phase) {
                 UnderwayPhase.Leg, UnderwayPhase.Arrival ->
-                    done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice))
+                    if (event.stopId != null && event.stopId != current) rejectOriginal(Rejection.StaleStop)
+                    else done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice))
                 else -> rejectOriginal(Rejection.WrongPhase)
             }
             UnderwayEvent.ReturnToLeg ->

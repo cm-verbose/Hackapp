@@ -66,7 +66,7 @@ class UnderwayContext(
 }
 
 sealed interface UnderwayEvent {
-    data class OpenTransport(val choice: TransportChoice) : UnderwayEvent
+    data class OpenTransport(val choice: TransportChoice, val stopId: String? = null) : UnderwayEvent
     data object ReturnToLeg : UnderwayEvent
     data class ConfirmArrival(val stopId: String? = null) : UnderwayEvent
     data class Leaving(val stopId: String? = null) : UnderwayEvent

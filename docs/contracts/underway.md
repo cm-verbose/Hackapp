@@ -31,7 +31,7 @@ Start -> Leg -> Arrival -> AtStop -> Leg (next Stop) ... -> AtStop (last) -> End
 
 | Event | Allowed in | Result |
 |---|---|---|
-| `OpenTransport(choice)` | Leg, Arrival | `Arrival`, records the choice. Does not assume they left |
+| `OpenTransport(choice, stopId?)` | Leg, Arrival | `Arrival`, records the choice. Does not assume they left. A `stopId` that is not the current Stop is rejected with `StaleStop` |
 | `ReturnToLeg` | Arrival | `Leg`, to change transport |
 | `ConfirmArrival(stopId?)` | Leg, Arrival | `AtStop`, records `arrivedAt` (late arrival is only recorded, never replans) |
 | `Leaving(stopId?)` | AtStop, not last Stop | Next `Leg`. Rejected on the last Stop |
