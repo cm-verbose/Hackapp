@@ -85,7 +85,7 @@ fun StopRow(
             Text(details, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         if (onRemove != null) {
-            val removeDescription = stringResource(R.string.strip_stop, removeLabel, stopName)
+            val removeDescription = stringResource(R.string.review_remove_stop, stopName)
             Box(
                 Modifier
                     .heightIn(min = 48.dp)
