@@ -68,7 +68,6 @@ fun EventOptionCard(
     val parts = buildList {
         add(time)
         add(price.text())
-        if (endTime == null) add(stringResource(R.string.end_time_unpublished))
     }
     HorizontalInfoCard(
         title = title,

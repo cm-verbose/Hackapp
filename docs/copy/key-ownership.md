@@ -187,31 +187,22 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `stop_type_sport`: StopTypeTag.kt
 - `stop_type_theatre`: StopTypeTag.kt
 
-## underway: Underway and Passport (37)
+## underway: Underway and Passport (28)
 
 - `arrival_en_route`: AppNavigation.kt, ArrivalStatusCard.kt
 - `arrival_expected`: ArrivalStatusCard.kt
-- `arrival_not_detected_note`: ArrivalStatusCard.kt
-- `arrival_reminder_note`: unused
-- `at_stop_alert_note`: unused
 - `at_stop_leave_by`: AppNavigation.kt, LeaveByCard.kt
 - `at_stop_next`: LeaveByCard.kt
-- `end_of_day_confirmed_only`: unused
+- `end_of_day_already_in_passport`: unused
 - `end_of_day_finish`: unused
-- `end_of_day_hero_day`: unused
-- `end_of_day_hero_night`: unused
 - `end_of_day_new_stamps_section`: unused
 - `end_of_day_title`: AppNavigation.kt
-- `end_time_unpublished`: StopOptionCards.kt
 - `leg_arrive`: LegTimes.kt
 - `leg_depart`: LegTimes.kt
 - `leg_fare_required`: TransitFareRow.kt, TransportChoiceCard.kt
-- `leg_fare_single_ride`: TransitFareRow.kt, TransportChoiceCard.kt
-- `leg_fare_source`: unused
 - `leg_google_maps_directions`: unused
 - `leg_how_to_get_there`: TransportChoiceCard.kt
 - `leg_mode_transit`: TransportChoiceCard.kt
-- `leg_mode_uber` [missing EN]: TransportChoiceCard.kt
 - `leg_next_stop_label`: AppNavigation.kt, LegHeader.kt
 - `leg_now`: LegHeader.kt, LegTimes.kt
 - `leg_open_transit_app`: unused

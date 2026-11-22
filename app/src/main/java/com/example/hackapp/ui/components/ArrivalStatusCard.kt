@@ -20,7 +20,7 @@ import com.example.hackapp.ui.theme.HackappTheme
 
 /**
  * Figma "ArrivalStatusCard" (53:1470), en-route screen: expected arrival at the next Stop.
- * Arrival is never detected by GPS; the user confirms it ([hint]).
+ * Arrival is never detected by GPS; the screen carries the arrival button.
  */
 @Composable
 fun ArrivalStatusCard(
@@ -28,7 +28,6 @@ fun ArrivalStatusCard(
     modifier: Modifier = Modifier,
     status: String = stringResource(R.string.arrival_en_route),
     expectedArrival: String = stringResource(R.string.arrival_expected, expectedArrivalTime),
-    hint: String = stringResource(R.string.arrival_not_detected_note),
 ) {
     val scheme = MaterialTheme.colorScheme
     Column(
@@ -40,7 +39,6 @@ fun ArrivalStatusCard(
     ) {
         Text(status, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth())
         Text(expectedArrival, style = MaterialTheme.typography.headlineSmall, color = scheme.onSurface, modifier = Modifier.fillMaxWidth())
-        Text(hint, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth())
     }
 }
 

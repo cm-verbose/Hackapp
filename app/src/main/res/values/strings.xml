@@ -20,13 +20,12 @@
     <string name="selection_meal_block_title">Bloc repas</string>
     <string name="selection_choose_meal">Choisir un repas</string>
     <string name="leg_next_stop_label">Prochain arrêt</string>
-    <string name="leg_fare_required">Titre requis : %1$s</string>
-    <string name="leg_fare_single_ride">1 passage</string>
+    <string name="leg_fare_required">Titre requis : %1$s · %2$s</string>
     <string name="leg_depart">Départ</string>
     <string name="leg_travel">Trajet</string>
     <string name="leg_arrive">Arrivée</string>
     <string name="leg_now">Maintenant</string>
-    <string name="leg_walk_minutes">≈ %1$d min à pied</string>
+    <string name="leg_walk_minutes">≈ %1$d min</string>
     <plurals name="stamps_count">
         <item quantity="one">%d timbre</item>
         <item quantity="other">%d timbres</item>
@@ -43,14 +42,13 @@
     <string name="meal_plan_no">Je m’en occupe</string>
     <string name="meal_block_note">Bloc de %1$d min</string>
     <string name="leg_stop_progress">Prochain arrêt · %1$d sur %2$d</string>
-    <string name="leg_start_from_location">Début %1$s · départ depuis votre position</string>
+    <string name="leg_start_from_location">Début %1$s</string>
     <string name="arrival_en_route">En route</string>
     <string name="arrival_expected">Arrivée prévue %1$s</string>
-    <string name="arrival_not_detected_note">L’arrivée n’est pas détectée par GPS : confirmez-la.</string>
     <string name="action_skip_stop">Sauter cet arrêt</string>
     <string name="action_go_anyway">Y aller quand même</string>
     <string name="at_stop_leave_by">Partez avant</string>
-    <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
+    <string name="at_stop_next">Prochain arrêt : %1$s · ≈ %2$d min</string>
     <string name="late_warning">Retard possible : %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
     <string name="password_reset_sent">Lien envoyé si un compte existe pour ce courriel.</string>
@@ -68,10 +66,10 @@
     <string name="action_arrived">Je suis sur place</string>
     <string name="action_leaving">Je pars</string>
     <string name="notification_preview_header">%1$s · maintenant</string>
-    <string name="notification_arrival_title">Êtes-vous arrivé·e?</string>
-    <string name="notification_arrival_body">%1$s devait commencer à %2$s.</string>
-    <string name="notification_leave_title">Départ dans 30 min</string>
-    <string name="notification_leave_body">Quittez %1$s avant %2$s pour arriver à l’heure.</string>
+    <string name="notification_arrival_title">Êtes-vous sur place?</string>
+    <string name="notification_arrival_body">%1$s · %2$s</string>
+    <string name="notification_leave_title">Partez avant %1$s</string>
+    <string name="notification_leave_body">Prochain arrêt : %1$s</string>
 
     <!-- Shared controls and states (not on the Figma strings page) -->
     <string name="action_back">Retour</string>
@@ -91,7 +89,6 @@
     <string name="label_coming_soon">Bientôt disponible</string>
     <string name="price_unknown">prix inconnu</string>
     <string name="price_free">gratuit</string>
-    <string name="end_time_unpublished">fin non publiée</string>
     <string name="nav_home">Accueil</string>
     <string name="nav_itineraries">Itinéraires</string>
     <string name="nav_passport">Passeport</string>
@@ -182,22 +179,16 @@
     <string name="review_notification_note">On vous demandera d’autoriser les notifications.</string>
 
     <!-- Underway -->
-    <string name="leg_how_to_get_there">Comment y allez-vous?</string>
+    <string name="leg_how_to_get_there">Comment y aller?</string>
     <string name="leg_mode_transit">Transport en commun</string>
-    <string name="leg_mode_uber" translatable="false">Uber</string>
-    <string name="leg_fare_source">Selon la grille tarifaire de %1$s.</string>
     <string name="leg_open_transit_app">Ouvrir %1$s</string>
-    <string name="leg_google_maps_directions">Itinéraire dans Google Maps</string>
-    <string name="arrival_reminder_note">Sans confirmation 30 min après l’heure prévue :</string>
-    <string name="at_stop_alert_note">Alerte prioritaire 30 min avant :</string>
+    <string name="leg_google_maps_directions">Ouvrir dans Google Maps</string>
     <string name="notification_channel_underway">Itinéraire en cours</string>
-    <string name="end_of_day_title">Fin de la journée</string>
-    <string name="end_of_day_hero_night">Belle soirée!</string>
-    <string name="end_of_day_hero_day">Belle journée!</string>
+    <string name="end_of_day_title">Itinéraire terminé</string>
     <string name="end_of_day_no_stamp">Aucun</string>
+    <string name="end_of_day_already_in_passport">Déjà dans votre passeport</string>
     <string name="end_of_day_new_stamps_section">Nouveaux timbres</string>
-    <string name="end_of_day_confirmed_only">Seuls les arrêts confirmés donnent un timbre.</string>
-    <string name="end_of_day_finish">Terminer la journée</string>
+    <string name="end_of_day_finish">Terminer l’itinéraire</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passeport</string>

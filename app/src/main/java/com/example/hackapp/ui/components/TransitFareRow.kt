@@ -11,11 +11,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
+import com.example.hackapp.citypack.MontrealCityPack
 import com.example.hackapp.ui.theme.HackappTheme
+import java.util.Locale
 
 /**
  * Figma "TransitFareRow" (53:1247), UnderwayLegScreen.
- * Usage (City Pack → Compose): TransitFareRow(stringResource(R.string.leg_fare_required, fare.label))
+ * Usage (City Pack → Compose): TransitFareRow(stringResource(R.string.leg_fare_required, fare.singleRide, fare.agencyName))
  */
 @Composable
 fun TransitFareRow(fareText: String, modifier: Modifier = Modifier) {
@@ -29,5 +31,6 @@ fun TransitFareRow(fareText: String, modifier: Modifier = Modifier) {
 @Preview(name = "TransitFareRow", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = 348)
 @Composable
 private fun TransitFareRowPreview() = HackappTheme {
-    TransitFareRow(stringResource(R.string.leg_fare_required, stringResource(R.string.leg_fare_single_ride)))
+    val fare = MontrealCityPack.fareTable
+    TransitFareRow(stringResource(R.string.leg_fare_required, fare.singleRide.get(Locale.getDefault().language).orEmpty(), fare.agencyName))
 }

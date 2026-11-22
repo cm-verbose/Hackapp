@@ -22,13 +22,12 @@
     <string name="selection_meal_block_title">Meal block</string>
     <string name="selection_choose_meal">Choose a meal</string>
     <string name="leg_next_stop_label">Next stop</string>
-    <string name="leg_fare_required">Fare needed: %1$s</string>
-    <string name="leg_fare_single_ride">1 ride</string>
-    <string name="leg_depart">Depart</string>
+    <string name="leg_fare_required">Ticket needed: %1$s · %2$s</string>
+    <string name="leg_depart">Departure</string>
     <string name="leg_travel">Travel</string>
-    <string name="leg_arrive">Arrive</string>
+    <string name="leg_arrive">Arrival</string>
     <string name="leg_now">Now</string>
-    <string name="leg_walk_minutes">≈ %1$d min walk</string>
+    <string name="leg_walk_minutes">≈ %1$d min</string>
     <plurals name="stamps_count">
         <item quantity="one">%d stamp</item>
         <item quantity="other">%d stamps</item>
@@ -45,14 +44,13 @@
     <string name="meal_plan_no">I’ll handle it</string>
     <string name="meal_block_note">%1$d-min block</string>
     <string name="leg_stop_progress">Next stop · %1$d of %2$d</string>
-    <string name="leg_start_from_location">Starts %1$s · leaving from your location</string>
+    <string name="leg_start_from_location">Starts %1$s</string>
     <string name="arrival_en_route">On the way</string>
     <string name="arrival_expected">Expected arrival %1$s</string>
-    <string name="arrival_not_detected_note">Arrival isn’t detected by GPS, so please confirm it.</string>
     <string name="action_skip_stop">Skip this stop</string>
     <string name="action_go_anyway">Go anyway</string>
     <string name="at_stop_leave_by">Leave by</string>
-    <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
+    <string name="at_stop_next">Next stop: %1$s · ≈ %2$d min</string>
     <string name="late_warning">You may be late for %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
     <string name="password_reset_sent">If this email has an account, we’ve sent a link.</string>
@@ -71,9 +69,9 @@
     <string name="action_leaving">I’m leaving</string>
     <string name="notification_preview_header">%1$s · now</string>
     <string name="notification_arrival_title">Have you arrived?</string>
-    <string name="notification_arrival_body">%1$s was due to start at %2$s.</string>
-    <string name="notification_leave_title">Leaving in 30 min</string>
-    <string name="notification_leave_body">Leave %1$s by %2$s to arrive on time.</string>
+    <string name="notification_arrival_body">%1$s · %2$s</string>
+    <string name="notification_leave_title">Leave by %1$s</string>
+    <string name="notification_leave_body">Next stop: %1$s</string>
 
     <!-- Shared controls and states (not on the Figma strings page) -->
     <string name="action_back">Back</string>
@@ -93,7 +91,6 @@
     <string name="label_coming_soon">Coming soon</string>
     <string name="price_unknown">price unknown</string>
     <string name="price_free">free</string>
-    <string name="end_time_unpublished">end time not published</string>
     <string name="nav_home">Home</string>
     <string name="nav_itineraries">Itineraries</string>
     <string name="nav_passport">Passport</string>
@@ -177,21 +174,16 @@
     <string name="review_notification_note">We’ll ask you to allow notifications.</string>
 
     <!-- Underway -->
-    <string name="leg_how_to_get_there">How are you getting there?</string>
+    <string name="leg_how_to_get_there">Getting there</string>
     <string name="leg_mode_transit">Public transit</string>
-    <string name="leg_fare_source">Based on the %1$s fare table.</string>
     <string name="leg_open_transit_app">Open %1$s</string>
-    <string name="leg_google_maps_directions">Directions in Google Maps</string>
-    <string name="arrival_reminder_note">If not confirmed 30 min after the expected time:</string>
-    <string name="at_stop_alert_note">High-priority alert 30 min before:</string>
+    <string name="leg_google_maps_directions">Open in Google Maps</string>
     <string name="notification_channel_underway">Underway itinerary</string>
-    <string name="end_of_day_title">End of day</string>
-    <string name="end_of_day_hero_night">What a night!</string>
-    <string name="end_of_day_hero_day">What a day!</string>
+    <string name="end_of_day_title">Itinerary ended</string>
     <string name="end_of_day_no_stamp">None</string>
+    <string name="end_of_day_already_in_passport">Already in your passport</string>
     <string name="end_of_day_new_stamps_section">New stamps</string>
-    <string name="end_of_day_confirmed_only">Only confirmed stops earn a stamp.</string>
-    <string name="end_of_day_finish">End the day</string>
+    <string name="end_of_day_finish">End itinerary</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passport</string>

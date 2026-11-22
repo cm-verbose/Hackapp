@@ -20,16 +20,16 @@ import com.example.hackapp.ui.theme.HackappTheme
 
 /**
  * Figma "LeaveByCard" (53:1286), at-stop screen: the Leave By time for the current Stop.
- * [nextStopName] and [walkMinutes] describe the following Leg.
+ * [nextStopName] and [transitMinutes] is the transit estimate used for Leave By, for the following Leg.
  */
 @Composable
 fun LeaveByCard(
     leaveByTime: String,
     nextStopName: String,
-    walkMinutes: Int,
+    transitMinutes: Int,
     modifier: Modifier = Modifier,
     label: String = stringResource(R.string.at_stop_leave_by),
-    nextStop: String = stringResource(R.string.at_stop_next, nextStopName, walkMinutes),
+    nextStop: String = stringResource(R.string.at_stop_next, nextStopName, transitMinutes),
 ) {
     val color = MaterialTheme.colorScheme.onPrimaryContainer
     Column(
@@ -48,5 +48,5 @@ fun LeaveByCard(
 @Preview(name = "LeaveByCard", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun LeaveByCardPreview() = HackappTheme {
-    LeaveByCard(leaveByTime = "19:15", nextStopName = "Bistro du coin", walkMinutes = 10)
+    LeaveByCard(leaveByTime = "19:15", nextStopName = "Bistro du coin", transitMinutes = 10)
 }

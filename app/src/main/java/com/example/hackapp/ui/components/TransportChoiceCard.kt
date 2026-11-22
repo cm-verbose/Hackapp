@@ -15,13 +15,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
+import com.example.hackapp.citypack.MontrealCityPack
 import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
+import java.util.Locale
 
 enum class TransportChoice { Transit, RideHail }
 
 /**
- * Figma "TransportChoiceCard" (38:1186). [rideHailName] and [fareLabel] come from the City Pack.
+ * Figma "TransportChoiceCard" (38:1186). [rideHailName], [fareLabel] and [fareAgency] come from the City Pack.
  * The fare row shows only for public transit.
  */
 @Composable
@@ -30,6 +32,7 @@ fun TransportChoiceCard(
     onSelect: (TransportChoice) -> Unit,
     rideHailName: String,
     fareLabel: String,
+    fareAgency: String,
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -55,7 +58,7 @@ fun TransportChoiceCard(
             onSelectedChange = onSelect,
         )
         if (selected == TransportChoice.Transit) {
-            TransitFareRow(stringResource(R.string.leg_fare_required, fareLabel))
+            TransitFareRow(stringResource(R.string.leg_fare_required, fareLabel, fareAgency))
         }
     }
 }
@@ -66,7 +69,8 @@ private fun TransportChoiceCardPreview() = HackappTheme {
     TransportChoiceCard(
         selected = TransportChoice.Transit,
         onSelect = {},
-        rideHailName = stringResource(R.string.leg_mode_uber),
-        fareLabel = stringResource(R.string.leg_fare_single_ride),
+        rideHailName = MontrealCityPack.rideHail.displayName,
+        fareLabel = MontrealCityPack.fareTable.singleRide.get(Locale.getDefault().language).orEmpty(),
+        fareAgency = MontrealCityPack.fareTable.agencyName,
     )
 }
