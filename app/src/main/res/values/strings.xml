@@ -146,7 +146,7 @@
     <string name="interests_event_types">Types d’événements</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Événement</string>
-    <string name="planning_stops_title">Choix des arrêts</string>
+    <string name="planning_stops_title">Arrêts</string>
     <string name="stop_kind_meal">Repas</string>
 
     <!-- Cuisines (align with restaurant data) -->

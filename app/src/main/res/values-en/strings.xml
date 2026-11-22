@@ -143,7 +143,7 @@
     <string name="interests_event_types">Event types</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Event</string>
-    <string name="planning_stops_title">Choose stops</string>
+    <string name="planning_stops_title">Stops</string>
     <string name="stop_kind_meal">Meal</string>
 
     <!-- Cuisines (align with restaurant data) -->
