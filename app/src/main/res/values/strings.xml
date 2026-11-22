@@ -39,7 +39,7 @@
         <item quantity="other">%d arrondissements</item>
     </plurals>
     <!-- Qindong 2 components -->
-    <string name="data_attribution">Données : Has Things (hasthings.com)</string>
+    <string name="data_attribution">Données : Has Things (hasthings.com), Ville de Montréal, © contributeurs OpenStreetMap</string>
     <string name="map_district_boundaries">Carte · limites des arrondissements</string>
     <string name="district_add_as_position">Ajouter en %1$de</string>
     <string name="district_choose_another">Choisir un autre</string>
@@ -57,8 +57,18 @@
     <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
     <string name="late_warning">Vous risquez d’arriver en retard à %1$s.</string>
     <string name="late_no_replanning">Pas de replanification automatique.</string>
-    <!-- Authentication (layout branch) -->
-    <string name="text_sign_in_with_google">Se connecter avec Google</string>
+    <!-- Authentication messages (not on the Figma strings page) -->
+    <string name="password_reset_body">Entrez votre courriel et nous vous enverrons un lien pour choisir un nouveau mot de passe.</string>
+    <string name="password_reset_sent">Si un compte existe pour ce courriel, le lien vient d’être envoyé.</string>
+    <string name="auth_error_invalid_credentials">Courriel ou mot de passe incorrect.</string>
+    <string name="auth_error_invalid_email">Ce courriel n’est pas valide.</string>
+    <string name="auth_error_email_in_use">Un compte existe déjà pour ce courriel. Connectez-vous ou continuez avec Google.</string>
+    <string name="auth_error_weak_password">Choisissez un mot de passe d’au moins 6 caractères.</string>
+    <string name="auth_error_password_mismatch">Les mots de passe ne correspondent pas.</string>
+    <string name="auth_error_network">Connexion impossible. Vérifiez votre réseau et réessayez.</string>
+    <string name="auth_error_provider_disabled">La connexion par courriel n’est pas encore activée.</string>
+    <string name="auth_error_google">La connexion avec Google a échoué. Réessayez.</string>
+    <string name="auth_error_unknown">Une erreur est survenue. Réessayez.</string>
     <!-- First Eric Group components -->
     <string name="action_remove">Retirer</string>
     <string name="action_arrived">Je suis arrivé·e</string>
@@ -68,4 +78,170 @@
     <string name="notification_arrival_body">%1$s devait commencer à %2$s.</string>
     <string name="notification_leave_title">Départ dans 30 min</string>
     <string name="notification_leave_body">Quittez %1$s avant %2$s pour arriver à l’heure.</string>
+
+    <!-- Shared controls and states (not on the Figma strings page) -->
+    <string name="action_back">Retour</string>
+    <string name="action_clear">Effacer</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_confirm">Confirmer</string>
+    <string name="action_retry">Réessayer</string>
+    <string name="state_loading">Chargement…</string>
+    <string name="state_error_title">Une erreur est survenue</string>
+    <string name="state_empty_title">Rien à afficher pour le moment</string>
+
+    <!-- Common (Figma frame 55:3) -->
+    <string name="action_continue">Continuer</string>
+    <string name="action_finish">Terminer</string>
+    <string name="action_skip">Passer</string>
+    <string name="action_add">+ Ajouter</string>
+    <string name="action_open">Ouvrir</string>
+    <string name="label_or">ou</string>
+    <string name="label_coming_soon">Bientôt disponible</string>
+    <string name="price_unknown">prix inconnu</string>
+    <string name="price_free">Gratuit</string>
+    <string name="end_time_unpublished">fin non publiée</string>
+    <string name="nav_home">Accueil</string>
+    <string name="nav_itineraries">Itinéraires</string>
+    <string name="nav_passport">Passeport</string>
+
+    <!-- Authentication: WelcomeScreen, RegisterScreen -->
+    <string name="welcome_title">Votre sortie, sur mesure.</string>
+    <string name="welcome_tagline">Planifiez votre sortie, suivez-la arrêt par arrêt, et collectionnez vos timbres.</string>
+    <string name="auth_continue_with_google">Continuer avec Google</string>
+    <string name="auth_email">Courriel</string>
+    <string name="auth_password">Mot de passe</string>
+    <string name="auth_password_confirm">Confirmer le mot de passe</string>
+    <string name="auth_forgot_password">Mot de passe oublié?</string>
+    <string name="auth_sign_in">Se connecter</string>
+    <string name="auth_create_account">Créer un compte</string>
+    <string name="register_one_account_note">Un seul compte par courriel : Google ou mot de passe mènent au même profil, itinéraires et passeport.</string>
+    <string name="register_submit">Créer mon compte</string>
+    <string name="password_reset_title">Réinitialiser le mot de passe</string>
+    <string name="password_reset_send">Envoyer le lien</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_step">Étape %1$d de %2$d</string>
+    <string name="onboarding_visitor_type_title">Comment explorez-vous la ville?</string>
+    <string name="onboarding_visitor_type_subtitle">Choisissez votre profil d’exploration.</string>
+    <string name="visitor_title">Visiteur·euse</string>
+    <string name="visitor_description">J’explore une ville où je n’habite pas</string>
+    <string name="resident_title">Résident·e</string>
+    <string name="profile_title">Votre profil</string>
+    <string name="profile_prefill_note">Prérempli depuis Google si disponible.</string>
+    <string name="profile_name">Nom</string>
+    <string name="profile_age_range">Tranche d’âge</string>
+    <string name="age_range_18_24" translatable="false">18–24</string>
+    <string name="age_range_25_34" translatable="false">25–34</string>
+    <string name="age_range_35_44" translatable="false">35–44</string>
+    <string name="age_range_45_54" translatable="false">45–54</string>
+    <string name="age_range_55_plus" translatable="false">55+</string>
+    <!-- City Pack may override the District label -->
+    <string name="profile_district_of_stay">Arrondissement de séjour</string>
+    <string name="budget_audience_title">Budget et public</string>
+    <string name="budget_subtitle">Par personne, pour une sortie.</string>
+    <string name="budget_under_20">&lt; 20 $</string>
+    <string name="budget_under_50">&lt; 50 $</string>
+    <string name="budget_under_100">&lt; 100 $</string>
+    <string name="budget_100_plus">100 $ +</string>
+    <string name="audience_title">Type de public</string>
+    <string name="audience_adults_only">18+ seulement</string>
+    <string name="audience_family_friendly">Familial</string>
+    <string name="audience_no_alcohol">Sans alcool</string>
+    <string name="audience_bars_hidden_note">Les bars sont masqués pour les profils familial ou sans alcool.</string>
+    <string name="interests_title">Intérêts et cuisines</string>
+    <string name="interests_subtitle">Facultatif. Sert à classer les résultats, jamais à les masquer.</string>
+    <string name="interests_event_types">Types d’événements</string>
+    <string name="interests_cuisines">Cuisines</string>
+    <string name="stop_kind_event">Événement</string>
+    <string name="stop_kind_meal">Repas</string>
+
+    <!-- Cuisines (align with restaurant data) -->
+    <string name="cuisine_quebecois">Québécoise</string>
+    <string name="cuisine_italian">Italienne</string>
+    <string name="cuisine_lebanese">Libanaise</string>
+    <string name="cuisine_japanese">Japonaise</string>
+    <string name="cuisine_vegetarian">Végé</string>
+    <string name="cuisine_cafe">Café</string>
+    <string name="cuisine_bistro">Bistro</string>
+
+    <!-- HomeScreen -->
+    <string name="home_greeting">Bonjour %1$s</string>
+    <string name="home_planning_section">En planification</string>
+
+    <!-- Planning -->
+    <string name="planning_new_itinerary">Nouvel itinéraire</string>
+    <string name="planning_when_title">Quand sortez-vous?</string>
+    <string name="planning_date">Date</string>
+    <string name="planning_day_out">Journée</string>
+    <string name="planning_night_out">Soirée</string>
+    <string name="planning_start">Début</string>
+    <string name="planning_end">Fin</string>
+    <string name="planning_budget_override">Budget pour cet itinéraire (facultatif)</string>
+    <string name="planning_budget_from_profile">%1$s · selon le profil</string>
+    <string name="planning_time_window_note">Journée : 10:00–18:00 · Soirée : 18:00–02:00. Un itinéraire appartient à la date où il commence, même après minuit.</string>
+    <!-- City Pack may override the District label -->
+    <string name="district_pick_title">Arrondissements</string>
+    <string name="district_pick_instructions">Choisissez 1 à 3 arrondissements, dans l’ordre de visite.</string>
+    <string name="district_order_chip" translatable="false">%1$d · %2$s</string>
+    <string name="meal_title">Repas</string>
+    <string name="meal_question">On planifie vos repas?</string>
+    <string name="meal_when">Quand voulez-vous manger?</string>
+    <string name="meal_lunch_at">Dîner · %1$s</string>
+    <string name="meal_dinner_at">Souper · %1$s</string>
+    <string name="meal_late_bite_at">Bouchée tardive · %1$s</string>
+    <string name="selection_district_progress">Arrondissement %1$d sur %2$d · %3$s → %4$s</string>
+    <string name="selection_time_block" translatable="false">%1$s – %2$s</string>
+    <string name="selection_finish_here">Terminer ici</string>
+    <string name="selection_next_district">Arrondissement suivant</string>
+    <string name="planned_departure_title">À quelle heure partirez-vous?</string>
+    <string name="review_title">Révision</string>
+    <string name="review_planned_departure">départ prévu %1$s</string>
+    <string name="review_remove_note">Retirer un arrêt vous ramène à la sélection pour ce créneau. Les arrêts ne se réordonnent pas.</string>
+    <string name="review_start">Démarrer l’itinéraire</string>
+    <string name="review_notification_note">On vous demandera d’autoriser les notifications.</string>
+
+    <!-- Underway -->
+    <string name="leg_how_to_get_there">Comment y allez-vous?</string>
+    <string name="leg_mode_transit">Transport en commun</string>
+    <string name="leg_mode_uber" translatable="false">Uber</string>
+    <string name="leg_fare_source">Selon la grille tarifaire de %1$s.</string>
+    <string name="leg_open_transit_app">Ouvrir %1$s</string>
+    <string name="leg_google_maps_directions">Itinéraire dans Google Maps</string>
+    <string name="arrival_reminder_note">Sans confirmation 30 min après l’heure prévue :</string>
+    <string name="at_stop_alert_note">Alerte prioritaire 30 min avant :</string>
+    <string name="notification_channel_underway">Itinéraire en cours</string>
+    <string name="end_of_day_title">Fin de la journée</string>
+    <string name="end_of_day_hero_night">Belle soirée!</string>
+    <string name="end_of_day_hero_day">Belle journée!</string>
+    <string name="end_of_day_no_stamp">aucun timbre</string>
+    <string name="end_of_day_new_stamps_section">Nouveaux timbres</string>
+    <string name="end_of_day_confirmed_only">Seuls les arrêts confirmés donnent un timbre.</string>
+    <string name="end_of_day_finish">Terminer la journée</string>
+
+    <!-- Passport and Settings -->
+    <string name="passport_title">Passeport</string>
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_language">Langue</string>
+    <string name="language_french" translatable="false">Français</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="settings_profile">Profil</string>
+    <string name="settings_profile_description">Nom, courriel, âge, arrondissement</string>
+    <string name="settings_sign_out">Se déconnecter</string>
+
+    <plurals name="stops_count">
+        <item quantity="one">%d arrêt</item>
+        <item quantity="other">%d arrêts</item>
+    </plurals>
+    <plurals name="stops_confirmed">
+        <item quantity="one">%d arrêt confirmé</item>
+        <item quantity="other">%d arrêts confirmés</item>
+    </plurals>
+    <plurals name="stops_skipped">
+        <item quantity="one">%d arrêt sauté</item>
+        <item quantity="other">%d arrêts sautés</item>
+    </plurals>
+    <plurals name="new_stamps_in_passport">
+        <item quantity="one">%d nouveau timbre dans votre passeport.</item>
+        <item quantity="other">%d nouveaux timbres dans votre passeport.</item>
+    </plurals>
 </resources>

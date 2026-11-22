@@ -151,7 +151,8 @@ Two different questions, kept separate:
 - international chains (McDonald's, Subway, Starbucks, …);
 - Canadian national chains (Tim Hortons, A&W, Pizza Pizza, Second Cup, Harvey's, …);
 - **Thaï Express**, **Sushi Shop**, **Mikes**, **Valentine** and **St-Hubert** (large franchise networks), by team decision;
-- Cora and 3 Brasseurs.
+- Cora and 3 Brasseurs;
+- **Baton Rouge**, **Presse Café** and **Nickels**, by team decision.
 
 On the sample data this rule removes about **530 places** (Subway 85, Tim Hortons 74, McDonald's 42, A&W 30, Starbucks 22, Pizza Hut 21, Domino's 20, Pizza Pizza 19, Sushi Shop 19, …). Fewer than 50 Québec-chain locations remain.
 
@@ -298,6 +299,7 @@ Google's `priceRange` is per person. Its **start price is inclusive** and its **
 | `cuisines` | list of codes | section 6.2 |
 | `dietary` | list of codes | section 9 |
 | `is_chain` | boolean | section 5 (Québec-local chains only) |
+| `brand` | `brand.name`, nullable | section 5; all locations of a chain share one value, and the Passport awards one Stamp per brand |
 | `price_min` | integer, nullable | section 7 |
 | `price_max` | integer, nullable | section 7 |
 | `price_source` | enum | section 7 |
@@ -336,6 +338,7 @@ Google's `priceRange` is per person. Its **start price is inclusive** and its **
   "cuisines": ["chinese", "dumplings"],
   "dietary": [],
   "is_chain": false,
+  "brand": null,
   "price_min": 10,
   "price_max": 20,
   "price_source": "GOOGLE_RANGE",
@@ -393,6 +396,9 @@ Boundary file ┘          │
 | — | Price brackets | **< $20 / < $50 / < $100 / $100+**, aligned with Google's range steps |
 | — | Cuisine fallback | **Google types**, confirmed |
 | — | Custom `ZONE`s | **Deferred**; decided at the end of the project |
+| — | Chain Stamps | **One Stamp per `brand`**, on the first location visited |
+| — | National and international chains | **Removed** from `mtl_food_core_v2.csv`; local chains only |
+| — | Baton Rouge, Presse Café, Nickels | **Block** and removed from `mtl_food_core_v2.csv` |
 
 ## 13. Still Open
 1. Confirm Google's actual range steps for Montréal on the first enrichment sample (the brackets assume 20 / 50 / 100).

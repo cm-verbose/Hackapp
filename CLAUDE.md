@@ -4,7 +4,8 @@ Single entry point for AI agents. Read this first. If anything here is unclear o
 
 ## 1. Project
 - **Hackapp**: Android (Kotlin, Jetpack Compose) **Montréal trip planner** for a hackathon sponsored by the City of Montréal.
-- App name: **Plan Montréal** (`app_name`; EN "Plan Montreal"). Root project name `HackApp`.
+- App name pattern: **Plan[City]**, using the City Pack's city. Montréal is **Plan Montréal** (`app_name`; EN "Plan Montreal"). "Hackapp" is only the repository and code identifier (root project `HackApp`).
+- Accounts are for people 18 and over; adults planning with children use the family-friendly Audience Preference.
 - Gradle: AGP 9.5.2, Kotlin 2.4.21, minSdk 29, compileSdk 37. Namespace and `applicationId` are both `com.example.hackapp` (the `applicationId` was `com.example.androidtemplate` until the `layout` merge on 2026-11-21; an old install on a device stays as a separate app).
 - Version catalog: `gradle/libs.versions.toml`. Navigation is Compose Navigation with `@Serializable` destinations (`scaffold/navigation/AppNavigation.kt`): start = `ScreenLoginDestination` -> `PlanningScreenDestination` (only a log-out button so far); `PlacesDestination` (restaurant browse) is registered but not the start. ScreenA/ScreenB were deleted.
 - Auth (from branch `layout`): Google sign-in with Firebase Auth + Credential Manager (`auth/AuthHandler.kt`, `auth/AuthTag.kt`, `scaffold/screens/login/`). `MainActivity` calls `FirebaseApp.initializeApp`. Config in `app/google-services.json` (committed by the `layout` branch; it contains the Firebase API key).

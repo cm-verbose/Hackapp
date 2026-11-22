@@ -1,0 +1,3 @@
+# Hand-curate demo restaurant data instead of storing Google Places data
+
+The restaurant dataset has 6,241 places but no price, rating or opening hours, so budget filtering and meal timing cannot work on it directly. For the demo we curate about 60 restaurants across 3 boroughs, filling in hours and price by hand from public listings, because bulk-storing Google Places content in Firestore may conflict with Google's caching terms. This departs from the Google enrichment step in `prep/api-business/restaurant-data-design-final.md`, and that step should not be restored without first checking the current terms.

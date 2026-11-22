@@ -2,9 +2,12 @@ package com.example.hackapp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.hackapp.R
 
 /*
  * Figma: "Typography — M3 type scale". Two families, both Figtree in Figma
@@ -12,16 +15,23 @@ import androidx.compose.ui.unit.sp
  *   Brand → display, headline, title/large
  *   Plain → everything else
  *
- * TODO(font): Figtree is not bundled yet, so both families fall back to the system sans-serif.
- * To enable it: download Figtree (Regular, Medium, Bold) from Google Fonts into res/font/ as
- * figtree_regular.ttf, figtree_medium.ttf, figtree_bold.ttf and replace FontFamily.Default below with
- *   FontFamily(Font(R.font.figtree_regular, FontWeight.Normal),
- *              Font(R.font.figtree_medium, FontWeight.Medium),
- *              Font(R.font.figtree_bold, FontWeight.Bold))
+ * Figtree ships as one variable font in res/font (SIL OFL, see assets/licenses/figtree-OFL.txt).
  */
+private fun figtree(weight: FontWeight) = Font(
+    resId = R.font.figtree,
+    weight = weight,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
+)
+
+private val Figtree = FontFamily(
+    figtree(FontWeight.Normal),
+    figtree(FontWeight.Medium),
+    figtree(FontWeight.Bold),
+)
+
 object HackappFonts {
-    val Brand: FontFamily = FontFamily.Default
-    val Plain: FontFamily = FontFamily.Default
+    val Brand: FontFamily = Figtree
+    val Plain: FontFamily = Figtree
 }
 
 private fun style(family: FontFamily, weight: FontWeight, size: Int, lineHeight: Int, tracking: Double) =
