@@ -151,13 +151,11 @@ fun PassportPage(
     if (showAll && stamps.isNotEmpty()) {
         AllStampsSheet(
             stamps = stamps,
-            onOpen = {
-                showAll = false
-                openKey = it
-            },
+            onOpen = { openKey = it },
             onDismiss = { showAll = false },
         )
     }
+    // Composed after the list, so it opens on top and closing it returns to the list.
     stamps.firstOrNull { it.key == openKey }?.let { stamp ->
         StampDetailsSheet(stamp, onDismiss = { openKey = null })
     }
