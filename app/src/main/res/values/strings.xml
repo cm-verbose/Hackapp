@@ -358,6 +358,7 @@
     <string name="passport_empty_title">Aucun timbre</string>
     <string name="passport_empty_body">Confirmez un arrêt pour obtenir un timbre.</string>
     <string name="passport_all_stamps">Tous les timbres</string>
+    <string name="passport_stamp_district_date" translatable="false">%1$s Â· %2$s</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_language">Langue</string>
     <string name="language_french" translatable="false">Français</string>

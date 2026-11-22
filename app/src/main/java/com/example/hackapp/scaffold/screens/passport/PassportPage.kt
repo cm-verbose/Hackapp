@@ -403,7 +403,7 @@ private fun AllStampsList(stamps: List<PassportStampUi>, onOpen: (String) -> Uni
                     Column(Modifier.weight(1f)) {
                         Text(stamp.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(
-                            stringResource(R.string.leg_time_district, stamp.district, stamp.date),
+                            stringResource(R.string.passport_stamp_district_date, stamp.district, stamp.date),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
