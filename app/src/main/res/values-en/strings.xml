@@ -39,4 +39,23 @@
         <item quantity="one">%d borough</item>
         <item quantity="other">%d boroughs</item>
     </plurals>
+    <!-- Qindong 2 components -->
+    <string name="data_attribution">Data: Has Things (hasthings.com)</string>
+    <string name="map_district_boundaries">Map · borough boundaries</string>
+    <string name="district_add_as_position">Add as #%1$d</string>
+    <string name="district_choose_another">Choose another</string>
+    <string name="meal_plan_yes">Yes, plan my meals</string>
+    <string name="meal_plan_no">I’ll handle it</string>
+    <string name="meal_block_note">Each meal reserves a 90-min block: 1 h, plus 15 min before and after.</string>
+    <string name="leg_stop_progress">Next stop · %1$d of %2$d</string>
+    <string name="leg_start_from_location">Starts %1$s · leaving from your location</string>
+    <string name="arrival_en_route">On the way</string>
+    <string name="arrival_expected">Expected arrival %1$s</string>
+    <string name="arrival_not_detected_note">Arrival isn’t detected by GPS: please confirm it.</string>
+    <string name="action_skip_stop">Skip this stop</string>
+    <string name="action_go_anyway">Go anyway</string>
+    <string name="at_stop_leave_by">Leave by</string>
+    <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
+    <string name="late_warning">You may arrive late at %1$s.</string>
+    <string name="late_no_replanning">No automatic replanning.</string>
 </resources>

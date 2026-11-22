@@ -38,4 +38,23 @@
         <item quantity="one">%d arrondissement</item>
         <item quantity="other">%d arrondissements</item>
     </plurals>
+    <!-- Qindong 2 components -->
+    <string name="data_attribution">Données : Has Things (hasthings.com)</string>
+    <string name="map_district_boundaries">Carte · limites des arrondissements</string>
+    <string name="district_add_as_position">Ajouter en %1$de</string>
+    <string name="district_choose_another">Choisir un autre</string>
+    <string name="meal_plan_yes">Oui, planifiez mes repas</string>
+    <string name="meal_plan_no">Je m’en occupe</string>
+    <string name="meal_block_note">Chaque repas réserve un bloc de 90 min : 1 h, plus 15 min avant et après.</string>
+    <string name="leg_stop_progress">Prochain arrêt · %1$d sur %2$d</string>
+    <string name="leg_start_from_location">Début %1$s · départ depuis votre position</string>
+    <string name="arrival_en_route">En route</string>
+    <string name="arrival_expected">Arrivée prévue %1$s</string>
+    <string name="arrival_not_detected_note">L’arrivée n’est pas détectée par GPS : confirmez-la.</string>
+    <string name="action_skip_stop">Sauter cet arrêt</string>
+    <string name="action_go_anyway">Y aller quand même</string>
+    <string name="at_stop_leave_by">Partez avant</string>
+    <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
+    <string name="late_warning">Vous risquez d’arriver en retard à %1$s.</string>
+    <string name="late_no_replanning">Pas de replanification automatique.</string>
 </resources>
