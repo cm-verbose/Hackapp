@@ -225,12 +225,6 @@ private fun DemoExitFailedPreview() = HackappTheme {
     UnderwayAtStopPage(AtJazz, demoChrome(failed = true), {}, {}, {}, {})
 }
 
-@Preview(name = "Demo · End of day", widthDp = 412, heightDp = 917)
-@Composable
-private fun DemoEndOfDayPreview() = HackappTheme {
-    UnderwayEndOfDayPage(Day, {}, demoControl = { DemoControl(DemoTime, canAdvance = false, onNextMoment = {}) })
-}
-
 @Preview(name = "Demo · exit dialog", widthDp = 360, heightDp = 400)
 @Composable
 private fun DemoExitDialogPreview() = HackappTheme { ExitDemoDialog({}, {}) }

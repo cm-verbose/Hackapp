@@ -302,13 +302,11 @@ fun UnderwayEndOfDayPage(
     ui: EndOfDayUi,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
-    demoControl: (@Composable () -> Unit)? = null,
 ) {
     HackappPage(
         title = stringResource(R.string.end_of_day_title),
         modifier = modifier,
         onBack = onDone,
-        belowTopBar = demoControl,
         bottomActions = { HackappPrimaryButton(stringResource(R.string.end_of_day_done), onDone) },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

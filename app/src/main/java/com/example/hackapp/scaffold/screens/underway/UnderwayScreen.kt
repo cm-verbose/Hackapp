@@ -154,7 +154,6 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
             districtNames = (info as? LoadState.Ready)?.value?.stops?.districtNames.orEmpty(),
             onRetry = viewModel::retry,
             onDone = onExitToHome,
-            demoControl = demoControl,
         )
         state is LoadState.Failed -> UnderwayErrorPage(onRetry = viewModel::onResume, onBack = onExitToHome)
         data == null -> UnderwayLoadingPage(onBack = onExitToHome)
@@ -394,7 +393,6 @@ private fun EndOfDayContent(
     districtNames: Map<String, String>,
     onRetry: () -> Unit,
     onDone: () -> Unit,
-    demoControl: (@Composable () -> Unit)?,
 ) {
     when (endOfDay) {
         LoadState.Loading -> UnderwayLoadingPage(onBack = onDone)
@@ -402,7 +400,6 @@ private fun EndOfDayContent(
         is LoadState.Ready -> UnderwayEndOfDayPage(
             endOfDayUi(endOfDay.value, districtNames),
             onDone,
-            demoControl = demoControl,
         )
     }
 }
