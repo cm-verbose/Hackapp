@@ -97,7 +97,6 @@ import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.ui.theme.StopType
 import kotlinx.coroutines.CancellationException
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -136,8 +135,8 @@ fun ItineraryReviewScreen(
         } catch (_: Exception) {
             null
         }
-        profile?.let { PlanningContext.from(it, Instant.now(), zone) }
-            ?: PlanningContext(Instant.now(), zone, AgeRange.From25To34)
+        profile?.let { PlanningContext.from(it, coordinator.clock.now(), zone) }
+            ?: PlanningContext(coordinator.clock.now(), zone, AgeRange.From25To34)
     }
     val viewModel: ItineraryReviewViewModel = viewModel(
         factory = ItineraryReviewViewModel.factory(
@@ -166,6 +165,7 @@ fun ItineraryReviewScreen(
                 )
             },
             starter = coordinator.reviewStarter(),
+            clock = coordinator.clock::now,
         ),
     )
     val permissions = rememberUnderwayStartPermissions()

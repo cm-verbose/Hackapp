@@ -43,7 +43,8 @@ class UnderwayCoordinator(
     private val stamps: StampRepository,
     private val resolverFor: suspend (Itinerary) -> StampIdentityResolver,
     private val estimator: LegEstimator,
-    private val clock: UnderwayClock,
+    /** The one source of time for Underway and for Review's Start check. */
+    val clock: UnderwayClock,
     private val scheduler: UnderwayAlertScheduler,
     private val notifier: UnderwayNotifier,
 ) {

@@ -19,7 +19,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.hackapp.HackappApplication
 import com.example.hackapp.R
 import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.LocalCityPack
@@ -66,12 +65,11 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val cityPack = LocalCityPack.current
-    val clock = (appContext as HackappApplication).underwayClock
     val coordinator = currentUnderwayCoordinator()
     val viewModel = UnderwayViewModel.create(
         uid = uid,
         coordinator = coordinator,
-        clock = clock,
+        clock = coordinator.clock,
         notificationsAllowed = { NotificationManagerCompat.from(appContext).areNotificationsEnabled() },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
