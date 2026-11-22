@@ -94,6 +94,7 @@ fun DistrictPickScreen(
             cityPack = services.cityPack,
             loadMap = { loadDistrictMap(context.applicationContext, services.cityPack) },
             profiles = LocalProfileRepository.current,
+            reconciler = services.stopFitReconciler(),
         ),
     )
     val state by viewModel.state.collectAsState()
