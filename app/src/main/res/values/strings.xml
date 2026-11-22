@@ -55,15 +55,14 @@
     <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
     <string name="late_warning">Retard possible : %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
-    <string name="password_reset_body">Entrez votre courriel et nous vous enverrons un lien pour choisir un nouveau mot de passe.</string>
-    <string name="password_reset_sent">Si un compte existe pour ce courriel, le lien vient d’être envoyé.</string>
+    <string name="password_reset_sent">Lien envoyé si un compte existe pour ce courriel.</string>
     <string name="auth_error_invalid_credentials">Courriel ou mot de passe incorrect.</string>
-    <string name="auth_error_invalid_email">Ce courriel n’est pas valide.</string>
-    <string name="auth_error_email_in_use">Un compte existe déjà pour ce courriel. Connectez-vous ou continuez avec Google.</string>
-    <string name="auth_error_weak_password">Choisissez un mot de passe d’au moins 6 caractères.</string>
+    <string name="auth_error_invalid_email">Entrez un courriel valide.</string>
+    <string name="auth_error_email_in_use">Ce courriel est déjà utilisé. Connectez-vous ou continuez avec Google.</string>
+    <string name="auth_error_weak_password">Mot de passe : au moins 6 caractères.</string>
     <string name="auth_error_password_mismatch">Les mots de passe ne correspondent pas.</string>
     <string name="auth_error_network">Connexion impossible. Vérifiez votre réseau et réessayez.</string>
-    <string name="auth_error_provider_disabled">La connexion par courriel n’est pas encore activée.</string>
+    <string name="auth_error_provider_disabled">Mode de connexion indisponible. Essayez-en un autre.</string>
     <string name="auth_error_google">La connexion avec Google a échoué. Réessayez.</string>
     <string name="auth_error_unknown">Une erreur est survenue. Réessayez.</string>
     <!-- First Eric Group components -->
@@ -100,8 +99,8 @@
     <string name="nav_passport">Passeport</string>
 
     <!-- Authentication: WelcomeScreen, RegisterScreen -->
-    <string name="welcome_title">Votre sortie, sur mesure.</string>
-    <string name="welcome_tagline">Planifiez votre sortie, suivez-la arrêt par arrêt, et collectionnez vos timbres.</string>
+    <string name="welcome_title">Votre sortie, sur mesure</string>
+    <string name="welcome_tagline">Planifiez, suivez chaque arrêt, collectionnez vos timbres.</string>
     <string name="auth_continue_with_google">Continuer avec Google</string>
     <string name="auth_email">Courriel</string>
     <string name="auth_password">Mot de passe</string>
@@ -109,20 +108,17 @@
     <string name="auth_forgot_password">Mot de passe oublié?</string>
     <string name="auth_sign_in">Se connecter</string>
     <string name="auth_create_account">Créer un compte</string>
-    <string name="register_one_account_note">Un seul compte par courriel : Google ou mot de passe mènent au même profil, itinéraires et passeport.</string>
     <string name="register_submit">Créer mon compte</string>
-    <string name="password_reset_title">Réinitialiser le mot de passe</string>
+    <string name="register_age_notice">18 ans et plus</string>
+    <string name="password_reset_title">Mot de passe oublié</string>
     <string name="password_reset_send">Envoyer le lien</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_step">Étape %1$d de %2$d</string>
+    <string name="onboarding_step">Étape %1$d sur %2$d</string>
     <string name="onboarding_visitor_type_title">Comment explorez-vous la ville?</string>
-    <string name="onboarding_visitor_type_subtitle">Choisissez votre profil d’exploration.</string>
-    <string name="visitor_title">Visiteur·euse</string>
-    <string name="visitor_description">J’explore une ville où je n’habite pas</string>
-    <string name="resident_title">Résident·e</string>
+    <string name="visitor_title">En visite</string>
+    <string name="resident_title">J’habite ici</string>
     <string name="profile_title">Votre profil</string>
-    <string name="profile_prefill_note">Prérempli depuis Google si disponible.</string>
     <string name="profile_name">Nom</string>
     <string name="profile_age_range">Tranche d’âge</string>
     <string name="age_range_18_24" translatable="false">18–24</string>
@@ -133,37 +129,30 @@
     <!-- City Pack may override the District label -->
     <string name="profile_district_of_stay">Arrondissement de séjour</string>
     <string name="budget_audience_title">Budget et public</string>
-    <string name="budget_subtitle">Par personne, pour une sortie.</string>
-    <string name="budget_under_20">&lt; 20 $</string>
-    <string name="budget_under_50">&lt; 50 $</string>
-    <string name="budget_under_100">&lt; 100 $</string>
-    <string name="budget_100_plus">100 $ +</string>
+    <string name="budget_subtitle">Par personne, par itinéraire.</string>
+    <string name="budget_under_20">&lt; 20 $</string>
+    <string name="budget_under_50">&lt; 50 $</string>
+    <string name="budget_under_100">&lt; 100 $</string>
+    <string name="budget_100_plus">100 $ +</string>
     <string name="budget_lunch">Dîner (repas 1)</string>
     <string name="budget_dinner">Souper (repas 2)</string>
     <string name="budget_events">Événements (total)</string>
     <string name="budget_late_night">Collation de fin de soirée</string>
     <string name="budget_late_night_description">Facultatif. Ajoutez un budget pour une bouchée tardive.</string>
     <string name="onboarding_save_error">Impossible d’enregistrer votre profil. Réessayez.</string>
-    <string name="audience_title">Type de public</string>
+    <string name="audience_title">Public</string>
     <string name="audience_adults_only">18+ seulement</string>
     <string name="audience_family_friendly">Familial</string>
     <string name="audience_no_alcohol">Sans alcool</string>
-    <string name="audience_bars_hidden_note">Les bars sont masqués pour les profils familial ou sans alcool.</string>
+    <string name="audience_bars_hidden_note">Bars masqués</string>
     <string name="interests_title">Intérêts et cuisines</string>
-    <string name="interests_subtitle">Facultatif. Sert à classer les résultats, jamais à les masquer.</string>
+    <string name="interests_subtitle">Pour classer les résultats, sans rien masquer.</string>
     <string name="interests_event_types">Types d’événements</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Événement</string>
     <string name="stop_kind_meal">Repas</string>
 
     <!-- Cuisines (align with restaurant data) -->
-    <string name="cuisine_quebecois">Québécoise</string>
-    <string name="cuisine_italian">Italienne</string>
-    <string name="cuisine_lebanese">Libanaise</string>
-    <string name="cuisine_japanese">Japonaise</string>
-    <string name="cuisine_vegetarian">Végé</string>
-    <string name="cuisine_cafe">Café</string>
-    <string name="cuisine_bistro">Bistro</string>
 
     <!-- HomeScreen -->
     <string name="home_greeting">Bonjour %1$s</string>
@@ -223,7 +212,6 @@
     <string name="language_french" translatable="false">Français</string>
     <string name="language_english" translatable="false">English</string>
     <string name="settings_profile">Profil</string>
-    <string name="settings_profile_description">Nom, courriel, âge, arrondissement</string>
     <string name="settings_sign_out">Se déconnecter</string>
 
     <plurals name="stops_count">
@@ -263,6 +251,7 @@
     <string name="stop_status_skipped">Sauté</string>
     <string name="archived_choose_new_date">Choisir une nouvelle date</string>
     <string name="settings_no_preferences">Aucune préférence</string>
+    <string name="settings_events_budget">Événements : %1$s</string>
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">Un itinéraire dure au moins 2 heures.</string>

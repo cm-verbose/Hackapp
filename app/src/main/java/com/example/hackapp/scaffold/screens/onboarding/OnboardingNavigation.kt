@@ -33,7 +33,6 @@ import com.example.hackapp.scaffold.navigation.OnboardingBudgetAudienceRoute
 import com.example.hackapp.scaffold.navigation.OnboardingGraphRoute
 import com.example.hackapp.scaffold.navigation.OnboardingInterestsRoute
 import com.example.hackapp.scaffold.navigation.OnboardingProfileRoute
-import com.example.hackapp.scaffold.navigation.OnboardingVisitorTypeRoute
 import com.example.hackapp.scaffold.navigation.flowComposable
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
@@ -46,10 +45,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
-/** The four onboarding routes. Their nested graph owns the shared [OnboardingViewModel]. */
+/** The three onboarding routes (the Visitor type route is kept in AppRoutes but not part of the flow until Resident ships). Their nested graph owns the shared [OnboardingViewModel]. */
 fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
-    navigation<OnboardingGraphRoute>(startDestination = OnboardingVisitorTypeRoute) {
-        flowComposable<OnboardingVisitorTypeRoute> { entry ->
+    navigation<OnboardingGraphRoute>(startDestination = OnboardingProfileRoute) {
+        flowComposable<OnboardingProfileRoute> { entry ->
             val viewModel = onboardingViewModel(controller, entry)
             val state by viewModel.state.collectAsState()
             val signOut = rememberSignOut {
@@ -59,24 +58,15 @@ fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
                     launchSingleTop = true
                 }
             }
-            OnboardingVisitorTypePage(
-                state = state,
-                onContinue = { controller.navigate(OnboardingProfileRoute) },
-                onSignOut = signOut,
-            )
-        }
-        flowComposable<OnboardingProfileRoute> { entry ->
-            val viewModel = onboardingViewModel(controller, entry)
-            val state by viewModel.state.collectAsState()
             OnboardingProfilePage(
                 state = state,
-                onBack = { controller.popBackStack() },
                 onNameChange = viewModel::setName,
                 onEmailChange = viewModel::setEmail,
                 onAgeRangeChange = viewModel::setAgeRange,
                 onDistrictChange = viewModel::setDistrict,
                 onRetryDistricts = viewModel::retryDistricts,
                 onContinue = { controller.navigate(OnboardingBudgetAudienceRoute) },
+                onSignOut = signOut,
             )
         }
         flowComposable<OnboardingBudgetAudienceRoute> { entry ->

@@ -152,13 +152,12 @@ fun HackappPage(
 @Composable
 private fun HackappPagePreview() = HackappTheme {
     HackappPage(
-        title = stringResource(R.string.onboarding_step, 2, 4),
+        title = stringResource(R.string.profile_title),
         onBack = {},
         step = 2,
-        totalSteps = 4,
+        totalSteps = 3,
         bottomActions = { HackappPrimaryButton(stringResource(R.string.action_continue), {}) },
     ) {
         Text(stringResource(R.string.profile_title), style = MaterialTheme.typography.headlineSmall)
-        Text(stringResource(R.string.profile_prefill_note), style = MaterialTheme.typography.bodyMedium)
     }
 }

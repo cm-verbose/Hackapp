@@ -60,7 +60,7 @@ fun ScreenRegister(
         },
     ) {
         Text(
-            stringResource(R.string.register_one_account_note),
+            stringResource(R.string.register_age_notice),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

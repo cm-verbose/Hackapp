@@ -118,9 +118,8 @@ private fun SettingsSection(text: String) {
 private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
     val profile = summary.profile
     HorizontalInfoCard(
-        title = stringResource(R.string.settings_profile),
+        title = profile.name,
         subtitle = listOfNotNull(
-            profile.name,
             profile.email,
             ageRangeLabel(profile.ageRange),
             summary.districtName,
@@ -130,7 +129,10 @@ private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
     )
     HorizontalInfoCard(
         title = stringResource(R.string.budget_audience_title),
-        subtitle = (listOf(budgetLabel(profile.eventBudget)) + profile.audience.map { audienceLabel(it) })
+        subtitle = (
+            listOf(stringResource(R.string.settings_events_budget, budgetLabel(profile.eventBudget))) +
+                profile.audience.map { audienceLabel(it) }
+            )
             .joinToString(" · "),
         trailing = null,
     )

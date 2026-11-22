@@ -40,8 +40,8 @@ import com.example.hackapp.ui.theme.HackappTheme
 @Composable
 fun HorizontalInfoCard(
     title: String,
-    subtitle: String,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
     avatarText: String = title.take(1).uppercase(),
     selected: Boolean = false,
     enabled: Boolean = true,
@@ -80,7 +80,9 @@ fun HorizontalInfoCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(title, style = MaterialTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
             }
             trailing?.invoke()
         }
@@ -109,7 +111,6 @@ private fun HorizontalInfoCardPreview() = HackappTheme {
     Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HorizontalInfoCard(
             title = stringResource(R.string.visitor_title),
-            subtitle = stringResource(R.string.visitor_description),
             selected = true,
             onClick = {},
         )

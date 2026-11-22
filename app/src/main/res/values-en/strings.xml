@@ -57,15 +57,14 @@
     <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
     <string name="late_warning">You may be late for %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
-    <string name="password_reset_body">Enter your email and we’ll send you a link to choose a new password.</string>
-    <string name="password_reset_sent">If an account exists for this email, the link has been sent.</string>
+    <string name="password_reset_sent">If this email has an account, we’ve sent a link.</string>
     <string name="auth_error_invalid_credentials">Incorrect email or password.</string>
-    <string name="auth_error_invalid_email">This email isn’t valid.</string>
-    <string name="auth_error_email_in_use">An account already exists for this email. Sign in or continue with Google.</string>
-    <string name="auth_error_weak_password">Choose a password with at least 6 characters.</string>
+    <string name="auth_error_invalid_email">Enter a valid email.</string>
+    <string name="auth_error_email_in_use">This email already has an account. Sign in or continue with Google.</string>
+    <string name="auth_error_weak_password">Password must be at least 6 characters.</string>
     <string name="auth_error_password_mismatch">Passwords don’t match.</string>
     <string name="auth_error_network">Can’t connect. Check your network and try again.</string>
-    <string name="auth_error_provider_disabled">Email sign-in isn’t enabled yet.</string>
+    <string name="auth_error_provider_disabled">This sign-in method isn’t available. Try another.</string>
     <string name="auth_error_google">Google sign-in failed. Try again.</string>
     <string name="auth_error_unknown">Something went wrong. Try again.</string>
     <!-- First Eric Group components -->
@@ -102,8 +101,8 @@
     <string name="nav_passport">Passport</string>
 
     <!-- Authentication: WelcomeScreen, RegisterScreen -->
-    <string name="welcome_title">Your outing, made to measure.</string>
-    <string name="welcome_tagline">Plan your outing, follow it stop by stop, and collect your stamps.</string>
+    <string name="welcome_title">Your outing, made to measure</string>
+    <string name="welcome_tagline">Plan, follow each stop, collect your stamps.</string>
     <string name="auth_continue_with_google">Continue with Google</string>
     <string name="auth_email">Email</string>
     <string name="auth_password">Password</string>
@@ -111,26 +110,23 @@
     <string name="auth_forgot_password">Forgot password?</string>
     <string name="auth_sign_in">Sign in</string>
     <string name="auth_create_account">Create an account</string>
-    <string name="register_one_account_note">One account per email: Google or password sign-in reach the same profile, itineraries and passport.</string>
     <string name="register_submit">Create my account</string>
+    <string name="register_age_notice">18 and over</string>
     <string name="password_reset_title">Reset password</string>
     <string name="password_reset_send">Send reset link</string>
 
     <!-- Onboarding -->
     <string name="onboarding_step">Step %1$d of %2$d</string>
     <string name="onboarding_visitor_type_title">How are you exploring the city?</string>
-    <string name="onboarding_visitor_type_subtitle">Choose how you explore.</string>
-    <string name="visitor_title">Visitor</string>
-    <string name="visitor_description">I’m exploring a city I don’t live in</string>
-    <string name="resident_title">Resident</string>
+    <string name="visitor_title">I’m visiting</string>
+    <string name="resident_title">I live here</string>
     <string name="profile_title">Your profile</string>
-    <string name="profile_prefill_note">Prefilled from Google when available.</string>
     <string name="profile_name">Name</string>
     <string name="profile_age_range">Age range</string>
     <!-- City Pack may override the District label -->
-    <string name="profile_district_of_stay">Borough of stay</string>
+    <string name="profile_district_of_stay">Borough where you’re staying</string>
     <string name="budget_audience_title">Budget and audience</string>
-    <string name="budget_subtitle">Per person, per outing.</string>
+    <string name="budget_subtitle">Per person, per itinerary.</string>
     <string name="budget_under_20">&lt; $20</string>
     <string name="budget_under_50">&lt; $50</string>
     <string name="budget_under_100">&lt; $100</string>
@@ -145,22 +141,15 @@
     <string name="audience_adults_only">18+ only</string>
     <string name="audience_family_friendly">Family-friendly</string>
     <string name="audience_no_alcohol">No alcohol</string>
-    <string name="audience_bars_hidden_note">Bars are hidden for family-friendly or no-alcohol preferences.</string>
+    <string name="audience_bars_hidden_note">Bars hidden</string>
     <string name="interests_title">Interests and cuisines</string>
-    <string name="interests_subtitle">Optional. Used to rank results, never to hide them.</string>
+    <string name="interests_subtitle">Used to rank results, not hide them.</string>
     <string name="interests_event_types">Event types</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Event</string>
     <string name="stop_kind_meal">Meal</string>
 
     <!-- Cuisines (align with restaurant data) -->
-    <string name="cuisine_quebecois">Québécois</string>
-    <string name="cuisine_italian">Italian</string>
-    <string name="cuisine_lebanese">Lebanese</string>
-    <string name="cuisine_japanese">Japanese</string>
-    <string name="cuisine_vegetarian">Vegetarian</string>
-    <string name="cuisine_cafe">Café</string>
-    <string name="cuisine_bistro">Bistro</string>
 
     <!-- HomeScreen -->
     <string name="home_greeting">Hello %1$s</string>
@@ -215,7 +204,6 @@
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
     <string name="settings_profile">Profile</string>
-    <string name="settings_profile_description">Name, email, age, borough</string>
     <string name="settings_sign_out">Sign out</string>
 
     <plurals name="stops_count">
@@ -254,6 +242,7 @@
     <string name="stop_status_skipped">Skipped</string>
     <string name="archived_choose_new_date">Choose a new date</string>
     <string name="settings_no_preferences">No preferences</string>
+    <string name="settings_events_budget">Events: %1$s</string>
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">An itinerary lasts at least 2 hours.</string>

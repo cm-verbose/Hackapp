@@ -54,11 +54,6 @@ fun ScreenPasswordReset(onBack: () -> Unit) {
             )
         },
     ) {
-        Text(
-            stringResource(R.string.password_reset_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         HackappTextField(
             value = email,
             onValueChange = { email = it; error = null; sent = false },

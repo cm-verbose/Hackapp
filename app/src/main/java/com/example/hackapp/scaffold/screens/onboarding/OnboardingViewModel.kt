@@ -38,7 +38,7 @@ data class OnboardingUiState(
     val finished: Boolean = false,
 )
 
-/** Shared by the four onboarding routes through their navigation graph's back stack entry. */
+/** Shared by the onboarding routes through their navigation graph's back stack entry. */
 class OnboardingViewModel(
     private val savedState: SavedStateHandle,
     private val auth: AuthService,
