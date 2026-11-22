@@ -83,3 +83,12 @@ Each must read on a lock screen with no app context. Android shows the app name 
 - `late_warning`, `action_go_anyway`, `action_arrived` are shared keys; not changed.
 - The arrival notification body is `name · time` with no label, so the time's meaning (planned start) is only implied. Kept because `notification_arrival_body` is approved; flag for review.
 - `notification_preview_header` is the in-app mock only.
+
+## Handoff names
+
+| Key | Text | Where |
+|---|---|---|
+| `leg_open_transit_app` | Ouvrir %1$s / Open %1$s | Primary Leg button for any transport. `%1$s` is the City Pack name (`transitApp.displayName`, `rideHail.displayName`), so "Ouvrir Chrono" and "Ouvrir Uber" both read correctly. No Uber-specific key needed |
+| `leg_google_maps_directions` | Ouvrir dans Google Maps / Open in Google Maps | Secondary Leg button, transit only |
+| `app_name_google_maps` (`translatable="false"`, default file only) | Google Maps | Replaces the `DIRECTIONS_APP_NAME` constant in `UnderwayScreen.kt:46` through `stringResource`, as the `%1$s` of `handoff_unavailable` |
+| `handoff_unavailable` | Impossible d’ouvrir %1$s. Essayez une autre option. / Couldn’t open %1$s. Try another option. | Handoff error for Chrono, Uber or Google Maps |

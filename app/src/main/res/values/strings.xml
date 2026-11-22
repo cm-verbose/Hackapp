@@ -188,6 +188,7 @@
     <string name="leg_mode_transit">Transport en commun</string>
     <string name="leg_open_transit_app">Ouvrir %1$s</string>
     <string name="leg_google_maps_directions">Ouvrir dans Google Maps</string>
+    <string name="app_name_google_maps" translatable="false">Google Maps</string>
     <string name="notification_channel_underway">Itinéraire en cours</string>
     <string name="end_of_day_title">Itinéraire terminé</string>
     <string name="end_of_day_no_stamp">Aucun timbre</string>
