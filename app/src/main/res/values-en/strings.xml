@@ -41,7 +41,7 @@
         <item quantity="other">%d boroughs</item>
     </plurals>
     <!-- Qindong 2 components -->
-    <string name="data_attribution">Data: Has Things (hasthings.com)</string>
+    <string name="data_attribution">Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors</string>
     <string name="map_district_boundaries">Map · borough boundaries</string>
     <string name="district_add_as_position">Add as #%1$d</string>
     <string name="district_choose_another">Choose another</string>

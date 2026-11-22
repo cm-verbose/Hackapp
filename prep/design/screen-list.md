@@ -10,8 +10,8 @@ Terms are defined in [`GLOSSARY.md`](../../GLOSSARY.md).
 - **Age:** accounts are for people 18 and over. Adults planning an outing with children use the family-friendly Audience Preference.
 - **Languages:** French is the priority and default. English is also required. French lives in `values/strings.xml`, English in `values-en/strings.xml`, and no user-facing text is hardcoded. Settings has a French/English switch.
 - **City labels:** City Packs can override labels, such as "arrondissement" for a District. Toronto can default to English.
-- **Data:** source CSVs are imported into Firestore once. The app queries Events and Places by city and District and keeps them cached for offline use.
-- **Attribution:** show "Data: Has Things (hasthings.com)" wherever its data is used.
+- **Data:** Events and Places are bundled with the app and read through repository interfaces, so they can later move to a database. Profile, Itineraries and Passport use Firestore.
+- **Attribution:** show "Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors" wherever Event data is used.
 - **Demo mode:** a hidden control pins the date to one with good seed data and skips ahead to the next moment that matters. It also triggers alerts directly.
 
 ## Authentication

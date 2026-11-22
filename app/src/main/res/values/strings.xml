@@ -39,7 +39,7 @@
         <item quantity="other">%d arrondissements</item>
     </plurals>
     <!-- Qindong 2 components -->
-    <string name="data_attribution">Données : Has Things (hasthings.com)</string>
+    <string name="data_attribution">Données : Has Things (hasthings.com), Ville de Montréal, © contributeurs OpenStreetMap</string>
     <string name="map_district_boundaries">Carte · limites des arrondissements</string>
     <string name="district_add_as_position">Ajouter en %1$de</string>
     <string name="district_choose_another">Choisir un autre</string>
