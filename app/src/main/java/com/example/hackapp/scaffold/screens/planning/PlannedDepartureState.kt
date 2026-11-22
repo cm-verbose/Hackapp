@@ -22,10 +22,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 enum class DepartureError {
-    /** The chosen time is after [PlannedDepartureUiState.latestDeparture]. */
+    /** The pick is not inside the range [PlannedDepartureUiState.earliestDeparture] to [PlannedDepartureUiState.latestDeparture], including a stay of zero or less. */
     OutsideWindow,
 
-    /** The stay is zero or negative. */
+    /** No time is valid: the Event leaves no room before the latest departure. */
     NotAfterStart,
 }
 
@@ -34,7 +34,9 @@ data class PlannedDepartureUiState(
     val eventTitle: String,
     val eventType: String,
     val start: ZonedDateTime,
-    /** The latest allowed departure. Show it with an [DepartureError.OutsideWindow] error. */
+    /** The earliest valid departure: the Event start. Picks must be after it. */
+    val earliestDeparture: ZonedDateTime,
+    /** The latest valid departure. Show one range error: "between [earliestDeparture] and [latestDeparture]". */
     val latestDeparture: ZonedDateTime,
     /** The typical stay for the Event type, in minutes. */
     val typicalStayMinutes: Int,
@@ -44,7 +46,7 @@ data class PlannedDepartureUiState(
     val stayMinutes: Int,
     /** The Event published an end time. The sheet then does not need to open. */
     val hasPublishedEnd: Boolean,
-    /** [departure] is still the typical stay for the Event type. */
+    /** [stayMinutes] equals [typicalStayMinutes] and no end was published. False when clamped or edited. */
     val isTypicalStay: Boolean,
     /** [departure] is on a later calendar day than [start]. */
     val crossesMidnight: Boolean,
@@ -115,7 +117,7 @@ class PlannedDepartureHolder private constructor(
     /** Sets the stay length, for steppers. */
     fun setStayMinutes(minutes: Int) {
         if (minutes <= 0) {
-            _state.update { it.copy(error = DepartureError.NotAfterStart, rejectedTime = null) }
+            _state.update { it.copy(error = DepartureError.OutsideWindow, rejectedTime = null) }
             return
         }
         val candidate = start.plusMinutes(minutes.toLong())
@@ -133,11 +135,12 @@ class PlannedDepartureHolder private constructor(
     fun confirm(): ZonedDateTime? = _state.value.takeIf { it.canConfirm }?.departure
 
     private fun apply(departure: ZonedDateTime) {
+        val minutes = Duration.between(start, departure).toMinutes().toInt()
         _state.update {
             it.copy(
                 departure = departure,
-                stayMinutes = Duration.between(start, departure).toMinutes().toInt(),
-                isTypicalStay = !it.hasPublishedEnd && departure == prefill,
+                stayMinutes = minutes,
+                isTypicalStay = !it.hasPublishedEnd && minutes == it.typicalStayMinutes,
                 crossesMidnight = departure.toLocalDate() != start.toLocalDate(),
                 rejectedTime = null,
                 error = null,
@@ -157,17 +160,19 @@ class PlannedDepartureHolder private constructor(
             val suggestion = suggestDeparture(event, itinerary, zone) ?: return null
             val suggested = suggestion.plannedDeparture
             val departure = if (suggested.isAfter(latestDeparture)) latestDeparture else suggested
+            val stay = Duration.between(start, departure).toMinutes().toInt()
             val state = PlannedDepartureUiState(
                 eventId = event.id,
                 eventTitle = event.title,
                 eventType = event.type,
                 start = start,
+                earliestDeparture = start,
                 latestDeparture = latestDeparture,
                 typicalStayMinutes = typicalStayMinutes(event.type),
                 departure = departure,
-                stayMinutes = Duration.between(start, departure).toMinutes().toInt(),
+                stayMinutes = stay,
                 hasPublishedEnd = suggestion.hasPublishedEnd,
-                isTypicalStay = !suggestion.hasPublishedEnd,
+                isTypicalStay = !suggestion.hasPublishedEnd && stay == typicalStayMinutes(event.type),
                 crossesMidnight = departure.toLocalDate() != start.toLocalDate(),
                 error = if (!departure.isAfter(start)) DepartureError.NotAfterStart else null,
             )

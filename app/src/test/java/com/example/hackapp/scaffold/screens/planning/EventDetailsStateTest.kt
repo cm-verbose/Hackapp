@@ -84,7 +84,10 @@ class EventDetailsStateTest {
         assertEquals(EventPrice.Unknown, holder().also { it.load() }.state.value.price)
         assertEquals(EventPrice.Free, holder(listOf(e("a", cost = Cost(CostStatus.FREE)))).state.value.price)
         val paid = Cost(CostStatus.PAID, minPrice = 10.0, maxPrice = 30.0)
-        assertEquals(EventPrice.Published(10.0, 30.0), holder(listOf(e("a", cost = paid))).state.value.price)
+        val publishedHolder = holder(listOf(e("a", cost = paid)))
+        assertEquals(EventPrice.Loading, publishedHolder.state.value.price)
+        publishedHolder.load()
+        assertEquals(EventPrice.Published(10.0, 30.0), publishedHolder.state.value.price)
 
         val repo = InMemoryTicketPriceRepository()
         val key = e("a").showtimeKey()
@@ -285,5 +288,56 @@ class EventDetailsStateTest {
         save.cancelAndJoin()
         assertEquals(TicketPriceStatus.Idle, h2.state.value.ticketPrice.status)
         assertTrue(h2.state.value.ticketPrice.canSave)
+    }
+
+    @Test
+    fun `price shows loading until the reports load, and falls back after a failed load`() = runBlocking {
+        val h = holder()
+        assertEquals(EventPrice.Loading, h.state.value.price)
+        h.load()
+        assertEquals(EventPrice.Unknown, h.state.value.price)
+        val failed = holder(repo = FailingRepo(failLoad = true, failSave = false))
+        failed.load()
+        assertEquals(EventPrice.Unknown, failed.state.value.price)
+    }
+
+    @Test
+    fun `Free Events have no ticket price section`() = runBlocking {
+        val repo = InMemoryTicketPriceRepository()
+        val h = holder(listOf(e("a", cost = Cost(CostStatus.FREE))), repo = repo)
+        h.load()
+        assertFalse(h.state.value.ticketPrice.applicable)
+        h.setTicketPriceInput("10")
+        assertFalse(h.state.value.ticketPrice.canSave)
+        assertFalse(h.saveTicketPrice())
+        assertNull(repo.getSummary(e("a").showtimeKey()))
+        h.setTicketPriceInput("abc")
+        val action = h.addToItinerary() as AddToItineraryAction.ChooseDeparture
+        assertNull(action.ticketPriceCad)
+        assertTrue(holder().also { it.load() }.state.value.ticketPrice.applicable)
+    }
+
+    private class SaveFailsRepo : TicketPriceRepository by InMemoryTicketPriceRepository() {
+        override suspend fun getOwnReport(uid: String, key: ShowtimeKey): Double? = 9.0
+        override suspend fun saveReport(uid: String, key: ShowtimeKey, priceCad: Double): Boolean = error("offline")
+    }
+
+    @Test
+    fun `after a failed save the Event can be added without the price`() = runBlocking {
+        val h = holder(repo = SaveFailsRepo())
+        h.load()
+        assertFalse(h.state.value.canAddWithoutPrice)
+        assertNull(h.addWithoutPrice())
+        h.setTicketPriceInput("15")
+        assertNull(h.addToItinerary())
+        assertEquals(TicketPriceStatus.SaveFailed, h.state.value.ticketPrice.status)
+        assertTrue(h.state.value.canAddWithoutPrice)
+        val action = h.addWithoutPrice() as AddToItineraryAction.ChooseDeparture
+        assertEquals(9.0, action.ticketPriceCad)
+        val published = holder(listOf(e("a", end = at(Nov28, 21).toString())), repo = SaveFailsRepo())
+        published.load()
+        published.setTicketPriceInput("15")
+        published.addToItinerary()
+        assertEquals(9.0, (published.addWithoutPrice() as AddToItineraryAction.Add).stop.ticketPriceCad)
     }
 }

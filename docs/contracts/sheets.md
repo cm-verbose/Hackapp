@@ -43,18 +43,18 @@ Create: `PlannedDepartureHolder.create(event, itinerary, zone, latestDeparture):
 | Field | Meaning |
 |---|---|
 | `eventId`, `eventTitle`, `eventType`, `start` | The Event |
-| `latestDeparture` | The latest allowed departure (replaces `windowEnd`). Show it with the OutsideWindow error |
+| `earliestDeparture`, `latestDeparture` | The valid range: picks must be after the first and no later than the second. Show one range error with both times (replaces `windowEnd`) |
 | `typicalStayMinutes` | Typical stay for the Event type, for a "Typical stay" label or reset hint |
 | `departure` | Last valid choice |
 | `stayMinutes` | Stay duration, from `start` to `departure`, to show next to the time |
 | `hasPublishedEnd` | Always false when the sheet is needed |
-| `isTypicalStay` | Still the typical stay: label it as typical, not as chosen |
+| `isTypicalStay` | `stayMinutes` equals `typicalStayMinutes` and no end was published. False when clamped to the limit or edited |
 | `crossesMidnight` | `departure` is on a later day than `start`: show an after-midnight hint |
-| `error`, `rejectedTime` | `OutsideWindow` (after `latestDeparture`) or `NotAfterStart` (stay of zero or less). The invalid pick leaves `departure` unchanged |
+| `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists at all). The invalid pick leaves `departure` unchanged |
 | `canConfirm` | `error == null` |
 
 Callbacks
-- `setTime(LocalTime)`: from a time picker. A time at or before the start rolls to the next day, so 01:00 after a 23:00 start means after midnight. A time after `latestDeparture` sets `OutsideWindow`. A time equal to the one already shown is ignored, so a prefilled time keeps its offset on the night clocks go back.
+- `setTime(LocalTime)`: from a time picker. A time at or before the start counts as the next day only when that is inside the range (01:00 after a 23:00 start is after midnight). Otherwise it is the range error. A time after `latestDeparture` sets `OutsideWindow`. A time equal to the one already shown is ignored, so a prefilled time keeps its offset on the night clocks go back.
 - `setStayMinutes(Int)`: for steppers.
 - `reset()`: back to the typical stay (or `latestDeparture` when that is earlier).
 - `confirm(): ZonedDateTime?`: the Planned Departure, or null while there is an error. Selection then calls `eventStop(event, departure, ticketPriceCad)` and `itinerary.withStop(stop)`.
@@ -76,14 +76,17 @@ Create: `EventDetailsHolder(showtimes: List<ReachableShowtime>, initialEventId, 
 | `description`, `ticketUrl` | Both nullable. Hide the row or link when null |
 | `ticketPrice: TicketPriceFieldState` | The optional ticket price field |
 | `canAdd` | False when the Event cannot become a Stop, and while prices load or save: disable **Add to Itinerary** |
+| `canAddWithoutPrice` | The last save or clear failed (`SaveFailed`): offer **Add without price** |
 
 `EventPrice`
+- `Loading`: reports have not finished loading (until `load()` ends). Show a loading state, never "unknown price".
 - `Free`: counts as $0.
 - `UserMedian(medianCad, reportCount)`: label it "median of user-reported prices".
 - `Published(minCad, maxCad)`: the source's own price, only when there are no reports.
 - `Unknown`: unknown-price state (no reports and no published price).
 
 `TicketPriceFieldState`
+- `applicable`: false for Free Events. Hide the whole section: nothing can be entered or saved, and no report goes with the Stop.
 - `signedIn`: false means hide the field or show a sign-in prompt. Nobody else is ever shown a name.
 - `input`, `inputError` (`NotANumber`, `OutOfRange`), `minCad` 0, `maxCad` 500. Blank is valid and means no report. `$` before or after the amount and a comma decimal are accepted (`25 $`, `12,50 $`), at most 2 decimals, ASCII digits only. A leading minus is `OutOfRange`.
 - `ownReportCad`: this person's own saved report, loaded by `load()`; the field is prefilled with it.
@@ -100,6 +103,7 @@ Callbacks
 - `suspend addToItinerary(): AddToItineraryAction?`: saves a pending valid ticket price first. Null while loading or saving, when the input is invalid, the save failed, or the Event cannot be added. Otherwise:
   - `Add(stop)`: published end. Apply `itinerary.withStop(stop)`.
   - `ChooseDeparture(event, ticketPriceCad)`: no published end. Open the Planned Departure sheet, then `eventStop(event, departure, ticketPriceCad)`.
+- `addWithoutPrice(): AddToItineraryAction?`: only when `canAddWithoutPrice`. Adds without saving the typed price and keeps the last saved report; same `Add` or `ChooseDeparture` outcome. A failed optional price never blocks adding.
 
 The Stop's `ticketPriceCad` is only this person's own report. The running total uses the own report, then the median, then the published price (`knownEventPrice`).
 
@@ -118,7 +122,7 @@ MealPickerContent(state, nextDistrictName: String?, budgetLabel: String?, onSele
 - The sheet looks up `nextDistrictName` from the City Pack (`rememberDistrictMap()`) by `state.nextDistrictId`; while it is unknown the tab says `meal_tab_next`.
 - Each row shows the venue type (`venueTypeLabel`, strings `venue_type_*`) under the name.
 - `budgetLabel` is the Meal budget bracket label Selection already shows (for example `budget_under_50`); null drops the budget part of the subtitle.
-- Tabs render only when `state.tabs.size > 1`. **Skip this Meal** is a text button, or the primary button when `hasNoOptions`.
+- Tabs render only when `state.tabs.size > 1` and not in the `hasNoOptions` state; the District label may wrap to 3 lines (`HackappSegmentedButton(maxLines = 3)`). **Skip this Meal** is a text button, or the primary button when `hasNoOptions`.
 - `onChoose` receives the row's `placeId`; Selection calls `holder.choose(placeId)` and applies the outcome.
 
 ### `PlannedDepartureSheet.kt`
@@ -131,18 +135,20 @@ PlannedDepartureContent(state, venueName, onTimeChange, onConfirm, onCancel, mod
 
 - Uses `HackappTimeWheels`; every wheel move calls `onTimeChange` (wire it to `holder.setTime`). The wheels show `rejectedTime` while there is an error, else `departure`.
 - `venueName` fills the subtitle's middle part; the Event type label stands in when null. The state has no venue field.
-- The note uses `state.typicalStayMinutes`; the duration row adds `planned_departure_next_day` when `crossesMidnight`.
+- The duration row reads `planned_departure_typical` while `isTypicalStay`, else `planned_departure_duration`, and adds `planned_departure_next_day` when `crossesMidnight`. It is hidden while `error != null`; both errors show `planned_departure_error_range(earliestDeparture, latestDeparture)` as sentence times.
 - **Confirm** is disabled while `!canConfirm`. **Cancel** dismisses.
 
 ### `EventDetailsSheet.kt`
 
 ```kotlin
 EventDetailsSheet(state: EventDetailsUiState, onSelectShowtime: (eventId: String) -> Unit, onTicketPriceChange: (String) -> Unit,
-    onRetryLoad: () -> Unit, onSignIn: () -> Unit, onAddToItinerary: () -> Unit, onDismiss: () -> Unit)
-EventDetailsContent(state, onSelectShowtime, onTicketPriceChange, onRetryLoad, onSignIn, onAddToItinerary, onClose, modifier)
+    onRetryLoad: () -> Unit, onSignIn: () -> Unit, onAddToItinerary: () -> Unit, onAddWithoutPrice: () -> Unit, onDismiss: () -> Unit)
+EventDetailsContent(state, onSelectShowtime, onTicketPriceChange, onRetryLoad, onSignIn, onAddToItinerary, onAddWithoutPrice, onClose, modifier)
 ```
 
-- The ticket link opens `ticketUrl` with `LocalUriHandler` (an `IllegalArgumentException` from a device with no browser is swallowed). The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper, and is disabled while `ticketPrice.isBusy`.
-- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while `ticketPrice.isBusy`.
-- `onRetryLoad` wires to `holder.load()`; the `LoadFailed` text and Retry show for signed-out people too. `onSignIn` is shown only when `ticketPrice.signedIn` is false.
-- Audience label: `audience.description` when non-blank; otherwise `minAge >= 18` is adults, a `maxAge` is family, else all audiences.
+- The ticket link (48 dp tall) opens `ticketUrl` with `LocalUriHandler` (an `IllegalArgumentException` from a device with no browser is swallowed). The ticket field uses a decimal keyboard and `HackappTextField`'s new `supportingText` for the range helper, and is disabled while `ticketPrice.isBusy`.
+- No save button: **Add to Itinerary** calls `onAddToItinerary`, which Selection wires to `holder.addToItinerary()`. It is disabled while `!canAdd`, while the input is invalid, or while `ticketPrice.isBusy`. When `canAddWithoutPrice` (a failed save), a text button **Add without price** calls `onAddWithoutPrice`, wired to `holder.addWithoutPrice()`.
+- The whole ticket price section is hidden when `ticketPrice.applicable` is false (free Events). The shared-price notice shows only when signed in.
+- `onRetryLoad` wires to `holder.load()`; the `LoadFailed` text and Retry show for signed-out people too. `onSignIn` is shown only when `ticketPrice.signedIn` is false. `EventPrice.Loading` shows `state_loading` in the price row.
+- Time row: a single showtime shows only the time (`start – end` when published); repeated showtimes show `event_showtimes(date, n)`, the selected `start – end` when published, and radio-role chips described by `event_showtime_label`.
+- Audience label: `audience.description` mapped through the table in `sheets-strings.md` ("Audience labels"), unknown text shown as is; without a text, `minAge >= 18` is adults, a `maxAge` is family, else all audiences.

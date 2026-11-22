@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,7 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -52,12 +55,12 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 private val ClockFormat = DateTimeFormatter.ofPattern("HH:mm")
-private const val SEPARATOR = " · "
 
 /**
  * Figma "EventDetailsSheet" (141:3622) and "EventDetailsSheet_RepeatedShowtimes" (141:3734).
  * **Add to Itinerary** also saves a pending valid ticket price, so there is no separate save button.
  * [onRetryLoad] calls `load()` again after `LoadFailed`; [onSignIn] starts sign-in when the field is hidden.
+ * [onAddWithoutPrice] wires to `addWithoutPrice()` after a failed save.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +71,7 @@ fun EventDetailsSheet(
     onRetryLoad: () -> Unit,
     onSignIn: () -> Unit,
     onAddToItinerary: () -> Unit,
+    onAddWithoutPrice: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -78,6 +82,7 @@ fun EventDetailsSheet(
             onRetryLoad = onRetryLoad,
             onSignIn = onSignIn,
             onAddToItinerary = onAddToItinerary,
+            onAddWithoutPrice = onAddWithoutPrice,
             onClose = onDismiss,
             modifier = Modifier.navigationBarsPadding(),
         )
@@ -93,6 +98,7 @@ fun EventDetailsContent(
     onRetryLoad: () -> Unit,
     onSignIn: () -> Unit,
     onAddToItinerary: () -> Unit,
+    onAddWithoutPrice: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -106,7 +112,12 @@ fun EventDetailsContent(
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(state.title, style = MaterialTheme.typography.titleLarge, color = scheme.onSurface)
+                Text(
+                    state.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = scheme.onSurface,
+                    modifier = Modifier.semantics { heading() },
+                )
                 Text(
                     stopTypeLabel(eventStopType(state.type)),
                     style = MaterialTheme.typography.labelLarge,
@@ -139,7 +150,10 @@ fun EventDetailsContent(
 
             state.ticketUrl?.let { url -> TicketLink(url) }
 
-            TicketPriceSection(field, state.hasRepeatedShowtimes, onTicketPriceChange, onRetryLoad, onSignIn)
+            // A free Event has no price to report.
+            if (field.applicable) {
+                TicketPriceSection(field, state.hasRepeatedShowtimes, onTicketPriceChange, onRetryLoad, onSignIn)
+            }
         }
 
         HackappPrimaryButton(
@@ -148,17 +162,26 @@ fun EventDetailsContent(
             enabled = state.canAdd && field.inputError == null && !field.isBusy,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
+        if (state.canAddWithoutPrice) {
+            HackappSmallTextButton(
+                text = stringResource(R.string.event_add_without_price),
+                onClick = onAddWithoutPrice,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+        }
     }
 }
 
-/** Date and time, or the date with a showtime chooser when the title repeats that day. */
+/**
+ * The time (`start – end` when published), or the date with a showtime chooser when the title
+ * repeats that day. Selection already shows the date, so a single showtime does not repeat it.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WhenRow(state: EventDetailsUiState, onSelectShowtime: (String) -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val locale = LocalConfiguration.current.locales[0]
     val dateFormat = remember(locale) { DateTimeFormatter.ofPattern("EEE d MMM yyyy", locale) }
-    val date = state.start.format(dateFormat)
     val time = state.publishedEnd
         ?.let { stringResource(R.string.selection_time_block, state.start.format(ClockFormat), it.format(ClockFormat)) }
         ?: state.start.format(ClockFormat)
@@ -167,10 +190,17 @@ private fun WhenRow(state: EventDetailsUiState, onSelectShowtime: (String) -> Un
         HackappIconView(HackappIcon.Schedule, tint = scheme.onSurfaceVariant)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                if (state.hasRepeatedShowtimes) stringResource(R.string.event_showtimes, date, state.showtimes.size) else date + SEPARATOR + time,
+                if (state.hasRepeatedShowtimes) {
+                    stringResource(R.string.event_showtimes, state.start.format(dateFormat), state.showtimes.size)
+                } else {
+                    time
+                },
                 style = MaterialTheme.typography.bodyLarge,
                 color = scheme.onSurface,
             )
+            if (state.hasRepeatedShowtimes && state.publishedEnd != null) {
+                Text(time, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+            }
             if (state.endTimeUnpublished) {
                 Text(stringResource(R.string.event_end_unknown), style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
             }
@@ -187,11 +217,18 @@ private fun WhenRow(state: EventDetailsUiState, onSelectShowtime: (String) -> Un
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     state.showtimes.forEach { showtime ->
+                        val clock = showtime.start.format(ClockFormat)
+                        val label = stringResource(R.string.event_showtime_label, clock)
                         // Selection shows by colour only: the chip has no leading checkmark.
+                        // One showtime at a time, so TalkBack hears a radio button, not a checkbox.
                         FilterChip(
                             selected = showtime.selected,
                             onClick = { onSelectShowtime(showtime.eventId) },
-                            label = { Text(showtime.start.format(ClockFormat), style = MaterialTheme.typography.labelLarge) },
+                            label = { Text(clock, style = MaterialTheme.typography.labelLarge) },
+                            modifier = Modifier.semantics {
+                                role = Role.RadioButton
+                                contentDescription = label
+                            },
                         )
                     }
                 }
@@ -203,6 +240,7 @@ private fun WhenRow(state: EventDetailsUiState, onSelectShowtime: (String) -> Un
 @Composable
 private fun PriceRow(price: EventPrice) {
     when (price) {
+        EventPrice.Loading -> InfoRow(HackappIcon.Sell, stringResource(R.string.state_loading))
         EventPrice.Free -> InfoRow(HackappIcon.Sell, stringResource(R.string.event_price_free))
         EventPrice.Unknown -> InfoRow(HackappIcon.Sell, stringResource(R.string.event_price_unknown))
         is EventPrice.UserMedian -> InfoRow(HackappIcon.Sell, formatCad(price.medianCad), stringResource(R.string.event_price_median))
@@ -235,13 +273,15 @@ private fun TicketLink(url: String) {
     val uriHandler = LocalUriHandler.current
     val scheme = MaterialTheme.colorScheme
     Row(
-        Modifier.clickable(role = Role.Button) {
-            // A device without a browser throws instead of opening the link.
-            try {
-                uriHandler.openUri(url)
-            } catch (_: IllegalArgumentException) {
-            }
-        },
+        Modifier
+            .heightIn(min = 48.dp)
+            .clickable(role = Role.Button) {
+                // A device without a browser throws instead of opening the link.
+                try {
+                    uriHandler.openUri(url)
+                } catch (_: IllegalArgumentException) {
+                }
+            },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -251,8 +291,8 @@ private fun TicketLink(url: String) {
 }
 
 /**
- * The optional ticket price. Signed out: a sign-in prompt instead of the field. The shared-price
- * notice always shows, and errors are live regions.
+ * The optional ticket price. Signed out: a sign-in prompt instead of the field and no shared-price
+ * notice, since there is nothing to share. Errors are live regions.
  */
 @Composable
 private fun ColumnScope.TicketPriceSection(
@@ -295,13 +335,15 @@ private fun ColumnScope.TicketPriceSection(
     // The shared median loads for everyone, so its failure and Retry show when signed out too.
     TicketPriceStatus(field.status, onRetryLoad)
 
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        HackappIconView(HackappIcon.Info, size = 16.dp, tint = scheme.onSurfaceVariant)
-        Text(
-            stringResource(if (repeatedShowtimes) R.string.event_ticket_price_shared_showtimes else R.string.event_ticket_price_shared),
-            style = MaterialTheme.typography.bodySmall,
-            color = scheme.onSurfaceVariant,
-        )
+    if (field.signedIn) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+            HackappIconView(HackappIcon.Info, size = 16.dp, tint = scheme.onSurfaceVariant)
+            Text(
+                stringResource(if (repeatedShowtimes) R.string.event_ticket_price_shared_showtimes else R.string.event_ticket_price_shared),
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -312,12 +354,14 @@ private fun TicketPriceStatus(status: TicketPriceStatus, onRetryLoad: () -> Unit
     when (status) {
         TicketPriceStatus.Idle -> Unit
         TicketPriceStatus.Loading, TicketPriceStatus.Saving -> {
-            val loading = stringResource(R.string.state_loading)
+            val description = stringResource(
+                if (status == TicketPriceStatus.Saving) R.string.event_price_saving else R.string.state_loading,
+            )
             CircularProgressIndicator(
                 Modifier
                     .size(20.dp)
                     .semantics {
-                        contentDescription = loading
+                        contentDescription = description
                         liveRegion = LiveRegionMode.Polite
                     },
                 strokeWidth = 2.dp,
@@ -348,18 +392,31 @@ private fun TicketPriceStatus(status: TicketPriceStatus, onRetryLoad: () -> Unit
 }
 
 /**
- * The source's own audience text when it has one. Otherwise adults when the minimum age is 18 or
- * more, family when a maximum age exists, else all audiences.
+ * The source's audience text mapped to its `event_audience_*` key (`docs/contracts/sheets-strings.md`,
+ * "Audience labels"); an unknown text shows as is. Without a text: adults when the minimum age is
+ * 18 or more, family when a maximum age exists, else all audiences.
  */
 @Composable
 private fun audienceLabel(audience: EventAudience): String {
-    val description = audience.description?.takeIf { it.isNotBlank() }
+    val description = audience.description?.trim()?.takeIf { it.isNotEmpty() }
     return when {
-        description != null -> description
+        description != null -> audienceKey(description)?.let { stringResource(it) } ?: description
         (audience.minAge ?: 0) >= 18 -> stringResource(R.string.event_audience_adults)
         audience.maxAge != null -> stringResource(R.string.event_audience_family)
         else -> stringResource(R.string.event_audience_all)
     }
+}
+
+/** Exact source values of `targetAudience.description` in `events.json`. */
+private fun audienceKey(description: String): Int? = when (description) {
+    "Pour tous" -> R.string.event_audience_all
+    "Enfants d'âge préscolaire", "Enfants d’âge préscolaire" -> R.string.event_audience_preschool
+    "Famille" -> R.string.event_audience_family
+    "Enfants" -> R.string.event_audience_children
+    "Adultes" -> R.string.event_audience_adult_public
+    "Adolescents" -> R.string.event_audience_teens
+    "Personnes aînées" -> R.string.event_audience_seniors
+    else -> null
 }
 
 // Previews
@@ -375,8 +432,9 @@ private fun previewState(
     showtimes: List<ZonedDateTime> = listOf(PreviewStart),
     publishedEnd: ZonedDateTime? = null,
     description: String? = PREVIEW_DESCRIPTION,
-    audience: EventAudience? = EventAudience(null, null, null),
+    audience: EventAudience? = EventAudience("Pour tous", null, null),
     canAdd: Boolean = true,
+    canAddWithoutPrice: Boolean = false,
 ) = EventDetailsUiState(
     eventId = "lemay-20",
     title = "Quatuor jazz Lemay",
@@ -394,6 +452,7 @@ private fun previewState(
     ticketUrl = "https://example.org/billets",
     ticketPrice = ticketPrice,
     canAdd = canAdd,
+    canAddWithoutPrice = canAddWithoutPrice,
 )
 
 @Composable
@@ -405,6 +464,7 @@ private fun EventDetailsPreview(state: EventDetailsUiState) = HackappTheme {
         onRetryLoad = {},
         onSignIn = {},
         onAddToItinerary = {},
+        onAddWithoutPrice = {},
         onClose = {},
         modifier = Modifier.padding(top = 16.dp),
     )
@@ -431,13 +491,23 @@ private fun EventDetailsPublishedPreview() = EventDetailsPreview(
     ),
 )
 
+@Preview(name = "EventDetails · repeated showtimes, end known", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun EventDetailsRepeatedEndKnownPreview() = EventDetailsPreview(
+    previewState(
+        showtimes = listOf(PreviewStart.minusHours(2), PreviewStart, PreviewStart.plusHours(2)),
+        publishedEnd = PreviewStart.plusMinutes(90),
+        audience = EventAudience("Rencontre avec l'artiste", null, null),
+    ),
+)
+
 @Preview(name = "EventDetails · unknown price, no description", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun EventDetailsUnknownPreview() = EventDetailsPreview(
     previewState(
         price = EventPrice.Unknown,
         description = null,
-        audience = EventAudience(null, null, 12),
+        audience = EventAudience("Adolescents", null, null),
         ticketPrice = TicketPriceFieldState(signedIn = true, status = TicketPriceStatus.Idle),
     ),
 )
@@ -445,13 +515,27 @@ private fun EventDetailsUnknownPreview() = EventDetailsPreview(
 @Preview(name = "EventDetails · free, signed out", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun EventDetailsSignedOutPreview() = EventDetailsPreview(
-    previewState(price = EventPrice.Free, ticketPrice = TicketPriceFieldState(signedIn = false), audience = null),
+    previewState(
+        price = EventPrice.Free,
+        ticketPrice = TicketPriceFieldState(signedIn = false, applicable = false, status = TicketPriceStatus.Idle),
+        audience = null,
+    ),
+)
+
+@Preview(name = "EventDetails · unknown price, signed out", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun EventDetailsUnknownSignedOutPreview() = EventDetailsPreview(
+    previewState(
+        price = EventPrice.Unknown,
+        ticketPrice = TicketPriceFieldState(signedIn = false, status = TicketPriceStatus.Idle),
+        audience = EventAudience(null, null, 12),
+    ),
 )
 
 @Preview(name = "EventDetails · loading", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun EventDetailsLoadingPreview() = EventDetailsPreview(
-    previewState(price = EventPrice.Unknown, ticketPrice = TicketPriceFieldState(signedIn = true)),
+    previewState(price = EventPrice.Loading, ticketPrice = TicketPriceFieldState(signedIn = true)),
 )
 
 @Preview(name = "EventDetails · load failed", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
@@ -473,7 +557,16 @@ private fun EventDetailsLoadFailedSignedOutPreview() = EventDetailsPreview(
 @Preview(name = "EventDetails · save failed", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun EventDetailsSaveFailedPreview() = EventDetailsPreview(
-    previewState(ticketPrice = TicketPriceFieldState(signedIn = true, input = "30", status = TicketPriceStatus.SaveFailed)),
+    previewState(
+        ticketPrice = TicketPriceFieldState(signedIn = true, input = "30", status = TicketPriceStatus.SaveFailed),
+        canAddWithoutPrice = true,
+    ),
+)
+
+@Preview(name = "EventDetails · saving", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun EventDetailsSavingPreview() = EventDetailsPreview(
+    previewState(ticketPrice = TicketPriceFieldState(signedIn = true, input = "30", status = TicketPriceStatus.Saving)),
 )
 
 @Preview(name = "EventDetails · saved", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)

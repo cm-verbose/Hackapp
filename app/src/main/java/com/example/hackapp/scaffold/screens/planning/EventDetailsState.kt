@@ -24,6 +24,9 @@ import java.time.ZonedDateTime
 
 /** What the price line shows. Reports never carry who submitted them. */
 sealed interface EventPrice {
+    /** Reports have not finished loading: show a loading state, not "unknown price". */
+    data object Loading : EventPrice
+
     data object Free : EventPrice
 
     /** Label it as the median of user-reported prices. */
@@ -70,6 +73,8 @@ data class TicketPriceFieldState(
     val ownReportCad: Double? = null,
     val status: TicketPriceStatus = TicketPriceStatus.Loading,
     val minCad: Double = MIN_TICKET_PRICE_CAD,
+    /** False for Free Events: hide the section. No report can be entered or saved. */
+    val applicable: Boolean = true,
     val maxCad: Double = MAX_TICKET_PRICE_CAD,
 ) {
     /** The parsed input, or null when blank or invalid. */
@@ -83,7 +88,7 @@ data class TicketPriceFieldState(
 
     /** Enables the save button: a new valid amount, or clearing the existing report. */
     val canSave: Boolean
-        get() = signedIn && inputError == null && !isBusy &&
+        get() = applicable && signedIn && inputError == null && !isBusy &&
             (clearsReport || (parsedCad != null && parsedCad != ownReportCad))
 }
 
@@ -107,6 +112,8 @@ data class EventDetailsUiState(
     val ticketPrice: TicketPriceFieldState,
     /** False when the Event cannot become a Stop, such as no coordinates, or while prices load or save. */
     val canAdd: Boolean,
+    /** The last save or clear failed: offer **Add without price** (`addWithoutPrice()`). */
+    val canAddWithoutPrice: Boolean,
 )
 
 sealed interface AddToItineraryAction {
@@ -207,7 +214,7 @@ class EventDetailsHolder(
     /** True when the report was stored or cleared. Replaces this person's earlier report for all showtimes. */
     suspend fun saveTicketPrice(): Boolean {
         val id = uid ?: return false
-        val current = field.takeIf { it.canSave } ?: return false
+        val current = fieldNow().takeIf { it.canSave } ?: return false
         val amount = current.parsedCad
         field = field.copy(status = TicketPriceStatus.Saving)
         publish()
@@ -248,10 +255,23 @@ class EventDetailsHolder(
      */
     suspend fun addToItinerary(): AddToItineraryAction? {
         val current = _state.value
-        if (!current.canAdd || field.isBusy || field.inputError != null) return null
-        if (field.canSave && !saveTicketPrice()) return null
+        if (!current.canAdd || field.isBusy || (isApplicable() && field.inputError != null)) return null
+        if (fieldNow().canSave && !saveTicketPrice()) return null
+        return buildAction()
+    }
+
+    /**
+     * After `SaveFailed`: adds the Event without saving the typed price. The last saved report, if
+     * any, still travels with the Stop. Null in any other status.
+     */
+    fun addWithoutPrice(): AddToItineraryAction? {
+        if (!_state.value.canAddWithoutPrice) return null
+        return buildAction()
+    }
+
+    private fun buildAction(): AddToItineraryAction? {
         val event = selected.event
-        val ticketPrice = field.ownReportCad
+        val ticketPrice = field.ownReportCad.takeIf { isApplicable() }
         if (event.publishedEnd() == null) return AddToItineraryAction.ChooseDeparture(event, ticketPrice)
         val stop = eventStop(event, selected.suggestedDeparture.plannedDeparture, ticketPrice, selected.arrivalAt) ?: return null
         return AddToItineraryAction.Add(stop)
@@ -280,16 +300,25 @@ class EventDetailsHolder(
             audience = event.targetAudience?.let { EventAudience(it.description, it.minAge, it.maxAge) },
             description = event.description,
             ticketUrl = event.url,
-            ticketPrice = field,
-            canAdd = !field.isBusy && eventStop(event, selected.suggestedDeparture.plannedDeparture, arrival = selected.arrivalAt) != null,
+            ticketPrice = fieldNow(),
+            canAdd = canAdd(),
+            canAddWithoutPrice = field.status == TicketPriceStatus.SaveFailed && canAdd(),
         )
     }
+
+    private fun isApplicable() = selected.event.cost.status != CostStatus.FREE
+
+    private fun fieldNow() = field.copy(applicable = isApplicable())
+
+    private fun canAdd() =
+        !field.isBusy && eventStop(selected.event, selected.suggestedDeparture.plannedDeparture, arrival = selected.arrivalAt) != null
 
     private fun priceOf(event: Event): EventPrice {
         val cost = event.cost
         val median = summary
         return when {
             cost.status == CostStatus.FREE -> EventPrice.Free
+            field.status == TicketPriceStatus.Loading -> EventPrice.Loading
             median != null -> EventPrice.UserMedian(median.medianCad, median.reportCount)
             cost.status == CostStatus.PAID && (cost.minPrice != null || cost.maxPrice != null) ->
                 EventPrice.Published(cost.minPrice, cost.maxPrice)
