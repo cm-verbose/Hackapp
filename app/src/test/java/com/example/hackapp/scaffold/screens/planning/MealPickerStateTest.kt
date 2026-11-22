@@ -5,6 +5,7 @@ import com.example.hackapp.itinerary.MealBlock
 import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.MealSearch
 import com.example.hackapp.itinerary.activeMealBlocks
+import com.example.hackapp.itinerary.withStop
 import com.example.hackapp.itinerary.HERE
 import com.example.hackapp.itinerary.NEXT
 import com.example.hackapp.itinerary.Nov28
@@ -99,6 +100,16 @@ class MealPickerStateTest {
         val skipped = itinerary.withMealSkipped(outcome.blockId)
         assertTrue(skipped.mealBlocks.single().skipped)
         assertTrue(skipped.activeMealBlocks.isEmpty())
+    }
+
+    @Test
+    fun `choosing again replaces the Stop of the same block and skipping removes it`() {
+        val h = holder(listOf(place(1), place(2)))
+        val first = h.choose(1)!!.stop
+        val second = h.choose(2)!!.stop
+        val it2 = itinerary.withStop(first).withStop(second)
+        assertEquals(listOf(second.id), it2.stops.map { it.id })
+        assertTrue(it2.withMealSkipped("d").stops.isEmpty())
     }
 }
 

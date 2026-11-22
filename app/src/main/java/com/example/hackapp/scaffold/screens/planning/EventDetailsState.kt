@@ -75,9 +75,16 @@ data class TicketPriceFieldState(
     /** The parsed input, or null when blank or invalid. */
     val parsedCad: Double? get() = if (inputError == null) parseTicketPrice(input).amount else null
 
+    /** True while loading or saving. */
+    val isBusy: Boolean get() = status == TicketPriceStatus.Loading || status == TicketPriceStatus.Saving
+
+    /** Blank input with an existing report clears it. */
+    val clearsReport: Boolean get() = inputError == null && input.isBlank() && ownReportCad != null
+
+    /** Enables the save button: a new valid amount, or clearing the existing report. */
     val canSave: Boolean
-        get() = signedIn && inputError == null && parsedCad != null && parsedCad != ownReportCad &&
-            status != TicketPriceStatus.Saving && status != TicketPriceStatus.Loading
+        get() = signedIn && inputError == null && !isBusy &&
+            (clearsReport || (parsedCad != null && parsedCad != ownReportCad))
 }
 
 data class EventDetailsUiState(
@@ -98,7 +105,7 @@ data class EventDetailsUiState(
     val description: String?,
     val ticketUrl: String?,
     val ticketPrice: TicketPriceFieldState,
-    /** False when the Event cannot become a Stop, such as no coordinates. */
+    /** False when the Event cannot become a Stop, such as no coordinates, or while prices load or save. */
     val canAdd: Boolean,
 )
 
@@ -115,13 +122,19 @@ sealed interface AddToItineraryAction {
 
 internal data class ParsedTicketPrice(val amount: Double?, val error: TicketPriceInputError?)
 
-private val AmountPattern = Regex("^-?\\d{1,6}([.,]\\d{1,2})?$")
+private val AmountPattern = Regex("^[0-9]{1,6}([.,][0-9]{1,2})?\$")
 
-/** Blank is valid and means no report. A leading `$` and spaces are ignored. */
+/**
+ * Blank is valid and means no report. A `$` before or after the amount and spaces are ignored, so
+ * `$25`, `25 $` and `12,50 $` work. A leading minus is out of range.
+ */
 internal fun parseTicketPrice(input: String): ParsedTicketPrice {
-    val text = input.trim().removePrefix("$").trim()
+    var text = input.trim().removePrefix("$").trim().removeSuffix("$").trim()
     if (text.isEmpty()) return ParsedTicketPrice(null, null)
+    val negative = text.startsWith("-")
+    if (negative) text = text.removePrefix("-").trim()
     if (!AmountPattern.matches(text)) return ParsedTicketPrice(null, TicketPriceInputError.NotANumber)
+    if (negative) return ParsedTicketPrice(null, TicketPriceInputError.OutOfRange)
     val amount = text.replace(',', '.').toDouble()
     return if (isValidTicketPrice(amount)) ParsedTicketPrice(amount, null)
     else ParsedTicketPrice(null, TicketPriceInputError.OutOfRange)
@@ -164,6 +177,8 @@ class EventDetailsHolder(
                 status = TicketPriceStatus.Idle,
             )
         } catch (e: CancellationException) {
+            field = field.copy(status = TicketPriceStatus.LoadFailed)
+            publish()
             throw e
         } catch (_: Exception) {
             field = field.copy(status = TicketPriceStatus.LoadFailed)
@@ -189,24 +204,33 @@ class EventDetailsHolder(
         publish()
     }
 
-    /** True when the report was stored. Replaces this person's earlier report for all showtimes. */
+    /** True when the report was stored or cleared. Replaces this person's earlier report for all showtimes. */
     suspend fun saveTicketPrice(): Boolean {
         val id = uid ?: return false
-        val amount = field.takeIf { it.canSave }?.parsedCad ?: return false
+        val current = field.takeIf { it.canSave } ?: return false
+        val amount = current.parsedCad
         field = field.copy(status = TicketPriceStatus.Saving)
         publish()
-        val saved = try {
-            repository.saveReport(id, key, amount)
+        val done = try {
+            if (amount == null) {
+                repository.deleteReport(id, key)
+                true
+            } else {
+                repository.saveReport(id, key, amount)
+            }
         } catch (e: CancellationException) {
+            field = field.copy(status = TicketPriceStatus.Idle)
+            publish()
             throw e
         } catch (_: Exception) {
             false
         }
-        if (saved) {
-            field = field.copy(ownReportCad = amount, status = TicketPriceStatus.Saved)
+        if (done) {
+            field = field.copy(ownReportCad = amount, status = if (amount == null) TicketPriceStatus.Idle else TicketPriceStatus.Saved)
             summary = try {
                 repository.getSummary(key)
             } catch (e: CancellationException) {
+                publish()
                 throw e
             } catch (_: Exception) {
                 summary
@@ -215,16 +239,16 @@ class EventDetailsHolder(
             field = field.copy(status = TicketPriceStatus.SaveFailed)
         }
         publish()
-        return saved
+        return done
     }
 
     /**
-     * Saves a pending valid ticket price first, so it travels with the Stop. Null when the input
-     * is invalid, the save failed, or the Event cannot become a Stop.
+     * Saves a pending valid ticket price first, so it travels with the Stop. Null while prices
+     * load or save, when the input is invalid, the save failed, or the Event cannot become a Stop.
      */
     suspend fun addToItinerary(): AddToItineraryAction? {
         val current = _state.value
-        if (!current.canAdd || field.inputError != null) return null
+        if (!current.canAdd || field.isBusy || field.inputError != null) return null
         if (field.canSave && !saveTicketPrice()) return null
         val event = selected.event
         val ticketPrice = field.ownReportCad
@@ -257,7 +281,7 @@ class EventDetailsHolder(
             description = event.description,
             ticketUrl = event.url,
             ticketPrice = field,
-            canAdd = eventStop(event, selected.suggestedDeparture.plannedDeparture) != null,
+            canAdd = !field.isBusy && eventStop(event, selected.suggestedDeparture.plannedDeparture) != null,
         )
     }
 

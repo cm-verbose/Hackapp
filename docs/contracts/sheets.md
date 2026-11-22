@@ -29,32 +29,34 @@ Create: `MealPickerHolder(search: MealSearch, estimator: LegEstimator)`. `MealSe
 Callbacks
 - `selectTab(tab)`: ignored when the tab is not offered.
 - `choose(placeId): MealPickerOutcome.Chosen?`: returns `Chosen(stop, moveToDistrictId)`. Selection applies `itinerary.withStop(stop)`; when `moveToDistrictId` is not null, planning moves to that District after the Meal. Null if the row is unknown.
-- `skip(): MealPickerOutcome.Skipped(blockId)`: Selection applies `itinerary.withMealSkipped(blockId)`, which frees the block so its Events reappear.
+- `skip(): MealPickerOutcome.Skipped(blockId)`: Selection applies `itinerary.withMealSkipped(blockId)`, which frees the block so its Events reappear and removes that block's Meal Stop.
+- Choosing a Meal again for the same block replaces the earlier Meal Stop (`withStop` replaces by `mealBlockId`).
 
 Always render **Skip this Meal**, including when rows exist.
 
 ## 2. Planned Departure (`PlannedDepartureState.kt`)
 
-Create: `PlannedDepartureHolder.create(event, itinerary, zone): PlannedDepartureHolder?`. Null when the Event has no start time (it is never reachable then). Open the sheet only when `!state.hasPublishedEnd`. The prefill is the typical stay for the Event type (`typicalStayMinutes`), clamped to the Itinerary window end. The source end time stays empty.
+Create: `PlannedDepartureHolder.create(event, itinerary, zone, latestDeparture): PlannedDepartureHolder?`. Compute `latestDeparture` with `latestDeparture(event, itinerary, zone, estimator)`: the earliest of the window end, the next active Meal Block start, and the next active Stop start minus the transit Leg to it. Null when the Event has no start time (it is never reachable then). Open the sheet only when `!state.hasPublishedEnd`. The prefill is the typical stay for the Event type, clamped to `latestDeparture`. The source end time stays empty.
 
 `PlannedDepartureUiState`
 
 | Field | Meaning |
 |---|---|
 | `eventId`, `eventTitle`, `eventType`, `start` | The Event |
-| `windowEnd` | End of the Itinerary window, after midnight on Night Itineraries |
+| `latestDeparture` | The latest allowed departure (replaces `windowEnd`). Show it with the OutsideWindow error |
+| `typicalStayMinutes` | Typical stay for the Event type, for a "Typical stay" label or reset hint |
 | `departure` | Last valid choice |
 | `stayMinutes` | Stay duration, from `start` to `departure`, to show next to the time |
 | `hasPublishedEnd` | Always false when the sheet is needed |
 | `isTypicalStay` | Still the typical stay: label it as typical, not as chosen |
 | `crossesMidnight` | `departure` is on a later day than `start`: show an after-midnight hint |
-| `error`, `rejectedTime` | `OutsideWindow` (after the window end) or `NotAfterStart` (stay of zero or less). The invalid pick leaves `departure` unchanged |
+| `error`, `rejectedTime` | `OutsideWindow` (after `latestDeparture`) or `NotAfterStart` (stay of zero or less). The invalid pick leaves `departure` unchanged |
 | `canConfirm` | `error == null` |
 
 Callbacks
-- `setTime(LocalTime)`: from a time picker. A time at or before the start rolls to the next day, so 01:00 after a 23:00 start means after midnight. A time after the window end sets `OutsideWindow`.
+- `setTime(LocalTime)`: from a time picker. A time at or before the start rolls to the next day, so 01:00 after a 23:00 start means after midnight. A time after `latestDeparture` sets `OutsideWindow`. A time equal to the one already shown is ignored, so a prefilled time keeps its offset on the night clocks go back.
 - `setStayMinutes(Int)`: for steppers.
-- `reset()`: back to the typical stay.
+- `reset()`: back to the typical stay (or `latestDeparture` when that is earlier).
 - `confirm(): ZonedDateTime?`: the Planned Departure, or null while there is an error. Selection then calls `eventStop(event, departure, ticketPriceCad)` and `itinerary.withStop(stop)`.
 
 ## 3. Event details (`EventDetailsState.kt`)
@@ -73,7 +75,7 @@ Create: `EventDetailsHolder(showtimes: List<ReachableShowtime>, initialEventId, 
 | `audience: EventAudience?` | `description`, `minAge`, `maxAge`. Null when none |
 | `description`, `ticketUrl` | Both nullable. Hide the row or link when null |
 | `ticketPrice: TicketPriceFieldState` | The optional ticket price field |
-| `canAdd` | False when the Event cannot become a Stop: disable **Add to Itinerary** |
+| `canAdd` | False when the Event cannot become a Stop, and while prices load or save: disable **Add to Itinerary** |
 
 `EventPrice`
 - `Free`: counts as $0.
@@ -83,10 +85,11 @@ Create: `EventDetailsHolder(showtimes: List<ReachableShowtime>, initialEventId, 
 
 `TicketPriceFieldState`
 - `signedIn`: false means hide the field or show a sign-in prompt. Nobody else is ever shown a name.
-- `input`, `inputError` (`NotANumber`, `OutOfRange`), `minCad` 0, `maxCad` 500. Blank is valid and means no report. `$` and a comma decimal are accepted, at most 2 decimals.
+- `input`, `inputError` (`NotANumber`, `OutOfRange`), `minCad` 0, `maxCad` 500. Blank is valid and means no report. `$` before or after the amount and a comma decimal are accepted (`25 $`, `12,50 $`), at most 2 decimals, ASCII digits only. A leading minus is `OutOfRange`.
 - `ownReportCad`: this person's own saved report, loaded by `load()`; the field is prefilled with it.
 - `status`: `Loading`, `Idle`, `Saving`, `Saved`, `LoadFailed` (offer Retry, which calls `load()`; the Event can still be added), `SaveFailed` (input is kept, retry).
-- `canSave`: enable the save button.
+- `canSave`: enable the save button. Blank input while `ownReportCad` is set clears the report (`saveTicketPrice()` deletes it and refreshes the median); a failed clear gives `SaveFailed`.
+- `isBusy`: loading or saving. Cancelling a load leaves `LoadFailed`; cancelling a save leaves `Idle`.
 - Always tell the person the price is shared and applies to all showtimes of this title and venue that day.
 
 Callbacks
@@ -94,7 +97,7 @@ Callbacks
 - `selectShowtime(eventId)`.
 - `setTicketPriceInput(String)`: validates as the person types.
 - `suspend saveTicketPrice(): Boolean`: one editable report per user and Event. Updates the median.
-- `suspend addToItinerary(): AddToItineraryAction?`: saves a pending valid ticket price first. Null when the input is invalid, the save failed, or the Event cannot be added. Otherwise:
+- `suspend addToItinerary(): AddToItineraryAction?`: saves a pending valid ticket price first. Null while loading or saving, when the input is invalid, the save failed, or the Event cannot be added. Otherwise:
   - `Add(stop)`: published end. Apply `itinerary.withStop(stop)`.
   - `ChooseDeparture(event, ticketPriceCad)`: no published end. Open the Planned Departure sheet, then `eventStop(event, departure, ticketPriceCad)`.
 

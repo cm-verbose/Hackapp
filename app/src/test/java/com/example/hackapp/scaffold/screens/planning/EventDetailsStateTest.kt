@@ -20,6 +20,8 @@ import com.example.hackapp.itinerary.startTime
 import com.example.hackapp.itinerary.suggestDeparture
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -44,12 +46,14 @@ class EventDetailsStateTest {
     ) = EventDetailsHolder(events.map(::showtime), null, Toronto, uid, repo)
 
     @Test
-    fun `shows the basic fields`() {
+    fun `shows the basic fields`() = runBlocking {
         val ev = event(
             "a", start = at(Nov28, 19).toString(), title = "Show", venue = "Hall",
             audience = TargetAudience("Teens and up", 13, null),
         ).copy(description = "About", url = "https://tickets.example")
-        val s = holder(listOf(ev)).state.value
+        val h = holder(listOf(ev))
+        h.load()
+        val s = h.state.value
         assertEquals("Show", s.title)
         assertEquals("music", s.type)
         assertEquals("Hall", s.venueName)
@@ -60,6 +64,7 @@ class EventDetailsStateTest {
         assertNull(s.publishedEnd)
         assertTrue(s.canAdd)
         assertFalse(s.hasRepeatedShowtimes)
+        Unit
     }
 
     @Test
@@ -102,6 +107,12 @@ class EventDetailsStateTest {
         assertNull(check("500").inputError)
         assertEquals(TicketPriceInputError.OutOfRange, check("500.01").inputError)
         assertEquals(TicketPriceInputError.OutOfRange, check("-1").inputError)
+        assertEquals(TicketPriceInputError.OutOfRange, check("-0").inputError)
+        assertNull(check("25 \u0024").inputError)
+        assertNull(check("12,50\u00A0\u0024").inputError)
+        assertEquals(12.5, parseTicketPrice("12,50 \u0024").amount!!, 0.0)
+        assertEquals(TicketPriceInputError.NotANumber, check("\u0661\u0662").inputError)
+        assertEquals(TicketPriceInputError.NotANumber, check("5\u0024 5").inputError)
         assertEquals(TicketPriceInputError.NotANumber, check("abc").inputError)
         assertEquals(TicketPriceInputError.NotANumber, check("NaN").inputError)
         assertEquals(TicketPriceInputError.NotANumber, check("1.234").inputError)
@@ -206,5 +217,73 @@ class EventDetailsStateTest {
         val h = holder(listOf(noCoords))
         assertFalse(h.state.value.canAdd)
         assertNull(h.addToItinerary())
+    }
+
+    @Test
+    fun `adding is blocked while prices load or save`() = runBlocking {
+        val h = holder()
+        assertFalse(h.state.value.canAdd)
+        assertNull(h.addToItinerary())
+        h.load()
+        assertTrue(h.state.value.canAdd)
+    }
+
+    @Test
+    fun `blank input clears the own report and refreshes the median`() = runBlocking {
+        val repo = InMemoryTicketPriceRepository()
+        val key = e("a").showtimeKey()
+        repo.saveReport(UID, key, 20.0)
+        repo.saveReport("u2", key, 40.0)
+        val h = holder(repo = repo)
+        h.load()
+        assertEquals(EventPrice.UserMedian(30.0, 2), h.state.value.price)
+        h.setTicketPriceInput("")
+        assertTrue(h.state.value.ticketPrice.canSave)
+        assertTrue(h.saveTicketPrice())
+        assertNull(repo.getOwnReport(UID, key))
+        assertNull(h.state.value.ticketPrice.ownReportCad)
+        assertEquals(EventPrice.UserMedian(40.0, 1), h.state.value.price)
+        assertFalse(h.state.value.ticketPrice.canSave)
+    }
+
+    private class DeleteFailsRepo : TicketPriceRepository by InMemoryTicketPriceRepository() {
+        override suspend fun getOwnReport(uid: String, key: ShowtimeKey): Double? = 9.0
+        override suspend fun deleteReport(uid: String, key: ShowtimeKey) = error("offline")
+    }
+
+    @Test
+    fun `a failed clear behaves like a failed save`() = runBlocking {
+        val h = holder(repo = DeleteFailsRepo())
+        h.load()
+        h.setTicketPriceInput("")
+        assertFalse(h.saveTicketPrice())
+        assertEquals(TicketPriceStatus.SaveFailed, h.state.value.ticketPrice.status)
+        assertEquals(9.0, h.state.value.ticketPrice.ownReportCad)
+    }
+
+    private class HangingRepo : TicketPriceRepository by InMemoryTicketPriceRepository() {
+        override suspend fun saveReport(uid: String, key: ShowtimeKey, priceCad: Double): Boolean =
+            kotlinx.coroutines.awaitCancellation()
+        override suspend fun getSummary(key: ShowtimeKey): TicketPriceSummary? =
+            kotlinx.coroutines.awaitCancellation()
+    }
+
+    @Test
+    fun `cancelling a save or load does not leave a stuck status`() = runBlocking {
+        val h = holder(repo = HangingRepo())
+        val load = launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) { h.load() }
+        load.cancelAndJoin()
+        assertEquals(TicketPriceStatus.LoadFailed, h.state.value.ticketPrice.status)
+
+        val h2 = holder(repo = object : TicketPriceRepository by InMemoryTicketPriceRepository() {
+            override suspend fun saveReport(uid: String, key: ShowtimeKey, priceCad: Double): Boolean =
+                kotlinx.coroutines.awaitCancellation()
+        })
+        h2.load()
+        h2.setTicketPriceInput("10")
+        val save = launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) { h2.saveTicketPrice() }
+        save.cancelAndJoin()
+        assertEquals(TicketPriceStatus.Idle, h2.state.value.ticketPrice.status)
+        assertTrue(h2.state.value.ticketPrice.canSave)
     }
 }

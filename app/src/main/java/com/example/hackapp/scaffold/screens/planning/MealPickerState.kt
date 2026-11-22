@@ -81,9 +81,11 @@ sealed interface MealPickerOutcome {
     data class Skipped(val blockId: String) : MealPickerOutcome
 }
 
-/** A skipped block no longer reserves time or hides Events. */
-fun Itinerary.withMealSkipped(blockId: String): Itinerary =
-    copy(mealBlocks = mealBlocks.map { if (it.id == blockId) it.copy(skipped = true) else it })
+/** A skipped block no longer reserves time or hides Events, and loses its Meal Stop. */
+fun Itinerary.withMealSkipped(blockId: String): Itinerary = copy(
+    mealBlocks = mealBlocks.map { if (it.id == blockId) it.copy(skipped = true) else it },
+    stops = stops.filterNot { it.mealBlockId == blockId },
+)
 
 fun mealPickerRows(search: MealSearch, estimator: LegEstimator): Pair<List<MealOptionRow>, List<MealOptionRow>> {
     val zone = search.context.zone

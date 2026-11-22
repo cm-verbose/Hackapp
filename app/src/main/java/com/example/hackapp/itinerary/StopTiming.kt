@@ -104,9 +104,9 @@ fun mealStop(place: Place, block: MealBlock, itinerary: Itinerary, zone: ZoneId)
     )
 }
 
-/** Adds [stop] in visit order. */
+/** Adds [stop] in visit order. A Meal Stop replaces any other Stop of the same Meal Block. */
 fun Itinerary.withStop(stop: Stop): Itinerary =
-    copy(stops = (stops.filterNot { it.id == stop.id } + stop).sortedBy { it.start.toInstant() })
+    copy(stops = (stops.filterNot { it.id == stop.id || (stop.mealBlockId != null && it.mealBlockId == stop.mealBlockId) } + stop).sortedBy { it.start.toInstant() })
 
 /** Finish rule: an Itinerary needs at least one Event. */
 fun canFinish(itinerary: Itinerary): Boolean = itinerary.activeStops.any { it.kind == StopKind.Event }
