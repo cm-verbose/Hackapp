@@ -174,9 +174,9 @@ private fun WelcomeContent(
 }
 
 /**
- * Figma "Title · Plan + logo" (190:1172): the word "Plan" and the City Pack logo, centred
- * vertically on each other. As in Figma, "Plan" is measured by its cap height (the text box is
- * trimmed to cap height and baseline), so its capitals, not its line box, are centred on the logo.
+ * Figma "Title · Plan + logo" (190:1172): the word "Plan" and the City Pack logo on one baseline.
+ * As in Figma, the "Plan" box is trimmed to cap height and baseline, and the logo is cropped to
+ * its mark, so aligning both bottoms sets the logo's letters on the baseline of "Plan".
  * Read as the app name by screen readers.
  */
 @Composable
@@ -188,7 +188,7 @@ private fun PlanCityTitle(modifier: Modifier = Modifier) {
             heading()
         },
         horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Bottom,
     ) {
         val style = MaterialTheme.typography.displayMedium
         Text(
