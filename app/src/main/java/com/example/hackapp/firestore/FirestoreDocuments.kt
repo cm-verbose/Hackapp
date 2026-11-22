@@ -56,15 +56,19 @@ internal object FirestoreDocuments {
     )
 
     /** Null when unreadable or when the stored owner or id does not match where it was found. */
-    fun itineraryFrom(uid: String, docId: String, doc: Map<String, Any?>?): Itinerary? {
-        val payload = payloadOf(doc, uid) ?: return null
+    fun itineraryFrom(uid: String, docId: String, doc: Map<String, Any?>?, strict: Boolean = false): Itinerary? {
+        val payload = payloadOf(doc, uid, strict) ?: return null
         val itinerary = ItineraryCodec.decode(payload) ?: return null
         return itinerary.takeIf { it.ownerUid == uid && it.id == docId && doc?.get("id") == docId }
     }
 
-    private fun payloadOf(doc: Map<String, Any?>?, uid: String): String? {
+    private fun payloadOf(doc: Map<String, Any?>?, uid: String, strict: Boolean = true): String? {
         if (doc == null) return null
         val version = (doc["schemaVersion"] as? Number)?.toInt() ?: return null
+        if (version > SCHEMA_VERSION) {
+            if (strict) throw NewerSchemaException(version)
+            return null
+        }
         if (version != SCHEMA_VERSION) return null
         if (doc["ownerUid"] != uid) return null
         return doc["payload"] as? String
@@ -96,3 +100,9 @@ internal object FirestoreDocuments {
         return if (isValidTicketPrice(median) && count > 0) TicketPriceSummary(median, count) else null
     }
 }
+
+/**
+ * A stored document was written by a newer app. Thrown, not treated as missing, so the caller
+ * shows its error and retry instead of sending the person back through onboarding.
+ */
+class NewerSchemaException(val version: Int) : RuntimeException("Stored schema version $version is newer than this app supports")

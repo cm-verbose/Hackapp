@@ -43,10 +43,19 @@ class FirestoreDocumentsTest {
         val doc = FirestoreDocuments.profileDoc(UID, profile, 5)
         assertNull(FirestoreDocuments.profileFrom(UID, null))
         assertNull(FirestoreDocuments.profileFrom("someone-else", doc))
-        assertNull(FirestoreDocuments.profileFrom(UID, doc + ("schemaVersion" to 2)))
         assertNull(FirestoreDocuments.profileFrom(UID, doc - "schemaVersion"))
         assertNull(FirestoreDocuments.profileFrom(UID, doc + ("payload" to "not json")))
         assertNull(FirestoreDocuments.profileFrom(UID, doc + ("payload" to 3)))
+    }
+
+    @Test
+    fun `newer schema throws for a profile and a single itinerary but is skipped in a list`() {
+        val newer = FirestoreDocuments.profileDoc(UID, profile, 5) + ("schemaVersion" to 2)
+        val thrown = runCatching { FirestoreDocuments.profileFrom(UID, newer) }.exceptionOrNull()
+        assertEquals(2, (thrown as NewerSchemaException).version)
+        val doc = FirestoreDocuments.itineraryDoc(night(id = "trip")) + ("schemaVersion" to 3)
+        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", doc))
+        assertEquals(true, runCatching { FirestoreDocuments.itineraryFrom(UID, "trip", doc, strict = true) }.isFailure)
     }
 
     @Test
