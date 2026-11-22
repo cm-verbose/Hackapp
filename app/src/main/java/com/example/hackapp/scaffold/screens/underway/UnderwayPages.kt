@@ -29,6 +29,7 @@ import com.example.hackapp.scaffold.screens.itinerary.itineraryShortDate
 import com.example.hackapp.ui.components.ArrivalStatusCard
 import com.example.hackapp.ui.components.DataAttribution
 import com.example.hackapp.ui.components.ErrorState
+import com.example.hackapp.ui.components.HackappOutlineButton
 import com.example.hackapp.ui.components.HackappPage
 import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappTextActionButton
@@ -74,6 +75,7 @@ fun UnderwayLegPage(
     onOpenTransport: () -> Unit,
     onOpenDirections: () -> Unit,
     onSkip: () -> Unit,
+    onArrived: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val hero = ui.hero
@@ -86,6 +88,10 @@ fun UnderwayLegPage(
         bottomActions = {
             val appName = if (transport == TransportChoice.Transit) labels.transitAppName else labels.rideHailName
             HackappPrimaryButton(stringResource(R.string.leg_open_transit_app, appName), onOpenTransport)
+            // With no travel app there is no Arrival page, and this is the only way to earn the Stamp.
+            if (handoffError != null) {
+                HackappOutlineButton(stringResource(R.string.action_arrived), onArrived, contentColor = actionColor)
+            }
             if (transport == TransportChoice.Transit) {
                 HackappTextActionButton(
                     stringResource(R.string.leg_google_maps_directions),

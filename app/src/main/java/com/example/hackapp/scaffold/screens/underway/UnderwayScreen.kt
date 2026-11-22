@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
@@ -40,6 +41,7 @@ import com.example.hackapp.underway.UnderwayEvent
 import com.example.hackapp.underway.UnderwayPhase
 import com.example.hackapp.underway.UnderwayView
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 private class UnderwayItineraryInfo(val itinerary: Itinerary, val stops: UnderwayStopsInfo) {
     val districtName: String? =
@@ -153,6 +155,10 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
                     services = services,
                     chrome = chrome,
                     dispatch = viewModel::dispatch,
+                    isOnLegTo = { id ->
+                        val fresh = appContext.underwayCoordinator.view(uid, notificationsAllowed = true)
+                        fresh?.phase == UnderwayPhase.Leg && fresh.currentStop?.id == id
+                    },
                     onAskSkip = { skipStopId = it },
                     onExitToHome = onExitToHome,
                 )
@@ -193,12 +199,13 @@ private fun ActivePhase(
     services: CityServices,
     chrome: UnderwayChrome,
     dispatch: (UnderwayEvent) -> Unit,
+    isOnLegTo: suspend (String) -> Boolean,
     onAskSkip: (String) -> Unit,
     onExitToHome: () -> Unit,
 ) {
     val stopId = view.currentStop?.id
     when (view.phase) {
-        UnderwayPhase.Leg -> LegContent(view, now, info, services, chrome, dispatch, onAskSkip, onExitToHome)
+        UnderwayPhase.Leg -> LegContent(view, now, info, services, chrome, dispatch, isOnLegTo, onAskSkip, onExitToHome)
         UnderwayPhase.Arrival -> {
             val ui = arrivalUi(view, info.stops)
             if (ui == null) {
@@ -240,6 +247,7 @@ private fun LegContent(
     services: CityServices,
     chrome: UnderwayChrome,
     dispatch: (UnderwayEvent) -> Unit,
+    isOnLegTo: suspend (String) -> Boolean,
     onAskSkip: (String) -> Unit,
     onExitToHome: () -> Unit,
 ) {
@@ -265,12 +273,33 @@ private fun LegContent(
         fareAgency = fare.agencyName,
     )
     val destination = stop.handoffDestination()
-    fun finishHandoff(result: HandoffResult, appName: String, choice: TransportChoice) {
-        if (result == HandoffResult.UNAVAILABLE) {
-            failedApp = appName
-        } else {
-            failedApp = null
-            dispatch(UnderwayEvent.OpenTransport(choice.toEngine()))
+    val scope = rememberCoroutineScope()
+    var opening by remember(stop.id) { mutableStateOf(false) }
+
+    /** Rereads the state first: a notification action may have moved on from the Stop on screen. */
+    fun handoff(appName: String, choice: TransportChoice, open: () -> HandoffResult) {
+        if (opening) return
+        opening = true
+        scope.launch {
+            try {
+                val stillOnLeg = try {
+                    isOnLegTo(stop.id)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    failedApp = appName
+                    return@launch
+                }
+                if (!stillOnLeg) return@launch
+                if (open() == HandoffResult.UNAVAILABLE) {
+                    failedApp = appName
+                } else {
+                    failedApp = null
+                    dispatch(UnderwayEvent.OpenTransport(choice.toEngine()))
+                }
+            } finally {
+                opening = false
+            }
         }
     }
     UnderwayLegPage(
@@ -286,22 +315,19 @@ private fun LegContent(
         },
         onOpenTransport = {
             when (transport) {
-                TransportChoice.Transit -> finishHandoff(
-                    services.transit.openTransitApp(destination),
-                    labels.transitAppName,
-                    TransportChoice.Transit,
-                )
-                TransportChoice.RideHail -> finishHandoff(
-                    services.rideHail.requestRide(destination),
-                    labels.rideHailName,
-                    TransportChoice.RideHail,
-                )
+                TransportChoice.Transit -> handoff(labels.transitAppName, TransportChoice.Transit) {
+                    services.transit.openTransitApp(destination)
+                }
+                TransportChoice.RideHail -> handoff(labels.rideHailName, TransportChoice.RideHail) {
+                    services.rideHail.requestRide(destination)
+                }
             }
         },
         onOpenDirections = {
-            finishHandoff(services.transit.openDirections(destination), directionsAppName, TransportChoice.Transit)
+            handoff(directionsAppName, TransportChoice.Transit) { services.transit.openDirections(destination) }
         },
         onSkip = { onAskSkip(stop.id) },
+        onArrived = { dispatch(UnderwayEvent.ConfirmArrival(stop.id)) },
     )
 }
 

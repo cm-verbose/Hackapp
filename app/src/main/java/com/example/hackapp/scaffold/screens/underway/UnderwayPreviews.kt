@@ -26,7 +26,7 @@ private fun chrome(banner: Boolean = false) = UnderwayChrome(banner, {}, {}, {},
 
 @Composable
 private fun Leg(ui: LegUi, banner: Boolean = false, error: String? = null) = HackappTheme {
-    UnderwayLegPage("Samedi sur le Plateau", ui, TransportChoice.Transit, Labels, error, chrome(banner), {}, {}, {}, {})
+    UnderwayLegPage("Samedi sur le Plateau", ui, TransportChoice.Transit, Labels, error, chrome(banner), {}, {}, {}, {}, {})
 }
 
 @Composable
@@ -60,9 +60,18 @@ private fun LegBannerPreview() = Leg(FirstLeg, banner = true)
 @Composable
 private fun LegBannerLargeTextPreview() = Leg(FirstLeg, banner = true)
 
-@Preview(name = "Leg · handoff error", widthDp = 360, heightDp = 800)
+private const val HandoffFailed = "Impossible d’ouvrir Chrono. Essayez une autre option."
+
+@Preview(name = "Leg · handoff failed, can confirm arrival", widthDp = 360, heightDp = 800)
 @Composable
-private fun LegHandoffErrorPreview() = Leg(FirstLeg, error = "Impossible d’ouvrir Chrono. Essayez une autre option.")
+private fun LegHandoffErrorPreview() = Leg(FirstLeg, error = HandoffFailed)
+
+@Preview(name = "Leg · hero, handoff failed, 360 dp at 1.3x", widthDp = 360, heightDp = 800, fontScale = 1.3f)
+@Composable
+private fun LegHeroHandoffErrorLargeTextPreview() = Leg(
+    FirstLeg.copy(stop = Bistro, stopIndex = 2, hero = LegTimesUi(null, 8, "19:23"), currentIndex = 1),
+    error = HandoffFailed,
+)
 
 @Preview(name = "Arrival (159:2624)", widthDp = 360, heightDp = 800)
 @Composable
