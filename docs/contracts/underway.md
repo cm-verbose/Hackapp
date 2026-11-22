@@ -55,7 +55,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
 
 ## `UnderwayView` (what pages draw)
 
-`phase`, `currentStop`, `legFrom` (previous Stop or null), `expectedArrival`, `leaveBy` (Leg: when to leave to arrive on time, null for the first Leg without an origin; AtStop: this Stop's Leave By), `nextStop`, `isLastStop`, `transport`, `remainingStops`, `lateWarningStop` (AtStop, next Stop that can no longer be reached on time and was not dismissed), `endNeedsConfirmation`, `showNotificationBanner` (notifications off and not yet handled for this Itinerary), `endedReason`.
+`phase`, `currentStop`, `legFrom` (previous Stop or null), `expectedArrival`, `leaveBy` (Leg: when to leave to arrive on time, null for the first Leg when the District of stay is unknown; AtStop: this Stop's Leave By), `nextStop`, `isLastStop`, `transport`, `remainingStops`, `lateWarningStop` (AtStop, next Stop that can no longer be reached on time and was not dismissed), `endNeedsConfirmation`, `showNotificationBanner` (notifications off and not yet handled for this Itinerary), `endedReason`.
 
 ## End of day (`EndOfDay`)
 
@@ -79,7 +79,7 @@ Manifest gets `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM` (no max SDK: on Andro
 
 ## Open items for the lead
 
-See the final report of the Domain Engineer: first-Leg Leave By without an origin, arrival reminder due at Start, skipping the last Stop ends the day.
+See the final report of the Domain Engineer: arrival reminder due at Start, skipping the last Stop ends the day.
 
 ## Wiring Start and screens (integration)
 
@@ -89,11 +89,13 @@ val coordinator = app.underwayCoordinator
 val result = coordinator.start(
     uid = uid,                       // signed-in account
     itineraryId = itinerary.id,
-    origin = LatLng(lat, lng),       // current location, or null if denied
+    origin = origin,                 // the Profile's District of stay, or null
     demoMode = false,                // true only in demo mode (skips the date check)
     confirmEndCurrent = false,       // true after the user accepts the "current one will end" warning
 )
 ```
+
+The first Leg starts from the Profile's District of stay, with no location permission. `resolveStayOrigin` (`citypack/DistrictOrigin.kt`) converts that District's label anchor back to coordinates with the City Pack's projection. A missing or unreadable Profile, District, anchor or projection gives `origin = null`, and Start still works: the first Leg then shows no Leave By. Review reads time from `coordinator.clock`, the same clock as Underway.
 
 Handle the result: `Started(view, askExactAlarm)` navigate to Leg. `NeedsConfirmation(current)` show the warning, then call again with `confirmEndCurrent = true`. `Blocked(reason)` shows why (`WrongDate`, `WindowEnded`, `NoEvents`, `NotInPlanning`). `NotFound` is an error.
 

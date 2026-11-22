@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -52,7 +53,9 @@ import com.example.hackapp.R
 import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.DistrictMapData
 import com.example.hackapp.citypack.GeoPoint
+import com.example.hackapp.citypack.loadDistrictMap
 import com.example.hackapp.citypack.rememberDistrictMap
+import com.example.hackapp.citypack.resolveStayOrigin
 import com.example.hackapp.data.repository.EventQuery
 import com.example.hackapp.itinerary.BudgetPrices
 import com.example.hackapp.itinerary.BudgetSummary
@@ -126,6 +129,7 @@ fun ItineraryReviewScreen(
     val profiles = LocalProfileRepository.current
     val zone = services.cityPack.timeZone
     val coordinator = currentUnderwayCoordinator()
+    val appContext = LocalContext.current.applicationContext
     // A missing or unreadable Profile only leaves the fallback budgets unset, as on Meal choice.
     val loadProfileContext: suspend () -> PlanningContext = {
         val profile = try {
@@ -164,7 +168,12 @@ fun ItineraryReviewScreen(
                     ),
                 )
             },
-            starter = coordinator.reviewStarter(),
+            starter = coordinator.reviewStarter { uid ->
+                resolveStayOrigin(
+                    loadDistrictId = { profiles.getProfile(uid)?.districtOfStayId },
+                    loadMap = { loadDistrictMap(appContext, services.cityPack) },
+                )
+            },
             clock = coordinator.clock::now,
         ),
     )
