@@ -185,7 +185,6 @@
     <string name="selection_next_district">Next borough</string>
     <string name="selection_progress">Step %1$d of %2$d · Borough %3$d of %4$d</string>
     <string name="selection_slot_title">Time slot %1$s – %2$s</string>
-    <string name="selection_slot_from">From %1$s</string>
     <string name="selection_start_times">Start times</string>
     <string name="selection_end_unknown">end time not published</string>
     <string name="selection_ongoing">Ongoing</string>
@@ -228,6 +227,7 @@
     <string name="meal_picker_no_options">No meals available.</string>
     <!-- Planned departure sheet -->
     <string name="planned_departure_subtitle">%1$s · %2$s · starts %3$s</string>
+    <string name="planned_departure_arrival">%1$s · %2$s · arrival %3$s</string>
     <string name="planned_departure_no_end">No published end time.</string>
     <string name="planned_departure_typical">Typical duration: %1$s</string>
     <string name="planned_departure_duration">Duration: %1$s</string>

@@ -10,7 +10,6 @@ Amounts are formatted by code as `20 $` (U+00A0 before `$`) and passed as string
 |---|---|---|---|---|
 | Progress line "Étape 5 sur 6 · Arrondissement 1 sur 2" | `selection_progress` | Étape %1$d sur %2$d · Arrondissement %3$d sur %4$d | Step %1$d of %2$d · Borough %3$d of %4$d | New. One string, never join `onboarding_step`. Args 5, 6, borough index, borough count. Replaces `selection_district_progress` (deleted, no caller) |
 | Time slot heading | `selection_slot_title` | Plage horaire %1$s – %2$s | Time slot %1$s – %2$s | New. Args start and end |
-| Earliest start line "Dès 17:00" | `selection_slot_from` | Dès %1$s | From %1$s | New. Arg: first reachable start |
 | Hour group header "17:00" and type tag | data, `stop_type_*` | n/a | n/a | Existing. `selection_time_block` stays for ranges (`translatable="false"`) |
 | Group header "En continu" | `selection_ongoing` | En continu | Ongoing | New. Holds Events with no fixed time |
 | Ongoing chip "Sans heure fixe · 10:00 – 21:00" | `selection_no_fixed_time` | Sans heure fixe · %1$s | No fixed time · %1$s | New. Arg: `10:00 – 21:00` from `selection_time_block` |
@@ -33,6 +32,7 @@ Amounts are formatted by code as `20 $` (U+00A0 before `$`) and passed as string
 |---|---|---|---|---|
 | Median price label | `selection_price_median` | %1$s (médiane déclarée) | %1$s (reported median) | Arg: the formatted price. Keeps the "median of user-reported prices" label |
 | Save failure | `selection_save_error` | Enregistrement impossible | Couldn’t save | Own key. `planning_save_error` is shared and unchanged |
+| Planned Departure subtitle, running drop-in | `planned_departure_arrival` | %1$s · %2$s · arrivée %3$s | %1$s · %2$s · arrival %3$s | Sibling of `planned_departure_subtitle`, same args: `%1$s` Event, `%2$s` venue, `%3$s` arrival time. Use it instead of the subtitle when the Event is already running |
 
 Non-breaking spaces (U+00A0) keep `selection_end_unknown` and every `running_total_*` string together, so an amount never splits from its label or currency.
 
@@ -67,4 +67,4 @@ Non-breaking spaces (U+00A0) keep `selection_end_unknown` and every `running_tot
 
 ## For a Québec French reader
 
-- `selection_progress`, `selection_slot_from` ("Dès"), `running_total_over` ("Budget dépassé de"), `running_total_amount`.
+- `selection_progress`, `running_total_over` ("Budget dépassé de"), `running_total_amount`.
