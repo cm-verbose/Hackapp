@@ -189,6 +189,9 @@ class DistrictPickViewModel(
             try {
                 saveLock.withLock {
                     val latest = checkNotNull(itineraries.getItinerary(uid, itineraryId))
+                    // A selection that drops a Stop's District is saved only by Continue, after the warning.
+                    val selected = _state.value.selected
+                    if (latest.stops.any { it.districtId !in selected }) return@withLock
                     itineraries.saveItinerary(
                         latest.copy(
                             step = maxOf(latest.step, PlanningStep.Districts),
