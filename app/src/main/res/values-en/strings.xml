@@ -235,9 +235,20 @@
     <string name="event_add">Add to itinerary</string>
     <string name="review_title">Review</string>
     <string name="review_planned_departure">planned departure %1$s</string>
-    <string name="review_remove_note">Removing a stop takes you back to selection for that time slot.</string>
     <string name="review_start">Start itinerary</string>
     <string name="review_notification_note">We’ll ask you to allow notifications.</string>
+    <string name="review_start_only_on">Can only be started on %1$s.</string>
+    <string name="review_start_warning_title">End the current itinerary?</string>
+    <string name="review_start_warning_body">“%1$s” moves to Past. Confirmed stops keep their stamps. The others are marked skipped.</string>
+    <string name="review_start_warning_confirm">End and start</string>
+    <string name="review_unreachable_title">Unreachable stops</string>
+    <string name="review_unreachable_body">Back to the time slot at %1$s. These stops won’t be reachable anymore. Reschedule them or reorganize your itinerary.</string>
+    <string name="review_unreachable_affected">Affected stops</string>
+    <string name="stop_edit_title">Edit this step?</string>
+    <string name="stop_edit_body">Some stops no longer fit.</string>
+    <string name="stop_edit_removed">Will be removed</string>
+    <string name="stop_edit_kept">Kept</string>
+    <string name="stop_edit_confirm">Edit</string>
 
     <!-- Underway -->
     <string name="leg_how_to_get_there">Getting there</string>

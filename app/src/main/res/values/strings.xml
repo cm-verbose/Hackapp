@@ -240,9 +240,20 @@
     <string name="event_add">Ajouter à l’itinéraire</string>
     <string name="review_title">Révision</string>
     <string name="review_planned_departure">départ prévu %1$s</string>
-    <string name="review_remove_note">Retirer un arrêt vous ramène à la sélection pour cette plage horaire.</string>
     <string name="review_start">Démarrer l’itinéraire</string>
     <string name="review_notification_note">On vous demandera d’autoriser les notifications.</string>
+    <string name="review_start_only_on">Démarrage possible seulement le %1$s.</string>
+    <string name="review_start_warning_title">Terminer l’itinéraire en cours?</string>
+    <string name="review_start_warning_body">« %1$s » passera dans Passés. Les arrêts confirmés garderont leur timbre, les autres seront marqués comme sautés.</string>
+    <string name="review_start_warning_confirm">Terminer et démarrer</string>
+    <string name="review_unreachable_title">Arrêts inaccessibles</string>
+    <string name="review_unreachable_body">Retour à la plage horaire de %1$s. Ces arrêts ne seront plus accessibles : replanifiez-les ou réorganisez votre itinéraire.</string>
+    <string name="review_unreachable_affected">Arrêts touchés</string>
+    <string name="stop_edit_title">Modifier cette étape?</string>
+    <string name="stop_edit_body">Certains arrêts ne conviennent plus.</string>
+    <string name="stop_edit_removed">Seront retirés</string>
+    <string name="stop_edit_kept">Conservés</string>
+    <string name="stop_edit_confirm">Modifier</string>
 
     <!-- Underway -->
     <string name="leg_how_to_get_there">Comment y aller?</string>
