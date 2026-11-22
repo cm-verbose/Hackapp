@@ -234,10 +234,12 @@ class PlanningMealChoiceTest {
     }
 
     @Test
-    fun keptBlockKeepsItsSkippedFlag() {
+    fun aSkippedBlockOpensUnselectedAndSelectingItClearsTheSkip() {
         val it = draft(18, 2, planMeals = true, blocks = listOf(MealBlock("d", MealKind.Dinner, LocalTime.of(18, 30), skipped = true)))
-        val saved = it.withMealChoice(true, initialMealPicks(it, context()), zone)
-        assertTrue(saved.mealBlocks.single().skipped)
+        val picks = initialMealPicks(it, context())
+        assertFalse(picks.getValue(MealKind.Dinner).selected)
+        val chosen = picks + (MealKind.Dinner to picks.getValue(MealKind.Dinner).copy(selected = true))
+        assertFalse(it.withMealChoice(true, chosen, zone).mealBlocks.single().skipped)
     }
 
     @Test

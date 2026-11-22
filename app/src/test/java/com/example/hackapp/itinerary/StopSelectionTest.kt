@@ -111,6 +111,27 @@ class StopSelectionTest {
     }
 
     @Test
+    fun `a block that has already ended is not pending, even before the last Stop's departure`() {
+        val itinerary = night(blocks = listOf(dinner))
+        assertEquals("d", itinerary.pendingMealBlock(instant(Nov28, 21, 29), Toronto)?.id)
+        assertNull(itinerary.pendingMealBlock(instant(Nov28, 21, 30), Toronto))
+    }
+
+    @Test
+    fun `District counts come from the query with no lower bound and keep running drop-ins`() = kotlinx.coroutines.runBlocking {
+        val profiles = object : com.example.hackapp.profile.ProfileRepository {
+            override suspend fun getProfile(uid: String): com.example.hackapp.profile.Profile? = null
+            override suspend fun saveProfile(uid: String, profile: com.example.hackapp.profile.Profile) = Unit
+        }
+        val window = night().planningWindow(Toronto)
+        val counts = districtCountFilter(profiles, UID, window, Toronto, now)
+        assertTrue(counts(allDay))
+        assertTrue(counts(event("in", start = at(Nov28, 19).toString())))
+        assertFalse(counts(event("before", start = at(Nov28, 10).toString(), end = at(Nov28, 12).toString())))
+        assertFalse(counts(event("fixed", start = at(Nov28, 17).toString())))
+    }
+
+    @Test
     fun `the gap starts at the last Stop or at the later of window start and now`() {
         assertEquals(instant(Nov28, 18), night().gapStart(now, Toronto))
         assertEquals(instant(Nov28, 19), night().gapStart(instant(Nov28, 19), Toronto))

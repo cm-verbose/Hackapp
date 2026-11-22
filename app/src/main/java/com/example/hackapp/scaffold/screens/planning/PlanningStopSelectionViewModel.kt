@@ -38,7 +38,7 @@ import com.example.hackapp.itinerary.finishedSelection
 import com.example.hackapp.itinerary.gapStart
 import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.movedToDistrict
-import com.example.hackapp.itinerary.pendingMealBlock
+import com.example.hackapp.itinerary.mealBlockToAnswer
 import com.example.hackapp.itinerary.selectionDistrict
 import com.example.hackapp.itinerary.showtimeKey
 import com.example.hackapp.itinerary.withStop
@@ -246,7 +246,8 @@ class StopSelectionSession(
     fun openMealPicker() {
         val itinerary = draft ?: return
         val district = itinerary.selectionDistrict() ?: return
-        val block = itinerary.pendingMealBlock(Instant.ofEpochMilli(nowMillis()), zone) ?: return
+        val blockId = _state.value.mealPrompt?.blockId ?: return
+        val block = itinerary.mealBlocks.firstOrNull { it.id == blockId } ?: return
         val search = MealSearch(
             itinerary = itinerary,
             block = block,
@@ -281,11 +282,8 @@ class StopSelectionSession(
     }
 
     suspend fun skipMeal() {
-        val itinerary = draft ?: return
         val picker = pickerSheet()
-        val blockId = picker?.holder?.skip()?.blockId
-            ?: itinerary.pendingMealBlock(Instant.ofEpochMilli(nowMillis()), zone)?.id
-            ?: return
+        val blockId = picker?.holder?.skip()?.blockId ?: _state.value.mealPrompt?.blockId ?: return
         _state.update { it.copy(sheet = null) }
         commit { it.withMealSkipped(blockId) }
     }
@@ -369,7 +367,7 @@ class StopSelectionSession(
         loadMedians(district)
         val context = context()
         val now = context.now
-        val pending = itinerary.pendingMealBlock(now, zone)
+        val pending = itinerary.mealBlockToAnswer(now, zone)
         val pendingStart = pending?.interval(itinerary, zone)?.start
         val search = EventSearch(
             itinerary = itinerary,

@@ -35,11 +35,25 @@ fun Itinerary.gapStart(now: Instant, zone: ZoneId): Instant =
  * gap starts. A block that ended before the gap began can no longer be reached.
  */
 fun Itinerary.pendingMealBlock(now: Instant, zone: ZoneId): MealBlock? {
-    val from = gapStart(now, zone)
+    val from = maxOf(gapStart(now, zone), now)
     val answered = stops.mapNotNull { it.mealBlockId }.toSet()
     return activeMealBlocks
         .filter { it.id !in answered && it.interval(this, zone).end.isAfter(from) }
         .minByOrNull { it.interval(this, zone).start }
+}
+
+/**
+ * The Meal Block the prompt asks about. A Meal edit can leave an unanswered block before the last
+ * Stop, so that block comes first while it is still ahead of [now]. Otherwise the next pending one.
+ */
+fun Itinerary.mealBlockToAnswer(now: Instant, zone: ZoneId): MealBlock? {
+    val gap = gapStart(now, zone)
+    val answered = stops.mapNotNull { it.mealBlockId }.toSet()
+    return activeMealBlocks
+        .filter { it.id !in answered }
+        .filter { block -> block.interval(this, zone).end.let { it.isAfter(now) && !it.isAfter(gap) } }
+        .minByOrNull { it.interval(this, zone).start }
+        ?: pendingMealBlock(now, zone)
 }
 
 /** The District selection is planning in, from the saved one or else where the last Stop is. */

@@ -18,24 +18,50 @@ class MealStopReconciliationTest {
     @Test
     fun removedBlockRemovesItsStop() {
         val updated = previous.copy(mealBlocks = listOf(lunch))
-        assertEquals(listOf("m1", "e"), reconcileMealStops(previous, updated).stops.map { it.id })
+        assertEquals(listOf("m1", "e"), reconcileMealStops(previous, updated, Toronto).stops.map { it.id })
     }
 
     @Test
     fun movedBlockRemovesItsStopButKeepsEvents() {
         val updated = previous.copy(mealBlocks = listOf(lunch.copy(start = LocalTime.of(12, 30)), dinner))
-        assertEquals(listOf("e", "m2"), reconcileMealStops(previous, updated).stops.map { it.id })
+        assertEquals(listOf("e", "m2"), reconcileMealStops(previous, updated, Toronto).stops.map { it.id })
     }
 
     @Test
     fun decliningMealsRemovesEveryMealStop() {
         val updated = previous.copy(planMeals = false, mealBlocks = emptyList())
-        assertEquals(listOf("e"), reconcileMealStops(previous, updated).stops.map { it.id })
+        assertEquals(listOf("e"), reconcileMealStops(previous, updated, Toronto).stops.map { it.id })
     }
 
     @Test
     fun budgetChangeOnlyKeepsEverything() {
         val updated = previous.copy(mealBlocks = listOf(lunch.copy(budget = com.example.hackapp.profile.BudgetBracket.Under20), dinner))
-        assertSame(updated, reconcileMealStops(previous, updated))
+        assertSame(updated, reconcileMealStops(previous, updated, Toronto))
+    }
+
+    @Test
+    fun eventOverlappingAMovedBlockIsRemovedAndTheDraftReturnsToSelection() {
+        val atReview = previous.copy(step = PlanningStep.Review)
+        val updated = atReview.copy(mealBlocks = listOf(lunch, dinner.copy(start = LocalTime.of(19, 45))))
+        val saved = reconcileMealStops(atReview, updated, Toronto)
+        assertEquals(listOf("m1"), saved.stops.map { it.id })
+        assertEquals(PlanningStep.Stops, saved.step)
+    }
+
+    @Test
+    fun skippedBlockDoesNotRemoveAnEvent() {
+        val updated = previous.copy(mealBlocks = listOf(lunch, dinner.copy(start = LocalTime.of(19, 45), skipped = true)))
+        assertEquals(listOf("m1", "e"), reconcileMealStops(previous, updated, Toronto).stops.map { it.id })
+    }
+
+    @Test
+    fun aBlockLeftBeforeTheLastStopStillGetsThePrompt() {
+        val updated = previous.copy(mealBlocks = listOf(lunch, dinner.copy(start = LocalTime.of(18, 0))))
+        val saved = reconcileMealStops(previous, updated, Toronto)
+        assertEquals(listOf("m1", "e"), saved.stops.map { it.id })
+        val morning = instant(Nov28, 8)
+        assertEquals(null, saved.pendingMealBlock(morning, Toronto))
+        assertEquals("meal-dinner", saved.mealBlockToAnswer(morning, Toronto)?.id)
+        assertEquals(null, saved.mealBlockToAnswer(instant(Nov28, 20), Toronto))
     }
 }

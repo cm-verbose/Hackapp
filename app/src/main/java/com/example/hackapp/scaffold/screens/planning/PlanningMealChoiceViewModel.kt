@@ -88,7 +88,7 @@ fun initialMealPicks(itinerary: Itinerary, context: PlanningContext): Map<MealKi
         // The Late bite add-on is off without a budget: it stays offered but is not preselected.
         val addOnOn = kind != MealKind.LateBite || itinerary.mealBudget(kind, context) != null
         when {
-            saved != null -> MealPick(offered = true, selected = true, start = saved.start, budget = saved.budget)
+            saved != null -> MealPick(offered = true, selected = !saved.skipped, start = saved.start, budget = saved.budget)
             else -> MealPick(
                 offered = start != null,
                 selected = fits && addOnOn && itinerary.planMeals == null,
@@ -142,7 +142,8 @@ fun Itinerary.withMealChoice(planMeals: Boolean, picks: Map<MealKind, MealPick>,
                     kind = kind,
                     start = pick.start,
                     budget = pick.budget,
-                    skipped = existing?.skipped == true,
+                    // Selecting a Meal here is the answer to an earlier skip.
+                    skipped = false,
                 )
             }
             .sortedBy { it.interval(this, zone).start }
@@ -176,8 +177,10 @@ data class PlanningMealChoiceUiState(
         }
 }
 
-/** Removes Meal Stops whose block is gone or moved. Event Stops stay. */
-val MealStopReconciler = PlanningChangeReconciler { previous, updated -> reconcileMealStops(previous, updated) }
+/** Removes Meal Stops whose block is gone or moved, and Event Stops that overlap a block. */
+fun mealStopReconciler(zone: ZoneId) = PlanningChangeReconciler { previous, updated ->
+    reconcileMealStops(previous, updated, zone)
+}
 
 class PlanningMealChoiceViewModel(
     private val itineraryId: String,
@@ -185,7 +188,7 @@ class PlanningMealChoiceViewModel(
     private val itineraries: ItineraryRepository,
     private val profiles: ProfileRepository,
     private val zone: ZoneId,
-    private val reconciler: PlanningChangeReconciler = MealStopReconciler,
+    private val reconciler: PlanningChangeReconciler = mealStopReconciler(zone),
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlanningMealChoiceUiState())
@@ -304,7 +307,7 @@ class PlanningMealChoiceViewModel(
             itineraries: ItineraryRepository,
             profiles: ProfileRepository,
             zone: ZoneId,
-            reconciler: PlanningChangeReconciler = MealStopReconciler,
+            reconciler: PlanningChangeReconciler = mealStopReconciler(zone),
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer { PlanningMealChoiceViewModel(itineraryId, auth, itineraries, profiles, zone, reconciler) }
         }
