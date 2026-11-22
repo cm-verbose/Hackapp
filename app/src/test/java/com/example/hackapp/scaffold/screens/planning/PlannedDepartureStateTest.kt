@@ -106,7 +106,7 @@ class PlannedDepartureStateTest {
     fun `stay minutes must be positive and inside the window`() {
         val h = holder(21)
         h.setStayMinutes(0)
-        assertEquals(DepartureError.NotAfterStart, h.state.value.error)
+        assertEquals(DepartureError.OutsideWindow, h.state.value.error)
         h.setStayMinutes(600)
         assertEquals(DepartureError.OutsideWindow, h.state.value.error)
         h.setStayMinutes(45)
@@ -164,5 +164,30 @@ class PlannedDepartureStateTest {
         assertEquals(java.time.ZoneOffset.ofHours(-5), before.offset)
         h.setTime(before.toLocalTime())
         assertEquals(before, h.state.value.departure)
+    }
+
+    @Test
+    fun `range is exposed and a time before the start is a range error unless after midnight`() {
+        val h = holder(22)
+        assertEquals(at(Nov28, 22).toInstant(), h.state.value.earliestDeparture.toInstant())
+        assertEquals(at(Nov28.plusDays(1), 2).toInstant(), h.state.value.latestDeparture.toInstant())
+        h.setTime(LocalTime.of(21, 0))
+        assertEquals(DepartureError.OutsideWindow, h.state.value.error)
+        h.setTime(LocalTime.of(1, 0))
+        assertNull(h.state.value.error)
+        assertTrue(h.state.value.crossesMidnight)
+    }
+
+    @Test
+    fun `isTypicalStay is accurate when clamped or edited`() {
+        val ev = event("e", start = at(Nov28, 19).toString(), type = "theatre")
+        val clamped = PlannedDepartureHolder.create(ev, night(), Toronto, at(Nov28, 20).atZoneSameInstant(Toronto))!!
+        assertFalse(clamped.state.value.isTypicalStay)
+        val h = holder(19, type = "theatre")
+        assertTrue(h.state.value.isTypicalStay)
+        h.setStayMinutes(60)
+        assertFalse(h.state.value.isTypicalStay)
+        h.setStayMinutes(150)
+        assertTrue(h.state.value.isTypicalStay)
     }
 }

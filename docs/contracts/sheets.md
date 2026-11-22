@@ -43,18 +43,18 @@ Create: `PlannedDepartureHolder.create(event, itinerary, zone, latestDeparture):
 | Field | Meaning |
 |---|---|
 | `eventId`, `eventTitle`, `eventType`, `start` | The Event |
-| `latestDeparture` | The latest allowed departure (replaces `windowEnd`). Show it with the OutsideWindow error |
+| `earliestDeparture`, `latestDeparture` | The valid range: picks must be after the first and no later than the second. Show one range error with both times (replaces `windowEnd`) |
 | `typicalStayMinutes` | Typical stay for the Event type, for a "Typical stay" label or reset hint |
 | `departure` | Last valid choice |
 | `stayMinutes` | Stay duration, from `start` to `departure`, to show next to the time |
 | `hasPublishedEnd` | Always false when the sheet is needed |
-| `isTypicalStay` | Still the typical stay: label it as typical, not as chosen |
+| `isTypicalStay` | `stayMinutes` equals `typicalStayMinutes` and no end was published. False when clamped to the limit or edited |
 | `crossesMidnight` | `departure` is on a later day than `start`: show an after-midnight hint |
-| `error`, `rejectedTime` | `OutsideWindow` (after `latestDeparture`) or `NotAfterStart` (stay of zero or less). The invalid pick leaves `departure` unchanged |
+| `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists at all). The invalid pick leaves `departure` unchanged |
 | `canConfirm` | `error == null` |
 
 Callbacks
-- `setTime(LocalTime)`: from a time picker. A time at or before the start rolls to the next day, so 01:00 after a 23:00 start means after midnight. A time after `latestDeparture` sets `OutsideWindow`. A time equal to the one already shown is ignored, so a prefilled time keeps its offset on the night clocks go back.
+- `setTime(LocalTime)`: from a time picker. A time at or before the start counts as the next day only when that is inside the range (01:00 after a 23:00 start is after midnight). Otherwise it is the range error. A time after `latestDeparture` sets `OutsideWindow`. A time equal to the one already shown is ignored, so a prefilled time keeps its offset on the night clocks go back.
 - `setStayMinutes(Int)`: for steppers.
 - `reset()`: back to the typical stay (or `latestDeparture` when that is earlier).
 - `confirm(): ZonedDateTime?`: the Planned Departure, or null while there is an error. Selection then calls `eventStop(event, departure, ticketPriceCad)` and `itinerary.withStop(stop)`.
@@ -76,14 +76,17 @@ Create: `EventDetailsHolder(showtimes: List<ReachableShowtime>, initialEventId, 
 | `description`, `ticketUrl` | Both nullable. Hide the row or link when null |
 | `ticketPrice: TicketPriceFieldState` | The optional ticket price field |
 | `canAdd` | False when the Event cannot become a Stop, and while prices load or save: disable **Add to Itinerary** |
+| `canAddWithoutPrice` | The last save or clear failed (`SaveFailed`): offer **Add without price** |
 
 `EventPrice`
+- `Loading`: reports have not finished loading (until `load()` ends). Show a loading state, never "unknown price".
 - `Free`: counts as $0.
 - `UserMedian(medianCad, reportCount)`: label it "median of user-reported prices".
 - `Published(minCad, maxCad)`: the source's own price, only when there are no reports.
 - `Unknown`: unknown-price state (no reports and no published price).
 
 `TicketPriceFieldState`
+- `applicable`: false for Free Events. Hide the whole section: nothing can be entered or saved, and no report goes with the Stop.
 - `signedIn`: false means hide the field or show a sign-in prompt. Nobody else is ever shown a name.
 - `input`, `inputError` (`NotANumber`, `OutOfRange`), `minCad` 0, `maxCad` 500. Blank is valid and means no report. `$` before or after the amount and a comma decimal are accepted (`25 $`, `12,50 $`), at most 2 decimals, ASCII digits only. A leading minus is `OutOfRange`.
 - `ownReportCad`: this person's own saved report, loaded by `load()`; the field is prefilled with it.
@@ -100,6 +103,7 @@ Callbacks
 - `suspend addToItinerary(): AddToItineraryAction?`: saves a pending valid ticket price first. Null while loading or saving, when the input is invalid, the save failed, or the Event cannot be added. Otherwise:
   - `Add(stop)`: published end. Apply `itinerary.withStop(stop)`.
   - `ChooseDeparture(event, ticketPriceCad)`: no published end. Open the Planned Departure sheet, then `eventStop(event, departure, ticketPriceCad)`.
+- `addWithoutPrice(): AddToItineraryAction?`: only when `canAddWithoutPrice`. Adds without saving the typed price and keeps the last saved report; same `Add` or `ChooseDeparture` outcome. A failed optional price never blocks adding.
 
 The Stop's `ticketPriceCad` is only this person's own report. The running total uses the own report, then the median, then the published price (`knownEventPrice`).
 
