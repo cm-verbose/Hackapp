@@ -516,6 +516,7 @@
     <string name="share_title">Partager l’itinéraire</string>
     <string name="share_receive_title">Recevoir un itinéraire</string>
     <string name="home_receive_itinerary">Recevoir un itinéraire</string>
+    <string name="action_close">Fermer</string>
     <string name="action_share">Partager</string>
     <string name="share_permissions_needed">Autorisez le partage à proximité pour continuer.</string>
     <string name="share_unavailable">Cet itinéraire ne peut pas être partagé.</string>

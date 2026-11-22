@@ -403,7 +403,9 @@ class SandboxWorld(
         val present = HashSet<Any>(pendingRespawns.keys)
         items.filter { it.isOwn }.forEach { present += it.spec.key }
         specs.filter { it.key !in present }.forEach { spec ->
-            spawn(spec, freeSlot(spec), isOwn = true, popIn = popIn)
+            // A start position only counts when the world is first filled (popIn false).
+            val start = spec.startCenterPx?.takeIf { !popIn }?.let { it.x to it.y }
+            spawn(spec, start ?: freeSlot(spec), isOwn = true, popIn = popIn)
         }
     }
 

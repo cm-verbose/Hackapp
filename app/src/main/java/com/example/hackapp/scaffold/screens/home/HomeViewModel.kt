@@ -51,6 +51,7 @@ import java.time.format.DateTimeFormatter
 
 @Immutable
 data class UnderwayUi(
+    val id: String,
     val date: LocalDate,
     val districtName: String?,
     val nextStopName: String?,
@@ -98,6 +99,7 @@ internal fun Itinerary.toUnderwayUi(
     val nextIndex = stops.indexOfFirst { it.status == StopStatus.Planned }
     val next = stops.getOrNull(nextIndex)
     return UnderwayUi(
+        id = id,
         date = date,
         districtName = (districtIds.firstOrNull() ?: stops.firstOrNull()?.districtId)?.let(districtNames::get),
         nextStopName = next?.name,

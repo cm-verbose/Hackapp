@@ -1,9 +1,9 @@
 package com.example.hackapp.scaffold.screens.home
 
-import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
-import com.example.hackapp.underway.simulationChanges
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
@@ -21,12 +22,26 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +64,9 @@ import com.example.hackapp.scaffold.screens.itinerary.SectionLabel
 import com.example.hackapp.scaffold.screens.itinerary.itineraryTitle
 import com.example.hackapp.scaffold.screens.itinerary.loadDistrictNames
 import com.example.hackapp.scaffold.screens.onboarding.LoadState
+import com.example.hackapp.scaffold.screens.share.FlickCard
+import com.example.hackapp.scaffold.screens.share.ItineraryFlickOverlay
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.components.DataAttribution
 import com.example.hackapp.ui.components.ErrorState
@@ -60,10 +78,12 @@ import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.PlanItineraryCard
 import com.example.hackapp.ui.components.StripStop
 import com.example.hackapp.ui.components.UnderwayItineraryCard
+import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.ui.theme.StopType
-import kotlinx.serialization.Serializable
+import com.example.hackapp.underway.simulationChanges
 import java.time.LocalDate
+import kotlinx.serialization.Serializable
 
 @Serializable
 object ScreenHomeDestination
@@ -91,20 +111,46 @@ fun ScreenHome(
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val language = LocalConfiguration.current.locales[0].language
-    Scaffold(bottomBar = { MainBottomBar(controller, outerPaddingValues) }) { paddingValues ->
-        HomePage(
-            state = state,
-            cityName = cityPack.displayName.get(language).orEmpty(),
-            onPlanItinerary = onPlanItinerary,
-            onOpenItinerary = onOpenItinerary,
-            onOpenSettings = onOpenSettings,
-            onRetry = viewModel::retry,
-            onRequestDelete = viewModel::requestDelete,
-            onReceiveItinerary = { controller.navigate(ShareItineraryRoute()) },
-            modifier = Modifier.padding(paddingValues),
-        )
-        if (state.pendingDeleteId != null) {
-            DeleteItineraryDialog(onConfirm = viewModel::confirmDelete, onDismiss = viewModel::dismissDelete)
+    // Screen bounds of the active Itinerary card while it is being shared, else null.
+    var sharingFrom by remember { mutableStateOf<Rect?>(null) }
+    val underway = (state.itineraries as? LoadState.Ready)?.value?.underway
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(bottomBar = { MainBottomBar(controller, outerPaddingValues) }) { paddingValues ->
+            HomePage(
+                state = state,
+                cityName = cityPack.displayName.get(language).orEmpty(),
+                onPlanItinerary = onPlanItinerary,
+                onOpenItinerary = onOpenItinerary,
+                onOpenSettings = onOpenSettings,
+                onRetry = viewModel::retry,
+                onRequestDelete = viewModel::requestDelete,
+                onReceiveItinerary = { controller.navigate(ShareItineraryRoute()) },
+                sharingUnderway = sharingFrom != null,
+                onShareUnderway = { sharingFrom = it },
+                modifier = Modifier.padding(paddingValues),
+            )
+            if (state.pendingDeleteId != null) {
+                DeleteItineraryDialog(onConfirm = viewModel::confirmDelete, onDismiss = viewModel::dismissDelete)
+            }
+        }
+        val from = sharingFrom
+        if (from != null && underway != null) {
+            val colors = HackappTheme.appColors
+            ItineraryFlickOverlay(
+                cards = listOf(
+                    FlickCard(underway.id, from, RoundedCornerShape(HackappCorners.ExtraLarge), colors.hero) {
+                        HomeUnderwayCard(underway, onResume = {}, modifier = Modifier.fillMaxSize())
+                    },
+                ),
+                onClose = { sharingFrom = null },
+                onOpenReceived = {
+                    sharingFrom = null
+                    onOpenItinerary(it)
+                },
+            )
+        } else if (from != null) {
+            // The Itinerary is no longer underway: nothing left to share.
+            LaunchedEffect(Unit) { sharingFrom = null }
         }
     }
 }
@@ -121,6 +167,10 @@ fun HomePage(
     modifier: Modifier = Modifier,
     onRequestDelete: (String) -> Unit = {},
     onReceiveItinerary: () -> Unit = {},
+    /** The active Itinerary is being shared: its card is hidden, the share overlay draws it. */
+    sharingUnderway: Boolean = false,
+    /** A long press on the active Itinerary card, with its bounds on screen. */
+    onShareUnderway: (Rect) -> Unit = {},
 ) {
     val content = state.itineraries
     Column(
@@ -147,16 +197,26 @@ fun HomePage(
             }
         }
         (content as? LoadState.Ready)?.value?.underway?.let { underway ->
-            UnderwayItineraryCard(
-                itineraryName = itineraryTitle(underway.date, underway.districtName),
-                nextStop = if (underway.nextStopName != null) {
-                    stringResource(R.string.home_next_stop, underway.nextStopName)
-                } else {
-                    ""
-                },
+            val haptics = LocalHapticFeedback.current
+            val shareLabel = stringResource(R.string.share_title)
+            var bounds by remember { mutableStateOf(Rect.Zero) }
+            HomeUnderwayCard(
+                underway = underway,
                 onResume = { onOpenItinerary(underway.route) },
-                itineraryStrip = { ItineraryStrip(underway.strip, currentIndex = underway.currentIndex) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { bounds = it.boundsInRoot() }
+                    .alpha(if (sharingUnderway) 0f else 1f)
+                    // Press and hold to flick it to a friend.
+                    .pointerInput(Unit) {
+                        detectTapGestures(onLongPress = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onShareUnderway(bounds)
+                        })
+                    }
+                    .semantics {
+                        customActions = listOf(CustomAccessibilityAction(shareLabel) { onShareUnderway(bounds); true })
+                    },
             )
         }
         PlanItineraryCard(cityName = cityName, onPlan = onPlanItinerary, modifier = Modifier.fillMaxWidth())
@@ -197,6 +257,7 @@ private val PreviewHomeState = HomeUiState(
     itineraries = LoadState.Ready(
         HomeItineraries(
             underway = UnderwayUi(
+                id = "u",
                 date = LocalDate.of(2026, 11, 28),
                 districtName = "Le Plateau",
                 nextStopName = "Bistro du coin",
@@ -235,3 +296,19 @@ private fun HomeEmptyPreview() =
 @Preview(name = "Home · error", showBackground = true, widthDp = 412, heightDp = 600)
 @Composable
 private fun HomeErrorPreview() = HomePreviewPage(HomeUiState(itineraries = LoadState.Failed))
+
+/** The active Itinerary card. Also drawn by the share overlay, so both look the same. */
+@Composable
+private fun HomeUnderwayCard(underway: UnderwayUi, onResume: () -> Unit, modifier: Modifier = Modifier) {
+    UnderwayItineraryCard(
+        itineraryName = itineraryTitle(underway.date, underway.districtName),
+        nextStop = if (underway.nextStopName != null) {
+            stringResource(R.string.home_next_stop, underway.nextStopName)
+        } else {
+            ""
+        },
+        onResume = onResume,
+        itineraryStrip = { ItineraryStrip(underway.strip, currentIndex = underway.currentIndex) },
+        modifier = modifier,
+    )
+}

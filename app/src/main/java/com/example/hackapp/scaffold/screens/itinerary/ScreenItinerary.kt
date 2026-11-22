@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -21,13 +22,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,12 +51,15 @@ import com.example.hackapp.scaffold.composables.mainbottombar.MainBottomBar
 import com.example.hackapp.scaffold.navigation.PastItineraryRoute
 import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.screens.onboarding.LoadState
+import com.example.hackapp.scaffold.screens.share.FlickCard
+import com.example.hackapp.scaffold.screens.share.ItineraryFlickOverlay
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.PlanItineraryCard
+import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
-import kotlinx.serialization.Serializable
 import java.time.LocalDate
+import kotlinx.serialization.Serializable
 
 @Serializable
 object ScreenItineraryDestination
@@ -72,18 +84,44 @@ fun ScreenItinerary(
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val language = appLocale().language
-    Scaffold(bottomBar = { MainBottomBar(controller, outerPaddingValues) }) { paddingValues ->
-        ItinerariesPage(
-            state = state,
-            cityName = cityPack.displayName.get(language).orEmpty(),
-            onPlanItinerary = onPlanItinerary,
-            onOpen = { onOpenItinerary(it.route) },
-            onRequestDelete = viewModel::requestDelete,
-            onConfirmDelete = viewModel::confirmDelete,
-            onDismissDelete = viewModel::dismissDelete,
-            onRetry = viewModel::retry,
-            modifier = Modifier.padding(paddingValues),
-        )
+    // Screen bounds of the drafts, by id, while they are being shared, else null.
+    var sharingFrom by remember { mutableStateOf<Map<String, Rect>?>(null) }
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(bottomBar = { MainBottomBar(controller, outerPaddingValues) }) { paddingValues ->
+            ItinerariesPage(
+                state = state,
+                cityName = cityPack.displayName.get(language).orEmpty(),
+                onPlanItinerary = onPlanItinerary,
+                onOpen = { onOpenItinerary(it.route) },
+                onRequestDelete = viewModel::requestDelete,
+                onConfirmDelete = viewModel::confirmDelete,
+                onDismissDelete = viewModel::dismissDelete,
+                onRetry = viewModel::retry,
+                sharingPlanning = sharingFrom != null,
+                onSharePlanning = { sharingFrom = it },
+                modifier = Modifier.padding(paddingValues),
+            )
+        }
+        val from = sharingFrom
+        val planning = (state.content as? LoadState.Ready)?.value?.planning.orEmpty().filter { it.id in from.orEmpty() }
+        if (from != null && planning.isNotEmpty()) {
+            val scheme = MaterialTheme.colorScheme
+            ItineraryFlickOverlay(
+                cards = planning.map { card ->
+                    FlickCard(card.id, from.getValue(card.id), RoundedCornerShape(HackappCorners.Medium), scheme.surfaceContainerLowest) {
+                        ItineraryCard(card, onClick = {}, modifier = Modifier.fillMaxSize(), trailing = { DraftMenu {} })
+                    }
+                },
+                onClose = { sharingFrom = null },
+                onOpenReceived = {
+                    sharingFrom = null
+                    onOpenItinerary(it)
+                },
+            )
+        } else if (from != null) {
+            // The drafts are gone (deleted or started): nothing left to share.
+            LaunchedEffect(Unit) { sharingFrom = null }
+        }
     }
 }
 
@@ -99,6 +137,10 @@ fun ItinerariesPage(
     onDismissDelete: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The drafts are being shared: their cards are hidden, the share overlay draws them. */
+    sharingPlanning: Boolean = false,
+    /** A long press on a draft, with every draft's bounds on screen by id. */
+    onSharePlanning: (Map<String, Rect>) -> Unit = {},
 ) {
     Column(
         modifier
@@ -125,7 +167,7 @@ fun ItinerariesPage(
                 )
                 PlanItineraryCard(cityName = cityName, onPlan = onPlanItinerary, modifier = Modifier.fillMaxWidth())
             } else {
-                ItinerarySectionList(content.value, onOpen, onRequestDelete)
+                ItinerarySectionList(content.value, onOpen, onRequestDelete, sharingPlanning, onSharePlanning)
             }
         }
     }
@@ -139,11 +181,28 @@ private fun ItinerarySectionList(
     content: ItinerariesContent,
     onOpen: (ItineraryCardUi) -> Unit,
     onRequestDelete: (String) -> Unit,
+    sharingPlanning: Boolean,
+    onSharePlanning: (Map<String, Rect>) -> Unit,
 ) {
     if (content.planning.isNotEmpty()) {
         SectionLabel(stringResource(R.string.home_planning_section))
+        val haptics = LocalHapticFeedback.current
+        val bounds = remember { mutableMapOf<String, Rect>() }
         content.planning.forEach { card ->
-            ItineraryCard(card, onClick = { onOpen(card) }, trailing = { DraftMenu { onRequestDelete(card.id) } })
+            // Press and hold a draft to pile every draft up and flick one to a friend.
+            ItineraryCard(
+                card,
+                onClick = { onOpen(card) },
+                modifier = Modifier
+                    .onGloballyPositioned { bounds[card.id] = it.boundsInRoot() }
+                    .alpha(if (sharingPlanning) 0f else 1f),
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSharePlanning(content.planning.mapNotNull { c -> bounds[c.id]?.let { c.id to it } }.toMap())
+                },
+                onLongClickLabel = stringResource(R.string.share_title),
+                trailing = { DraftMenu { onRequestDelete(card.id) } },
+            )
         }
     }
     if (content.past.isNotEmpty()) {
