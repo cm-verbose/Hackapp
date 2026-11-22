@@ -122,7 +122,7 @@ internal fun Itinerary.toCard(districtNames: Map<String, String>) = ItineraryCar
     id = id,
     date = date,
     districtName = (districtIds.firstOrNull() ?: stops.firstOrNull()?.districtId)?.let(districtNames::get),
-    stopCount = stops.size,
+    stopCount = if (phase == ItineraryPhase.Completed) stops.count { it.status == StopStatus.Confirmed } else stops.size,
     stampCount = if (phase == ItineraryPhase.Completed) earnedStampStops().size else null,
     route = openRoute(),
 )
