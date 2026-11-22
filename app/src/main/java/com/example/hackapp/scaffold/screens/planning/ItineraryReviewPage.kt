@@ -107,7 +107,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private const val REVIEW_STEP = 6
+private const val REVIEW_STEP = 5
 
 /** Times in Stop rows: `18:30`, in both languages. */
 private val StopTimeFormat = DateTimeFormatter.ofPattern("HH:mm")
@@ -115,7 +115,7 @@ private val StopTimeFormat = DateTimeFormatter.ofPattern("HH:mm")
 /** One line of the budget card. A null [bracket] has no budget set. */
 data class ReviewBudgetRow(@param:StringRes val label: Int, val bracket: BudgetBracket?)
 
-/** Connects the Itinerary review (Planning step 6) to its ViewModel, data and navigation. */
+/** Connects the Itinerary review (Planning step 5) to its ViewModel, data and navigation. */
 @Composable
 fun ItineraryReviewScreen(
     itineraryId: String,

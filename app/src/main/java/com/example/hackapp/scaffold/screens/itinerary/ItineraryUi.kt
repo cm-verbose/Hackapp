@@ -60,6 +60,8 @@ fun ItineraryCard(
     card: ItineraryCardUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val parts = buildList {
@@ -72,6 +74,8 @@ fun ItineraryCard(
         subtitle = parts.joinToString("\u00a0· "),
         modifier = modifier,
         onClick = onClick,
+        onLongClick = onLongClick,
+        onLongClickLabel = onLongClickLabel,
         trailing = trailing,
     )
 }

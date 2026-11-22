@@ -86,4 +86,14 @@ class PassportUiTest {
         counts.values.forEach { assertTrue("uneven mix: $counts", it in 60..140) }
         assertEquals(StampShape.entries.toSet(), (1..40).map { stampShapeFor("mtl:event:show$it:45.507:-73.554") }.toSet())
     }
+
+    @Test
+    fun `a saved shape seed picks the shape, and Stamps without one fall back to their key`() {
+        val seeded = stamp("mtl:place:123").copy(shapeSeed = 4)
+        val ready = passportContent(PassportState.Loaded(listOf(seeded, stamp("mtl:place:9"))), "mtl", emptyMap(), format)
+            as PassportContent.Ready
+        assertEquals(StampShape.entries[4], ready.stamps[0].shape)
+        assertEquals(stampShapeFor("mtl:place:9"), ready.stamps[1].shape)
+        assertEquals(StampShape.entries.toSet(), (-6..6).map(::stampShapeForSeed).toSet())
+    }
 }

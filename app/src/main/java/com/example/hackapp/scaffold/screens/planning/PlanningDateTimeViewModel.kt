@@ -37,7 +37,7 @@ data class PlanningDateTimeUiState(
     val loadFailed: Boolean = false,
     val coverage: EventCoverage,
     val date: LocalDate = coverage.firstDate,
-    val outingKind: OutingKind = OutingKind.Night,
+    val outingKind: OutingKind = OutingKind.Day,
     val start: LocalTime = outingKind.defaultStart(),
     val end: LocalTime = outingKind.defaultEnd(),
     val saving: Boolean = false,
@@ -137,7 +137,7 @@ class PlanningDateTimeViewModel(
                 id = UUID.randomUUID().toString(),
                 ownerUid = uid,
                 cityId = cityPack.id,
-                step = PlanningStep.Budget,
+                step = PlanningStep.Districts,
                 date = form.date,
                 outingKind = form.outingKind,
                 startTime = form.start,
@@ -151,7 +151,7 @@ class PlanningDateTimeViewModel(
             val updated = latest.copy(
                 // Choosing a new date is what brings an archived draft back to Planning.
                 phase = if (latest.phase == ItineraryPhase.Archived) ItineraryPhase.Planning else latest.phase,
-                step = maxOf(latest.step, PlanningStep.Budget),
+                step = maxOf(latest.step, PlanningStep.Districts),
                 date = form.date,
                 outingKind = form.outingKind,
                 startTime = form.start,

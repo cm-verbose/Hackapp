@@ -173,6 +173,7 @@
     <string name="meal_dinner">Dinner</string>
     <string name="meal_late_bite">Late bite</string>
     <string name="meal_budget_label">Budget for this meal</string>
+    <string name="meal_budget_change">Change budget</string>
     <string name="meal_none_reserved">No meal blocks reserved.</string>
     <string name="meal_none_fit">No meal fits this time slot. Extend it, or choose “I’ll handle it”.</string>
     <string name="meal_change_time">Change time</string>
@@ -425,10 +426,6 @@
     <string name="time_minute">Minute</string>
     <string name="time_minute_value">Minute: %1$s</string>
     <string name="planning_budget_title">Budget</string>
-    <string name="planning_budget_keep">Keep this budget</string>
-    <string name="planning_budget_change">Change for this itinerary</string>
-    <string name="planning_budget_edit_subtitle">Per person, for this itinerary</string>
-    <string name="budget_off">Off</string>
     <string name="budget_not_set">Not set</string>
 
     <string name="demo_mode_title">Demo mode</string>

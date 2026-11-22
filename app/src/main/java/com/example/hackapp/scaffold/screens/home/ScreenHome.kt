@@ -39,6 +39,8 @@ import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.composables.mainbottombar.MainBottomBar
 import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
+import com.example.hackapp.scaffold.screens.itinerary.DeleteErrorNote
+import com.example.hackapp.scaffold.screens.itinerary.DeleteItineraryDialog
 import com.example.hackapp.scaffold.screens.itinerary.ItineraryCard
 import com.example.hackapp.scaffold.screens.itinerary.ItineraryCardUi
 import com.example.hackapp.scaffold.screens.itinerary.SectionLabel
@@ -95,8 +97,12 @@ fun ScreenHome(
             onOpenItinerary = onOpenItinerary,
             onOpenSettings = onOpenSettings,
             onRetry = viewModel::retry,
+            onRequestDelete = viewModel::requestDelete,
             modifier = Modifier.padding(paddingValues),
         )
+        if (state.pendingDeleteId != null) {
+            DeleteItineraryDialog(onConfirm = viewModel::confirmDelete, onDismiss = viewModel::dismissDelete)
+        }
     }
 }
 
@@ -110,6 +116,7 @@ fun HomePage(
     onOpenSettings: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    onRequestDelete: (String) -> Unit = {},
 ) {
     val content = state.itineraries
     Column(
@@ -157,9 +164,17 @@ fun HomePage(
             LoadState.Failed -> ErrorState(onRetry = onRetry)
             is LoadState.Ready -> if (content.value.planning.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.home_planning_section))
+                val deleteLabel = stringResource(R.string.action_delete)
                 content.value.planning.forEach { card ->
-                    ItineraryCard(card, onClick = { onOpenItinerary(card.route) })
+                    // Every draft on Home is in Planning, so each one can be deleted with a long press.
+                    ItineraryCard(
+                        card,
+                        onClick = { onOpenItinerary(card.route) },
+                        onLongClick = { onRequestDelete(card.id) },
+                        onLongClickLabel = deleteLabel,
+                    )
                 }
+                if (state.deleteFailed) DeleteErrorNote()
             }
         }
         if (state.suggestions.isNotEmpty() || (content as? LoadState.Ready)?.value?.underway != null) DataAttribution()

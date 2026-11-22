@@ -9,8 +9,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
 import com.example.hackapp.R
 import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
-import com.example.hackapp.scaffold.navigation.PlanningBudgetEditRoute
-import com.example.hackapp.scaffold.navigation.PlanningBudgetRoute
 import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.navigation.PlanningDistrictPickRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
@@ -20,7 +18,7 @@ import com.example.hackapp.scaffold.navigation.flowComposable
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 
-internal const val PLANNING_STEPS = 6
+internal const val PLANNING_STEPS = 5
 
 /**
  * The Planning routes. The app bar arrow returns to the previous step, while the system Back
@@ -32,24 +30,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
         PlanningDateTimeScreen(
             itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            onContinue = { id -> controller.navigate(PlanningBudgetRoute(id)) },
-        )
-    }
-    planningPage<PlanningBudgetRoute>(controller) { entry ->
-        val route = entry.toRoute<PlanningBudgetRoute>()
-        PlanningBudgetChoiceScreen(
-            itineraryId = route.itineraryId,
-            onBack = { controller.popBackStack() },
-            onKept = { id -> controller.navigate(PlanningDistrictPickRoute(id)) },
-            onChange = { controller.navigate(PlanningBudgetEditRoute(route.itineraryId)) },
-        )
-    }
-    planningPage<PlanningBudgetEditRoute>(controller) { entry ->
-        val route = entry.toRoute<PlanningBudgetEditRoute>()
-        PlanningBudgetEditScreen(
-            itineraryId = route.itineraryId,
-            onBack = { controller.popBackStack() },
-            onSaved = { id -> controller.navigate(PlanningDistrictPickRoute(id)) },
+            onContinue = { id -> controller.navigate(PlanningDistrictPickRoute(id)) },
         )
     }
     planningPage<PlanningDistrictPickRoute>(controller) { entry ->

@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -52,6 +53,10 @@ import kotlin.math.max
  * Figma demo control (`186:2775`, wrapped `186:2786`): the simulated date and time, and the button
  * that jumps to the next moment. The button moves under the time when both do not fit on one line.
  */
+/** The whole control, including its text, stays readable at this opacity. */
+private const val DEMO_CONTROL_ALPHA = 0.85f
+private const val DEMO_BACKGROUND_ALPHA = 0.6f
+
 @Composable
 fun DemoControl(
     dateTime: String,
@@ -75,8 +80,10 @@ fun DemoControl(
     Column(
         modifier
             .fillMaxWidth()
+            // Slightly see-through, so the control reads as a demo tool laid over the real page.
+            .alpha(DEMO_CONTROL_ALPHA)
             .clip(shape)
-            .background(colors.warningContainer)
+            .background(colors.warningContainer.copy(alpha = DEMO_BACKGROUND_ALPHA))
             .dashedBorder(colors.warning, HackappCorners.Medium)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),

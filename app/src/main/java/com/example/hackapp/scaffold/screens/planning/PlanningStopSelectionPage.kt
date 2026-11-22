@@ -96,7 +96,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-private const val SELECTION_STEP = 5
+private const val SELECTION_STEP = 4
 private const val DETAIL_SEPARATOR = " · "
 
 /** Times in controls: `18:30`, in both languages. */

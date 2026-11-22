@@ -271,4 +271,18 @@ class StampAwardingTest {
         description = LocalizedText(null, null), descriptionSource = DescriptionSource.GENERATED,
         rating = null, ratingCount = null, openingHours = null, photoRef = null, googlePlaceId = null,
     )
+
+    @Test
+    fun `each new Stamp draws its own shape seed and a retry keeps it`() {
+        var next = 0
+        val itinerary = completed(stops = listOf(event("a", "e1", 19), meal("b", "3", 21)))
+        val first = awardStamps(itinerary, emptyList(), resolver, 100) { next++ }
+        assertEquals(listOf(0, 1), first.created.map { it.shapeSeed })
+        val retry = awardStamps(itinerary, first.created, resolver, 200) { 99 }
+        assertEquals(emptyList<PassportStamp>(), retry.created)
+        assertEquals(
+            listOf(0, 1),
+            listOf("a", "b").map { ((retry.resultFor(it) as StopStampResult.NewStamp).stamp.shapeSeed) },
+        )
+    }
 }

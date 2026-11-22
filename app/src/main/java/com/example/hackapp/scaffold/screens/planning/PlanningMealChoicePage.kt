@@ -16,6 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -39,6 +42,7 @@ import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappOutlineButton
 import com.example.hackapp.ui.components.HackappPage
 import com.example.hackapp.ui.components.HackappPrimaryButton
+import com.example.hackapp.ui.components.HackappSmallTonalButton
 import com.example.hackapp.ui.components.HackappTimeField
 import com.example.hackapp.ui.components.InfoCallout
 import com.example.hackapp.ui.components.LoadingState
@@ -50,7 +54,7 @@ import com.example.hackapp.ui.theme.HackappTheme
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-private const val MEAL_STEP = 4
+private const val MEAL_STEP = 3
 
 /** Times in controls: `18:30`, in both languages. */
 private val ControlTimeFormat = DateTimeFormatter.ofPattern("HH:mm")
@@ -61,7 +65,7 @@ private val TimeFieldWidth = 140.dp
 /** The Itinerary's window, shown above the Meal chips. Null while unknown. */
 data class ItineraryHours(val start: LocalTime, val end: LocalTime)
 
-/** Connects the Meal choice page (Planning step 4) to its ViewModel and to navigation. */
+/** Connects the Meal choice page (Planning step 3) to its ViewModel and to navigation. */
 @Composable
 fun PlanningMealChoiceScreen(
     itineraryId: String,
@@ -295,12 +299,22 @@ private fun MealCard(
                     )
                 }
             }
-            SingleChoiceChips(
-                options = BudgetBracket.entries.map { ChoiceOption(it, budgetBracketLabel(it)) },
-                selected = option.budget,
-                onSelectedChange = { onBudgetChange(option.kind, it) },
-                allowDeselect = true,
-            )
+            // The brackets stay hidden until the person asks to change the budget, so the page reads
+            // as "keep the Profile budget" by default. A Meal with its own bracket shows them right away.
+            var editingBudget by rememberSaveable(option.kind) { mutableStateOf(false) }
+            if (editingBudget || option.budget != null) {
+                SingleChoiceChips(
+                    options = BudgetBracket.entries.map { ChoiceOption(it, budgetBracketLabel(it)) },
+                    selected = option.budget,
+                    onSelectedChange = { onBudgetChange(option.kind, it) },
+                    allowDeselect = true,
+                )
+            } else {
+                HackappSmallTonalButton(
+                    text = stringResource(R.string.meal_budget_change),
+                    onClick = { editingBudget = true },
+                )
+            }
         }
     }
 }

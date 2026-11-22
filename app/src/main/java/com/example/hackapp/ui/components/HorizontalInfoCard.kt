@@ -2,6 +2,7 @@ package com.example.hackapp.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -55,6 +57,9 @@ fun HorizontalInfoCard(
     selected: Boolean = false,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
+    /** Long press, with [onLongClickLabel] read by TalkBack as the custom action. Needs [onClick]. */
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
     trailing: (@Composable () -> Unit)? = { CardMediaPlaceholder() },
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -101,7 +106,23 @@ fun HorizontalInfoCard(
             trailing?.invoke()
         }
     }
-    if (onClick != null) {
+    if (onClick != null && onLongClick != null) {
+        OutlinedCard(
+            modifier = modifier
+                .fillMaxWidth()
+                .then(selectedState)
+                .clip(shape)
+                .combinedClickable(
+                    enabled = enabled,
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                    onLongClickLabel = onLongClickLabel,
+                ),
+            shape = shape,
+            colors = colors,
+            border = border,
+        ) { body() }
+    } else if (onClick != null) {
         OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth().then(selectedState), shape = shape, colors = colors, border = border) { body() }
     } else {
         Card(modifier = modifier.fillMaxWidth().then(selectedState), shape = shape, colors = colors, border = border) { body() }

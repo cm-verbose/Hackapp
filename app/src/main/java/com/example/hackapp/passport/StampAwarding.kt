@@ -8,6 +8,7 @@ import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.itinerary.StopStatus
 import java.text.Normalizer
 import java.util.Locale
+import kotlin.random.Random
 
 /** What a Stop is for Stamp purposes. [key] is shared by everything that counts as one. */
 data class StampIdentity(val key: String, val category: String? = null)
@@ -57,6 +58,7 @@ fun awardStamps(
     existing: Collection<PassportStamp>,
     resolver: StampIdentityResolver,
     awardedAtMillis: Long,
+    shapeSeed: () -> Int = { Random.nextInt() },
 ): StampAward {
     if (itinerary.phase != ItineraryPhase.Completed) {
         return StampAward(itinerary.stops.map { StopStampOutcome(it.id, StopStampResult.NoStamp) }, emptyList())
@@ -91,6 +93,7 @@ fun awardStamps(
                         itineraryId = itinerary.id,
                         stopId = stop.id,
                         awardedAtMillis = awardedAtMillis,
+                        shapeSeed = shapeSeed(),
                     )
                     held[key] = fresh
                     created += fresh

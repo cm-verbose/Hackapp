@@ -57,7 +57,7 @@ private fun PassportStamp.toUi(districtNames: Map<String, String>, dateFormat: D
     district = districtNames[districtId] ?: districtId,
     date = date.format(dateFormat),
     type = stampStopType(kind, category),
-    shape = stampShapeFor(key),
+    shape = shapeSeed?.let(::stampShapeForSeed) ?: stampShapeFor(key),
 )
 
 internal fun stampStopType(kind: StampKind, category: String?): StopType = when (kind) {
@@ -83,7 +83,7 @@ internal fun readableInitialsScale(itemScale: Float): Float = maxOf(1f, 0.875f /
 
 /**
  * The playground's six Material shapes, with their sizes in dp. Constant names are not stored: a
- * Stamp's shape is always worked out from its key.
+ * Stamp's shape is worked out from its random seed, or from its key for older Stamps.
  */
 enum class StampShape(val widthDp: Int, val heightDp: Int) {
     VerySunny(180, 180),
@@ -98,8 +98,12 @@ enum class StampShape(val widthDp: Int, val heightDp: Int) {
     val isRound: Boolean get() = this != RoundedLarge && this != RoundedMedium
 }
 
+/** The shape for a Stamp's random [PassportStamp.shapeSeed]. Shapes do not follow the Stop type. */
+internal fun stampShapeForSeed(seed: Int): StampShape =
+    StampShape.entries[Math.floorMod(seed, StampShape.entries.size)]
+
 /**
- * The same key always gets the same shape, on every launch. [String.hashCode] is fixed by the
+ * Fallback for Stamps saved without a seed. The same key always gets the same shape, on every launch. [String.hashCode] is fixed by the
  * language, and the extra mixing spreads keys that differ only by a few digits across the set.
  */
 internal fun stampShapeFor(key: String): StampShape {

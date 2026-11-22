@@ -140,7 +140,7 @@ fun DistrictPickPage(
     val scheme = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().background(scheme.surface)) {
         HackappTopBar(stringResource(R.string.district_pick_title), onBack = onBack)
-        StepProgress(3, PLANNING_STEPS)
+        StepProgress(2, PLANNING_STEPS)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             val map = state.map
             when {

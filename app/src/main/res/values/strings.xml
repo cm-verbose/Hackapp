@@ -178,6 +178,7 @@
     <string name="meal_dinner">Souper</string>
     <string name="meal_late_bite">Bouchée tardive</string>
     <string name="meal_budget_label">Budget pour ce repas</string>
+    <string name="meal_budget_change">Modifier le budget</string>
     <string name="meal_none_reserved">Aucun bloc repas réservé.</string>
     <string name="meal_none_fit">Aucun repas ne tient dans cette plage. Prolongez-la ou choisissez « Je m’en occupe ».</string>
     <string name="meal_change_time">Modifier l’horaire</string>
@@ -435,10 +436,6 @@
     <string name="time_minute">Minute</string>
     <string name="time_minute_value">Minute : %1$s</string>
     <string name="planning_budget_title">Budget</string>
-    <string name="planning_budget_keep">Garder ce budget</string>
-    <string name="planning_budget_change">Modifier pour cet itinéraire</string>
-    <string name="planning_budget_edit_subtitle">Par personne, pour cet itinéraire</string>
-    <string name="budget_off">Désactivée</string>
     <string name="budget_not_set">Non défini</string>
 
     <string name="demo_mode_title">Mode démo</string>

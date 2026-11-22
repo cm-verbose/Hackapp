@@ -24,8 +24,6 @@ private val FlowRoutes: List<KClass<*>> = listOf(
     OnboardingBudgetAudienceRoute::class,
     OnboardingInterestsRoute::class,
     PlanningDateTimeRoute::class,
-    PlanningBudgetRoute::class,
-    PlanningBudgetEditRoute::class,
     PlanningDistrictPickRoute::class,
     PlanningMealChoiceRoute::class,
     PlanningStopSelectionRoute::class,

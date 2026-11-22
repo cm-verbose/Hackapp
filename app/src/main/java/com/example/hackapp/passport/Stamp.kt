@@ -32,4 +32,9 @@ data class PassportStamp(
     val itineraryId: String,
     val stopId: String,
     val awardedAtMillis: Long,
+    /**
+     * Drawn at random when the Stamp is awarded, so its Passport shape is random but stays the
+     * same on every launch. Null for Stamps saved before it existed: those fall back to their key.
+     */
+    val shapeSeed: Int? = null,
 )

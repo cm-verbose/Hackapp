@@ -15,6 +15,7 @@ import com.example.hackapp.itinerary.StopStatus
 import com.example.hackapp.itinerary.eventEligibility
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.scaffold.screens.itinerary.ItineraryCardUi
+import com.example.hackapp.scaffold.screens.itinerary.canDelete
 import com.example.hackapp.scaffold.screens.itinerary.eventStopType
 import com.example.hackapp.scaffold.screens.itinerary.openRoute
 import com.example.hackapp.scaffold.screens.itinerary.stopTypesFor
@@ -67,7 +68,12 @@ data class HomeUiState(
     val itineraries: LoadState<HomeItineraries> = LoadState.Loading,
     val firstName: String? = null,
     val suggestions: List<EventSuggestion> = emptyList(),
+    /** The draft a long press asked to delete, waiting for confirmation. */
+    val pendingDeleteId: String? = null,
+    val deleteFailed: Boolean = false,
 )
+
+private data class HomeDeleteState(val pendingId: String? = null, val failed: Boolean = false)
 
 private val StopTimeFormat = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -117,6 +123,7 @@ class HomeViewModel(
     private val firstName = MutableStateFlow<String?>(null)
     private val suggestions = MutableStateFlow<List<EventSuggestion>>(emptyList())
     private val districtNames = MutableStateFlow<Map<String, String>>(emptyMap())
+    private val delete = MutableStateFlow(HomeDeleteState())
 
     private val saved = retry.flatMapLatest {
         if (uid == null) {
@@ -144,8 +151,14 @@ class HomeViewModel(
             }
         }
 
-    val state: StateFlow<HomeUiState> = combine(content, firstName, suggestions) { list, name, suggested ->
-        HomeUiState(itineraries = list, firstName = name, suggestions = suggested)
+    val state: StateFlow<HomeUiState> = combine(content, firstName, suggestions, delete) { list, name, suggested, deleting ->
+        HomeUiState(
+            itineraries = list,
+            firstName = name,
+            suggestions = suggested,
+            pendingDeleteId = deleting.pendingId,
+            deleteFailed = deleting.failed,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState())
 
     init {
@@ -165,6 +178,27 @@ class HomeViewModel(
     }
 
     fun retry() = retry.update { it + 1 }
+
+    fun requestDelete(id: String) = delete.update { HomeDeleteState(pendingId = id) }
+
+    fun dismissDelete() = delete.update { HomeDeleteState() }
+
+    fun confirmDelete() {
+        val id = delete.value.pendingId ?: return
+        val owner = uid ?: return
+        delete.update { HomeDeleteState() }
+        viewModelScope.launch {
+            try {
+                // Read again: the draft may have been started since the long press.
+                val current = itineraries.getItinerary(owner, id)
+                if (current?.canDelete == true) itineraries.deleteItinerary(owner, id)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                delete.update { it.copy(failed = true) }
+            }
+        }
+    }
 
     private suspend fun <T> optional(read: suspend () -> T?): T? = try {
         read()

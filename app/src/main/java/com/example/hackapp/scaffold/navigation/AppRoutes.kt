@@ -31,8 +31,6 @@ import kotlinx.serialization.Serializable
 // Planning
 /** A null [itineraryId] starts a new draft. */
 @Serializable data class PlanningDateTimeRoute(val itineraryId: String? = null)
-@Serializable data class PlanningBudgetRoute(val itineraryId: String)
-@Serializable data class PlanningBudgetEditRoute(val itineraryId: String)
 @Serializable data class PlanningDistrictPickRoute(val itineraryId: String)
 @Serializable data class PlanningMealChoiceRoute(val itineraryId: String)
 /** With [districtId] set, Selection opens on the gap after [afterStopId] (null = before the first Stop). */
