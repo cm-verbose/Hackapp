@@ -17,7 +17,6 @@ import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.OutingKind
 import com.example.hackapp.itinerary.PlanningStep
-import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.ProfileRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -39,8 +38,6 @@ data class PlanningDateTimeUiState(
     val outingKind: OutingKind = OutingKind.Night,
     val start: LocalTime = outingKind.defaultStart(),
     val end: LocalTime = outingKind.defaultEnd(),
-    val profileBudget: BudgetBracket? = null,
-    val eventBudget: BudgetBracket? = null,
     val saving: Boolean = false,
     val saveFailed: Boolean = false,
     /** Set once the draft is saved. The route navigates, then clears it. */
@@ -84,10 +81,6 @@ class PlanningDateTimeViewModel(
     fun setStart(value: LocalTime) = edit { copy(start = value) }
     fun setEnd(value: LocalTime) = edit { copy(end = value) }
 
-    /** Changes this Itinerary's budget only. The Profile is never written here. */
-    fun setEventBudget(value: BudgetBracket) = edit { copy(eventBudget = value) }
-    fun resetEventBudget() = edit { copy(eventBudget = profileBudget) }
-
     fun onNavigated() = _state.update { it.copy(savedItineraryId = null) }
 
     fun save() {
@@ -121,12 +114,12 @@ class PlanningDateTimeViewModel(
                 id = UUID.randomUUID().toString(),
                 ownerUid = uid,
                 cityId = cityPack.id,
-                step = PlanningStep.Districts,
+                step = PlanningStep.Budget,
                 date = form.date,
                 outingKind = form.outingKind,
                 startTime = form.start,
                 endTime = form.end,
-                eventBudget = form.eventBudget,
+                eventBudget = profileEventBudget(uid),
                 createdAtMillis = now,
                 updatedAtMillis = now,
             )
@@ -135,12 +128,11 @@ class PlanningDateTimeViewModel(
             val updated = latest.copy(
                 // Choosing a new date is what brings an archived draft back to Planning.
                 phase = if (latest.phase == ItineraryPhase.Archived) ItineraryPhase.Planning else latest.phase,
-                step = maxOf(latest.step, PlanningStep.Districts),
+                step = maxOf(latest.step, PlanningStep.Budget),
                 date = form.date,
                 outingKind = form.outingKind,
                 startTime = form.start,
                 endTime = form.end,
-                eventBudget = form.eventBudget,
                 updatedAtMillis = now,
             )
             val windowChanged = latest.date != updated.date ||
@@ -157,7 +149,6 @@ class PlanningDateTimeViewModel(
         viewModelScope.launch {
             try {
                 val uid = checkNotNull(auth.currentUser?.uid)
-                val profileBudget = profileEventBudget(uid)
                 val id = draftId
                 if (id != null) {
                     val draft = checkNotNull(itineraries.getItinerary(uid, id))
@@ -168,20 +159,11 @@ class PlanningDateTimeViewModel(
                             outingKind = draft.outingKind,
                             start = draft.startTime,
                             end = draft.endTime,
-                            profileBudget = profileBudget,
-                            eventBudget = draft.eventBudget ?: profileBudget,
                         )
                     }
                 } else {
                     val date = firstDateWithData()
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            date = date,
-                            profileBudget = profileBudget,
-                            eventBudget = profileBudget,
-                        )
-                    }
+                    _state.update { it.copy(loading = false, date = date) }
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -192,7 +174,7 @@ class PlanningDateTimeViewModel(
     }
 
     /** A missing or unreadable Profile leaves the budget empty instead of blocking Planning. */
-    private suspend fun profileEventBudget(uid: String): BudgetBracket? = try {
+    private suspend fun profileEventBudget(uid: String) = try {
         profiles.getProfile(uid)?.eventBudget
     } catch (e: CancellationException) {
         throw e

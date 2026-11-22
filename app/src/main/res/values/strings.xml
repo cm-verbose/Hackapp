@@ -182,9 +182,6 @@
     <string name="planning_night_out">Soirée</string>
     <string name="planning_start">Début</string>
     <string name="planning_end">Fin</string>
-    <string name="planning_budget_override">Budget pour cet itinéraire (facultatif)</string>
-    <string name="planning_budget_from_profile">%1$s · selon le profil</string>
-    <string name="planning_time_window_note">Journée : 10:00–18:00 · Soirée : 18:00–02:00. Un itinéraire appartient à la date où il commence, même après minuit.</string>
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Arrondissements</string>
     <string name="district_pick_instructions">Choisissez 1 à 3 arrondissements, dans l’ordre de visite.</string>
@@ -273,7 +270,6 @@
     <string name="settings_no_preferences">Aucune préférence</string>
 
     <!-- Planning: date and District map -->
-    <string name="planning_budget_reset">Revenir au budget du profil</string>
     <string name="planning_error_min_duration">Un itinéraire dure au moins 2 heures.</string>
     <string name="planning_error_latest_end">Un itinéraire se termine au plus tard à 04:00.</string>
     <string name="planning_save_error">Impossible d’enregistrer. Réessayez.</string>
@@ -285,6 +281,15 @@
     <string name="district_map_reset">Réinitialiser la carte</string>
     <string name="time_hour">Heure</string>
     <string name="time_minute">Minute</string>
+    <string name="planning_budget_title">Budget</string>
+    <string name="planning_budget_question">Modifier votre budget pour cette sortie?</string>
+    <string name="planning_budget_current">Voici le budget actuellement prévu pour cette sortie.</string>
+    <string name="planning_budget_keep">Garder ce budget</string>
+    <string name="planning_budget_change">Modifier pour cette sortie</string>
+    <string name="planning_budget_edit_title">Budget de cette sortie</string>
+    <string name="planning_budget_edit_note">Ces changements s’appliquent à cet itinéraire seulement.</string>
+    <string name="budget_off">Désactivée</string>
+    <string name="budget_not_set">Non défini</string>
 
     <!-- Planning: engine messages -->
 </resources>

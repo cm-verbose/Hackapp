@@ -1,26 +1,13 @@
 package com.example.hackapp.scaffold.screens.planning
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Cancel
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,14 +18,12 @@ import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.EventCoverage
 import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.itinerary.OutingKind
-import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappDateField
 import com.example.hackapp.ui.components.HackappPage
-import com.example.hackapp.ui.components.HackappPickerField
 import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappSegmentedButton
 import com.example.hackapp.ui.components.HackappTimeField
@@ -80,8 +65,6 @@ fun PlanningDateTimeScreen(
         onOutingKindChange = viewModel::setOutingKind,
         onStartChange = viewModel::setStart,
         onEndChange = viewModel::setEnd,
-        onBudgetChange = viewModel::setEventBudget,
-        onBudgetReset = viewModel::resetEventBudget,
         onContinue = viewModel::save,
     )
 }
@@ -95,8 +78,6 @@ fun PlanningDateTimePage(
     onOutingKindChange: (OutingKind) -> Unit,
     onStartChange: (LocalTime) -> Unit,
     onEndChange: (LocalTime) -> Unit,
-    onBudgetChange: (BudgetBracket) -> Unit,
-    onBudgetReset: () -> Unit,
     onContinue: () -> Unit,
 ) {
     HackappPage(
@@ -155,67 +136,16 @@ fun PlanningDateTimePage(
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
-                EventBudgetField(state.eventBudget, state.profileBudget, onBudgetChange, onBudgetReset)
-                Text(
-                    stringResource(R.string.planning_time_window_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
 }
-
-@Composable
-private fun EventBudgetField(
-    budget: BudgetBracket?,
-    profileBudget: BudgetBracket?,
-    onChange: (BudgetBracket) -> Unit,
-    onReset: () -> Unit,
-) {
-    var open by rememberSaveable { mutableStateOf(false) }
-    val label = budget?.let { budgetLabel(it) }.orEmpty()
-    val value = if (budget != null && budget == profileBudget) {
-        stringResource(R.string.planning_budget_from_profile, label)
-    } else {
-        label
-    }
-    Box(Modifier.fillMaxWidth()) {
-        HackappPickerField(value, stringResource(R.string.planning_budget_override), onClick = { open = true })
-        if (profileBudget != null && budget != profileBudget) {
-            IconButton(onClick = onReset, modifier = Modifier.align(Alignment.CenterEnd).padding(top = 4.dp)) {
-                Icon(Icons.Outlined.Cancel, contentDescription = stringResource(R.string.planning_budget_reset))
-            }
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            BudgetBracket.entries.forEach { bracket ->
-                DropdownMenuItem(
-                    text = { Text(budgetLabel(bracket)) },
-                    onClick = {
-                        onChange(bracket)
-                        open = false
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun budgetLabel(bracket: BudgetBracket): String = stringResource(
-    when (bracket) {
-        BudgetBracket.Under20 -> R.string.budget_under_20
-        BudgetBracket.Under50 -> R.string.budget_under_50
-        BudgetBracket.Under100 -> R.string.budget_under_100
-        BudgetBracket.From100 -> R.string.budget_100_plus
-    },
-)
 
 private val PreviewCoverage = EventCoverage(LocalDate.of(2026, 11, 21), LocalDate.of(2026, 12, 6))
 
 @Composable
 private fun PreviewPage(state: PlanningDateTimeUiState) = HackappTheme {
-    PlanningDateTimePage(state, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    PlanningDateTimePage(state, {}, {}, {}, {}, {}, {}, {})
 }
 
 @Preview(name = "Date and time", showBackground = true, widthDp = 412, heightDp = 917)
@@ -225,8 +155,6 @@ private fun PlanningDateTimePreview() = PreviewPage(
         loading = false,
         coverage = PreviewCoverage,
         date = LocalDate.of(2026, 11, 28),
-        profileBudget = BudgetBracket.Under50,
-        eventBudget = BudgetBracket.Under50,
     ),
 )
 
@@ -238,8 +166,6 @@ private fun PlanningDateTimeInvalidPreview() = PreviewPage(
         coverage = PreviewCoverage,
         date = LocalDate.of(2026, 11, 28),
         end = LocalTime.of(5, 0),
-        profileBudget = BudgetBracket.Under50,
-        eventBudget = BudgetBracket.Under100,
     ),
 )
 

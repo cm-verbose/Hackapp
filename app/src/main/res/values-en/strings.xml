@@ -179,9 +179,6 @@
     <string name="planning_night_out">Night out</string>
     <string name="planning_start">Start</string>
     <string name="planning_end">End</string>
-    <string name="planning_budget_override">Budget for this itinerary (optional)</string>
-    <string name="planning_budget_from_profile">%1$s · from profile</string>
-    <string name="planning_time_window_note">Day out: 10:00–18:00 · Night out: 18:00–02:00. An itinerary belongs to the date it starts on, even after midnight.</string>
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Boroughs</string>
     <string name="district_pick_instructions">Choose 1 to 3 boroughs, in the order you’ll visit them.</string>
@@ -264,7 +261,6 @@
     <string name="settings_no_preferences">No preferences</string>
 
     <!-- Planning: date and District map -->
-    <string name="planning_budget_reset">Return to the profile budget</string>
     <string name="planning_error_min_duration">An itinerary lasts at least 2 hours.</string>
     <string name="planning_error_latest_end">An itinerary ends no later than 04:00.</string>
     <string name="planning_save_error">Couldn’t save. Try again.</string>
@@ -276,6 +272,15 @@
     <string name="district_map_reset">Reset map</string>
     <string name="time_hour">Hour</string>
     <string name="time_minute">Minute</string>
+    <string name="planning_budget_title">Budget</string>
+    <string name="planning_budget_question">Change your budget for this outing?</string>
+    <string name="planning_budget_current">This is the budget currently set for this outing.</string>
+    <string name="planning_budget_keep">Keep this budget</string>
+    <string name="planning_budget_change">Change for this outing</string>
+    <string name="planning_budget_edit_title">Budget for this outing</string>
+    <string name="planning_budget_edit_note">These changes apply to this Itinerary only.</string>
+    <string name="budget_off">Off</string>
+    <string name="budget_not_set">Not set</string>
 
     <!-- Planning: engine messages -->
 </resources>

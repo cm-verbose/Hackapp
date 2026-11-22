@@ -69,15 +69,25 @@ class AppNavigationTest {
         click(R.string.home_plan_action)
         awaitContinueEnabled()
         click(R.string.action_continue)
-        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
-            compose.onAllNodes(hasText(context.getString(R.string.district_pick_instructions)))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        keepBudgetAndAwaitDistrictPick()
         // District pick needs a tap on the map, so the walk resumes at the next page.
         compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute("draft")) }
         compose.waitForIdle()
         repeat(PAGES_AFTER_DISTRICT_PICK) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    private fun keepBudgetAndAwaitDistrictPick() {
+        val keep = context.getString(R.string.planning_budget_keep)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(keep) and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText(keep).performClick()
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(context.getString(R.string.district_pick_instructions)))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.waitForIdle()
     }
 
     private fun awaitContinueEnabled() = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {

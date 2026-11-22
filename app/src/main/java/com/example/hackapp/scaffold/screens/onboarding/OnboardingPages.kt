@@ -36,6 +36,7 @@ import com.example.hackapp.profile.AudiencePreference
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Interest
 import com.example.hackapp.profile.VisitorType
+import com.example.hackapp.scaffold.screens.BudgetFields
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappIcon
@@ -174,7 +175,6 @@ fun OnboardingBudgetAudiencePage(
     onContinue: () -> Unit,
 ) {
     val draft = state.draft
-    val brackets = budgetOptions()
     HackappPage(
         title = stringResource(R.string.onboarding_step, 3, ONBOARDING_STEPS),
         onBack = onBack,
@@ -186,27 +186,18 @@ fun OnboardingBudgetAudiencePage(
     ) {
         PageHeading(stringResource(R.string.budget_audience_title))
         BodyText(stringResource(R.string.budget_subtitle))
-        SectionTitle(stringResource(R.string.budget_lunch))
-        SingleChoiceChips(brackets, draft.lunchBudget, onLunchChange, allowDeselect = true)
-        SectionTitle(stringResource(R.string.budget_dinner))
-        SingleChoiceChips(brackets, draft.dinnerBudget, onDinnerChange, allowDeselect = true)
-        SectionTitle(stringResource(R.string.budget_events))
-        SingleChoiceChips(brackets, draft.eventBudget, onEventsChange, allowDeselect = true)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .toggleable(draft.lateNightEnabled, role = Role.Switch, onValueChange = onLateNightEnabledChange),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.budget_late_night), style = MaterialTheme.typography.titleMedium)
-                BodyText(stringResource(R.string.budget_late_night_description))
-            }
-            Switch(checked = draft.lateNightEnabled, onCheckedChange = null)
-        }
-        if (draft.lateNightEnabled) {
-            SingleChoiceChips(brackets, draft.lateNightBudget, onLateNightChange, allowDeselect = true)
-        }
+        BudgetFields(
+            lunch = draft.lunchBudget,
+            dinner = draft.dinnerBudget,
+            events = draft.eventBudget,
+            lateNightEnabled = draft.lateNightEnabled,
+            lateNight = draft.lateNightBudget,
+            onLunchChange = onLunchChange,
+            onDinnerChange = onDinnerChange,
+            onEventsChange = onEventsChange,
+            onLateNightEnabledChange = onLateNightEnabledChange,
+            onLateNightChange = onLateNightChange,
+        )
         SectionTitle(stringResource(R.string.audience_title))
         MultiChoiceChips(audienceOptions(), draft.audience, onAudienceChange)
         BodyText(stringResource(R.string.audience_bars_hidden_note))
@@ -283,14 +274,6 @@ private fun ageRangeOptions() = listOf(
     ChoiceOption(AgeRange.From35To44, stringResource(R.string.age_range_35_44)),
     ChoiceOption(AgeRange.From45To54, stringResource(R.string.age_range_45_54)),
     ChoiceOption(AgeRange.From55, stringResource(R.string.age_range_55_plus)),
-)
-
-@Composable
-private fun budgetOptions() = listOf(
-    ChoiceOption(BudgetBracket.Under20, stringResource(R.string.budget_under_20)),
-    ChoiceOption(BudgetBracket.Under50, stringResource(R.string.budget_under_50)),
-    ChoiceOption(BudgetBracket.Under100, stringResource(R.string.budget_under_100)),
-    ChoiceOption(BudgetBracket.From100, stringResource(R.string.budget_100_plus)),
 )
 
 @Composable
