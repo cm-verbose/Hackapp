@@ -10,21 +10,21 @@ Living checklist for the current implementation step. Update it in the same chan
 
 ## Current status and handoff
 
-Last updated 2026-11-22 05:30. Start here if you are picking up this work.
+Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 
 **Where the code is.** Use **`origin/team/integration`**. It contains Planning, Underway, the dark-mode and travel-time fixes, demo mode and the physics Passport. `origin/feat/ui-foundation` is still at `5d0eb80` and contains none of these until Niko approves the milestone on the phone.
 
 | Branch | Contains | State |
 |---|---|---|
-| `team/integration` | Everything below except Firestore | **Start here.** 525 unit and 9 emulator tests pass, and it opens on the emulator. Not yet approved on the phone. Demo and Passport UX review is running |
+| `team/integration` | Everything below except Firestore | **Start here.** 536 unit and 9 emulator tests pass, and it opens on the emulator. Demo and Passport UX fixes are in. Niko is testing it on the phone |
 | `team/planning-fixes` | Meals, Sheets, Selection, Review, Underway, Start, District of stay origin, dark card fix, walking and transit Legs | Superseded by `team/integration` |
 | `team/demo` | Demo engine, Settings switch, Underway control and exit | Superseded by `team/integration`, which also has the code review fixes |
 | `team/passport-integration` | `cmvb`'s `shape-playground` merge, real Stamps, all six shapes, shrink-as-you-collect, details and list | Merged into `team/integration` |
 | `team/firestore` | Firestore repositories, flag off | Not merged or deployed. Needs rule tests, a Cloud Function aggregate and a product decision on the `eventSources` rule |
 
 **Next steps, in order:**
-1. Apply the Demo and Passport UX review findings on `team/integration`.
-2. Install on the phone. Niko runs a full demo Itinerary, earns Stamps and approves the milestone.
+1. Apply any fixes from Niko's phone review on `team/integration`.
+2. Niko runs a full demo Itinerary, earns Stamps and approves the milestone.
 3. Only after that approval, merge into `feat/ui-foundation` and push.
 4. Then do Firestore switch-on, Itinerary sharing through the flicking code (`ThrowChannel`, `ShareMessage.Throw.payload`), the ETL `is_chain=0` chain rows, and the page-by-page review.
 
