@@ -17,6 +17,7 @@ import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.OutingKind
 import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.withFittingMealBlocks
 import com.example.hackapp.profile.ProfileRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -138,7 +139,8 @@ class PlanningDateTimeViewModel(
             val windowChanged = latest.date != updated.date ||
                 latest.startTime != updated.startTime ||
                 latest.endTime != updated.endTime
-            if (windowChanged && latest.stops.isNotEmpty()) reconciler.reconcile(latest, updated) else updated
+            val fitted = if (windowChanged) updated.withFittingMealBlocks(cityPack.timeZone) else updated
+            if (windowChanged && latest.stops.isNotEmpty()) reconciler.reconcile(latest, fitted) else fitted
         }
         itineraries.saveItinerary(saved)
         return saved

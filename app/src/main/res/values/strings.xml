@@ -172,6 +172,16 @@
     <string name="meal_lunch_at">Dîner · %1$s</string>
     <string name="meal_dinner_at">Souper · %1$s</string>
     <string name="meal_late_bite_at">Bouchée tardive · %1$s</string>
+    <string name="meal_itinerary_range">Itinéraire : %1$s – %2$s</string>
+    <string name="meal_lunch">Dîner</string>
+    <string name="meal_dinner">Souper</string>
+    <string name="meal_late_bite">Bouchée tardive</string>
+    <string name="meal_budget_label">Budget pour ce repas</string>
+    <string name="meal_none_reserved">Aucun bloc repas réservé.</string>
+    <string name="meal_none_fit">Aucun repas ne tient dans cette plage. Prolongez-la ou choisissez « Je m’en occupe ».</string>
+    <string name="meal_change_time">Modifier l’horaire</string>
+    <string name="meal_error_outside_window">Ce repas ne tient pas dans la plage.</string>
+    <string name="meal_error_overlaps">Ce repas chevauche un autre repas.</string>
     <string name="selection_district_progress">Arrondissement %1$d sur %2$d</string>
     <string name="selection_time_block" translatable="false">%1$s – %2$s</string>
     <string name="selection_finish_here">Terminer ici</string>

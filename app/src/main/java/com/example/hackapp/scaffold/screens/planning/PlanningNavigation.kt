@@ -62,12 +62,11 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
     }
     planningPage<PlanningMealChoiceRoute>(controller) { entry ->
         val route = entry.toRoute<PlanningMealChoiceRoute>()
-        RoutePlaceholder(
-            title = stringResource(R.string.meal_title),
+        PlanningMealChoiceScreen(
+            itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            step = 4,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(PlanningStopSelectionRoute(route.itineraryId)) },
+            onContinue = { id -> controller.navigate(PlanningStopSelectionRoute(id)) },
+            onChangeDateTime = { id -> controller.returnToDateTime(id) },
         )
     }
     planningPage<PlanningStopSelectionRoute>(controller) { entry ->
@@ -98,6 +97,19 @@ private inline fun <reified T : Any> NavGraphBuilder.planningPage(
     flowComposable<T> { entry ->
         BackHandler { controller.backToHome() }
         content(entry)
+    }
+}
+
+/**
+ * Returns to the Date and time step already on the back stack, so the later steps are left again
+ * from there. A draft resumed straight at a later step has no such entry, so Date and time opens
+ * in place of the Meal page rather than on top of it.
+ */
+private fun NavHostController.returnToDateTime(itineraryId: String) {
+    if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) {
+        navigate(PlanningDateTimeRoute(itineraryId)) {
+            popUpTo<PlanningMealChoiceRoute> { inclusive = true }
+        }
     }
 }
 
