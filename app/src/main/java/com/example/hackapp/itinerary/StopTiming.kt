@@ -62,10 +62,34 @@ internal val Stop.latLng: LatLng get() = LatLng(latitude, longitude)
 internal fun LegEstimator.transit(from: LatLng, to: LatLng): LegEstimate =
     estimate(from, to, LegMode.TRANSIT)
 
+/**
+ * The mode a Leg uses unless the person picks another: walking between two places of one District,
+ * public transit otherwise. A walk longer than [LegEstimator.maxWalkMinutes] counts as transit, because
+ * Districts can be large. Planning and Underway both call this, so they show the same minutes.
+ */
+fun defaultLegMode(
+    fromDistrict: String?,
+    toDistrict: String?,
+    from: LatLng,
+    to: LatLng,
+    estimator: LegEstimator,
+): LegMode {
+    if (fromDistrict == null || fromDistrict != toDistrict) return LegMode.TRANSIT
+    val walk = estimator.estimate(from, to, LegMode.WALK)
+    return if (walk.travelMinutes <= estimator.maxWalkMinutes) LegMode.WALK else LegMode.TRANSIT
+}
+
+/** The estimate for a Leg in its default mode. */
+fun LegEstimator.defaultEstimate(fromDistrict: String?, toDistrict: String?, from: LatLng, to: LatLng): LegEstimate =
+    estimate(from, to, defaultLegMode(fromDistrict, toDistrict, from, to, this))
+
+internal fun LegEstimator.legBetween(from: Stop, to: Stop): LegEstimate =
+    defaultEstimate(from.districtId, to.districtId, from.latLng, to.latLng)
+
 /** The earlier of the Planned Departure and the time needed to reach [next] by transit. */
 fun leaveBy(stop: Stop, next: Stop?, estimator: LegEstimator): OffsetDateTime {
     if (next == null) return stop.plannedDeparture
-    val latest = next.start.minusMinutes(estimator.transit(stop.latLng, next.latLng).totalMinutes.toLong())
+    val latest = next.start.minusMinutes(estimator.legBetween(stop, next).totalMinutes.toLong())
     return if (latest.isBefore(stop.plannedDeparture)) latest else stop.plannedDeparture
 }
 

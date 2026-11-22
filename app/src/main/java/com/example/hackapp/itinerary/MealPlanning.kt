@@ -87,6 +87,7 @@ fun mealOptions(search: MealSearch, estimator: LegEstimator): MealOptions {
     val interval = search.block.interval(search.itinerary, zone)
     val previous = previousStopBefore(search.itinerary, search.block, zone)
     val origin = previous?.latLng ?: search.origin
+    val referenceDistrict = previous?.districtId ?: search.currentDistrictId
     val budget = search.block.budget ?: search.itinerary.mealBudget(search.block.kind, search.context)
     val barsAllowed = barsAllowed(search)
     val preferred = search.cuisineCatalog.filter { it.code in search.context.cuisineGroups }
@@ -100,7 +101,7 @@ fun mealOptions(search: MealSearch, estimator: LegEstimator): MealOptions {
     fun optionsIn(districtId: String, inNext: Boolean): List<MealOption> = candidates
         .filter { it.borough == districtId }
         .mapNotNull { place ->
-            val leg = origin?.let { estimator.transit(it, place.location) }
+            val leg = origin?.let { estimator.defaultEstimate(referenceDistrict, place.borough, it, place.location) }
             if (inNext && previous != null && leg != null) {
                 val arrival = previous.plannedDeparture.toInstant().plusSeconds(leg.totalMinutes * 60L)
                 if (arrival.isAfter(interval.start)) return@mapNotNull null

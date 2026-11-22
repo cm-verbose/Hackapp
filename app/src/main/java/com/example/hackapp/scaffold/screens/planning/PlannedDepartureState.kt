@@ -2,6 +2,7 @@ package com.example.hackapp.scaffold.screens.planning
 
 import com.example.hackapp.data.Event
 import com.example.hackapp.data.model.LatLng
+import com.example.hackapp.itinerary.defaultEstimate
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.activeMealBlocks
 import com.example.hackapp.itinerary.activeStops
@@ -93,7 +94,7 @@ fun latestDeparture(
         .minByOrNull { it.start.toInstant() }
     if (next != null) {
         val toNextSeconds = if (lat != null && lng != null) {
-            estimator.transit(LatLng(lat, lng), next.latLng).totalMinutes * 60L
+            estimator.defaultEstimate(event.districtId, next.districtId, LatLng(lat, lng), next.latLng).totalMinutes * 60L
         } else {
             0L
         }

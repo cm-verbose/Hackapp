@@ -19,9 +19,16 @@ data class LegEstimate(
 /** Estimates a Leg. A routing API can replace the distance-based version behind this interface. */
 fun interface LegEstimator {
     fun estimate(from: LatLng, to: LatLng, mode: LegMode): LegEstimate
+
+    /** Longest walk, in minutes, that still counts as the default Leg inside one District. */
+    val maxWalkMinutes: Int get() = DEFAULT_MAX_WALK_MINUTES
 }
 
+const val DEFAULT_MAX_WALK_MINUTES = 20
+
 class DistanceLegEstimator(private val config: LegEstimatorConfig) : LegEstimator {
+    override val maxWalkMinutes: Int get() = config.maxWalkMinutes
+
 
     override fun estimate(from: LatLng, to: LatLng, mode: LegMode): LegEstimate {
         val routeMeters = Geo.distanceMeters(from, to) * config.routeDetourFactor

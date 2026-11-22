@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.data.model.PriceRange
 import com.example.hackapp.data.model.VenueType
 import com.example.hackapp.itinerary.Itinerary
@@ -7,6 +8,7 @@ import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.MealOption
 import com.example.hackapp.itinerary.MealSearch
 import com.example.hackapp.itinerary.Stop
+import com.example.hackapp.itinerary.defaultLegMode
 import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.mealOptions
 import com.example.hackapp.itinerary.mealStop
@@ -38,9 +40,14 @@ sealed interface MealPrice {
 /** The shown estimate. [minutes] leaves out the buffer, like the travel time on the Leg page. */
 data class MealTravel(val mode: LegMode, val minutes: Int)
 
-/** Walking inside the reference District, public transit to another one. */
-internal fun mealTravelMode(referenceDistrictId: String, placeDistrictId: String?): LegMode =
-    if (placeDistrictId == referenceDistrictId) LegMode.WALK else LegMode.TRANSIT
+/** The shared default: walking inside the reference District when it is short, transit otherwise. */
+internal fun mealTravelMode(
+    referenceDistrictId: String,
+    placeDistrictId: String?,
+    from: LatLng,
+    to: LatLng,
+    estimator: LegEstimator,
+): LegMode = defaultLegMode(referenceDistrictId, placeDistrictId, from, to, estimator)
 
 data class MealOptionRow(
     val placeId: Long,
@@ -110,7 +117,7 @@ fun mealPickerRows(search: MealSearch, estimator: LegEstimator): Pair<List<MealO
             venueType = place.venueType,
             distanceMeters = option.distanceMeters?.let { Math.round(it).toInt() },
             travel = origin?.let {
-                val mode = mealTravelMode(referenceDistrictId, place.borough)
+                val mode = mealTravelMode(referenceDistrictId, place.borough, it, place.location, estimator)
                 MealTravel(mode, estimator.estimate(it, place.location, mode).travelMinutes)
             },
             price = if (price == null) MealPrice.Unknown else MealPrice.Range(price, option.topPriceCad),
