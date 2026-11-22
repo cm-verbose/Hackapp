@@ -49,6 +49,7 @@ import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.services.LegEstimator
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,10 +57,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** The next Meal Block that still needs a Meal or a skip. [reached]: no fixed-time Event is left before it; drop-in cards are ignored. */
 data class MealPrompt(
@@ -108,6 +111,8 @@ data class PlanningStopSelectionUiState(
     val reviewId: String? = null,
     /** Set by Back at the first District. Navigate to the previous step, then call `onNavigated()`. */
     val leaveId: String? = null,
+    /** Set by system Back once the draft is saved. Navigate Home, then call `onNavigated()`. */
+    val homeId: String? = null,
 )
 
 /** True when no fixed-time card is left: nothing, or only drop-in cards that stay available across the block. */
@@ -151,6 +156,12 @@ class StopSelectionSession(
     private val medians = mutableMapOf<ShowtimeKey, Double?>()
     private var mealMove: MealMove? = null
 
+    /** Held from the first Finish tap until Review opens, so a double tap cannot navigate twice. */
+    private val finishing = AtomicBoolean(false)
+
+    /** The last Finish could not save, so Retry must finish rather than only save. */
+    private var finishAfterSave = false
+
     suspend fun load() = lock.withLock {
         _state.update { it.copy(loading = true, loadFailed = false) }
         try {
@@ -184,9 +195,33 @@ class StopSelectionSession(
         }
     }
 
-    suspend fun retrySave() = lock.withLock {
-        val current = draft ?: return@withLock
-        persist(current)
+    suspend fun retrySave() {
+        if (finishAfterSave) {
+            finish()
+            return
+        }
+        lock.withLock { draft?.let { persist(it) } }
+    }
+
+    /**
+     * Picks up changes made elsewhere, such as Review's edits, and refreshes the list for the current
+     * time. A draft that failed to save is newer than the stored one, so it is kept.
+     */
+    suspend fun refresh() = lock.withLock {
+        val current = _state.value
+        if (current.loading || current.loadFailed || current.saveFailed) return@withLock
+        val base = draft ?: return@withLock
+        val saved = tolerant { uid()?.let { itineraries.getItinerary(it, itineraryId) } }
+        if (saved != null && saved.districtIds.isNotEmpty()) {
+            val latest = saved.copy(planningDistrictId = saved.selectionDistrict())
+            if (latest != base) {
+                draft = latest
+                mealMove = null
+                // An open sheet was built from the old draft.
+                _state.update { it.copy(sheet = null) }
+            }
+        }
+        publish()
     }
 
     // Events
@@ -300,13 +335,40 @@ class StopSelectionSession(
     }
 
     suspend fun finish() {
-        val itinerary = draft ?: return
-        if (itinerary.finishedSelection() == null) return
-        commit { it.finishedSelection() ?: it }
-        if (!_state.value.saveFailed) _state.update { it.copy(reviewId = itineraryId) }
+        if (!finishing.compareAndSet(false, true)) return
+        val done = lock.withLock { saveFinished() }
+        if (!done) finishing.set(false)
+    }
+
+    /** Saves the finished copy first, so a failed save leaves the draft in selection and Retry can finish. */
+    private suspend fun saveFinished(): Boolean {
+        val finished = draft?.finishedSelection()?.copy(updatedAtMillis = nowMillis()) ?: return false
+        finishAfterSave = !persist(finished)
+        if (finishAfterSave) return false
+        mealMove = null
+        draft = finished
+        publish()
+        _state.update { it.copy(reviewId = itineraryId) }
+        return true
+    }
+
+    /** Back never leaves unsaved work: it saves again first, and stays here if that fails. */
+    private suspend fun savedBeforeLeaving(): Boolean {
+        if (!_state.value.saveFailed) return true
+        return lock.withLock {
+            val current = draft ?: return@withLock false
+            finishAfterSave = false
+            persist(current)
+        }
+    }
+
+    /** System Back: goes Home once the draft is saved. */
+    suspend fun leaveForHome() {
+        if (savedBeforeLeaving()) _state.update { it.copy(homeId = itineraryId) }
     }
 
     suspend fun back() {
+        if (!savedBeforeLeaving()) return
         val itinerary = draft ?: return
         val from = itinerary.selectionDistrict() ?: return
         val move = mealMove
@@ -323,7 +385,10 @@ class StopSelectionSession(
         commit { it.movedToDistrict(from, before) }
     }
 
-    fun onNavigated() = _state.update { it.copy(reviewId = null, leaveId = null) }
+    fun onNavigated() {
+        finishing.set(false)
+        _state.update { it.copy(reviewId = null, leaveId = null, homeId = null) }
+    }
 
     // Internals
 
@@ -337,6 +402,7 @@ class StopSelectionSession(
         lock.withLock {
             val base = draft ?: return
             if (clearMove) mealMove = null
+            finishAfterSave = false
             val next = transform(base).let {
                 it.copy(
                     step = maxOf(it.step, PlanningStep.Stops),
@@ -350,21 +416,22 @@ class StopSelectionSession(
         }
     }
 
-    private suspend fun persist(itinerary: Itinerary) {
-        try {
-            itineraries.saveItinerary(itinerary)
-            _state.update { it.copy(saveFailed = false) }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            _state.update { it.copy(saveFailed = true) }
-        }
+    /** True when stored. Leaving the page cannot cancel a save that has started. */
+    private suspend fun persist(itinerary: Itinerary): Boolean = try {
+        withContext(NonCancellable) { itineraries.saveItinerary(itinerary) }
+        _state.update { it.copy(saveFailed = false) }
+        true
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        _state.update { it.copy(saveFailed = true) }
+        false
     }
 
     private suspend fun publish() {
         val itinerary = draft ?: return
         val district = itinerary.selectionDistrict() ?: return
-        loadMedians(district)
+        loadMedians(district, itinerary)
         val context = context()
         val now = context.now
         val pending = itinerary.mealBlockToAnswer(now, zone)
@@ -409,9 +476,10 @@ class StopSelectionSession(
         }
     }
 
-    /** Shared median prices for this District's Events. A failed read leaves the price unknown. */
-    private suspend fun loadMedians(districtId: String) {
-        events.filter { it.districtId == districtId }.map { it.showtimeKey() }.distinct()
+    /** Shared median prices for this District's Events and the planned ones. A failed read leaves the price unknown. */
+    private suspend fun loadMedians(districtId: String, itinerary: Itinerary) {
+        val planned = itinerary.stops.filter { it.kind == StopKind.Event }.map { it.sourceId }.toSet()
+        events.filter { it.districtId == districtId || it.id in planned }.map { it.showtimeKey() }.distinct()
             .filter { it !in medians }
             .forEach { key -> medians[key] = tolerant { tickets.getSummary(key)?.medianCad } }
     }
@@ -444,6 +512,8 @@ class PlanningStopSelectionViewModel(private val session: StopSelectionSession) 
     }
 
     fun retry() = launchOn { session.load() }
+    fun onResume() = launchOn { session.refresh() }
+    fun leaveForHome() = launchOn { session.leaveForHome() }
     fun retrySave() = launchOn { session.retrySave() }
     fun openEvent(card: EventCard) = launchOn { session.openEvent(card) }
     fun selectShowtime(eventId: String) = session.selectShowtime(eventId)

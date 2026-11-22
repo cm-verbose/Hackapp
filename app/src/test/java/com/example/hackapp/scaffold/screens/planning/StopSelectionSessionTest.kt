@@ -31,6 +31,7 @@ import com.example.hackapp.itinerary.fixedLegs
 import com.example.hackapp.itinerary.instant
 import com.example.hackapp.itinerary.night
 import com.example.hackapp.itinerary.place
+import com.example.hackapp.itinerary.showtimeKey
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.profile.Profile
 import kotlinx.coroutines.runBlocking
@@ -323,6 +324,124 @@ class StopSelectionSessionTest {
         s.retrySave()
         assertFalse(s.state.value.saveFailed)
         assertEquals(1, repo.getItinerary(UID, "it-1")!!.stops.size)
+    }
+
+    private class SwitchableSaves(private val inner: com.example.hackapp.itinerary.ItineraryRepository) :
+        com.example.hackapp.itinerary.ItineraryRepository by inner {
+        var fail = false
+        var saves = 0
+        override suspend fun saveItinerary(itinerary: Itinerary) {
+            saves++
+            if (fail) error("offline") else inner.saveItinerary(itinerary)
+        }
+    }
+
+    private suspend fun plannedSession(saves: SwitchableSaves, events: List<Event> = listOf(early)): StopSelectionSession {
+        repo.saveItinerary(night())
+        val s = StopSelectionSession("it-1", { UID }, saves, NoProfile, FakeEvents(events), FakePlaces(emptyList()),
+            InMemoryTicketPriceRepository(), fixedLegs(), Toronto, { instant(Nov28, 8).toEpochMilli() })
+        s.load()
+        s.openEvent(s.state.value.groups.first().types.first().cards.first())
+        s.addToItinerary()
+        return s
+    }
+
+    @Test
+    fun `a failed Finish stays here and Retry reaches Review`() = runBlocking {
+        val saves = SwitchableSaves(repo)
+        val s = plannedSession(saves)
+        saves.fail = true
+        s.finish()
+        assertTrue(s.state.value.saveFailed)
+        assertNull(s.state.value.reviewId)
+        assertEquals(PlanningStep.Stops, repo.getItinerary(UID, "it-1")!!.step)
+        saves.fail = false
+        s.retrySave()
+        assertEquals("it-1", s.state.value.reviewId)
+        assertFalse(s.state.value.saveFailed)
+        assertEquals(PlanningStep.Review, repo.getItinerary(UID, "it-1")!!.step)
+    }
+
+    @Test
+    fun `a second Finish before navigating does nothing`() = runBlocking {
+        val saves = SwitchableSaves(repo)
+        val s = plannedSession(saves)
+        s.finish()
+        val after = saves.saves
+        s.finish()
+        assertEquals(after, saves.saves)
+        s.onNavigated()
+        s.finish()
+        assertEquals("it-1", s.state.value.reviewId)
+    }
+
+    @Test
+    fun `Back retries a failed save and stays when it fails again`() = runBlocking {
+        val saves = SwitchableSaves(repo)
+        val s = plannedSession(saves)
+        saves.fail = true
+        s.nextDistrict()
+        s.back()
+        assertEquals(NEXT, s.state.value.districtId)
+        s.leaveForHome()
+        assertNull(s.state.value.homeId)
+        assertTrue(s.state.value.saveFailed)
+        saves.fail = false
+        s.leaveForHome()
+        assertEquals("it-1", s.state.value.homeId)
+        assertEquals(NEXT, repo.getItinerary(UID, "it-1")!!.planningDistrictId)
+    }
+
+    @Test
+    fun `resuming loads Review's edits so a stale draft cannot overwrite them`() = runBlocking {
+        val s = session(night(), listOf(early, afterMeal))
+        s.load()
+        s.openEvent(s.state.value.groups.first().types.first().cards.first { it.title == early.title })
+        s.addToItinerary()
+        s.finish()
+        s.onNavigated()
+        val edited = repo.getItinerary(UID, "it-1")!!.copy(stops = emptyList())
+        repo.saveItinerary(edited)
+        s.refresh()
+        assertTrue(s.state.value.stops.isEmpty())
+        s.openEvent(s.state.value.groups.flatMap { it.types }.flatMap { it.cards }.first { it.title == afterMeal.title })
+        s.addToItinerary()
+        assertEquals(listOf("event-after"), repo.getItinerary(UID, "it-1")!!.stops.map { it.id })
+    }
+
+    @Test
+    fun `resuming keeps a draft that failed to save`() = runBlocking {
+        val saves = SwitchableSaves(repo)
+        val s = plannedSession(saves)
+        saves.fail = true
+        s.nextDistrict()
+        s.refresh()
+        assertEquals(NEXT, s.state.value.districtId)
+    }
+
+    @Test
+    fun `the total uses the median of a planned Event in another District`() = runBlocking {
+        val tickets = InMemoryTicketPriceRepository()
+        tickets.saveReport("other", early.showtimeKey(), 30.0)
+        val stop = com.example.hackapp.itinerary.eventStop(early, at(Nov28, 19, 30).atZoneSameInstant(Toronto))!!
+        repo.saveItinerary(night(stops = listOf(stop)).copy(planningDistrictId = NEXT))
+        val s = StopSelectionSession("it-1", { UID }, repo, NoProfile, FakeEvents(listOf(early)), FakePlaces(emptyList()),
+            tickets, fixedLegs(), Toronto, { instant(Nov28, 8).toEpochMilli() })
+        s.load()
+        assertEquals(NEXT, s.state.value.districtId)
+        assertEquals(30.0, s.state.value.budget!!.eventsCad, 0.0)
+    }
+
+    @Test
+    fun `Skip acts on the block shown in the prompt`() = runBlocking {
+        val lunch = MealBlock("meal-lunch", MealKind.Lunch, LocalTime.of(18, 0))
+        val event = com.example.hackapp.itinerary.stop("e", at(Nov28, 20), at(Nov28, 21))
+        val s = session(night(blocks = listOf(lunch), stops = listOf(event)))
+        s.load()
+        assertEquals("meal-lunch", s.state.value.mealPrompt?.blockId)
+        s.skipMeal()
+        assertTrue(repo.getItinerary(UID, "it-1")!!.mealBlocks.single().skipped)
+        assertNull(s.state.value.mealPrompt)
     }
 
     @Test

@@ -75,6 +75,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             itineraryId = route.itineraryId,
             onLeave = { id -> controller.returnToMealChoice(id) },
             onReview = { id -> controller.navigate(ItineraryReviewRoute(id)) },
+            onHome = { controller.backToHome() },
         )
     }
     planningPage<ItineraryReviewRoute>(controller) { entry ->

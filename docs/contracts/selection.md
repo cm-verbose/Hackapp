@@ -29,6 +29,7 @@ Owner: Domain Engineer, team Selection. Consumer: Feature Engineer. File:
 | `saveFailed` | Boolean | The last autosave failed. Show the save error with **Retry** (`retrySave()`). Cleared by the next successful save. |
 | `reviewId` | String? | Set after Finish. Navigate to Review with this id, then call `onNavigated()`. |
 | `leaveId` | String? | Set by `back()` when planning is at the first District with nothing to undo. Navigate to the previous step (Meal choice) with this id, then call `onNavigated()`. |
+| `homeId` | String? | Set by `leaveForHome()` once a failed save has been saved again. Navigate Home, then call `onNavigated()`. |
 
 `MealPrompt`
 
@@ -51,7 +52,9 @@ Both actions are always available: `openMealPicker()` and `skipMeal()`.
 | Callback | Effect |
 |---|---|
 | `retry()` | Reloads after `loadFailed`. |
-| `retrySave()` | Saves the current draft again after `saveFailed`. |
+| `retrySave()` | Saves the current draft again after `saveFailed`. After a failed Finish it finishes, so it reaches Review. |
+| `onResume()` | Reloads the stored draft and refreshes the list, so Review's edits are kept. A draft that failed to save is not replaced. |
+| `leaveForHome()` | System Back while `saveFailed`: saves again, then sets `homeId`. Stays on the page if the save fails. |
 | `openEvent(card)` | Opens Event details for the card and loads its prices. |
 | `selectShowtime(eventId)`, `setTicketPriceInput(text)`, `retryEventDetails()` | Forward to the details holder. |
 | `addToItinerary()` | From Event details. A fixed Event with a published end is added at once. A drop-in, or an Event with no published end, opens `PlannedDeparture`. Nothing happens while the holder says it cannot add. |
@@ -62,9 +65,9 @@ Both actions are always available: `openMealPicker()` and `skipMeal()`.
 | `skipMeal()` | Skips the prompt's block (from the picker or from the prompt). Frees the block so its Events reappear. |
 | `dismissSheet()` | Closes the open sheet without changes. |
 | `nextDistrict()` | Moves to the next District. The one left is dropped from the Itinerary if it has no Stop. Ignored on the last District. |
-| `finish()` | Ignored unless `canFinish`. Drops Districts with no Stop, sets `step = Review`, saves and sets `reviewId`. Used by both **Finish here** and **Finish**. |
-| `back()` | Undoes a Meal move, else goes to the previous District, else sets `leaveId`. Never removes Stops. |
-| `onNavigated()` | Clears `reviewId` and `leaveId`. |
+| `finish()` | Ignored unless `canFinish`, and while a Finish is in flight. Saves a copy with no empty District and `step = Review`; the draft and `reviewId` change only once it is stored. Used by both **Finish here** and **Finish**. |
+| `back()` | While `saveFailed`, saves again first and stays if that fails. Then undoes a Meal move, else goes to the previous District, else sets `leaveId`. Never removes Stops. |
+| `onNavigated()` | Clears `reviewId`, `leaveId` and `homeId`. |
 
 ## Rules
 
@@ -76,7 +79,7 @@ Both actions are always available: `openMealPicker()` and `skipMeal()`.
 
 **Meal Blocks and Events.** A fixed-showtime Event whose stay overlaps an active Meal Block is hidden. A drop-in Event stays visible even when its stay would cross a block. **Drop-in rule:** the Event published an end time and `4 hours <= end - start < 24 hours` (`DROP_IN_MIN_MINUTES = 240`, `DROP_IN_MAX_MINUTES = 1440`), so a multi-week series is not open all day. An Event with no published end is never drop-in, because its stay is a guess. **Drop-in stay:** the default departure is arrival plus `typicalStayMinutes(type)`, capped by the published end, the next Meal Block start, the next Stop minus the Leg to it, and the window end. Add to Itinerary opens Planned Departure with that default, so the person can adjust it up to `latestDeparture`, and the Stop keeps `hasPublishedEnd = true`. Every drop-in is offered only with at least `MIN_DROP_IN_STAY_MINUTES` (60) available after those caps. **In-progress drop-in:** a drop-in that began before the person can arrive is still offered under the same rule. Arrival is the latest of the window start, now, and the previous Stop's departure plus the transit Leg (the gap start for the first Stop). It must be before the next Meal Block start. `ReachableShowtime.start` and the Event keep the real published times for display; `ReachableShowtime.arrivalAt` is the earliest reachable arrival, and the created Stop has `start = arrivalAt` (`eventStop(..., arrival)`, wired in Event details). A drop-in that starts inside the gap has `arrivalAt = start`. Cards are grouped and sorted by `arrivalAt`, so an exhibition from 10:00 sits in the 18:00 hour of an 18:00 gap. Everything keyed on the Event still uses the Event: duplicate detection (`sourceId` and `showtimeKey`), ticket prices (`showtimeKey`) and the running total. District counts include a running drop-in with enough time left. The Events query has no lower start bound, so Events that began before the window are loaded. Fixed showtimes must still start at or after the earliest arrival. For a drop-in, `latestDeparture` counts Meals and Stops after `arrivalAt` and also stops at the published end.
 
-**Meal prompt.** The prompt is exposed while a block is unresolved. Choose opens the picker (tabs **Here** and **In [next District]**, per sheets.md). Skip applies `withMealSkipped(blockId)`, which also removes that block's Meal Stop.
+**Meal prompt.** The prompt is exposed while a block is unresolved. A Meal edit removes Event Stops that overlap an active block; a block then left before the last Stop is asked about first while it has not ended (`mealBlockToAnswer`). Choose and Skip act on the prompt's `blockId`. Choose opens the picker (tabs **Here** and **In [next District]**, per sheets.md). Skip applies `withMealSkipped(blockId)`, which also removes that block's Meal Stop.
 
 **Next District Meal.** When the chosen Meal is in the next District, the Stop is added and planning moves there. The move is undoable: while nothing else has changed, `back()` removes that Meal Stop and returns to the earlier District with the prompt open again. After any other change, Back goes to the previous District and keeps every Stop. The undo is lost if the app is closed; Back then keeps the Stop.
 

@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hackapp.R
 import com.example.hackapp.auth.LocalAuthService
@@ -111,6 +113,7 @@ fun PlanningStopSelectionScreen(
     itineraryId: String,
     onLeave: (String) -> Unit,
     onReview: (String) -> Unit,
+    onHome: () -> Unit,
 ) {
     val services = LocalCityServices.current
     val viewModel: PlanningStopSelectionViewModel = viewModel(
@@ -139,6 +142,19 @@ fun PlanningStopSelectionScreen(
             onLeave(id)
         }
     }
+    LaunchedEffect(state.homeId) {
+        if (state.homeId != null) {
+            viewModel.onNavigated()
+            onHome()
+        }
+    }
+    // Returning from Review or another app: show the stored draft and the current time.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { }
+    }
+    // With unsaved work, system Back saves first and stays here if that fails.
+    BackHandler(enabled = state.saveFailed) { viewModel.leaveForHome() }
     val map by rememberDistrictMap()
     val districtName = state.districtId?.let { id -> map?.districts?.firstOrNull { it.id == id }?.name }
 
