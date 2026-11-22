@@ -56,7 +56,7 @@ Unselected options still carry `start` and `budget`; the page may show the time 
 
 - `canContinue` is true when not loading, not saving, and either `planMeals` is false, or `planMeals` is true with at least one selected Meal, no selected Meal has an `error`, and Meals are offered.
 - When `noMealFits` is true, only `planMeals = false` can continue. Offer "I handle meals" and Change date and time.
-- A Meal is selected on first open (no saved answer) for every Meal that fits, with default times. A reopened draft restores `planMeals`, the saved blocks (kind, start, budget). Saved skipped blocks reopen as selected.
+- A Meal is selected on first open (no saved answer) for every Meal that fits, with default times, except Late bite when its add-on is off (no Late-night budget on the Itinerary or Profile): it is offered but not preselected, and can be selected by hand. A reopened draft restores `planMeals`, the saved blocks (kind, start, budget). Saved skipped blocks reopen as selected.
 - Blocks are valid when the whole block (start to start + length) is inside the window and half-open overlap with other selected blocks is empty (touching blocks are fine). Windows past midnight are handled: a time before the window start belongs to the next day.
 - Saved blocks keep the id of an existing block of the same kind, otherwise `meal-<kind>`, sorted in window order. If the draft already has Stops, they go through the `PlanningChangeReconciler`.
 - The Meal budget stored on a block is the chosen bracket or null. Null means search falls back to the Itinerary or Profile budget.

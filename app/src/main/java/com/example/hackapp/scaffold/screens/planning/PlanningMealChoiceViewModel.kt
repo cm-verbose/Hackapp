@@ -56,17 +56,19 @@ data class MealChoiceOption(
     val error: MealTimeError?,
 )
 
-/** The picks a draft opens with: its saved blocks, or every default block that fits when unanswered. */
-fun initialMealPicks(itinerary: Itinerary, zone: ZoneId): Map<MealKind, MealPick> =
+/** The picks a draft opens with: its saved blocks, or every default block that fits (and is not an off add-on) when unanswered. */
+fun initialMealPicks(itinerary: Itinerary, context: PlanningContext): Map<MealKind, MealPick> =
     MealKind.entries.associateWith { kind ->
         val saved = itinerary.mealBlocks.firstOrNull { it.kind == kind }
         val default = MealBlock("meal-${kind.idName()}", kind, kind.defaultStart)
-        val fits = default.fitsWindow(itinerary, zone)
+        val fits = default.fitsWindow(itinerary, context.zone)
+        // The Late bite add-on is off without a budget: it stays offered but is not preselected.
+        val addOnOn = kind != MealKind.LateBite || itinerary.mealBudget(kind, context) != null
         when {
             saved != null -> MealPick(offered = true, selected = true, start = saved.start, budget = saved.budget)
             else -> MealPick(
                 offered = fits,
-                selected = fits && itinerary.planMeals == null,
+                selected = fits && addOnOn && itinerary.planMeals == null,
                 start = kind.defaultStart,
             )
         }
@@ -221,7 +223,7 @@ class PlanningMealChoiceViewModel(
                 val saved = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                 draft = saved
                 profile = checkNotNull(profiles.getProfile(uid))
-                picks = initialMealPicks(saved, zone)
+                picks = initialMealPicks(saved, planningContext(checkNotNull(profile)))
                 _state.update {
                     it.copy(
                         loading = false,
@@ -239,6 +241,9 @@ class PlanningMealChoiceViewModel(
         }
     }
 
+    private fun planningContext(profile: Profile) =
+        PlanningContext.from(profile, Instant.ofEpochMilli(nowMillis()), zone)
+
     private fun editPick(kind: MealKind, change: MealPick.() -> MealPick) {
         val pick = picks[kind] ?: return
         picks = picks + (kind to pick.change())
@@ -252,7 +257,7 @@ class PlanningMealChoiceViewModel(
     private fun publish(change: (PlanningMealChoiceUiState) -> PlanningMealChoiceUiState) {
         val itinerary = draft ?: return
         val profile = profile ?: return
-        val context = PlanningContext.from(profile, Instant.ofEpochMilli(nowMillis()), zone)
+        val context = planningContext(profile)
         val options = mealChoiceOptions(itinerary, picks, context)
         _state.update { change(it).copy(options = options, noMealFits = options.isEmpty()) }
     }

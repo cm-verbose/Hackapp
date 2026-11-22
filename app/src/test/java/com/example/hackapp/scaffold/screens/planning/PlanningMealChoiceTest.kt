@@ -36,10 +36,10 @@ class PlanningMealChoiceTest {
 
     private fun context(lunch: BudgetBracket? = null) = PlanningContext(
         now = Instant.EPOCH, zone = zone, ageRange = AgeRange.From25To34,
-        defaultMealBudgets = mapOf(MealKind.Lunch to lunch),
+        defaultMealBudgets = mapOf(MealKind.Lunch to lunch, MealKind.LateBite to BudgetBracket.Under20),
     )
 
-    private fun options(it: Itinerary, picks: Map<MealKind, MealPick> = initialMealPicks(it, zone), ctx: PlanningContext = context()) =
+    private fun options(it: Itinerary, picks: Map<MealKind, MealPick> = initialMealPicks(it, context()), ctx: PlanningContext = context()) =
         mealChoiceOptions(it, picks, ctx)
 
     @Test
@@ -83,7 +83,7 @@ class PlanningMealChoiceTest {
     @Test
     fun togglingOffIsPossibleViaPicks() {
         val it = draft(10, 22)
-        val picks = initialMealPicks(it, zone)
+        val picks = initialMealPicks(it, context())
         val off = picks + (MealKind.Lunch to picks.getValue(MealKind.Lunch).copy(selected = false))
         assertFalse(options(it, off).first { o -> o.kind == MealKind.Lunch }.selected)
     }
@@ -91,7 +91,7 @@ class PlanningMealChoiceTest {
     @Test
     fun timeLeavingTheWindowIsInvalid() {
         val it = draft(10, 14)
-        val picks = initialMealPicks(it, zone)
+        val picks = initialMealPicks(it, context())
         fun errorAt(h: Int, m: Int) = options(it, picks + (MealKind.Lunch to picks.getValue(MealKind.Lunch).copy(start = LocalTime.of(h, m))))
             .single().error
         assertNull(errorAt(12, 30))
@@ -103,7 +103,7 @@ class PlanningMealChoiceTest {
     @Test
     fun pastMidnightTimesBelongToTheNextDay() {
         val it = draft(18, 2)
-        val picks = initialMealPicks(it, zone)
+        val picks = initialMealPicks(it, context())
         fun errorAt(h: Int, m: Int) = options(it, picks + (MealKind.LateBite to picks.getValue(MealKind.LateBite).copy(start = LocalTime.of(h, m))))
             .first { o -> o.kind == MealKind.LateBite }.error
         assertNull(errorAt(0, 30))
@@ -116,7 +116,7 @@ class PlanningMealChoiceTest {
     @Test
     fun overlappingSelectedBlocksAreInvalidButTouchingOnesAreNot() {
         val it = draft(10, 22)
-        val picks = initialMealPicks(it, zone)
+        val picks = initialMealPicks(it, context())
         fun with(dinner: LocalTime) = options(it, picks + (MealKind.Dinner to picks.getValue(MealKind.Dinner).copy(start = dinner)))
         // Lunch 12:00-13:30; Dinner at 13:30 touches.
         assertTrue(with(LocalTime.of(13, 30)).none { o -> o.error != null })
@@ -133,7 +133,7 @@ class PlanningMealChoiceTest {
     fun deselectedBudgetFallsBackToTheProfile() {
         val it = draft(10, 14)
         val ctx = context(lunch = BudgetBracket.Under20)
-        val picks = initialMealPicks(it, zone)
+        val picks = initialMealPicks(it, context())
         val none = options(it, picks, ctx).single()
         assertNull(none.budget)
         assertEquals(BudgetBracket.Under20, none.effectiveBudget)
@@ -141,19 +141,19 @@ class PlanningMealChoiceTest {
         assertEquals(BudgetBracket.Under100, chosen.effectiveBudget)
         // An Itinerary override wins over the Profile.
         val overridden = it.copy(mealBudgets = MealBudgets(lunch = BudgetBracket.Under50))
-        assertEquals(BudgetBracket.Under50, options(overridden, initialMealPicks(overridden, zone), ctx).single().effectiveBudget)
+        assertEquals(BudgetBracket.Under50, options(overridden, initialMealPicks(overridden, context()), ctx).single().effectiveBudget)
     }
 
     @Test
     fun savingWritesBlocksInWindowOrderAndKeepsIds() {
         val it = draft(18, 2, planMeals = true, blocks = listOf(MealBlock("custom-id", MealKind.LateBite, LocalTime.of(22, 0))))
-        val picks = initialMealPicks(it, zone)
+        val picks = initialMealPicks(it, context())
         val saved = it.withMealChoice(true, picks, zone)
         assertEquals(true, saved.planMeals)
         assertEquals(listOf(MealKind.LateBite), saved.mealBlocks.map { it.kind })
         assertEquals("custom-id", saved.mealBlocks.single().id)
         val both = it.copy(mealBlocks = emptyList(), planMeals = null).let { d ->
-            d.withMealChoice(true, initialMealPicks(d, zone), zone)
+            d.withMealChoice(true, initialMealPicks(d, context()), zone)
         }
         assertEquals(listOf(MealKind.Dinner, MealKind.LateBite), both.mealBlocks.map { it.kind })
         assertEquals("meal-dinner", both.mealBlocks[0].id)
@@ -162,7 +162,7 @@ class PlanningMealChoiceTest {
     @Test
     fun decliningReservesNoBlocks() {
         val it = draft(10, 22)
-        val saved = it.withMealChoice(false, initialMealPicks(it, zone), zone)
+        val saved = it.withMealChoice(false, initialMealPicks(it, context()), zone)
         assertEquals(false, saved.planMeals)
         assertTrue(saved.mealBlocks.isEmpty())
         assertEquals(PlanningStep.DateTime, saved.step)
@@ -188,5 +188,17 @@ class PlanningMealChoiceTest {
         val state = PlanningMealChoiceUiState()
         assertNull(state.windowStart)
         assertNull(state.windowEnd)
+    }
+
+    @Test
+    fun lateBiteIsNotPreselectedWhenItsAddOnIsOff() {
+        val it = draft(18, 2)
+        val off = PlanningContext(now = Instant.EPOCH, zone = zone, ageRange = AgeRange.From25To34)
+        val picks = initialMealPicks(it, off)
+        assertTrue(picks.getValue(MealKind.Dinner).selected)
+        assertFalse(picks.getValue(MealKind.LateBite).selected)
+        assertTrue(picks.getValue(MealKind.LateBite).offered)
+        // Turned on by the Profile budget, it is preselected.
+        assertTrue(initialMealPicks(it, context()).getValue(MealKind.LateBite).selected)
     }
 }
