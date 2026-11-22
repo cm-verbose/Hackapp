@@ -1,0 +1,49 @@
+
+export interface Event {
+    // Identification
+    id: string;
+    source: "montreal" | "hasthings" | "ticketmaster";
+    sourceId: string;
+    title: string;
+    description?: string;
+    url?: string;
+
+    // Classification
+    type: string;
+    categories?: string[];
+
+    // Target audience
+    targetAudience?: {
+        description?: string;
+        minAge?: number;
+        maxAge?: number;
+    };
+
+    // Location
+    location: {
+        venueName?: string;
+        address?: string;
+        city: string;
+        borough?: string;
+        postalCode?: string;
+        latitude?: number;
+        longitude?: number;
+    };
+
+    // Schedule
+    schedule: {
+        startDate: string;
+        endDate?: string;
+        timezone: string;
+    };
+
+    // Cost
+    cost: {
+        status: "free" | "paid" | "unknown";
+        minPrice?: number;
+        maxPrice?: number;
+        currency?: string;
+        originalText?: string;
+        registrationRequired?: boolean;
+    };
+}

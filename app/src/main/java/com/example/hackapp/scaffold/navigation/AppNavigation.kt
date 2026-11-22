@@ -4,10 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.hackapp.scaffold.screens.login.ScreenLogin
-import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
-import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
-import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
+import com.example.hackapp.scaffold.screens.places.PlacesDestination
+import com.example.hackapp.scaffold.screens.places.PlacesScreen
+import com.example.hackapp.scaffold.screens.screenA.ScreenA
+import com.example.hackapp.scaffold.screens.screenA.ScreenADestination
+import com.example.hackapp.scaffold.screens.screenB.ScreenB
+import com.example.hackapp.scaffold.screens.screenB.ScreenBDestination
 
 /**
  * Handles the navigation between screens which allows for dividing content
@@ -15,15 +17,16 @@ import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
  */
 @Composable
 fun AppNavigation(controller: NavHostController) {
-    NavHost(navController = controller, startDestination = ScreenLoginDestination) {
-        composable<ScreenLoginDestination> {
-            ScreenLogin(onNavigateNext = {
-                controller.navigate(PlanningScreenDestination)
+    NavHost(navController = controller, startDestination = PlacesDestination) {
+        composable<PlacesDestination> { PlacesScreen() }
+        composable<ScreenADestination> {
+            ScreenA(onNavigateB = {
+                controller.navigate(ScreenBDestination)
             })
         }
-        composable<PlanningScreenDestination> {
-            ScreenPlanning(onLogOff = {
-                controller.navigate(ScreenLoginDestination)
+        composable<ScreenBDestination> {
+            ScreenB(onNavigateA = {
+                controller.navigate(ScreenADestination)
             })
         }
     }
