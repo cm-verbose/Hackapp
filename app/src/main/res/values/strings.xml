@@ -283,6 +283,8 @@
     <string name="district_replace_label">Remplacer :</string>
     <string name="district_replace_action">Remplacer</string>
     <string name="district_map_reset">Réinitialiser la carte</string>
+    <string name="time_hour">Heure</string>
+    <string name="time_minute">Minute</string>
 
     <!-- Planning: engine messages -->
 </resources>

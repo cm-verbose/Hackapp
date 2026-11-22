@@ -14,11 +14,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -90,8 +89,7 @@ fun HackappDateField(
     }
 }
 
-/** 24-hour time field. */
-@OptIn(ExperimentalMaterial3Api::class)
+/** 24-hour time field. Its dialog uses flickable hour and minute boxes. */
 @Composable
 fun HackappTimeField(
     value: LocalTime,
@@ -103,14 +101,15 @@ fun HackappTimeField(
     HackappPickerField(value.format(TimeFormat), label, onClick = { open = true }, modifier = modifier)
 
     if (open) {
-        val state = rememberTimePickerState(value.hour, value.minute, is24Hour = true)
+        var hour by rememberSaveable { mutableIntStateOf(value.hour) }
+        var minute by rememberSaveable { mutableIntStateOf(value.minute) }
         AlertDialog(
             onDismissRequest = { open = false },
             title = { Text(label) },
-            text = { TimePicker(state = state) },
+            text = { HackappTimeWheels(hour, minute, { hour = it }, { minute = it }) },
             confirmButton = {
                 TextButton(onClick = {
-                    onValueChange(LocalTime.of(state.hour, state.minute))
+                    onValueChange(LocalTime.of(hour, minute))
                     open = false
                 }) { Text(stringResource(R.string.action_confirm)) }
             },
@@ -130,7 +129,8 @@ fun PlannedDepartureSheet(
     onConfirm: (LocalTime) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val state = rememberTimePickerState(initialTime.hour, initialTime.minute, is24Hour = true)
+    var hour by rememberSaveable { mutableIntStateOf(initialTime.hour) }
+    var minute by rememberSaveable { mutableIntStateOf(initialTime.minute) }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier
@@ -142,10 +142,10 @@ fun PlannedDepartureSheet(
         ) {
             Text(stringResource(R.string.planned_departure_title), style = MaterialTheme.typography.titleLarge)
             Text(eventTitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TimePicker(state = state)
+            HackappTimeWheels(hour, minute, { hour = it }, { minute = it })
             HackappPrimaryButton(
                 text = stringResource(R.string.action_confirm),
-                onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) },
+                onClick = { onConfirm(LocalTime.of(hour, minute)) },
             )
         }
     }

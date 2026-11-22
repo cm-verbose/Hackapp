@@ -274,6 +274,8 @@
     <string name="district_replace_label">Replace:</string>
     <string name="district_replace_action">Replace</string>
     <string name="district_map_reset">Reset map</string>
+    <string name="time_hour">Hour</string>
+    <string name="time_minute">Minute</string>
 
     <!-- Planning: engine messages -->
 </resources>
