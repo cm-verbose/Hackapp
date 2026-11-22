@@ -209,6 +209,24 @@
         <item quantity="one">%d stop skipped</item>
         <item quantity="other">%d stops skipped</item>
     </plurals>
+    <plurals name="map_district_description">
+        <item quantity="one">%1$s, %2$d event</item>
+        <item quantity="other">%1$s, %2$d events</item>
+    </plurals>
+    <plurals name="map_district_selected">
+        <item quantity="one">%1$s, position %2$d, %3$d event</item>
+        <item quantity="other">%1$s, position %2$d, %3$d events</item>
+    </plurals>
+    <plurals name="map_district_unavailable">
+        <item quantity="one">%1$s, unavailable, %2$d event</item>
+        <item quantity="other">%1$s, unavailable, %2$d events</item>
+    </plurals>
+    <plurals name="map_route_description">
+        <item quantity="one">Itinerary map, %d stop</item>
+        <item quantity="other">Itinerary map, %d stops</item>
+    </plurals>
+    <string name="strip_stop">%1$s, %2$s</string>
+    <string name="strip_stop_current">%1$s, %2$s, current stop</string>
     <plurals name="new_stamps_in_passport">
         <item quantity="one">%d new stamp</item>
         <item quantity="other">%d new stamps</item>

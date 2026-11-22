@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -34,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.example.hackapp.R
 import com.example.hackapp.citypack.DistrictMapData
 import com.example.hackapp.components.DistrictEventCount
 import com.example.hackapp.ui.theme.HackappTheme
@@ -175,6 +177,11 @@ fun DistrictPickMap(
                 }
                 val halo = if (label.pinned) null else Shadow(cs.surface, blurRadius = 6f)
                 val name = districtNames[label.id].orEmpty()
+                val description = when {
+                    marker.order != null -> pluralStringResource(R.plurals.map_district_selected, marker.count, name, marker.order, marker.count)
+                    !marker.pickable -> pluralStringResource(R.plurals.map_district_unavailable, marker.count, name, marker.count)
+                    else -> pluralStringResource(R.plurals.map_district_description, marker.count, name, marker.count)
+                }
                 Box(
                     Modifier
                         .offset {
@@ -194,7 +201,7 @@ fun DistrictPickMap(
                                 },
                         )
                         .clearAndSetSemantics {
-                            contentDescription = name
+                            contentDescription = description
                             if (marker.pickable) {
                                 onClick {
                                     onDistrictTap(label.id)

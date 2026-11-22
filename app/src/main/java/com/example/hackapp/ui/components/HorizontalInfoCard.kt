@@ -25,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,6 +57,7 @@ fun HorizontalInfoCard(
         containerColor = if (selected) scheme.primaryContainer else scheme.surfaceContainerLowest,
         disabledContainerColor = scheme.surfaceContainerLowest,
     )
+    val selectedState = if (selected) Modifier.semantics { this.selected = true } else Modifier
     val body: @Composable () -> Unit = {
         Row(
             Modifier
@@ -88,9 +91,9 @@ fun HorizontalInfoCard(
         }
     }
     if (onClick != null) {
-        OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border) { body() }
+        OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth().then(selectedState), shape = shape, colors = colors, border = border) { body() }
     } else {
-        Card(modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border) { body() }
+        Card(modifier = modifier.fillMaxWidth().then(selectedState), shape = shape, colors = colors, border = border) { body() }
     }
 }
 

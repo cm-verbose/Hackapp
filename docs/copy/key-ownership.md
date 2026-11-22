@@ -223,7 +223,7 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `notification_preview_header`: LocalNotificationPreview.kt
 - `passport_title`: unused
 
-## shared: Shared (actions, states, navigation, reused text) (31)
+## shared: Shared (actions, states, navigation, reused text) (37)
 
 - `action_add`: unused
 - `action_arrived`: LocalNotificationPreview.kt
@@ -242,6 +242,10 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `districts_count`: HeroHeader.kt
 - `late_no_replanning`: LateArrivalWarning.kt
 - `late_warning`: LateArrivalWarning.kt
+- `map_district_description`: DistrictPickMap.kt
+- `map_district_selected`: DistrictPickMap.kt
+- `map_district_unavailable`: DistrictPickMap.kt
+- `map_route_description`: ItineraryRouteMap.kt
 - `map_district_boundaries`: unused
 - `new_stamps_in_passport`: unused
 - `price_free`: StopOptionCards.kt
@@ -251,6 +255,8 @@ Each string key belongs to exactly one team. Only that team may change it. To ch
 - `state_empty_title`: StateViews.kt
 - `state_error_title`: StateViews.kt
 - `state_loading`: StateViews.kt
+- `strip_stop`: ItineraryStrip.kt
+- `strip_stop_current`: ItineraryStrip.kt
 - `stop_kind_event`: ItineraryDetailPages.kt
 - `stops_confirmed`: unused
 - `stops_skipped`: unused

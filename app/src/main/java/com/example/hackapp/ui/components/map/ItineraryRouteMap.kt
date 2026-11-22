@@ -23,8 +23,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.example.hackapp.R
 import com.example.hackapp.citypack.CityPack
 import com.example.hackapp.citypack.DistrictMapData
 import com.example.hackapp.citypack.GeoPoint
@@ -62,11 +67,17 @@ fun ItineraryRouteMap(
             }
         }.sortedBy { it.first.order }
     }
+    val description = pluralStringResource(R.plurals.map_route_description, stops.size, stops.size)
     val dash = with(LocalDensity.current) { PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())) }
 
     CityMap(
         map = map,
-        modifier = modifier.fillMaxWidth().height(200.dp).clip(MaterialTheme.shapes.large).background(cs.surfaceContainerLow),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(cs.surfaceContainerLow)
+            .semantics { contentDescription = description },
         focus = visited,
         fillOf = { d -> if (d.id in visited) cs.primaryContainer else districtBaseFill(cs, d.shape.groupId, groupTint) },
         overlay = { t ->
@@ -85,6 +96,7 @@ fun ItineraryRouteMap(
             val s = t.toScreen(p)
             Box(
                 Modifier
+                    .clearAndSetSemantics {}
                     .size(24.dp)
                     .offset { IntOffset((s.x - half).roundToInt(), (s.y - half).roundToInt()) }
                     .background(c, CircleShape)
