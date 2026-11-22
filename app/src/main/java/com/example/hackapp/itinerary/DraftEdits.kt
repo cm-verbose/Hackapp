@@ -101,6 +101,8 @@ fun previewDraftEdit(
 }
 
 private fun canReach(from: Stop, to: Stop, estimator: LegEstimator): Boolean {
+    // Meal Block margins already reserve the travel to and from a Meal.
+    if (from.mealBlockId != null || to.mealBlockId != null) return true
     val travel = estimator.transit(from.latLng, to.latLng).totalMinutes * 60L
     return !from.plannedDeparture.toInstant().plusSeconds(travel).isAfter(to.start.toInstant())
 }

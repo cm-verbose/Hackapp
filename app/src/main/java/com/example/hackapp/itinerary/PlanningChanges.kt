@@ -42,7 +42,13 @@ fun previewPlanningChange(
     if (previous.stops.isEmpty()) return PlanningChangePreview.unchanged(previous, updated)
 
     fun placeOf(stop: Stop): Place? = stop.sourceId.toLongOrNull()?.let { places[it] }
-    val isMealOpen = { stop: Stop, time: ZonedDateTime -> placeOf(stop)?.let { isOpenAt(it, time) } ?: true }
+    val isMealOpen = { stop: Stop, time: ZonedDateTime ->
+        placeOf(stop)?.let { place ->
+            val length = java.time.Duration.between(stop.start.toInstant(), stop.plannedDeparture.toInstant())
+            val interval = PlanningWindow(time.toInstant(), time.toInstant().plus(length))
+            isOpenDuring(place, interval, zone, isOpenAt)
+        } ?: true
+    }
 
     // The Meal Blocks come from the edit, so a block that no longer fits removes its Stop.
     var current = previous.copy(mealBlocks = updated.mealBlocks)
@@ -52,7 +58,12 @@ fun previewPlanningChange(
         removed += step.removed
         current = step.proposed
     }
-    if (updated.date != previous.date) apply(DraftEdit.ChangeDate(updated.date))
+    if (updated.date != previous.date) {
+        // Moved Stops resolve against the new start time, so the window changes together with the date:
+        // a 01:00 Stop of an 18:00 start belongs after midnight of the new date only when it still does.
+        current = current.copy(startTime = updated.startTime, endTime = updated.endTime, outingKind = updated.outingKind)
+        apply(DraftEdit.ChangeDate(updated.date))
+    }
     apply(DraftEdit.ChangeWindow(updated.startTime, updated.endTime, updated.outingKind))
     if (updated.districtIds.isNotEmpty()) apply(DraftEdit.ChangeDistricts(updated.districtIds))
 

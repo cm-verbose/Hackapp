@@ -144,7 +144,7 @@ private fun barsAllowed(search: MealSearch): Boolean {
     return start.toLocalDate().isAfter(search.itinerary.date) || !start.toLocalTime().isBefore(BarsOpenFrom)
 }
 
-private fun isOpenDuring(
+internal fun isOpenDuring(
     place: Place,
     interval: PlanningWindow,
     zone: ZoneId,

@@ -156,3 +156,57 @@ private object BudgetSummaryFree {
         mealBlocks = itinerary.mealBlocks.map { it.copy(budget = bracket) },
     )
 }
+
+class MealTravelTest {
+    private val legs = fixedLegs(20)
+    private val block = MealBlock("meal-dinner", MealKind.Dinner, LocalTime.of(19, 0))
+    private val e1 = stop("e1", at(Nov28, 18), at(Nov28, 19))
+    private val meal = stop(
+        "m", at(Nov28, 19), at(Nov28, 20, 30), kind = StopKind.Meal, sourceId = "7", mealBlockId = "meal-dinner",
+    )
+    private val e2 = stop("e2", at(Nov28, 20, 30), at(Nov28, 21, 30))
+
+    @Test
+    fun `Event, Meal and Event back to back are not flagged for transit`() {
+        val itinerary = night(stops = listOf(e1, meal, e2), blocks = listOf(block))
+        val p = previewDraftEdit(itinerary, DraftEdit.ChangeWindow(itinerary.startTime, itinerary.endTime), legs, Toronto)
+        assertTrue(p.removed.isEmpty())
+    }
+
+    @Test
+    fun `an edit that changes nothing gives no warning`() {
+        val itinerary = night(stops = listOf(e1, meal, e2), blocks = listOf(block))
+        val p = previewPlanningChange(itinerary, itinerary, legs, Toronto)
+        assertFalse(p.needsConfirmation)
+        assertEquals(itinerary.stops, p.proposed.stops)
+    }
+
+    @Test
+    fun `a moved Meal must be open for its whole block, not only its start`() {
+        val itinerary = night(stops = listOf(meal), blocks = listOf(block))
+        val moved = itinerary.copy(date = LocalDate.of(2026, 12, 5))
+        val closesAt20 = { _: com.example.hackapp.data.model.Place, time: java.time.ZonedDateTime ->
+            time.toLocalTime() < LocalTime.of(20, 0)
+        }
+        val p = previewPlanningChange(itinerary, moved, legs, Toronto, mapOf(7L to place(7)), closesAt20)
+        assertEquals(StopRemovalReason.MealClosed, p.removed.single().reason)
+        val open = previewPlanningChange(itinerary, moved, legs, Toronto, mapOf(7L to place(7))) { _, _ -> true }
+        assertFalse(open.needsConfirmation)
+    }
+
+    @Test
+    fun `a date and window edit together resolves a moved Meal against the new start`() {
+        val late = MealBlock("meal-late", MealKind.LateBite, LocalTime.of(1, 0))
+        val lateMeal = stop(
+            "l", at(Nov28.plusDays(1), 1), at(Nov28.plusDays(1), 1, 45),
+            kind = StopKind.Meal, sourceId = "7", mealBlockId = "meal-late",
+        )
+        val previous = night(stops = listOf(lateMeal), blocks = listOf(late))
+        val dec5 = LocalDate.of(2026, 12, 5)
+        val updated = previous.copy(date = dec5, startTime = LocalTime.MIDNIGHT, endTime = LocalTime.of(3, 0))
+            .withFittingMealBlocks(Toronto)
+        val p = previewPlanningChange(previous, updated, legs, Toronto)
+        assertTrue(p.removed.isEmpty())
+        assertEquals(at(dec5, 1), p.kept.single().start)
+    }
+}
