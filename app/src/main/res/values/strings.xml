@@ -437,6 +437,7 @@
 
     <string name="demo_mode_title">Mode démo</string>
     <string name="demo_mode_body">Simule la date et l’heure.</string>
+    <string name="demo_date_time" translatable="false">%1$s · %2$s</string>
     <string name="demo_next_moment">Moment suivant</string>
     <string name="demo_exit">Quitter le mode démo</string>
     <string name="demo_exit_body">L’itinéraire se terminera. Vos timbres seront conservés.</string>

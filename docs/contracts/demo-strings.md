@@ -10,3 +10,4 @@
 | `demo_exit_confirm` | Quitter | Exit | Exit demo confirmation button |
 | `demo_blocked_real_underway` | Un itinéraire est en cours. Terminez-le pour activer le mode démo. | An itinerary is underway. End it to turn on demo mode. | Shown when demo mode cannot turn on because a real Itinerary is Underway. Next step: end it |
 | `demo_error` | Action impossible. | Couldn’t do that. | Failure of a demo action, shown beside `action_retry` (Réessayer / Try again). The demo control gives the context |
+| `demo_date_time` (`translatable="false"`, default file only) | `%1$s` U+00A0 `· %2$s` | Simulated date, then time, in the demo controls, such as `sam. 28 nov. 2026 · 19:15` |
