@@ -14,33 +14,24 @@ import com.example.hackapp.scaffold.navigation.PlanningStopSelectionRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
 
-private const val PLANNING_STEPS = 5
-
-/** Used until Date and time creates a real draft. */
-private const val PLACEHOLDER_ITINERARY_ID = "draft"
+internal const val PLANNING_STEPS = 5
 
 /** The five Planning routes. Each page after Date and time receives its Itinerary id. */
 fun NavGraphBuilder.planningGraph(controller: NavHostController) {
     composable<PlanningDateTimeRoute> { entry ->
         val route = entry.toRoute<PlanningDateTimeRoute>()
-        RoutePlaceholder(
-            title = stringResource(R.string.planning_new_itinerary),
+        PlanningDateTimeScreen(
+            itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            step = 1,
-            totalSteps = PLANNING_STEPS,
-            onNext = {
-                controller.navigate(PlanningDistrictPickRoute(route.itineraryId ?: PLACEHOLDER_ITINERARY_ID))
-            },
+            onContinue = { id -> controller.navigate(PlanningDistrictPickRoute(id)) },
         )
     }
     composable<PlanningDistrictPickRoute> { entry ->
         val route = entry.toRoute<PlanningDistrictPickRoute>()
-        RoutePlaceholder(
-            title = stringResource(R.string.district_pick_title),
+        DistrictPickScreen(
+            itineraryId = route.itineraryId,
             onBack = { controller.popBackStack() },
-            step = 2,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(PlanningMealChoiceRoute(route.itineraryId)) },
+            onContinue = { id -> controller.navigate(PlanningMealChoiceRoute(id)) },
         )
     }
     composable<PlanningMealChoiceRoute> { entry ->

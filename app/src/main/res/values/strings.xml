@@ -273,6 +273,16 @@
     <string name="settings_no_preferences">Aucune préférence</string>
 
     <!-- Planning: date and District map -->
+    <string name="planning_budget_reset">Revenir au budget du profil</string>
+    <string name="planning_error_min_duration">Un itinéraire dure au moins 2 heures.</string>
+    <string name="planning_error_latest_end">Un itinéraire se termine au plus tard à 04:00.</string>
+    <string name="planning_save_error">Impossible d’enregistrer. Réessayez.</string>
+    <string name="district_add_first">Ajouter en 1re</string>
+    <string name="district_max_title">Maximum de %1$d %2$s</string>
+    <string name="district_max_body">Pour ajouter %1$s, choisissez lequel remplacer.</string>
+    <string name="district_replace_label">Remplacer :</string>
+    <string name="district_replace_action">Remplacer</string>
+    <string name="district_map_reset">Réinitialiser la carte</string>
 
     <!-- Planning: engine messages -->
 </resources>

@@ -5,13 +5,19 @@ import android.graphics.RectF
 import android.graphics.Region
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -59,6 +65,10 @@ fun rememberParsedDistricts(map: DistrictMapData): List<ParsedDistrict> = rememb
  * @param fillOf fill colour per district (states are decided by the caller)
  * @param overlay drawn in map units on top of the districts (routes, highlights)
  * @param content composables placed with [MapTransform.toScreen] (badges, markers)
+ * @param viewportState enables pinch, drag and double-tap. [content] then receives the fitted
+ *   (1x) transform and must apply [MapViewportState.viewport] in a layout or draw lambda
+ * @param tapTarget resolves a tap at a screen point before the District shapes, such as a badge
+ * @param onEmptyTap called for a tap outside every District
  */
 @Composable
 fun CityMap(
@@ -69,10 +79,18 @@ fun CityMap(
     fillOf: (ParsedDistrict) -> Color,
     onDistrictTap: ((String) -> Unit)? = null,
     overlay: DrawScope.(MapTransform) -> Unit = {},
+    viewportState: MapViewportState? = null,
+    tapTarget: ((Offset) -> String?)? = null,
+    onEmptyTap: (() -> Unit)? = null,
     content: @Composable BoxScope.(MapTransform, List<ParsedDistrict>) -> Unit = { _, _ -> },
 ) {
     val districts = rememberParsedDistricts(map)
     val stroke = MaterialTheme.colorScheme.surface
+    val scope = rememberCoroutineScope()
+    val currentOnTap by rememberUpdatedState(onDistrictTap)
+    val currentTapTarget by rememberUpdatedState(tapTarget)
+    val currentOnEmptyTap by rememberUpdatedState(onEmptyTap)
+    val handlesTaps = onDistrictTap != null || viewportState != null
     val (vbX, vbY, vbW, vbH) = map.viewBox
     val area: Rect = remember(map, focus) {
         val sel = focus?.let { f -> districts.filter { it.id in f } }.orEmpty()
@@ -88,29 +106,62 @@ fun CityMap(
         val s = min(w / area.width, h / area.height)
         val t = MapTransform(Offset(w / 2f - area.center.x * s, h / 2f - area.center.y * s), s)
 
+        if (viewportState != null) {
+            val fitted = remember(districts, t.scale, t.origin) { fittedBounds(districts, t) }
+            SideEffect { viewportState.setLayout(fitted, w, h) }
+        }
+
         Canvas(
             Modifier
                 .fillMaxSize()
+                .then(if (viewportState != null) Modifier.clipToBounds() else Modifier)
                 .then(
-                    if (onDistrictTap == null) Modifier
-                    else Modifier.pointerInput(districts, t.scale, t.origin) {
-                        detectTapGestures { tap ->
-                            val p = t.toMap(tap)
-                            districts.lastOrNull { it.hit.contains(p.x.roundToInt(), p.y.roundToInt()) }?.let { onDistrictTap(it.id) }
+                    if (viewportState == null) Modifier
+                    else Modifier.pointerInput(viewportState) {
+                        detectTransformGestures { centroid, pan, zoom, _ ->
+                            viewportState.applyGesture(centroid, pan, zoom)
                         }
+                    }
+                )
+                .then(
+                    if (!handlesTaps) Modifier
+                    else Modifier.pointerInput(districts, t.scale, t.origin, viewportState) {
+                        detectTapGestures(
+                            onDoubleTap = viewportState?.let { state -> { tap -> state.animateDoubleTap(scope, tap) } },
+                            onTap = { tap ->
+                                val id = currentTapTarget?.invoke(tap) ?: run {
+                                    val vp = viewportState?.viewport ?: MapViewport()
+                                    val p = t.toMap(Offset(vp.fittedX(tap.x), vp.fittedY(tap.y)))
+                                    districts.lastOrNull { it.hit.contains(p.x.roundToInt(), p.y.roundToInt()) }?.id
+                                }
+                                if (id != null) currentOnTap?.invoke(id) else currentOnEmptyTap?.invoke()
+                            },
+                        )
                     }
                 ),
         ) {
-            translate(t.origin.x, t.origin.y) {
-                scale(s, s, pivot = Offset.Zero) {
+            val vp = viewportState?.viewport ?: MapViewport()
+            val drawn = MapTransform(
+                Offset(vp.screenX(t.origin.x), vp.screenY(t.origin.y)),
+                s * vp.zoom,
+            )
+            translate(drawn.origin.x, drawn.origin.y) {
+                scale(drawn.scale, drawn.scale, pivot = Offset.Zero) {
                     districts.forEach { d ->
                         drawPath(d.path, fillOf(d))
-                        drawPath(d.path, stroke, style = Stroke(width = 1.5f * density.density / s))
+                        drawPath(d.path, stroke, style = Stroke(width = 1.5f * density.density / drawn.scale))
                     }
-                    overlay(t)
+                    overlay(drawn)
                 }
             }
         }
         content(t, districts)
     }
+}
+
+private fun fittedBounds(districts: List<ParsedDistrict>, t: MapTransform): MapBounds {
+    if (districts.isEmpty()) return MapBounds(t.origin.x, t.origin.y, t.origin.x, t.origin.y)
+    val topLeft = t.toScreen(Offset(districts.minOf { it.bounds.left }, districts.minOf { it.bounds.top }))
+    val bottomRight = t.toScreen(Offset(districts.maxOf { it.bounds.right }, districts.maxOf { it.bounds.bottom }))
+    return MapBounds(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y)
 }

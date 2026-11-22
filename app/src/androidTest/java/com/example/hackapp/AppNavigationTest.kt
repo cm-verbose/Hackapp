@@ -3,6 +3,8 @@ package com.example.hackapp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -11,11 +13,20 @@ import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.hackapp.auth.AuthResult
+import com.example.hackapp.auth.AuthService
+import com.example.hackapp.auth.AuthUser
+import com.example.hackapp.auth.LocalAuthService
+import com.example.hackapp.citypack.ActiveCityPack
+import com.example.hackapp.itinerary.InMemoryItineraryRepository
+import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.scaffold.navigation.AppNavigation
+import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
+import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
 import org.junit.Before
@@ -29,6 +40,7 @@ class AppNavigationTest {
     @get:Rule val compose = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val cityServices = CityServicesFactory.create(context, ActiveCityPack)
     private lateinit var controller: TestNavHostController
 
     @Before
@@ -39,7 +51,9 @@ class AppNavigationTest {
             }
             CompositionLocalProvider(
                 LocalProfileRepository provides NoProfiles,
-                LocalCityServices provides (context.applicationContext as HackappApplication).cityServices,
+                LocalAuthService provides SignedInAuth,
+                LocalCityServices provides cityServices,
+                LocalItineraryRepository provides InMemoryItineraryRepository(),
             ) {
                 HackappTheme { AppNavigation(controller, PaddingValues()) }
             }
@@ -53,8 +67,22 @@ class AppNavigationTest {
     @Test
     fun planningAndUnderwayFlowReturnsHome() {
         click(R.string.home_plan_action)
-        repeat(PLANNING_AND_UNDERWAY_PAGES) { click(R.string.action_continue) }
+        awaitContinueEnabled()
+        click(R.string.action_continue)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(context.getString(R.string.district_pick_instructions)))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        // District pick needs a tap on the map, so the walk resumes at the next page.
+        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute("draft")) }
+        compose.waitForIdle()
+        repeat(PAGES_AFTER_DISTRICT_PICK) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    private fun awaitContinueEnabled() = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+        compose.onAllNodes(hasText(context.getString(R.string.action_continue)) and isEnabled())
+            .fetchSemanticsNodes().isNotEmpty()
     }
 
     @Test
@@ -74,11 +102,20 @@ class AppNavigationTest {
     }
 
     private companion object {
-        const val PLANNING_AND_UNDERWAY_PAGES = 9
+        /** Meal choice, Stop selection, Review and the four Underway pages. */
+        const val PAGES_AFTER_DISTRICT_PICK = 7
+        const val LOAD_TIMEOUT_MILLIS = 10_000L
 
         val NoProfiles = object : ProfileRepository {
             override suspend fun getProfile(uid: String): Profile? = null
             override suspend fun saveProfile(uid: String, profile: Profile) = Unit
+        }
+
+        val SignedInAuth = object : AuthService {
+            override val currentUser = AuthUser("test-user", null, null)
+            override suspend fun signIn(email: String, password: String) = AuthResult.Success
+            override suspend fun register(email: String, password: String) = AuthResult.Success
+            override suspend fun sendPasswordReset(email: String) = AuthResult.Success
         }
     }
 }
