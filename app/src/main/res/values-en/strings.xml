@@ -181,6 +181,13 @@
     <string name="meal_tab_in_district">In %1$s</string>
     <string name="meal_picker_walk">%1$d m · %2$d min walk</string>
     <string name="meal_picker_price_unknown">Price unknown</string>
+    <string name="venue_type_restaurant">Restaurant</string>
+    <string name="venue_type_fast_food">Fast food</string>
+    <string name="venue_type_cafe">Café</string>
+    <string name="venue_type_bakery">Bakery</string>
+    <string name="venue_type_dessert">Desserts</string>
+    <string name="venue_type_food_truck">Food truck</string>
+    <string name="venue_type_bar">Bar</string>
     <string name="meal_picker_empty_here">No meals here.</string>
     <string name="meal_picker_empty_next">No meals in %1$s.</string>
     <string name="meal_picker_no_options">No meals available. Skip this meal.</string>

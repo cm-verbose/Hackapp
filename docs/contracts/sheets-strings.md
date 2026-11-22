@@ -95,3 +95,17 @@ Same as above, plus:
 | Ticket price, `SaveFailed` | `event_save_failed` | Input is kept. Next action is in the text |
 
 Not given a key: `Loading` and `Saving` (use a progress indicator), the after-midnight hint (`crossesMidnight`), and a separate save button (the maquette has none, Add saves the price). Add keys if the Feature Engineer wants them. The "+ prix inconnu" total belongs to team Selection.
+
+## Venue types (Meal picker row, second line)
+
+| `VenueType` | Key |
+|---|---|
+| `restaurant` | `venue_type_restaurant` |
+| `fast_food` | `venue_type_fast_food` |
+| `cafe` | `venue_type_cafe` |
+| `bakery` | `venue_type_bakery` |
+| `dessert` | `venue_type_dessert` |
+| `food_truck` | `venue_type_food_truck` |
+| `bar` | `venue_type_bar` |
+
+`venue_type_dessert` reads "Desserts" in both languages, as a category label.

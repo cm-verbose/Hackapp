@@ -186,6 +186,13 @@
     <string name="meal_tab_in_district">Dans %1$s</string>
     <string name="meal_picker_walk">%1$d m · %2$d min à pied</string>
     <string name="meal_picker_price_unknown">Prix inconnu</string>
+    <string name="venue_type_restaurant">Restaurant</string>
+    <string name="venue_type_fast_food">Restauration rapide</string>
+    <string name="venue_type_cafe">Café</string>
+    <string name="venue_type_bakery">Boulangerie</string>
+    <string name="venue_type_dessert">Desserts</string>
+    <string name="venue_type_food_truck">Camion de cuisine de rue</string>
+    <string name="venue_type_bar">Bar</string>
     <string name="meal_picker_empty_here">Aucun repas ici.</string>
     <string name="meal_picker_empty_next">Aucun repas dans %1$s.</string>
     <string name="meal_picker_no_options">Aucun repas disponible. Sautez ce repas.</string>
