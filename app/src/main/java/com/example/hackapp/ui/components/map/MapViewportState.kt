@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components.map
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -15,6 +16,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 private const val ANIMATION_MILLIS = 220
+private const val FOCUS_ANIMATION_MILLIS = 900
+
+/** A focused District fills this share of the visible map, leaving room around it. */
+private const val FOCUS_FILL = 0.6f
 
 /**
  * Zoom, rotation and pan of an interactive [CityMap]. Read [viewport] only in draw or layout lambdas, so a
@@ -92,10 +97,36 @@ class MapViewportState(initial: MapViewport = MapViewport()) {
         }
     }
 
-    private fun animateWith(scope: CoroutineScope, frame: (Float) -> MapViewport) {
+    /**
+     * Zooms, without rotation, so the fitted (1x) rectangle [left]..[bottom] fills the visible map,
+     * at no less than [minZoom].
+     */
+    fun animateToFitted(scope: CoroutineScope, left: Float, top: Float, right: Float, bottom: Float, minZoom: Float = MIN_MAP_ZOOM) {
+        if (width <= 0f || height <= 0f) return
+        val visibleTop = insetTop
+        val visibleHeight = (height - insetBottom - insetTop).coerceAtLeast(1f)
+        val fit = minOf(width / (right - left).coerceAtLeast(1f), visibleHeight / (bottom - top).coerceAtLeast(1f)) * FOCUS_FILL
+        val zoom = fit.coerceIn(minZoom.coerceAtMost(MAX_MAP_ZOOM), MAX_MAP_ZOOM)
+        val target = MapViewport(
+            zoom = zoom,
+            panX = width / 2f - zoom * (left + right) / 2f,
+            panY = visibleTop + visibleHeight / 2f - zoom * (top + bottom) / 2f,
+        )
+        val start = viewport
+        animateWith(scope, FOCUS_ANIMATION_MILLIS) { fraction ->
+            MapViewport(
+                zoom = start.zoom + (target.zoom - start.zoom) * fraction,
+                panX = start.panX + (target.panX - start.panX) * fraction,
+                panY = start.panY + (target.panY - start.panY) * fraction,
+                rotation = start.rotation * (1f - fraction),
+            )
+        }
+    }
+
+    private fun animateWith(scope: CoroutineScope, millis: Int = ANIMATION_MILLIS, frame: (Float) -> MapViewport) {
         animation?.cancel()
         animation = scope.launch {
-            animate(0f, 1f, animationSpec = tween(ANIMATION_MILLIS)) { fraction, _ ->
+            animate(0f, 1f, animationSpec = tween(millis, easing = FastOutSlowInEasing)) { fraction, _ ->
                 viewport = constrain(frame(fraction))
             }
         }

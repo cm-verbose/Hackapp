@@ -31,6 +31,8 @@ data class DistrictShape(
     val groupId: String? = null,
     val label: List<Float>,
     val path: String,
+    /** A 2–3 letter name for the zoomed-out map, such as `VM` for Ville-Marie. */
+    val short: String? = null,
 )
 
 /** Content of `assets/citypacks/<city>/districts.json`. [viewBox] is `[x, y, width, height]`. */

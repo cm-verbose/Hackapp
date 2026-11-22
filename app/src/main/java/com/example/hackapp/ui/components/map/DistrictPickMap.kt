@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -62,11 +64,29 @@ private class PlacedName(
     val label: MapLabel,
     val layout: TextLayoutResult,
     val marker: DistrictMarker,
+    /** The 2–3 letter name, measured only when the map shows short names zoomed out. */
+    val short: TextLayoutResult? = null,
 )
 
 /**
+ * A District's short name: the City Pack's, else the first letters of its main words
+ * ("Ville-Marie" → "VM"), at most three. A one-word name keeps its first three letters ("ANJ").
+ */
+internal fun shortDistrictName(name: String, short: String?): String {
+    if (short != null) return short
+    val words = name.split(' ', '-', '–', '’', '\'').filter { it.length > 1 && it.lowercase() !in MinorWords }
+    return when (words.size) {
+        0 -> name.take(3).uppercase()
+        1 -> words.single().take(3).uppercase()
+        else -> words.take(3).joinToString("") { it.first().uppercase() }
+    }
+}
+
+private val MinorWords = setOf("le", "la", "les", "de", "des", "du", "sur", "et", "aux", "the", "of")
+
+/**
  * Full-size interactive District map. Below [MAP_NAMES_ZOOM] a District shows its count badge, or
- * nothing when it has no Events. From that zoom it shows its upright name. Markers move in the
+ * nothing when it has no Events (or its short name, with [shortNamesZoomedOut]). From that zoom it shows its upright name. Markers move in the
  * layout phase and recompose only when what is shown changes.
  */
 @Composable
@@ -79,6 +99,10 @@ fun DistrictPickMap(
     modifier: Modifier = Modifier,
     /** False for maps that only pick a place, such as the District of stay: TalkBack reads names only. */
     showCounts: Boolean = true,
+    /** Zoomed out, labelled Districts show a 2–3 letter name instead of a count badge. */
+    shortNamesZoomedOut: Boolean = false,
+    /** Zooms to this District when it changes, such as the one the person is in. */
+    focusOn: String? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     val density = LocalDensity.current
@@ -111,6 +135,14 @@ fun DistrictPickMap(
         onDistrictTap = { id -> if (currentMarkers[id]?.pickable == true) onDistrictTap(id) },
         onEmptyTap = onEmptyTap,
     ) { t, districts ->
+        val scope = rememberCoroutineScope()
+        LaunchedEffect(focusOn, t.scale, t.origin) {
+            val target = districts.firstOrNull { it.id == focusOn } ?: return@LaunchedEffect
+            val topLeft = t.toScreen(target.bounds.topLeft)
+            val bottomRight = t.toScreen(target.bounds.bottomRight)
+            // The name must fit inside the zoomed District, so names show from this zoom.
+            viewportState.animateToFitted(scope, topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, minZoom = MAP_NAMES_ZOOM)
+        }
         val showNames by remember { derivedStateOf { viewportState.viewport.zoom >= MAP_NAMES_ZOOM } }
         val names = remember(districts, t.scale, t.origin, markers, textStyle, maxWidthPx) {
             districts.mapNotNull { d ->
@@ -128,6 +160,11 @@ fun DistrictPickMap(
                     constraints = Constraints(maxWidth = maxWidthPx),
                 )
                 val p = t.toScreen(d.label)
+                val short = if (!shortNamesZoomedOut) null else measurer.measure(
+                    text = shortDistrictName(d.shape.name, d.shape.short),
+                    style = textStyle,
+                    maxLines = 1,
+                )
                 PlacedName(
                     label = MapLabel(
                         id = d.id,
@@ -140,13 +177,19 @@ fun DistrictPickMap(
                     ),
                     layout = layout,
                     marker = marker,
+                    short = short,
                 )
             }
         }
         val shown = remember(names, showNames, badgePx) {
             names.mapNotNull { placed ->
+                val short = placed.short
                 when {
                     showNames -> placed to placed.label
+                    short != null -> placed to placed.label.copy(
+                        width = short.size.width + padX * 2f,
+                        height = short.size.height + padY * 2f,
+                    )
                     placed.marker.order == null && placed.marker.count == 0 -> null
                     else -> placed to placed.label.copy(width = badgePx, height = badgePx)
                 }
@@ -168,7 +211,9 @@ fun DistrictPickMap(
             val hidden = label.id !in visible
             if (hidden && !marker.pickable) return@forEach
             key(label.id) {
-                val showsName = showNames && !hidden
+                // Zoomed out, a short name stands in for the full one where the map uses them.
+                val text = if (showNames) placed.layout else placed.short
+                val showsName = text != null && !hidden
                 val background = when {
                     marker.order != null -> cs.secondaryContainer
                     marker.previewed -> cs.primary
@@ -203,7 +248,7 @@ fun DistrictPickMap(
                             else Modifier
                                 .background(background, RoundedCornerShape(4.dp))
                                 .drawBehind {
-                                    drawText(placed.layout, color = textColor, topLeft = Offset(padX, padY), shadow = halo)
+                                    if (text != null) drawText(text, color = textColor, topLeft = Offset(padX, padY), shadow = halo)
                                 },
                         )
                         .clearAndSetSemantics {

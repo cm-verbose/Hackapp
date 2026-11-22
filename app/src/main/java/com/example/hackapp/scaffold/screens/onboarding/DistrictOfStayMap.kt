@@ -52,9 +52,9 @@ internal fun districtAt(map: DistrictMapData, parsed: List<ParsedDistrict>, poin
 }
 
 /**
- * Full-screen map for the District of stay, with the same gestures as the Planning map. Names show
- * once zoomed in, with no Event counts. With permission, the District the person is in is chosen
- * for them on open, and they can still pick another.
+ * Full-screen map for the District of stay, with the same gestures as the Planning map. Zoomed out,
+ * Districts show short names (VM); zoomed in, full names, with no Event counts. With permission, the
+ * map zooms to the District the person is in and chooses it for them; they can still pick another.
  */
 @Composable
 internal fun DistrictOfStayMapDialog(
@@ -114,6 +114,9 @@ internal fun DistrictOfStayMapDialog(
                             onDistrictTap = { chosen = it },
                             onEmptyTap = {},
                             showCounts = false,
+                            shortNamesZoomedOut = true,
+                            // The District found for the person, or the one they chose before.
+                            focusOn = located ?: selectedId,
                         )
                         val located = located
                         if (located != null) {
