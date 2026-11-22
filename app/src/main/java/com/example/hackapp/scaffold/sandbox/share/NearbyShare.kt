@@ -45,7 +45,7 @@ import java.util.UUID
 import kotlin.math.abs
 
 private const val TAG = "NearbyShare"
-private const val SERVICE_ID = "com.example.hackapp.sandbox.share"
+internal const val SERVICE_ID = "com.example.hackapp.sandbox.share"
 private val STRATEGY = Strategy.P2P_CLUSTER
 
 /** UWB readings older than this are ignored when picking a target. */
@@ -94,16 +94,23 @@ data class SharePeer(
  * device stays discovered. The same name comparison decides who is the UWB controller.
  * Connections are accepted without a confirmation prompt.
  *
+ * [offer] is what this page sends, added to the advertised name so phones that are only listening
+ * ([NearbyOfferWatcher]) can tell their person. Null on a page that only receives.
+ *
  * Must be used from the main thread.
  */
-class NearbyShare(private val context: Context, private val scope: CoroutineScope) : ThrowChannel {
+class NearbyShare(
+    private val context: Context,
+    private val scope: CoroutineScope,
+    offer: ShareOffer? = null,
+) : ThrowChannel {
 
     private val client = Nearby.getConnectionsClient(context)
     /**
      * Advertised name: the device model for readable messages, plus a random suffix that keeps
      * names unique and decides which side of a pair requests the connection.
      */
-    private val localName = "${Build.MODEL} #${UUID.randomUUID().toString().take(4)}"
+    private val localName = ShareOffer.advertisedName("${Build.MODEL} #${UUID.randomUUID().toString().take(4)}", offer)
     private var running = false
     private var lastHeading: ShareMessage.Heading? = null
 
@@ -242,6 +249,7 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
     fun start() {
         if (running) return
         running = true
+        NearbyPresence.acquire()
 
         val gms = GoogleApiAvailability.getInstance()
         val gmsStatus = gms.isGooglePlayServicesAvailable(context)
@@ -342,6 +350,7 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
         pendingNames.clear()
         discovered.clear()
         error = null
+        NearbyPresence.release()
     }
 
     /** Shares this device's forward bearing, skipping updates too small to matter. */
@@ -408,10 +417,10 @@ class NearbyShare(private val context: Context, private val scope: CoroutineScop
 /**
  * Runs a [NearbyShare] while [enabled] and the page is started. Permissions are requested only
  * when [enabled] turns true, so pass true only after the person chose to share. Returns `null`
- * while permissions are missing.
+ * while permissions are missing. [offer] is what this page sends: nearby phones get a notice.
  */
 @Composable
-fun rememberNearbyShare(enabled: Boolean): NearbyShare? {
+fun rememberNearbyShare(enabled: Boolean, offer: ShareOffer? = null): NearbyShare? {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var granted by remember { mutableStateOf(NearbyShare.hasRequiredPermissions(context)) }
@@ -428,8 +437,8 @@ fun rememberNearbyShare(enabled: Boolean): NearbyShare? {
         }
     }
 
-    val share = remember(enabled, granted) {
-        if (enabled && granted) NearbyShare(context.applicationContext, scope) else null
+    val share = remember(enabled, granted, offer) {
+        if (enabled && granted) NearbyShare(context.applicationContext, scope, offer) else null
     }
     LifecycleStartEffect(share) {
         granted = NearbyShare.hasRequiredPermissions(context)

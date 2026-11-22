@@ -51,6 +51,7 @@ import com.example.hackapp.scaffold.sandbox.PhysicsScreen
 import com.example.hackapp.scaffold.sandbox.SandboxItem
 import com.example.hackapp.scaffold.sandbox.SandboxSharing
 import com.example.hackapp.scaffold.sandbox.ThrowOutcome
+import com.example.hackapp.scaffold.sandbox.share.ShareOffer
 import com.example.hackapp.scaffold.sandbox.share.rememberNearbyShare
 import com.example.hackapp.scaffold.screens.itinerary.itineraryTitle
 import com.example.hackapp.scaffold.screens.itinerary.loadDistrictNames
@@ -91,7 +92,7 @@ fun ItineraryShareScreen(
     val cityPack = LocalCityPack.current
     val uid = LocalAuthService.current.currentUser?.uid
     val itineraries = LocalItineraryRepository.current
-    val share = rememberNearbyShare(enabled = true)
+    val share = rememberNearbyShare(enabled = true, offer = ShareOffer.Itinerary.takeIf { itineraryId != null })
 
     val own by produceState<Itinerary?>(null, uid, itineraryId) {
         value = if (uid == null || itineraryId == null) null else try {
@@ -281,4 +282,5 @@ internal fun statusText(status: ShareStatus): String = when (status) {
 }
 
 /** Nearby names are "<model> #abcd"; the suffix only keeps names unique. */
-internal fun readableDeviceName(name: String): String = name.substringBeforeLast(" #").ifBlank { name }
+internal fun readableDeviceName(name: String): String =
+    ShareOffer.deviceName(name).substringBeforeLast(" #").ifBlank { name }

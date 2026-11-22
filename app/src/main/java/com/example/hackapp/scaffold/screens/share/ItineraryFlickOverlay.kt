@@ -61,6 +61,7 @@ import com.example.hackapp.scaffold.sandbox.PhysicsScreen
 import com.example.hackapp.scaffold.sandbox.SandboxItem
 import com.example.hackapp.scaffold.sandbox.SandboxSharing
 import com.example.hackapp.scaffold.sandbox.ThrowOutcome
+import com.example.hackapp.scaffold.sandbox.share.ShareOffer
 import com.example.hackapp.scaffold.sandbox.share.rememberNearbyShare
 import com.example.hackapp.scaffold.screens.itinerary.loadDistrictNames
 import com.example.hackapp.ui.components.HackappPrimaryButton
@@ -103,7 +104,7 @@ fun ItineraryFlickOverlay(
     val density = LocalDensity.current
     val uid = LocalAuthService.current.currentUser?.uid
     val itineraries = LocalItineraryRepository.current
-    val share = rememberNearbyShare(enabled = true)
+    val share = rememberNearbyShare(enabled = true, offer = ShareOffer.Itinerary)
     val scheme = MaterialTheme.colorScheme
 
     val ids = remember(cards) { cards.map { it.itineraryId } }

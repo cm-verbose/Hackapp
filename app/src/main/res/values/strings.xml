@@ -417,6 +417,10 @@
     <string name="share_stamp_received_from">%1$s, de %2$s</string>
     <string name="share_stamp_keepsake_note">Il s’ajoute à vos timbres reçus, pas à vos timbres.</string>
     <string name="share_stamp_keep">Garder</string>
+    <string name="share_offer_stamp">%1$s veut vous envoyer un timbre</string>
+    <string name="share_offer_itinerary">%1$s veut vous envoyer un itinéraire</string>
+    <string name="share_offer_receive">Recevoir</string>
+    <string name="share_offer_later">Pas maintenant</string>
     <plurals name="passport_received_count">
         <item quantity="one">%d timbre reçu</item>
         <item quantity="other">%d timbres reçus</item>
@@ -519,7 +523,7 @@
     <string name="action_share">Partager</string>
     <string name="share_permissions_needed">Autorisez le partage à proximité pour continuer.</string>
     <string name="share_unavailable">Cet itinéraire ne peut pas être partagé.</string>
-    <string name="share_searching">Aucun téléphone à proximité. Ouvrez cette page sur l’autre téléphone.</string>
+    <string name="share_searching">Aucun téléphone à proximité. Ouvrez l’app sur l’autre téléphone.</string>
     <string name="share_open_settings">Ouvrir les paramètres</string>
     <string name="share_received_from">%1$s vous envoie un itinéraire</string>
     <string name="share_received">Itinéraire reçu</string>

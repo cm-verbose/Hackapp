@@ -45,6 +45,7 @@ import com.example.hackapp.scaffold.sandbox.PhysicsScreen
 import com.example.hackapp.scaffold.sandbox.SandboxItem
 import com.example.hackapp.scaffold.sandbox.SandboxSharing
 import com.example.hackapp.scaffold.sandbox.ThrowOutcome
+import com.example.hackapp.scaffold.sandbox.share.ShareOffer
 import com.example.hackapp.scaffold.sandbox.share.rememberNearbyShare
 import com.example.hackapp.scaffold.screens.passport.stampStopType
 import com.example.hackapp.ui.components.HackappTopBar
@@ -71,7 +72,7 @@ fun StampShareScreen(stampKey: String?, onBack: () -> Unit) {
     val keepsakes = LocalKeepsakeStore.current
     val cityPack = LocalCityPack.current
     val scope = rememberCoroutineScope()
-    val share = rememberNearbyShare(enabled = true)
+    val share = rememberNearbyShare(enabled = true, offer = ShareOffer.Stamp.takeIf { stampKey != null })
 
     val own by produceState<Pair<PassportStamp, String?>?>(null, uid, stampKey) {
         value = if (uid == null || stampKey == null) null else try {
