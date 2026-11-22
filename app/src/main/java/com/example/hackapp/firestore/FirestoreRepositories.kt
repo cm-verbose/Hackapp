@@ -6,6 +6,7 @@ import com.example.hackapp.itinerary.ShowtimeKey
 import com.example.hackapp.itinerary.TicketPriceRepository
 import com.example.hackapp.itinerary.TicketPriceSummary
 import com.example.hackapp.itinerary.isValidTicketPrice
+import com.example.hackapp.itinerary.preconditionHolds
 import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
 import com.google.firebase.Firebase
@@ -84,6 +85,20 @@ class FirestoreItineraryRepository(
     override suspend fun saveItinerary(itinerary: Itinerary) {
         collection(itinerary.ownerUid).document(itinerary.id)
             .set(FirestoreDocuments.itineraryDoc(itinerary)).let { awaitWrite(it) }
+    }
+
+    override suspend fun saveItineraryIfUnchanged(itinerary: Itinerary, expectedUpdatedAtMillis: Long?): Boolean {
+        val ref = collection(itinerary.ownerUid).document(itinerary.id)
+        return db.runTransaction { transaction ->
+            val snapshot = transaction.get(ref)
+            val stored = FirestoreDocuments.storedUpdatedAt(snapshot.dataOrNull())
+            if (!preconditionHolds(stored, expectedUpdatedAtMillis)) {
+                false
+            } else {
+                transaction.set(ref, FirestoreDocuments.itineraryDoc(itinerary))
+                true
+            }
+        }.await()
     }
 
     override suspend fun deleteItinerary(uid: String, id: String) {

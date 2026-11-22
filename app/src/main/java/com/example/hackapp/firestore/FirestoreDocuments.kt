@@ -70,6 +70,9 @@ internal object FirestoreDocuments {
         return itinerary.takeIf { it.ownerUid == uid && it.id == docId && doc?.get("id") == docId }
     }
 
+    /** The `updatedAtMillis` of a stored Itinerary document, whatever its schema; null when absent. */
+    fun storedUpdatedAt(doc: Map<String, Any?>?): Long? = (doc?.get("updatedAtMillis") as? Number)?.toLong()
+
     private fun payloadOf(doc: Map<String, Any?>?, uid: String, strict: Boolean): String? {
         if (doc == null) return null
         val version = (doc["schemaVersion"] as? Number)?.toInt() ?: return null

@@ -132,3 +132,12 @@ class ProfileStateTest {
         assertEquals(ProfileState.Failed(boom), failing.loadProfileState("u"))
     }
 }
+
+class StoredUpdatedAtTest {
+    @Test
+    fun `reads the stored version of any schema`() {
+        assertEquals(7L, FirestoreDocuments.storedUpdatedAt(mapOf("schemaVersion" to 9, "updatedAtMillis" to 7L)))
+        assertNull(FirestoreDocuments.storedUpdatedAt(null))
+        assertNull(FirestoreDocuments.storedUpdatedAt(mapOf("updatedAtMillis" to "7")))
+    }
+}

@@ -14,3 +14,27 @@ class ListItinerariesTest {
         assertEquals(listOf("new", "old"), repository.listItineraries(UID, freshOnly = true).map { it.id })
     }
 }
+
+class SaveIfUnchangedTest {
+    @Test
+    fun `second device with a stale base is refused and the newer stops survive`() = runBlocking {
+        val repository = InMemoryItineraryRepository()
+        val base = night(id = "t").copy(updatedAtMillis = 1)
+        assertEquals(true, repository.saveItineraryIfUnchanged(base, null))
+        assertEquals(false, repository.saveItineraryIfUnchanged(base, null))
+        val deviceA = base.copy(updatedAtMillis = 5)
+        assertEquals(true, repository.saveItineraryIfUnchanged(deviceA, 1))
+        val deviceB = base.copy(updatedAtMillis = 6, stops = emptyList())
+        assertEquals(false, repository.saveItineraryIfUnchanged(deviceB, 1))
+        assertEquals(5L, repository.getItinerary(UID, "t")!!.updatedAtMillis)
+    }
+
+    @Test
+    fun `precondition compares exactly`() {
+        assertEquals(true, preconditionHolds(null, null))
+        assertEquals(true, preconditionHolds(3, 3))
+        assertEquals(false, preconditionHolds(3, null))
+        assertEquals(false, preconditionHolds(null, 3))
+        assertEquals(false, preconditionHolds(4, 3))
+    }
+}
