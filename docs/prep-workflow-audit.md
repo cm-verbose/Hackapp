@@ -150,7 +150,8 @@ M1 (T1-T6) covers none of P1-01..P1-10 directly. It fixes the trip-state integri
 - EVIDENCE: config plus code. **C** (conflict between two prep documents).
 - SEVERITY: MEDIUM (spec ambiguity; the code follows the data doc).
 - RECOMMENDATION: user picks one rule; if the screen-list rule wins, add BAR to the DINNER slot in `reference.yaml` (reference data; check whether that needs a DB rebuild) and keep the 17:00 / audience check.
-- RESPONSIBLE AGENT: user (decision), feature-engineer. REGRESSION TEST: `mealOptions` with a fake repo: an 18:30 dinner for ADULTS_ONLY includes a bar iff the rule says so; never for FAMILY/NO_ALCOHOL. RELATED M1 TASK: none (T22, folded into the T13a `mealOptions` tests).
+- RESPONSIBLE AGENT: user (decision), feature-engineer. REGRESSION TEST: `MealOptionsTest.barsAreOfferedAtDinnerFrom17hForAdults` (written in T13a, fails today). RELATED M1 TASK: T22.
+- **UPDATE 2026-11-22: decided by the user** (ADR 0003, CLAUDE.md section 3): bars from 17:00 including dinner, adults-only audiences only. The conflict is resolved; the code change is T22.
 
 ### Shorter confirmed items
 - **P1-11 (C, scope gap, HIGH for the spec, not a defect in shipped behaviour):** the Itineraries tab (`ScreenItinerary.kt` shows the text "itinerary"), several plans in Planning, and the "Itinerary logged" history at End of day do not exist. The draft is ViewModel memory only, so process death loses it. Owner: user (scope, T24). Test: none until built.
@@ -180,11 +181,32 @@ Other risks:
 
 Already covered by ux-designer: UX#1, UX#8 (one-Underway rule, T3), UX#25 (late warning refresh, part of P1-07), UX#26 (Passport placeholder, part of P1-03), UX#30 (F25).
 New from the spec comparison: P1-05 (remove Stop loses later choices), P1-08 (no ticket path), P1-11 (no Itineraries tab, no saved plans; "Itineraries in Planning (several)" on Home is impossible while the draft lives only in memory, so process death loses the draft), P1-04 (past events in a plan).
-ux-designer was asked on 2026-11-22 to rate (a)-(f); their answer will be appended here, not duplicated.
+ux-designer input (2026-11-22, their ids; not repeated in full here):
+- P1-05 is now **UX#36 (P1)**: the on-screen note `review_remove_note` promises "back to selection for that time slot", so users lose stops without warning. Fix: remove only that stop, or confirm ("also removes the N stops after it").
+- P1-11: **P1**. The spec's "plan now, go later" journey does not exist. ux note P1-2: the draft is also lost by tapping Plan again (`newDraft`).
+- P1-03: dedupe rule **P1**; the Passport placeholder stays **P2, UX#26**.
+- P1-08: **P2** (ux note P2-5). Event cards show only title, time and price (`ScreensPlanning.kt:322-331`), with no venue, description or link.
+- P1-07: **P2, UX#25**, widened to cover the walk-only estimate.
+- P1-04: past default date is **P1, new UX#37** (default to today, clamped to the snapshot range). Demo mode: **P2 for users, P1 for the hackathon demo**, because alarms are 30 min out and inexact.
+New divergences from ux-designer, accepted into this audit:
+- **P1-15 (C, HIGH): no "end the day early".** The spec says "after the last Stop, or at any time to end early". No Underway page has an End action; EndOfDay is reached only when `finished` (`ScreensUnderway.kt:84`, `AppNavigation.kt:182`). Owner: feature-engineer; relates to T3. Test: navigation/ViewModel test that End from Leg/AtStop awards the confirmed stamps.
+- **P1-16 (C, MEDIUM): District preview tags show raw enum names** (`ScreensPlanning.kt:209` maps `it.key.name`), so "Music"/"Comedy" appear untranslated in French; the spec also asks for a short description. Fix: use `stopTypeLabel(type)`. Owner: feature-engineer (fits T12).
+- P2-7 confirms R4: attribution is missing on Leg, Arrival, AtStop and EndOfDay, which show event titles. Severity LOW (C).
+- P2-10: selection does not show how much of the window is left or where the meal block falls. Suggestion.
+- Research brief vs built: onboarding step 2 packs 4 questions; there is no "you can change this later" reassurance (untrue until Settings editing works, UX#4); step 1 has no real choice while Resident is disabled (suggest auto-skip). Swipe cards and the full-bleed map were reasonably not adopted.
 
 ## 8. UI (referencing visual-designer)
 
-The spec implies states with no design yet: Passport (organised by city/district, empty state), Itineraries tab (In planning / Past / empty with "plan" button), replace-active-trip dialog (`docs/ux/spec-replace-active-trip.md`), loading while `events.json` parses (F28), and a ticket action. visual-designer was asked on 2026-11-22 for gaps and severity; their answer will be appended here.
+The spec implies states with no design yet: Passport (organised by city/district, empty state), Itineraries tab (In planning / Past / empty with "plan" button), replace-active-trip dialog (`docs/ux/spec-replace-active-trip.md`), loading while `events.json` parses (F28), and a ticket action. visual-designer input (2026-11-22; A3-n / D1-D6 ids from `docs/design/initial-audit.md`):
+- **ErrorState exists (`StateViews.kt`) but no screen uses it: P1.** No error is surfaced anywhere in the planning flow.
+- **No events / no meals use EmptyState with only the generic title** (`ScreensPlanning.kt:293,338,378`): no cause, no action. P1 (visual and copy): add a body ("no events in this window", "no restaurants open at this time") and an action (change time, next district, skip meal).
+- **Passport and Itineraries tabs: raw hard-coded English `Text`, no padding: P1 for a demo**; they should use EmptyState with the screen-list action ("plan an itinerary").
+- First DistrictPick load: a spinner inside the column, then the layout jumps to full map height. P2: reserve the map's aspect box with a placeholder.
+- Underway after Start: loading must use LoadingState, not EmptyState (F15, P1; ties to T1 "navigate after the write").
+- Step indicator: covered by A3-2 + D1 (T11).
+- Dialogs: the replace-trip AlertDialog needs no new visuals; if a stop-removal confirm or undo is added (UX#36), use the same pattern, not a red destructive button.
+- Cross-cutting: state views have no icon or container (P2). D6 (pending): primary on canvas is 4.25:1 and fails AA for text.
+These map to T12 (empty/error states) and the scope task T24 (Passport/Itineraries).
 
 ## 9. Architecture
 
@@ -248,3 +270,16 @@ The spec implies states with no design yet: Passport (organised by city/district
 | T24 | Scope decision: Itineraries tab, saved plans, Passport screen, Firestore persistence | P1-11, P1-13, R2 | user | M1 | ADR + new milestone | team-lead | Plan for M3+ |
 
 Out of scope for now (needs the user): prep folder clean-up (R1), Firestore emulator tooling for rules tests.
+
+### User decisions (2026-11-22, relayed by team-lead)
+| Task | Decision |
+|---|---|
+| T15 Google data vs ADR 0002 | **Open.** The user decides with the team. `places.db` stays untouched and builds are not distributed (CLAUDE.md open item 11) |
+| T16 age rule | **Approved and scheduled** (next after T13a). Failing test: `SpecEligibilityTest.aTwentyOnePlusEventIsHiddenFor18To24`; flip `PlannerRulesTest:55` in the same change |
+| T17 Stamp key | **Approved, done with T3.** Failing test: androidTest `UnderwayStoreTest.theSameEventNeverEarnsTwoStamps` (through `addStamps`, so it compiles today); T17 extracts a pure `mergeStamps` and adds its unit test |
+| T18 Clock / past events / demo mode | **Approved, after T2** |
+| T22 Bars | **Approved**: from 17:00 including dinner, adults-only audiences only (ADR 0003). Failing test: `MealOptionsTest.barsAreOfferedAtDinnerFrom17hForAdults` |
+| T19, T20, T21, T23, T24 | Proposals; not scheduled yet |
+| P1-15, P1-16 (from ux-designer) | New; proposed: P1-15 with T3 (end the day early), P1-16 with T12 (translated tags) |
+
+**P1 status: completed** (sections 7 and 8 contain the ux-designer and visual-designer input). Label: CHANGES REQUESTED for the app against the prep spec; the open release blocker is T15.

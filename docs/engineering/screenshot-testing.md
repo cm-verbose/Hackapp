@@ -75,6 +75,20 @@ Do not try to fix the AGP option beyond about half a day.
 - Use fixed sample data in previews (no `LocalDate.now()`, no DataStore).
 - Keep one OS for record and verify.
 
+## 4a. Review conditions (workflow-auditor, 2026-11-22: APPROVED as a time-boxed pilot plan, technically NOT VERIFIED)
+1. **`entrance()` guard is its own task.** It is a production change: feature-engineer implements it, workflow-auditor reviews it. It is not a side effect of the pilot, and it is a prerequisite for any baseline (visual-designer).
+2. **Objective gate 3:** record the same preview with and without `locale = "en"`, with and without `fontScale = 2f`, and with and without night mode. The PNG hashes must differ (e.g. `Get-FileHash`). A judgement of "visibly different" is not enough.
+3. **Determinism:**
+   - Pin the engine (`0.0.1-alpha16`) and the JDK used for both record and verify.
+   - Record after Figtree is bundled (open item 6), or plan one re-record.
+   - Previews must not call `LocalDate.now()` / `LocalDateTime.now()`. The Home date and the underway screens do, so pass fixed values.
+4. **Infinite animations** (spinners, `LoadingState`) can render at an arbitrary frame. Keep them out of the pilot set, or check them separately.
+5. **Ownership** (no CI): "screenshot verify passes" goes into the definition of done of UI tasks T10-T12. Whoever changes the UI records the new baselines, and visual-designer approves the diffs.
+6. **Approvals:** the new test dependencies and `gradle.properties` flags need user approval (the plan lists this as "needs user decision"). Gradle runs follow the current owner rule: feature-engineer during implementation, coordinated with workflow-auditor.
+7. **Fallback cost:** Robolectric downloads about 100 MB+ and adds a second test runtime. Keep the half-day cap.
+
+Visual-designer accepted (2026-11-22): AGP suites, with preview-name patterns instead of exact file names. Their pass/fail gate is locale + fontScale.
+
 ## 5. Sources
 - https://developer.android.com/studio/preview/compose-screenshot-testing-with-testsuites (setup, flags, paths, tasks, AGP 9.5.0-alpha03 minimum, engine alpha16)
 - https://developer.android.com/studio/preview/compose-screenshot-testing-release-notes (alpha06 threshold, alpha14 Windows fix, alpha15 Kotlin 2.1 fix)

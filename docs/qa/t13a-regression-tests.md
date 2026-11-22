@@ -39,3 +39,8 @@ None. All 6 tests marked "EXPECTED TO FAIL" in their KDoc failed.
 ## Files (new, test-only)
 - `app/src/test/java/com/example/hackapp/domain/{PlannerFakes,PlannerSelectionTest,MealOptionsTest,UnderwayProgressTest,SpecEligibilityTest}.kt`
 - `app/src/androidTest/java/com/example/hackapp/domain/UnderwayStoreTest.kt`
+
+## T16 QA (age rule, P1-02): APPROVED
+- Diff: `EventRules.kt:40` now hides when `minAge > age.min`; `Profile.kt:16` KDoc updated; `PlannerRulesTest:55` flipped, with a new 18+ case. Minimal and correct.
+- workflow-auditor run: `.\gradlew.bat testDebugUnitTest --rerun --continue` gave 45 tests, 2 failed. Both are the remaining expected T13a failures (T22 bars, F2 overlap). `SpecEligibilityTest` 3/3 and `PlannerRulesTest` 10/10 pass. feature-engineer's run: lint 0 errors, `assembleDebug` OK.
+- Observation (not a defect against the spec): with no age band (profile not filled, e.g. Q4/T4 path), age-restricted events stay visible. T4 makes the profile mandatory.

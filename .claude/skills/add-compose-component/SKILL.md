@@ -31,7 +31,7 @@ Reference example to copy the structure from (KDoc, parameters, preview): `app\s
      - On `errorContainer`, use `onErrorContainer`.
      - Do not use `SesameRedAccessible` / #D60028.
      - Always pass `contentColor` explicitly to `TextButton` and dialog buttons, because the M3 default is `primary`.
-   - Spacing grid: 4 / 8 / 12 / 16 / 24 dp (no 10).
+   - Spacing grid: 4 / 8 / 12 / 16 / 24 dp (no 10). 20 is used only for hero/feature card padding (D4).
 5. Icons: through the `HackappIcon` enum / `HackappIconView` in `HackappIcons.kt`. Add an enum entry rather than using Material icons directly.
 6. **Strings:** user-facing text comes from `stringResource(R.string.x)`, passed as a parameter default so callers can override it (`label: String = stringResource(R.string.x)`).
    - Add every key to **both** `app\src\main\res\values\strings.xml` (French, the default, copied from Figma frame `55:3`) and `app\src\main\res\values-en\strings.xml` (English, from frame `55:7`).
