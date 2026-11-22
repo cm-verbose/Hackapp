@@ -172,6 +172,36 @@
     <string name="selection_finish_here">Finish here</string>
     <string name="selection_next_district">Next borough</string>
     <string name="planned_departure_title">Planned departure</string>
+    <!-- Meal picker sheet -->
+    <string name="meal_picker_title_lunch">Choose lunch</string>
+    <string name="meal_picker_title_dinner">Choose dinner</string>
+    <string name="meal_picker_title_late_bite">Choose a late bite</string>
+    <string name="meal_picker_subtitle">%1$s · budget: %2$s</string>
+    <string name="meal_tab_here">Here</string>
+    <string name="meal_tab_in_district">In %1$s</string>
+    <string name="meal_picker_walk">%1$d m · %2$d min walk</string>
+    <string name="meal_picker_price_unknown">Price unknown</string>
+    <!-- Planned departure sheet -->
+    <string name="planned_departure_subtitle">%1$s · %2$s · starts %3$s</string>
+    <string name="planned_departure_no_end">No end time published. Typical duration: %1$s.</string>
+    <string name="planned_departure_duration">Duration: %1$s</string>
+    <!-- Event details sheet -->
+    <string name="event_close">Close</string>
+    <string name="event_end_unknown">End time not published</string>
+    <string name="event_showtimes">%1$s · %2$d showtimes</string>
+    <string name="event_showtimes_group">Showtime</string>
+    <string name="event_price_unknown">Price unknown</string>
+    <string name="event_price_free">Free</string>
+    <string name="event_price_median">Median of user-reported prices</string>
+    <string name="event_audience_all">All audiences</string>
+    <string name="event_audience_adults">18+ only</string>
+    <string name="event_audience_family">Family-friendly</string>
+    <string name="event_tickets_link">Tickets on the organizer’s site</string>
+    <string name="event_ticket_price_label">Your ticket price (optional)</string>
+    <string name="event_ticket_price_range">%1$s to %2$s CAD</string>
+    <string name="event_ticket_price_shared">Price shared with other users, without your name.</string>
+    <string name="event_ticket_price_shared_showtimes">Price shared with other users, without your name. It applies to all showtimes that day.</string>
+    <string name="event_add">Add to itinerary</string>
     <string name="review_title">Review</string>
     <string name="review_planned_departure">planned departure %1$s</string>
     <string name="review_remove_note">Removing a stop takes you back to selection for that time slot.</string>
