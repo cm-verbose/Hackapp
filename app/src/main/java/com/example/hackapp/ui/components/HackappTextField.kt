@@ -90,8 +90,9 @@ fun HackappTextField(
 
 /**
  * A read-only field that opens a picker when tapped (date, time, budget, District).
- * TalkBack sees one button named [label] whose state is [value]; the field itself is silent.
- * [choiceList] adds the drop-down arrow for pickers that open a list of options.
+ * TalkBack sees one button named [contentDescription] (the [label] by default) whose state is
+ * [value]; the field itself is silent. [choiceList] adds the drop-down arrow for pickers that
+ * open a list of options.
  */
 @Composable
 fun HackappPickerField(
@@ -101,6 +102,7 @@ fun HackappPickerField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     choiceList: Boolean = false,
+    contentDescription: String = label,
 ) {
     Box(modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -123,7 +125,7 @@ fun HackappPickerField(
             Modifier
                 .matchParentSize()
                 .semantics {
-                    contentDescription = label
+                    this.contentDescription = contentDescription
                     if (value.isNotBlank()) stateDescription = value
                 }
                 .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
