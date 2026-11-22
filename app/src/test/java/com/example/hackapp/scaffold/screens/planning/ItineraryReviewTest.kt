@@ -44,7 +44,15 @@ class ItineraryReviewTest {
     private val c = at(stop("c", at(Nov28, 19, 20), at(Nov28, 20), sourceId = "ev-c"), 45.52)
     private val d = at(stop("d", at(Nov28, 21), at(Nov28, 22), sourceId = "ev-d"), 45.52)
 
-    private val repository = InMemoryItineraryRepository()
+    private val inner = InMemoryItineraryRepository()
+    private var failSaves = false
+    private var failPrices = false
+    private val repository = object : com.example.hackapp.itinerary.ItineraryRepository by inner {
+        override suspend fun saveItinerary(itinerary: Itinerary) {
+            if (failSaves) error("save failed")
+            inner.saveItinerary(itinerary)
+        }
+    }
     private var now = instant(Nov28, 12)
     private var events = emptyList<com.example.hackapp.data.Event>()
 
@@ -55,7 +63,7 @@ class ItineraryReviewTest {
         estimator = legs,
         zone = Toronto,
         loadContext = { context(now = now) },
-        loadPrices = { BudgetPrices() },
+        loadPrices = { if (failPrices) error("prices failed") else BudgetPrices() },
         loadEvents = { events },
         demoMode = demoMode,
         clock = { now },
@@ -294,7 +302,7 @@ class ItineraryReviewTest {
     }
 
     @Test
-    fun `an affected Meal cannot be rescheduled`() = runBlocking {
+    fun `a Meal after the removed Stop is kept, its block margins cover the travel`() = runBlocking {
         val block = MealBlock("meal-dinner", MealKind.Dinner, LocalTime.of(19, 20))
         val meal = at(
             stop("m", at(Nov28, 19, 20), at(Nov28, 20, 50), kind = StopKind.Meal, sourceId = "5", mealBlockId = "meal-dinner"),
@@ -305,9 +313,8 @@ class ItineraryReviewTest {
         val holder = holder()
         holder.load()
         holder.remove("b")
-        val dialog = holder.state.value.dialog as ReviewDialog.RemoveAffects
-        assertEquals(listOf("m"), dialog.affected.map { it.id })
-        assertFalse(dialog.canReschedule)
+        assertNull(holder.state.value.dialog)
+        assertEquals(listOf("a", "m"), saved().stops.map { it.id })
     }
 
     @Test
@@ -344,5 +351,65 @@ class ItineraryReviewTest {
         holder.load()
         holder.remove("a")
         assertEquals(2, saved().stops.size)
+    }
+
+    @Test
+    fun `a failed last reschedule save can be retried with the same pick`() = runBlocking {
+        events = listOf(showtime("ev-c", 19, 20), showtime("ev-c2", 20, 45))
+        repository.saveItinerary(draft(a, b, c))
+        val holder = holder()
+        holder.load()
+        holder.remove("b")
+        holder.reschedule()
+        failSaves = true
+        holder.pickShowtime("ev-c2")
+        assertTrue(holder.state.value.actionFailed)
+        assertFalse(holder.state.value.busy)
+        assertEquals("c", holder.state.value.reschedule!!.stop.id)
+        assertEquals(3, saved().stops.size)
+
+        failSaves = false
+        holder.pickShowtime("ev-c2")
+        assertNull(holder.state.value.reschedule)
+        assertEquals(listOf("a", "event-ev-c2"), saved().stops.map { it.id })
+    }
+
+    @Test
+    fun `a price failure after a saved removal is not a save failure`() = runBlocking {
+        repository.saveItinerary(draft(a, b, d))
+        val holder = holder(legs = fixedLegs(10))
+        holder.load()
+        failPrices = true
+        holder.remove("b")
+        assertFalse(holder.state.value.actionFailed)
+        assertTrue(holder.state.value.navigation is ReviewNavigation.BackToSelection)
+        assertEquals(listOf("a", "d"), holder.state.value.stops.map { it.stop.id })
+        assertTrue(holder.state.value.budget != null)
+    }
+
+    @Test
+    fun `a failed Reorganize keeps the original canReschedule`() = runBlocking {
+        events = listOf(showtime("ev-c", 19, 20), showtime("ev-c2", 20, 45))
+        repository.saveItinerary(draft(a, b, c))
+        val holder = holder()
+        holder.load()
+        holder.remove("b")
+        failSaves = true
+        holder.reorganize()
+        assertTrue(holder.state.value.actionFailed)
+        assertTrue((holder.state.value.dialog as ReviewDialog.RemoveAffects).canReschedule)
+        assertEquals(3, saved().stops.size)
+    }
+
+    @Test
+    fun `refreshing Start after midnight moves a ready Itinerary to window ended`() = runBlocking {
+        repository.saveItinerary(draft(a))
+        now = instant(Nov28, 23)
+        val holder = holder()
+        holder.load()
+        assertEquals(ReviewStartState.Ready(), holder.state.value.start)
+        now = instant(Nov28.plusDays(1), 2, 30)
+        holder.refreshStart()
+        assertEquals(ReviewStartState.WindowEnded(Nov28), holder.state.value.start)
     }
 }

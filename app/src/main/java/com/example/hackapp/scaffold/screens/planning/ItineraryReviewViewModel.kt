@@ -182,6 +182,7 @@ class ItineraryReviewHolder(
     private var events: List<Event> = emptyList()
     private var base: Itinerary? = null
     private var queue: List<Stop> = emptyList()
+    private var canReschedule = false
 
     suspend fun load() {
         _state.update { it.copy(loading = true, loadFailed = false) }
@@ -189,7 +190,7 @@ class ItineraryReviewHolder(
             val owner = checkNotNull(uid())
             val itinerary = checkNotNull(itineraries.getItinerary(owner, itineraryId))
             context = context ?: loadContext()
-            publish(itinerary)
+            publish(itinerary, pricesRequired = true)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -197,20 +198,35 @@ class ItineraryReviewHolder(
         }
     }
 
-    /** Reads the Itinerary and prices again, keeping the highlight and any dialog. */
-    private suspend fun publish(itinerary: Itinerary) {
+    /**
+     * Shows [itinerary] first, then its budget. When [pricesRequired] is false a price-read failure
+     * keeps the earlier budget: the Itinerary is already saved, so it is not an action failure.
+     */
+    private suspend fun publish(itinerary: Itinerary, pricesRequired: Boolean = false) {
         val ctx = checkNotNull(context)
-        val prices = loadPrices(itinerary)
         _state.update {
             it.copy(
                 loading = false,
                 loadFailed = false,
                 itinerary = itinerary,
                 stops = reviewStops(itinerary, it.highlightedStopId, estimator),
-                budget = budgetSummary(itinerary, ctx, prices),
                 start = reviewStartState(itinerary, clock(), zone, demoMode),
             )
         }
+        try {
+            val budget = budgetSummary(itinerary, ctx, loadPrices(itinerary))
+            _state.update { it.copy(budget = budget) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (pricesRequired) throw e
+        }
+    }
+
+    /** Recomputes Start for the current time. Call on resume: a page left open past midnight changes. */
+    fun refreshStart() = _state.update { state ->
+        val itinerary = state.itinerary ?: return@update state
+        state.copy(start = reviewStartState(itinerary, clock(), zone, demoMode))
     }
 
     fun selectStop(id: String?) = _state.update { state ->
@@ -275,7 +291,7 @@ class ItineraryReviewHolder(
             val ctx = checkNotNull(context).copy(now = clock())
             events = loadEvents(itinerary)
             plan = removal
-            val canReschedule = removal.affected.all {
+            canReschedule = removal.affected.all {
                 rescheduleOptions(removal.reorganized, it, events, ctx, estimator).isNotEmpty()
             }
             _state.update {
@@ -314,8 +330,8 @@ class ItineraryReviewHolder(
         val option = rescheduleOptions(current, step.stop, events, ctx, estimator)
             .firstOrNull { it.event.id == eventId } ?: return
         val next = rescheduled(current, step.stop, option) ?: return failed()
-        base = next
         if (step.index + 1 < queue.size) {
+            base = next
             _state.update { it.copy(reschedule = stepFor(step.index + 1), actionFailed = false) }
             return
         }
@@ -342,7 +358,7 @@ class ItineraryReviewHolder(
         _state.update {
             it.copy(
                 reschedule = null,
-                dialog = ReviewDialog.RemoveAffects(removal.removed, removal.affected, canReschedule = true),
+                dialog = ReviewDialog.RemoveAffects(removal.removed, removal.affected, canReschedule = canReschedule),
             )
         }
         base = null
@@ -359,7 +375,7 @@ class ItineraryReviewHolder(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            _state.update { it.copy(dialog = ReviewDialog.RemoveAffects(removal.removed, removal.affected, false)) }
+            _state.update { it.copy(dialog = ReviewDialog.RemoveAffects(removal.removed, removal.affected, canReschedule)) }
             failed()
         }
     }
@@ -418,6 +434,8 @@ class ItineraryReviewViewModel(private val holder: ItineraryReviewHolder) : View
     fun dismissDialog() = holder.dismissDialog()
     fun cancelReschedule() = holder.cancelReschedule()
     fun onNavigated() = holder.onNavigated()
+    /** Call on resume so Start reflects the current time. */
+    fun onResume() = holder.refreshStart()
 
     companion object {
         fun factory(
