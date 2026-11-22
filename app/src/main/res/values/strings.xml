@@ -14,7 +14,7 @@
     <string name="home_underway_label">En cours</string>
     <string name="home_next_stop">Prochain arrêt : %1$s</string>
     <string name="home_resume_itinerary">Reprendre</string>
-    <string name="home_plan_title">Journée ou soirée à %1$s</string>
+    <string name="home_plan_title">Journée ou soirée à %1$s</string>
     <string name="home_plan_action">Planifier un itinéraire</string>
     <string name="home_suggestions">Suggestions</string>
     <string name="selection_meal_block_title">Bloc repas</string>
@@ -230,7 +230,7 @@
         <item quantity="other">Carte de l’itinéraire, %d arrêts</item>
     </plurals>
     <string name="strip_stop">%1$s, %2$s</string>
-    <string name="strip_stop_current">%1$s, %2$s, arrêt actuel</string>
+    <string name="strip_stop_current">%1$s, %2$s, prochain arrêt</string>
     <plurals name="new_stamps_in_passport">
         <item quantity="one">%d nouveau timbre</item>
         <item quantity="other">%d nouveaux timbres</item>
@@ -239,7 +239,7 @@
     <!-- Main tabs -->
     <string name="home_greeting_anonymous">Bonjour</string>
     <string name="itinerary_title_in">%1$s · %2$s</string>
-    <string name="itinerary_date_pattern" translatable="false">d MMM</string>
+    <string name="itinerary_date_pattern">d MMM</string>
     <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
     <string name="itineraries_past">Passés</string>
     <string name="itineraries_archived">Archivés · jamais commencés</string>

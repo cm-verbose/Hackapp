@@ -46,8 +46,8 @@ fun ItinerarySuggestionsCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                HackappIconView(s.icon, size = 22.dp, tint = scheme.onSurface)
-                Text(s.title, style = MaterialTheme.typography.titleMedium, color = scheme.onSurface, modifier = Modifier.weight(1f))
+                HackappIconView(s.icon, size = 22.dp, tint = scheme.onSurfaceVariant)
+                Text(s.title, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f))
             }
         }
     }

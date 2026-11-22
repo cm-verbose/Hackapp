@@ -5,12 +5,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.example.hackapp.R
-import com.example.hackapp.ui.components.CardMediaPlaceholder
 import com.example.hackapp.ui.components.HorizontalInfoCard
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -57,7 +60,7 @@ fun ItineraryCard(
     card: ItineraryCardUi,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    trailing: @Composable () -> Unit = { CardMediaPlaceholder() },
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val parts = buildList {
         add(itineraryShortDate(card.date))
@@ -70,6 +73,17 @@ fun ItineraryCard(
         modifier = modifier,
         onClick = onClick,
         trailing = trailing,
+    )
+}
+
+/** Failed delete: error colour, announced politely. */
+@Composable
+fun DeleteErrorNote(modifier: Modifier = Modifier) {
+    Text(
+        stringResource(R.string.itinerary_delete_error),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error,
+        modifier = modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
     )
 }
 

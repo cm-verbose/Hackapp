@@ -56,6 +56,17 @@ class ItineraryPresentationTest {
     }
 
     @Test
+    fun pastCardsCountOnlyConfirmedStops() {
+        val stops = listOf(
+            stop("a", "s1", StopStatus.Confirmed),
+            stop("b", "s2", StopStatus.Skipped),
+            stop("c", "s3", StopStatus.Planned),
+        )
+        assertEquals(1, itinerary("p", ItineraryPhase.Completed, stops = stops).toCard(emptyMap()).stopCount)
+        assertEquals(3, itinerary("d", ItineraryPhase.Planning, stops = stops).toCard(emptyMap()).stopCount)
+    }
+
+    @Test
     fun sectionsGroupByPhaseWithNewestPastFirst() {
         val sections = listOf(
             itinerary("old", ItineraryPhase.Completed, date = LocalDate.of(2026, 11, 21)),

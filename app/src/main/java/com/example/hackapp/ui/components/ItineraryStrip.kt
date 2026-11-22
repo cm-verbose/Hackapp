@@ -35,14 +35,14 @@ private val OtherDot = 14.dp
 
 /**
  * Figma "ItineraryStrip" (38:1027): the Stops of the Underway Itinerary as dots coloured by
- * StopType, joined by outline-variant lines. The Stop at [currentIndex] (default: first) is
- * larger and outlined.
+ * StopType, joined by outline-variant lines. The Stop at [currentIndex] is
+ * larger and outlined; null highlights none.
  */
 @Composable
 fun ItineraryStrip(
     stops: List<StripStop>,
     modifier: Modifier = Modifier,
-    currentIndex: Int = 0,
+    currentIndex: Int? = null,
 ) {
     val colors = HackappTheme.stopTypeColors
     val scheme = MaterialTheme.colorScheme
