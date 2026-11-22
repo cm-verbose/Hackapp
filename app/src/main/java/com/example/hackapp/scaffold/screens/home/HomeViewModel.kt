@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -105,6 +106,7 @@ class HomeViewModel(
     private val profiles: ProfileRepository,
     private val events: EventRepository,
     private val zone: ZoneId,
+    private val now: () -> Instant = Instant::now,
     private val loadDistrictNames: suspend () -> Map<String, String>,
 ) : ViewModel() {
     private val retry = MutableStateFlow(0)
@@ -149,8 +151,8 @@ class HomeViewModel(
         }
         viewModelScope.launch {
             suggestions.value = optional {
-                val eligible = eventEligibility(profiles, uid, zone)
-                suggestionsFrom(events.search(EventQuery(startsAtOrAfter = OffsetDateTime.now(zone))).filter(eligible))
+                val eligible = eventEligibility(profiles, uid, zone, now())
+                suggestionsFrom(events.search(EventQuery(startsAtOrAfter = now().atZone(zone).toOffsetDateTime())).filter(eligible))
             }.orEmpty()
         }
         viewModelScope.launch { districtNames.value = loadDistrictNames() }
@@ -175,9 +177,10 @@ class HomeViewModel(
             profiles: ProfileRepository,
             events: EventRepository,
             zone: ZoneId,
+            now: () -> Instant = Instant::now,
             loadDistrictNames: suspend () -> Map<String, String>,
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { HomeViewModel(uid, itineraries, profiles, events, zone, loadDistrictNames) }
+            initializer { HomeViewModel(uid, itineraries, profiles, events, zone, now, loadDistrictNames) }
         }
     }
 }

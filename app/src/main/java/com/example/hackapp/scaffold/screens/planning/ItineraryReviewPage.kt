@@ -139,8 +139,8 @@ fun ItineraryReviewScreen(
         } catch (_: Exception) {
             null
         }
-        profile?.let { PlanningContext.from(it, coordinator.clock.now(), zone) }
-            ?: PlanningContext(coordinator.clock.now(), zone, AgeRange.From25To34)
+        profile?.let { PlanningContext.from(it, coordinator.clock.planningNow(), zone) }
+            ?: PlanningContext(coordinator.clock.planningNow(), zone, AgeRange.From25To34)
     }
     val viewModel: ItineraryReviewViewModel = viewModel(
         factory = ItineraryReviewViewModel.factory(
@@ -174,7 +174,9 @@ fun ItineraryReviewScreen(
                     loadMap = { loadDistrictMap(appContext, services.cityPack) },
                 )
             },
+            demoMode = { coordinator.clock.isSimulated },
             clock = coordinator.clock::now,
+            planningClock = coordinator.clock::planningNow,
         ),
     )
     val permissions = rememberUnderwayStartPermissions()

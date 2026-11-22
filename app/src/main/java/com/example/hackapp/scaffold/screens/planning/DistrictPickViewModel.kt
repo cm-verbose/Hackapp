@@ -72,6 +72,7 @@ class DistrictPickViewModel(
     private val profiles: ProfileRepository,
     private val reconciler: PlanningChangeReconciler,
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    private val planningNowMillis: () -> Long = nowMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(DistrictPickUiState())
     val state: StateFlow<DistrictPickUiState> = _state.asStateFlow()
@@ -218,7 +219,7 @@ class DistrictPickViewModel(
                 val draft = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                 val map = loadMap()
                 val zone = cityPack.timeZone
-                val counts = districtCountFilter(profiles, uid, draft.planningWindow(zone), zone, Instant.ofEpochMilli(nowMillis()))
+                val counts = districtCountFilter(profiles, uid, draft.planningWindow(zone), zone, Instant.ofEpochMilli(planningNowMillis()))
                 val summary = withContext(Dispatchers.Default) {
                     summarizeDistrictEvents(events.search(windowQuery(draft)), counts)
                 }
@@ -254,9 +255,13 @@ class DistrictPickViewModel(
             loadMap: suspend () -> DistrictMapData,
             profiles: ProfileRepository,
             reconciler: PlanningChangeReconciler = cityPack.stopFitReconciler(),
+            planningNowMillis: () -> Long = System::currentTimeMillis,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                DistrictPickViewModel(itineraryId, auth, itineraries, events, cityPack, loadMap, profiles, reconciler)
+                DistrictPickViewModel(
+                    itineraryId, auth, itineraries, events, cityPack, loadMap, profiles, reconciler,
+                    planningNowMillis = planningNowMillis,
+                )
             }
         }
     }

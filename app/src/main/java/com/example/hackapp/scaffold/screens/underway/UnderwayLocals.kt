@@ -7,11 +7,18 @@ import com.example.hackapp.HackappApplication
 import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.scaffold.screens.planning.ReviewStartOutcome
 import com.example.hackapp.scaffold.screens.planning.ReviewStarter
+import com.example.hackapp.underway.UnderwayClock
 import com.example.hackapp.underway.UnderwayCoordinator
 import com.example.hackapp.underway.UnderwayStartResult
 
 /** Replaces the app's coordinator in tests, so it shares their in-memory Itineraries. */
 val LocalUnderwayCoordinator = staticCompositionLocalOf<UnderwayCoordinator?> { null }
+
+/** The app's one clock. Reading it does not build the coordinator. */
+@Composable
+fun currentUnderwayClock(): UnderwayClock =
+    LocalUnderwayCoordinator.current?.clock
+        ?: (LocalContext.current.applicationContext as HackappApplication).underwayClock
 
 @Composable
 fun currentUnderwayCoordinator(): UnderwayCoordinator =

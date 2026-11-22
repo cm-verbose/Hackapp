@@ -198,6 +198,7 @@ class PlanningMealChoiceViewModel(
     private val zone: ZoneId,
     private val reconciler: PlanningChangeReconciler = mealStopReconciler(zone),
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    private val planningNowMillis: () -> Long = nowMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlanningMealChoiceUiState())
     val state: StateFlow<PlanningMealChoiceUiState> = _state.asStateFlow()
@@ -306,8 +307,8 @@ class PlanningMealChoiceViewModel(
     }
 
     private fun planningContext(profile: Profile?) =
-        profile?.let { PlanningContext.from(it, Instant.ofEpochMilli(nowMillis()), zone) }
-            ?: PlanningContext(Instant.ofEpochMilli(nowMillis()), zone, AgeRange.From25To34)
+        profile?.let { PlanningContext.from(it, Instant.ofEpochMilli(planningNowMillis()), zone) }
+            ?: PlanningContext(Instant.ofEpochMilli(planningNowMillis()), zone, AgeRange.From25To34)
 
     private fun editPick(kind: MealKind, change: MealPick.() -> MealPick) {
         val pick = picks[kind] ?: return
@@ -334,8 +335,14 @@ class PlanningMealChoiceViewModel(
             profiles: ProfileRepository,
             zone: ZoneId,
             reconciler: PlanningChangeReconciler = mealStopReconciler(zone),
+            planningNowMillis: () -> Long = System::currentTimeMillis,
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { PlanningMealChoiceViewModel(itineraryId, auth, itineraries, profiles, zone, reconciler) }
+            initializer {
+                PlanningMealChoiceViewModel(
+                    itineraryId, auth, itineraries, profiles, zone, reconciler,
+                    planningNowMillis = planningNowMillis,
+                )
+            }
         }
     }
 }

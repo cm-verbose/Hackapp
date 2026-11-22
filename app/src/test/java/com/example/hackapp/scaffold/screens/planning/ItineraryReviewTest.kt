@@ -76,7 +76,7 @@ class ItineraryReviewTest {
                 StartResult.NotFound -> ReviewStartOutcome.NotFound
             }
         },
-        demoMode = demoMode,
+        demoMode = { demoMode },
         clock = { now },
     )
 

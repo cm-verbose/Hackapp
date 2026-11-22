@@ -32,6 +32,7 @@ import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.formatSentenceTime
 import com.example.hackapp.ui.theme.HackappTheme
 import java.time.LocalDate
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import java.time.LocalTime
 
 /** Connects the Date and time page to its ViewModel and to navigation. */
@@ -42,6 +43,7 @@ fun PlanningDateTimeScreen(
     onContinue: (String) -> Unit,
 ) {
     val services = LocalCityServices.current
+    val clock = currentUnderwayClock()
     val viewModel: PlanningDateTimeViewModel = viewModel(
         factory = PlanningDateTimeViewModel.factory(
             routeItineraryId = itineraryId,
@@ -51,6 +53,7 @@ fun PlanningDateTimeScreen(
             events = services.events,
             cityPack = services.cityPack,
             reconciler = services.stopFitReconciler(),
+            planningDate = clock::planningDate,
         ),
     )
     val state by viewModel.state.collectAsState()

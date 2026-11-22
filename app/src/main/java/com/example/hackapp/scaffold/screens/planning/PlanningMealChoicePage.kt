@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -68,6 +69,7 @@ fun PlanningMealChoiceScreen(
     onContinue: (String) -> Unit,
     onChangeDateTime: (String) -> Unit,
 ) {
+    val clock = currentUnderwayClock()
     val auth = LocalAuthService.current
     val itineraries = LocalItineraryRepository.current
     val viewModel: PlanningMealChoiceViewModel = viewModel(
@@ -77,6 +79,7 @@ fun PlanningMealChoiceScreen(
             itineraries = itineraries,
             profiles = LocalProfileRepository.current,
             zone = LocalCityPack.current.timeZone,
+            planningNowMillis = { clock.planningNow().toEpochMilli() },
         ),
     )
     val state by viewModel.state.collectAsState()

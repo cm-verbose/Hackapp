@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.onboarding
 
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -43,7 +44,6 @@ import com.example.hackapp.ui.components.LoadingState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Instant
 
 /** The three onboarding routes (the Visitor type route is kept in AppRoutes but not part of the flow until Resident ships). Their nested graph owns the shared [OnboardingViewModel]. */
 fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
@@ -142,6 +142,7 @@ fun SessionGate(onResolved: (SessionDestination) -> Unit) {
     val profiles = LocalProfileRepository.current
     val itineraries = LocalItineraryRepository.current
     val zone = LocalCityPack.current.timeZone
+    val clock = currentUnderwayClock()
     var attempt by remember { mutableIntStateOf(0) }
     var failed by remember { mutableStateOf(false) }
 
@@ -157,7 +158,8 @@ fun SessionGate(onResolved: (SessionDestination) -> Unit) {
         }
         auth.currentUser?.uid?.let { uid ->
             try {
-                archiveExpiredDrafts(itineraries, uid, Instant.now(), zone)
+                // In demo mode any planned Itinerary must stay startable, whatever its date.
+                if (!clock.isSimulated) archiveExpiredDrafts(itineraries, uid, clock.realNow(), zone)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {

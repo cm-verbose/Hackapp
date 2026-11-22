@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -117,6 +118,7 @@ fun PlanningStopSelectionScreen(
     onHome: () -> Unit,
 ) {
     val services = LocalCityServices.current
+    val clock = currentUnderwayClock()
     val viewModel: PlanningStopSelectionViewModel = viewModel(
         factory = PlanningStopSelectionViewModel.factory(
             itineraryId = itineraryId,
@@ -129,6 +131,7 @@ fun PlanningStopSelectionScreen(
             estimator = services.legs,
             zone = LocalCityPack.current.timeZone,
             returnGap = returnGap,
+            planningNowMillis = { clock.planningNow().toEpochMilli() },
         ),
     )
     val state by viewModel.state.collectAsState()

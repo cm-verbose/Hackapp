@@ -146,6 +146,7 @@ class StopSelectionSession(
     private val zone: ZoneId,
     private val nowMillis: () -> Long = System::currentTimeMillis,
     returnGap: SelectionGap? = null,
+    private val planningNowMillis: () -> Long = nowMillis,
 ) {
     /** Kept until the first change, which returns planning to the end of the Itinerary. */
     private var targetGap: SelectionGap? = returnGap
@@ -499,7 +500,7 @@ class StopSelectionSession(
     }
 
     private fun context(): PlanningContext {
-        val now = Instant.ofEpochMilli(nowMillis())
+        val now = Instant.ofEpochMilli(planningNowMillis())
         return profile?.let { PlanningContext.from(it, now, zone) } ?: PlanningContext(now, zone, AgeRange.From25To34)
     }
 
@@ -563,12 +564,13 @@ class PlanningStopSelectionViewModel(private val session: StopSelectionSession) 
             estimator: LegEstimator,
             zone: ZoneId,
             returnGap: SelectionGap? = null,
+            planningNowMillis: () -> Long = System::currentTimeMillis,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 PlanningStopSelectionViewModel(
                     StopSelectionSession(
                         itineraryId, { auth.currentUser?.uid }, itineraries, profiles, events, places, tickets,
-                        estimator, zone, returnGap = returnGap,
+                        estimator, zone, returnGap = returnGap, planningNowMillis = planningNowMillis,
                     ),
                 )
             }

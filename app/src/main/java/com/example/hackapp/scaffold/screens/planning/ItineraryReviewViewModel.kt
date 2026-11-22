@@ -189,8 +189,10 @@ class ItineraryReviewHolder(
     private val loadPrices: suspend (Itinerary) -> BudgetPrices,
     private val loadEvents: suspend (Itinerary) -> List<Event>,
     private val starter: ReviewStarter,
-    private val demoMode: Boolean = false,
+    private val demoMode: () -> Boolean = { false },
     private val clock: () -> Instant = Instant::now,
+    /** What Events are compared with. In demo mode no Event reads as past. */
+    private val planningClock: () -> Instant = clock,
 ) {
     private val _state = MutableStateFlow(ItineraryReviewUiState())
     val state: StateFlow<ItineraryReviewUiState> = _state.asStateFlow()
@@ -228,7 +230,7 @@ class ItineraryReviewHolder(
                 loadFailed = false,
                 itinerary = itinerary,
                 stops = reviewStops(itinerary, it.highlightedStopId, estimator),
-                start = reviewStartState(itinerary, clock(), zone, demoMode),
+                start = reviewStartState(itinerary, clock(), zone, demoMode()),
             )
         }
         try {
@@ -244,7 +246,7 @@ class ItineraryReviewHolder(
     /** Recomputes Start for the current time. Call on resume: a page left open past midnight changes. */
     fun refreshStart() = _state.update { state ->
         val itinerary = state.itinerary ?: return@update state
-        state.copy(start = reviewStartState(itinerary, clock(), zone, demoMode))
+        state.copy(start = reviewStartState(itinerary, clock(), zone, demoMode()))
     }
 
     fun selectStop(id: String?) = _state.update { state ->
@@ -274,7 +276,7 @@ class ItineraryReviewHolder(
         val owner = uid() ?: return failed()
         _state.update { it.copy(busy = true, actionFailed = false) }
         try {
-            when (val result = starter.start(owner, itineraryId, demoMode, confirmEndCurrent)) {
+            when (val result = starter.start(owner, itineraryId, demoMode(), confirmEndCurrent)) {
                 is ReviewStartOutcome.Started -> _state.update {
                     it.copy(busy = false, navigation = ReviewNavigation.Started(result.itineraryId, result.askExactAlarm))
                 }
@@ -305,7 +307,7 @@ class ItineraryReviewHolder(
                 save(removal)
                 return
             }
-            val ctx = checkNotNull(context).copy(now = clock())
+            val ctx = checkNotNull(context).copy(now = planningClock())
             events = loadEvents(itinerary)
             plan = removal
             canReschedule = removal.affected.all {
@@ -342,7 +344,7 @@ class ItineraryReviewHolder(
         val step = _state.value.reschedule ?: return
         val removal = plan ?: return
         if (_state.value.busy || step.options.none { it.eventId == eventId }) return
-        val ctx = checkNotNull(context).copy(now = clock())
+        val ctx = checkNotNull(context).copy(now = planningClock())
         val current = checkNotNull(base)
         val option = rescheduleOptions(current, step.stop, events, ctx, estimator)
             .firstOrNull { it.event.id == eventId } ?: return
@@ -419,7 +421,7 @@ class ItineraryReviewHolder(
 
     private fun stepFor(index: Int): RescheduleStep {
         val stop = queue[index]
-        val ctx = checkNotNull(context).copy(now = clock())
+        val ctx = checkNotNull(context).copy(now = planningClock())
         val options = rescheduleOptions(checkNotNull(base), stop, events, ctx, estimator).map {
             RescheduleOption(
                 eventId = it.event.id,
@@ -466,14 +468,15 @@ class ItineraryReviewViewModel(private val holder: ItineraryReviewHolder) : View
             loadPrices: suspend (Itinerary) -> BudgetPrices,
             loadEvents: suspend (Itinerary) -> List<Event>,
             starter: ReviewStarter,
-            demoMode: Boolean = false,
+            demoMode: () -> Boolean = { false },
             clock: () -> Instant = Instant::now,
+            planningClock: () -> Instant = clock,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 ItineraryReviewViewModel(
                     ItineraryReviewHolder(
                         itineraryId, { auth.currentUser?.uid }, itineraries, estimator, zone,
-                        loadContext, loadPrices, loadEvents, starter, demoMode, clock,
+                        loadContext, loadPrices, loadEvents, starter, demoMode, clock, planningClock,
                     ),
                 )
             }

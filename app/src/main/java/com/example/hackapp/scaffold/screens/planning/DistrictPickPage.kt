@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -84,6 +85,7 @@ fun DistrictPickScreen(
     onContinue: (String) -> Unit,
 ) {
     val services = LocalCityServices.current
+    val clock = currentUnderwayClock()
     val context = LocalContext.current
     val viewModel: DistrictPickViewModel = viewModel(
         factory = DistrictPickViewModel.factory(
@@ -95,6 +97,7 @@ fun DistrictPickScreen(
             loadMap = { loadDistrictMap(context.applicationContext, services.cityPack) },
             profiles = LocalProfileRepository.current,
             reconciler = services.stopFitReconciler(),
+            planningNowMillis = { clock.planningNow().toEpochMilli() },
         ),
     )
     val state by viewModel.state.collectAsState()

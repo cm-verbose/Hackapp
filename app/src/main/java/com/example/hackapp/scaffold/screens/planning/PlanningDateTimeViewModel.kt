@@ -61,6 +61,7 @@ class PlanningDateTimeViewModel(
     private val cityPack: CityPack,
     private val reconciler: PlanningChangeReconciler,
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    private val planningDate: () -> LocalDate = { LocalDate.now(cityPack.timeZone) },
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlanningDateTimeUiState(coverage = cityPack.eventCoverage))
     val state: StateFlow<PlanningDateTimeUiState> = _state.asStateFlow()
@@ -216,7 +217,7 @@ class PlanningDateTimeViewModel(
 
     private suspend fun firstDateWithData(): LocalDate {
         val zone = cityPack.timeZone
-        val today = LocalDate.now(zone)
+        val today = planningDate()
         val dates = try {
             withContext(Dispatchers.Default) {
                 events.search().mapNotNullTo(HashSet()) { event ->
@@ -245,6 +246,7 @@ class PlanningDateTimeViewModel(
             events: EventRepository,
             cityPack: CityPack,
             reconciler: PlanningChangeReconciler = cityPack.stopFitReconciler(),
+            planningDate: () -> LocalDate = { LocalDate.now(cityPack.timeZone) },
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 PlanningDateTimeViewModel(
@@ -256,6 +258,7 @@ class PlanningDateTimeViewModel(
                     events,
                     cityPack,
                     reconciler,
+                    planningDate = planningDate,
                 )
             }
         }
