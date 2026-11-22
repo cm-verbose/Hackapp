@@ -11,7 +11,7 @@ import androidx.credentials.CredentialManager
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
 import com.example.hackapp.scaffold.AppScaffold
-import com.example.hackapp.ui.theme.HackappTheme
+import com.example.hackapp.ui.theme.AndroidTemplateTheme
 import com.example.hackapp.widgets.AppWidgetReceiver
 import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.launch
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
         setContent {
-            HackappTheme {
+            AndroidTemplateTheme {
                 AppScaffold()
             }
         }
