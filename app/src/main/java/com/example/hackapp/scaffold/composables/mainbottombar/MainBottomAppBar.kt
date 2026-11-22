@@ -66,16 +66,7 @@ fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
             items.forEachIndexed { index, item ->
                 Tab(
                     selected = selectedIndex == index,
-                    onClick = {
-                        controller.navigate(item.target) {
-                            // Login leaves the back stack after sign-in, so Home is the tab root.
-                            popUpTo(ScreenHomeDestination) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
+                    onClick = { controller.openTab(item.target) },
                     text = { Text(item.title) },
                     icon = {
                         Icon(
@@ -86,5 +77,24 @@ fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
                 )
             }
         }
+    }
+}
+
+/**
+ * Login leaves the back stack after sign-in, so Home is the tab root. Home itself is reached by
+ * popping back to it: a save-and-restore would bring back whatever was saved under Home's id (such
+ * as the Passport opened from End of day), so the Home tab would do nothing.
+ */
+private fun NavHostController.openTab(target: Any) {
+    if (target == ScreenHomeDestination) {
+        if (!popBackStack<ScreenHomeDestination>(inclusive = false)) {
+            navigate(ScreenHomeDestination) { launchSingleTop = true }
+        }
+        return
+    }
+    navigate(target) {
+        popUpTo(ScreenHomeDestination) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }

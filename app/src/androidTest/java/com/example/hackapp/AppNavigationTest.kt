@@ -11,6 +11,9 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
 import androidx.compose.ui.test.performClick
@@ -46,6 +49,7 @@ import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
+import com.example.hackapp.scaffold.screens.passport.ScreenPassportDestination
 import com.example.hackapp.scaffold.screens.underway.LocalUnderwayCoordinator
 import com.example.hackapp.services.CityServicesFactory
 import com.example.hackapp.services.LocalCityServices
@@ -120,7 +124,7 @@ class AppNavigationTest {
         click(R.string.home_plan_action)
         awaitContinueEnabled()
         click(R.string.action_continue)
-        keepBudgetAndAwaitDistrictPick()
+        awaitDistrictPick()
         // District pick needs a tap on the map, and Finish needs an Event Stop, so both are seeded.
         val draftId = seedDistrictAndEventStop()
         compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute(draftId)) }
@@ -275,18 +279,14 @@ class AppNavigationTest {
         click(R.string.home_plan_action)
         awaitContinueEnabled()
         click(R.string.action_continue)
-        keepBudgetAndAwaitDistrictPick()
+        awaitDistrictPick()
         Espresso.pressBack()
         compose.waitForIdle()
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
-    private fun keepBudgetAndAwaitDistrictPick() {
-        val keep = context.getString(R.string.planning_budget_keep)
-        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
-            compose.onAllNodes(hasText(keep) and isEnabled()).fetchSemanticsNodes().isNotEmpty()
-        }
-        compose.onNodeWithText(keep).performClick()
+    /** Date and time leads straight to District pick: Planning no longer has a Budget step. */
+    private fun awaitDistrictPick() {
         compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
             compose.onAllNodes(hasText(context.getString(R.string.district_pick_instructions)))
                 .fetchSemanticsNodes().isNotEmpty()
@@ -297,6 +297,31 @@ class AppNavigationTest {
     private fun awaitContinueEnabled() = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
         compose.onAllNodes(hasText(context.getString(R.string.action_continue)) and isEnabled())
             .fetchSemanticsNodes().isNotEmpty()
+    }
+
+    @Test
+    fun passportAfterLastStopKeepsBottomTabsWorking() {
+        startSeededDraft()
+        // Skipping the only Stop ends the day; End of day then opens the Passport.
+        // A touch does not reach this button under the test rule; the semantics click does.
+        compose.onNodeWithText(context.getString(R.string.action_skip_stop))
+            .performSemanticsAction(SemanticsActions.OnClick)
+        val confirm = context.getString(R.string.underway_skip_confirm)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) { compose.onAllNodes(hasText(confirm)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodes(hasText(confirm)).onLast().performClick()
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(context.getString(R.string.end_of_day_open_passport)))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        click(R.string.end_of_day_open_passport)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            controller.currentBackStackEntry?.destination?.hasRoute<ScreenPassportDestination>() == true
+        }
+        compose.waitForIdle()
+        click(R.string.nav_home)
+        awaitHome()
+        compose.waitForIdle()
+        compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
     @Test
