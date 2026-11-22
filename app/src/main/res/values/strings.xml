@@ -69,6 +69,16 @@
     <string name="notification_leave_title">Départ dans 30 min</string>
     <string name="notification_leave_body">Quittez %1$s avant %2$s pour arriver à l’heure.</string>
 
+    <!-- Shared controls and states (not on the Figma strings page) -->
+    <string name="action_back">Retour</string>
+    <string name="action_clear">Effacer</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_confirm">Confirmer</string>
+    <string name="action_retry">Réessayer</string>
+    <string name="state_loading">Chargement…</string>
+    <string name="state_error_title">Une erreur est survenue</string>
+    <string name="state_empty_title">Rien à afficher pour le moment</string>
+
     <!-- Common (Figma frame 55:3) -->
     <string name="action_continue">Continuer</string>
     <string name="action_finish">Terminer</string>
