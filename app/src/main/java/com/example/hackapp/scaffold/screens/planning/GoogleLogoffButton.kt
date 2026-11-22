@@ -26,7 +26,20 @@ fun rememberSignOut(onSignedOut: () -> Unit): () -> Unit {
     val latestOnSignedOut by rememberUpdatedState(onSignedOut)
     return remember(application) {
         {
+            val uid = application.currentUid()
             FirebaseAuth.getInstance().signOut()
+            // Alarms and notifications of the account must not outlive its session.
+            if (uid != null) {
+                application.applicationScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+                    try {
+                        application.underwayCoordinator.onSignOut(uid)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(AUTH_TAG, "Could not cancel Underway alerts", e)
+                    }
+                }
+            }
             // Play Services can be slow, and this must outlive the screen we are leaving.
             application.applicationScope.launch {
                 try {

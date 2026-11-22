@@ -2,7 +2,9 @@ package com.example.hackapp.scaffold.screens.underway
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,6 +47,7 @@ class UnderwayViewModel(
     private val coordinator: UnderwayCoordinator,
     private val clock: UnderwayClock,
     private val notificationsAllowed: () -> Boolean,
+    private val saved: SavedStateHandle = SavedStateHandle(),
 ) : ViewModel() {
     private val _view = MutableStateFlow<LoadState<UnderwayScreenData>>(LoadState.Loading)
     val state: StateFlow<LoadState<UnderwayScreenData>> = _view.asStateFlow()
@@ -60,7 +63,10 @@ class UnderwayViewModel(
     /** True when no Itinerary is Underway and no day just ended: the page goes straight Home. */
     val nothingUnderway: StateFlow<Boolean> = _nothingUnderway.asStateFlow()
 
-    private var lastItineraryId: String? = null
+    /** Kept in the saved state, so End of day still loads after the process was killed. */
+    private var lastItineraryId: String?
+        get() = saved["itineraryId"]
+        set(value) { saved["itineraryId"] = value }
 
     init {
         viewModelScope.launch {
@@ -134,7 +140,7 @@ class UnderwayViewModel(
             lastItineraryId = view.itineraryId
             _nothingUnderway.value = false
             _view.value = LoadState.Ready(UnderwayScreenData(view, clock.now()))
-            if (ended) retry()
+            if ((ended || view.phase == UnderwayPhase.Ended) && _endOfDay.value !is LoadState.Ready) retry()
         } else if (lastItineraryId != null) {
             // It was Underway and is not any more: the day ended.
             if (_endOfDay.value !is LoadState.Ready) retry()
@@ -159,7 +165,9 @@ class UnderwayViewModel(
             clock: UnderwayClock,
             notificationsAllowed: () -> Boolean,
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { UnderwayViewModel(uid, coordinator, clock, notificationsAllowed) }
+            initializer {
+                UnderwayViewModel(uid, coordinator, clock, notificationsAllowed, createSavedStateHandle())
+            }
         }
     }
 }

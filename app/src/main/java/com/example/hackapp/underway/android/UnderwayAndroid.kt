@@ -30,6 +30,10 @@ private fun BroadcastReceiver.async(block: suspend () -> Unit) {
     CoroutineScope(Dispatchers.Default).launch {
         try {
             block()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            android.util.Log.w("Underway", "Receiver work failed", e)
         } finally {
             pending.finish()
         }
@@ -62,9 +66,18 @@ class UnderwayActionReceiver : BroadcastReceiver() {
     }
 }
 
+private val BootActions = setOf(
+    Intent.ACTION_BOOT_COMPLETED,
+    Intent.ACTION_MY_PACKAGE_REPLACED,
+    Intent.ACTION_TIME_CHANGED,
+    Intent.ACTION_TIMEZONE_CHANGED,
+)
+
 /** After a reboot, an app update or a clock change, alarms are gone or wrong. */
 class UnderwayBootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        async { context.coordinator().onBoot() }
+        if (intent.action !in BootActions) return
+        val app = context.applicationContext as HackappApplication
+        async { app.underwayCoordinator.onBoot(app.currentUid()) }
     }
 }

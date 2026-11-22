@@ -83,7 +83,7 @@ sealed interface UnderwayEvent {
 
 enum class Rejection { NeedsConfirmation, StaleStop, WrongPhase, Ended }
 
-enum class AlertKind { ArrivalReminder, LeaveBy, LateWarning }
+enum class AlertKind { ArrivalReminder, LeaveBy, LateWarning, AutoEnd }
 
 /** A notification the engine wants shown, and the time it is due. [id] is `<kind>:<stopId>`. */
 data class PlannedAlert(

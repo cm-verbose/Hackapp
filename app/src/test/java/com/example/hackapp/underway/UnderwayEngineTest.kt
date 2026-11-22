@@ -325,4 +325,26 @@ class UnderwayEngineTest {
         assertEquals(StopStatus.Skipped, UnderwayEngine.stampItinerary(itinerary, s).stops.first().status)
         assertEquals(StopStatus.Confirmed, synced.stops.first().status)
     }
+
+    @Test
+    fun `skipping the next Stop gives the Leave By alert a new id so it alerts again`() {
+        val atA = ctx.run(begin(), t(19) to E.ConfirmArrival())
+        val first = UnderwayEngine.scheduledAlerts(ctx, atA).single { it.kind == AlertKind.LeaveBy }
+        assertEquals("LeaveBy:a:b", first.id)
+        val fired = reduce(atA, E.Tick, t(21)).state
+        assertTrue(first.id in fired.firedAlerts)
+        val skipped = reduce(fired, E.SkipStop("b"), t(21, 1)).state
+        val second = UnderwayEngine.scheduledAlerts(ctx, skipped).single { it.kind == AlertKind.LeaveBy }
+        assertEquals("LeaveBy:a:c", second.id)
+    }
+
+    @Test
+    fun `the automatic end is an alarm and never a notification`() {
+        val s = begin()
+        val alarms = UnderwayEngine.alarmsToSchedule(ctx, s)
+        assertEquals(t(4, day = Nov29), alarms.single { it.kind == AlertKind.AutoEnd }.at)
+        assertTrue(reduce(s, E.Tick, t(23)).effects.none { it is UnderwayEffect.Notify && it.alert.kind == AlertKind.AutoEnd })
+        val ended = reduce(s, E.EndItinerary(true), t(19)).state
+        assertTrue(UnderwayEngine.alarmsToSchedule(ctx, ended).isEmpty())
+    }
 }

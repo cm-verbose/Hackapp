@@ -53,8 +53,10 @@ class UnderwayCoordinatorTest {
         clk: UnderwayClock = clock,
         repo: UnderwayRepository = states,
         sched: UnderwayAlertScheduler = scheduler,
+        its: com.example.hackapp.itinerary.ItineraryRepository = itineraries,
+        resolver: suspend (It) -> StampIdentityResolver = { PlaceStampIdentityResolver({ null }) },
     ) = UnderwayCoordinator(
-        itineraries, repo, stampRepo, { PlaceStampIdentityResolver({ null }) }, fixedLegs(20), clk, sched, notifier,
+        its, repo, stampRepo, resolver, fixedLegs(20), clk, sched, notifier,
     )
 
     private fun draft(id: String = "it-1", stops: List<com.example.hackapp.itinerary.Stop> = listOf(stopA(), stopB(), stopC())): It =
@@ -73,7 +75,7 @@ class UnderwayCoordinatorTest {
         assertEquals(UnderwayPhase.Leg, r.view.phase)
         assertEquals(false, r.askExactAlarm)
         assertEquals(ItineraryPhase.Underway, itineraries.getItinerary(UID, "it-1")!!.phase)
-        assertEquals(listOf(AlertKind.ArrivalReminder), scheduler.alertsFor("it-1").map { it.kind })
+        assertEquals(listOf(AlertKind.ArrivalReminder, AlertKind.AutoEnd), scheduler.alertsFor("it-1").map { it.kind })
     }
 
     @Test
@@ -82,7 +84,7 @@ class UnderwayCoordinatorTest {
         val sched = FakeUnderwayAlertScheduler(exactAllowed = false)
         val r = coordinator(sched = sched).start(UID, "it-1", null) as UnderwayStartResult.Started
         assertEquals(true, r.askExactAlarm)
-        assertEquals(1, sched.alertsFor("it-1").size)
+        assertEquals(2, sched.alertsFor("it-1").size)
     }
 
     @Test
@@ -103,7 +105,7 @@ class UnderwayCoordinatorTest {
         val view = reborn.view(UID, true)!!
         assertEquals(UnderwayPhase.AtStop, view.phase)
         assertEquals("a", view.currentStop!!.id)
-        assertEquals(setOf(AlertKind.LeaveBy, AlertKind.LateWarning), scheduler.alertsFor("it-1").map { it.kind }.toSet())
+        assertEquals(setOf(AlertKind.LeaveBy, AlertKind.LateWarning, AlertKind.AutoEnd), scheduler.alertsFor("it-1").map { it.kind }.toSet())
     }
 
     @Test
@@ -208,7 +210,7 @@ class UnderwayCoordinatorTest {
         clock.current = t(20, 30)
         ev(c, E.SkipStop("b"))
         clock.current = t(9, day = Nov29) // long after the automatic end at 04:00
-        c.onBoot()
+        c.onBoot(UID)
         val state = states.get(UID, "it-1")!!
         assertEquals(EndReason.Automatic, state.endReason)
         assertEquals(false, state.stampsAwarded) // the first award failed
@@ -240,5 +242,78 @@ class UnderwayCoordinatorTest {
         assertEquals("z", c.view(UID, true)!!.currentStop!!.id)
         assertNotNull(states.get(UID, "it-2"))
         assertTrue(scheduler.alertsFor("it-1").isEmpty())
+    }
+
+    @Test
+    fun `a wake-up alarm is set at the automatic end`() = runBlocking {
+        save(draft())
+        coordinator().start(UID, "it-1", null)
+        val autoEnd = scheduler.alertsFor("it-1").single { it.kind == AlertKind.AutoEnd }
+        assertEquals(t(4, day = Nov29), autoEnd.at)
+    }
+
+    @Test
+    fun `signing out cancels alarms and notifications`() = runBlocking {
+        save(draft())
+        val c = coordinator()
+        c.start(UID, "it-1", null)
+        val before = notifier.cancelCount
+        c.onSignOut(UID)
+        assertTrue(scheduler.alertsFor("it-1").isEmpty())
+        assertTrue(notifier.cancelCount > before)
+    }
+
+    @Test
+    fun `boot only reschedules the signed-in account`() = runBlocking {
+        save(draft())
+        val c = coordinator()
+        c.start(UID, "it-1", null)
+        scheduler.pending.clear()
+        c.onBoot(null)
+        c.onBoot("someone-else")
+        assertTrue(scheduler.alertsFor("it-1").isEmpty())
+        c.onBoot(UID)
+        assertEquals(2, scheduler.alertsFor("it-1").size)
+    }
+
+    @Test
+    fun `a failing Place lookup leaves the award to a later retry`() = runBlocking {
+        save(draft())
+        var broken = true
+        val c = coordinator(resolver = { if (broken) error("places db") else PlaceStampIdentityResolver({ null }) })
+        c.start(UID, "it-1", null)
+        clock.current = t(19)
+        finishDay(c)
+        assertEquals(false, states.get(UID, "it-1")!!.stampsAwarded)
+        assertEquals(false, c.endOfDay(UID, "it-1")!!.stampsAvailable)
+        broken = false
+        c.onAppOpen(UID)
+        assertTrue(states.get(UID, "it-1")!!.stampsAwarded)
+        assertEquals(3, stamps.inner.observeStamps(UID).first().size)
+    }
+
+    @Test
+    fun `a failed Itinerary save still schedules alerts and clears notifications, then rethrows`() = runBlocking {
+        save(draft())
+        var failing = false
+        val flaky = object : com.example.hackapp.itinerary.ItineraryRepository by itineraries {
+            override suspend fun saveItinerary(itinerary: It) {
+                if (failing) throw java.io.IOException("disk")
+                itineraries.saveItinerary(itinerary)
+            }
+        }
+        val c = coordinator(its = flaky)
+        c.start(UID, "it-1", null)
+        clock.current = t(19)
+        failing = true
+        val before = notifier.cancelCount
+        val thrown = try { ev(c, E.ConfirmArrival("a")); null } catch (e: java.io.IOException) { e }
+        assertNotNull(thrown)
+        assertTrue(notifier.cancelCount > before)
+        assertEquals(setOf(AlertKind.LeaveBy, AlertKind.LateWarning, AlertKind.AutoEnd), scheduler.alertsFor("it-1").map { it.kind }.toSet())
+        // The state was saved first, so the next app open repairs the Itinerary.
+        failing = false
+        c.onAppOpen(UID)
+        assertEquals(com.example.hackapp.itinerary.StopStatus.Confirmed, itineraries.getItinerary(UID, "it-1")!!.stops.first().status)
     }
 }

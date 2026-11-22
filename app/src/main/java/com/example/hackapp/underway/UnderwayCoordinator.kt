@@ -13,6 +13,7 @@ import com.example.hackapp.passport.StampIdentityResolver
 import com.example.hackapp.passport.StampRepository
 import com.example.hackapp.passport.StopStampResult
 import com.example.hackapp.services.LegEstimator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -142,9 +143,17 @@ class UnderwayCoordinator(
 
     }
 
-    /** After a reboot or a time change: reschedule every account's Underway Itinerary. */
-    suspend fun onBoot(): Unit = lock.withLock {
-        states.all().map { it.ownerUid }.distinct().forEach { reconcile(it) }
+    /** After a reboot or a time change: reschedule the signed-in account's Underway Itinerary. */
+    suspend fun onBoot(uid: String?): Unit = lock.withLock {
+        if (uid != null) reconcile(uid)
+    }
+
+    /** Signing out: this account's alarms and notifications must not outlive the session. */
+    suspend fun onSignOut(uid: String): Unit = lock.withLock {
+        states.all().filter { it.ownerUid == uid }.forEach {
+            scheduler.cancelAll(it.itineraryId)
+            notifier.cancelAll(it.itineraryId)
+        }
     }
 
     // ---- internals (lock held) ----
@@ -179,7 +188,17 @@ class UnderwayCoordinator(
         // State first: it is the source of truth. The Itinerary is re-synced by [reconcile] if we die here.
         if (t.state != state) states.save(t.state)
         val synced = UnderwayEngine.syncItinerary(itinerary, t.state, now)
-        if (synced != itinerary) itineraries.saveItinerary(synced)
+        // A failed sync must not drop the alerts or the notifications: run them, then rethrow.
+        var syncFailure: Exception? = null
+        if (synced != itinerary) {
+            try {
+                itineraries.saveItinerary(synced)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                syncFailure = e
+            }
+        }
         t.effects.forEach { effect ->
             when (effect) {
                 is UnderwayEffect.Notify -> notifier.show(uid, itinerary.id, effect.alert)
@@ -188,6 +207,7 @@ class UnderwayCoordinator(
             }
         }
         reschedule(uid, synced, t.state)
+        syncFailure?.let { throw it }
         if (t.state.phase == UnderwayPhase.Ended && !t.state.stampsAwarded) {
             if (awardOrNull(synced, t.state) != null) states.save(t.state.copy(stampsAwarded = true))
         }
@@ -198,7 +218,7 @@ class UnderwayCoordinator(
         if (state.phase == UnderwayPhase.Ended) {
             scheduler.cancelAll(state.itineraryId)
         } else {
-            scheduler.replaceAll(uid, state.itineraryId, UnderwayEngine.scheduledAlerts(ctx(itinerary), state))
+            scheduler.replaceAll(uid, state.itineraryId, UnderwayEngine.alarmsToSchedule(ctx(itinerary), state))
         }
     }
 
@@ -208,6 +228,11 @@ class UnderwayCoordinator(
             val toAward = UnderwayEngine.stampItinerary(itinerary, state)
             stamps.award(toAward, resolverFor(toAward), state.endedAtMillis ?: Instant.EPOCH.toEpochMilli())
         } catch (_: PassportUnavailableException) {
+            null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // A resolver or storage failure: the award is retried later.
             null
         }
 }

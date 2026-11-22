@@ -235,7 +235,7 @@ object UnderwayEngine {
                 val leave = leaveBy(current, next, ctx.estimator)
                 val alerts = mutableListOf(
                     PlannedAlert(
-                        id = "${AlertKind.LeaveBy.name}:${current.id}",
+                        id = "${AlertKind.LeaveBy.name}:${current.id}:${next.id}",
                         kind = AlertKind.LeaveBy,
                         at = leave.minusMinutes(LEAVE_ALERT_MINUTES).toInstant(),
                         highPriority = true,
@@ -268,6 +268,26 @@ object UnderwayEngine {
     /** Alerts still to be delivered: applicable and not fired yet. */
     fun scheduledAlerts(ctx: UnderwayContext, state: UnderwayState): List<PlannedAlert> =
         desiredAlerts(ctx, state).filter { it.id !in state.firedAlerts }.sortedBy { it.at }
+
+    /**
+     * Everything to hand to the alarm scheduler: the alerts still to deliver, plus a wake-up at the
+     * automatic end so a forgotten Itinerary ends and awards its Stamps with the app closed.
+     * The AutoEnd entry is never shown as a notification.
+     */
+    fun alarmsToSchedule(ctx: UnderwayContext, state: UnderwayState): List<PlannedAlert> {
+        if (state.phase == UnderwayPhase.Ended) return emptyList()
+        val end = autoEndAt(ctx)
+        val autoEnd = PlannedAlert(
+            id = "${AlertKind.AutoEnd.name}:${state.itineraryId}",
+            kind = AlertKind.AutoEnd,
+            at = end,
+            highPriority = false,
+            stopId = "",
+            stopName = "",
+            stopStart = end.atZone(ctx.zone).toOffsetDateTime(),
+        )
+        return scheduledAlerts(ctx, state) + autoEnd
+    }
 
     /**
      * The next moment after [time] when something happens: an alert, a Stop start, a Leave By or

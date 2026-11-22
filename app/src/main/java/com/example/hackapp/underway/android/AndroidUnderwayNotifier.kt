@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /** Notifications with the Stop name and time, visible on the lock screen. Text is from resources. */
-class AndroidUnderwayNotifier(context: Context) : UnderwayNotifier {
+class AndroidUnderwayNotifier(context: Context, private val zone: java.time.ZoneId) : UnderwayNotifier {
     private val appContext = context.applicationContext
     private val manager = NotificationManagerCompat.from(appContext)
     private val shownIds = appContext.getSharedPreferences("underway_notifications", Context.MODE_PRIVATE)
@@ -39,25 +39,27 @@ class AndroidUnderwayNotifier(context: Context) : UnderwayNotifier {
         ensureChannels()
         val locale = Locale.getDefault()
         val value = DateTimeFormatter.ofPattern("HH:mm", locale)
+        fun local(time: java.time.OffsetDateTime) = time.atZoneSameInstant(zone).toLocalTime()
         val (channel, title, body) = when (alert.kind) {
             AlertKind.ArrivalReminder -> Triple(
                 CH_ARRIVAL,
                 appContext.getString(R.string.notification_arrival_title),
-                appContext.getString(R.string.notification_arrival_body, alert.stopName, value.format(alert.stopStart)),
+                appContext.getString(R.string.notification_arrival_body, alert.stopName, value.format(local(alert.stopStart))),
             )
             AlertKind.LeaveBy -> Triple(
                 CH_LEAVE,
                 appContext.getString(
                     R.string.notification_leave_title,
-                    formatSentenceTime(alert.leaveBy?.toLocalTime() ?: alert.stopStart.toLocalTime(), locale),
+                    formatSentenceTime(local(alert.leaveBy ?: alert.stopStart), locale),
                 ),
                 appContext.getString(R.string.notification_leave_body, alert.nextStopName.orEmpty()),
             )
+            AlertKind.AutoEnd -> return
             AlertKind.LateWarning -> Triple(
                 CH_LATE,
                 appContext.getString(R.string.notification_late_title),
                 appContext.getString(
-                    R.string.notification_late_body, alert.stopName, formatSentenceTime(alert.stopStart.toLocalTime(), locale),
+                    R.string.notification_late_body, alert.stopName, formatSentenceTime(local(alert.stopStart), locale),
                 ),
             )
         }
@@ -81,6 +83,7 @@ class AndroidUnderwayNotifier(context: Context) : UnderwayNotifier {
             AlertKind.LeaveBy -> {
                 builder.addAction(0, appContext.getString(R.string.action_leaving), action(uid, itineraryId, UnderwayAndroid.ACTION_LEAVING, alert.stopId, alert.id))
             }
+            AlertKind.AutoEnd -> Unit
             AlertKind.LateWarning -> {
                 builder.addAction(0, appContext.getString(R.string.action_go_anyway), action(uid, itineraryId, UnderwayAndroid.ACTION_GO_ANYWAY, alert.stopId, alert.id))
             }
