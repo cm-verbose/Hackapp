@@ -1,5 +1,7 @@
 package com.example.hackapp.scaffold.navigation
 
+import com.example.hackapp.domain.UserProfile
+import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import kotlinx.serialization.Serializable
 
 /*
@@ -16,6 +18,13 @@ import kotlinx.serialization.Serializable
 @Serializable data object OnboardingProfileRoute
 @Serializable data object OnboardingBudgetAudienceRoute
 @Serializable data object OnboardingInterestsRoute
+
+/**
+ * Where sign-in leads: onboarding for every new account, and for any account until this device's
+ * profile says onboarding is done (onboarding quit halfway, or an existing account on a new device).
+ */
+fun afterSignInRoute(profile: UserProfile, isNewUser: Boolean): Any =
+    if (isNewUser || !profile.onboarded) OnboardingVisitorTypeRoute else ScreenHomeDestination
 
 // Settings (the top-level tabs use ScreenItineraryDestination and ScreenPassportDestination)
 @Serializable data object SettingsRoute

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.domain.FlowViewModel
+import com.example.hackapp.domain.StartLocation
 import com.example.hackapp.domain.StopStatus
 import com.example.hackapp.domain.UnderwayProgress
 import com.example.hackapp.domain.durationMinutes
@@ -110,13 +111,14 @@ private fun rememberPageProgress(vm: FlowViewModel): PageProgress {
     }
 }
 
-/** Last known position, if the person allowed location. */
+/** Last known position, if the person allowed location and it is near the city (see [StartLocation]). */
 @SuppressLint("MissingPermission")
 private fun lastKnown(context: Context): LatLng? {
     val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     return listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
         .firstNotNullOfOrNull { runCatching { manager.getLastKnownLocation(it) }.getOrNull() }
         ?.let { LatLng(it.latitude, it.longitude) }
+        ?.takeIf { StartLocation.isUsable(it) }
 }
 
 /** 1/4: how to get to the next Stop; the first leg starts from the current position when allowed. */
@@ -140,8 +142,12 @@ fun ScreenUnderwayLeg(vm: FlowViewModel, onBack: () -> Unit, onArrive: () -> Uni
         if (p.index == 0 && p.fromLat == null) askLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
 
-    val from: LatLng? = if (p.index == 0) p.fromLat?.let { lat -> p.fromLng?.let { LatLng(lat, it) } }
-    else p.itinerary.stops[p.index - 1].location
+    // A start saved before this check existed may still be far away: ignore it too (no estimate).
+    val from: LatLng? = if (p.index == 0) {
+        p.fromLat?.let { lat -> p.fromLng?.let { LatLng(lat, it) } }?.takeIf { StartLocation.isUsable(it) }
+    } else {
+        p.itinerary.stops[p.index - 1].location
+    }
     val mode = if (p.useRideHail) LegMode.RIDE_HAIL else LegMode.TRANSIT
     val estimate = remember(from, stop.id, mode) { from?.let { f -> stop.location?.let { services.legs.estimate(f, it, mode) } } }
     val depart = if (p.index == 0) LocalTime.now(services.cityPack.timeZone) else p.itinerary.stops[p.index - 1].departure.toLocalTime()
@@ -176,7 +182,6 @@ fun ScreenUnderwayLeg(vm: FlowViewModel, onBack: () -> Unit, onArrive: () -> Uni
             },
             modifier = Modifier.entrance(0),
         )
-        Text(stringResource(R.string.leg_how_to_get_there), style = MaterialTheme.typography.titleMedium)
         TransportChoiceCard(
             selected = if (p.useRideHail) TransportChoice.RideHail else TransportChoice.Transit,
             onSelect = { vm.setRideHail(it == TransportChoice.RideHail) },
@@ -184,7 +189,7 @@ fun ScreenUnderwayLeg(vm: FlowViewModel, onBack: () -> Unit, onArrive: () -> Uni
             fareLabel = services.fares.fareForLeg().label.get(language).orEmpty(),
             modifier = Modifier.entrance(1),
         )
-        if (p.index == 0 && p.fromLat != null) {
+        if (p.index == 0 && from != null) {
             Text(stringResource(R.string.leg_start_from_location, depart.format(HHMM)), style = MaterialTheme.typography.bodySmall)
         }
         NextStopCard(stop.title, p.index + 1, p.itinerary.stops.size, stop.details.orEmpty(), Modifier.entrance(2))

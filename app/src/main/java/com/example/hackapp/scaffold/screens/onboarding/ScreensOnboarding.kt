@@ -63,9 +63,9 @@ private fun brackets(vm: FlowViewModel): List<PriceBracket> {
     return list
 }
 
-/** Step 1: Visitor or Resident. Resident is shown but not available yet. */
+/** Step 1: Visitor or Resident. Resident is shown but not available yet. No [onBack] = no back arrow. */
 @Composable
-fun ScreenOnboardingVisitorType(vm: FlowViewModel, onBack: () -> Unit, onNext: () -> Unit) {
+fun ScreenOnboardingVisitorType(vm: FlowViewModel, onBack: (() -> Unit)?, onNext: () -> Unit) {
     val scope = rememberCoroutineScope()
     HackappPage(
         title = stringResource(R.string.onboarding_visitor_type_title),

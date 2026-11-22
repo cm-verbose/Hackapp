@@ -12,6 +12,7 @@ import com.example.hackapp.data.repository.PlaceRepository
 import com.example.hackapp.services.LegEstimator
 import com.example.hackapp.services.LegMode
 import com.example.hackapp.ui.theme.StopType
+import java.time.Clock
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
@@ -47,16 +48,24 @@ class ItineraryPlanner(
     private val places: () -> PlaceRepository,
     private val legs: LegEstimator,
     private val zone: ZoneId,
+    /** "Now" for the already-started rule; injected so tests are deterministic. */
+    private val clock: Clock,
 ) {
+    private fun now(): LocalDateTime = LocalDateTime.ofInstant(clock.instant(), zone)
+
     private fun EventQuery.forWindow(input: PlanInput, districts: Set<String>?) = copy(
         districtIds = districts,
         startsAtOrAfter = input.window.startAt.atZone(zone).toOffsetDateTime(),
         startsBefore = input.window.endAt.atZone(zone).toOffsetDateTime(),
     )
 
-    private suspend fun eligible(input: PlanInput, districts: Set<String>): List<Event> =
-        events.search(EventQuery().forWindow(input, districts))
+    /** Events that may be offered: eligible for the person and not started yet. */
+    private suspend fun eligible(input: PlanInput, districts: Set<String>): List<Event> {
+        val now = now()
+        return events.search(EventQuery().forWindow(input, districts))
             .filter { it.isEligible(input.profile, input.audience) }
+            .filter { e -> e.startLocal(zone)?.let { !it.isBefore(now) } == true }
+    }
 
     /** Badge numbers for DistrictPick: matching Events per District for the whole window. */
     suspend fun countsByDistrict(input: PlanInput, allDistricts: Collection<String>): Map<String, Int> =
@@ -187,15 +196,18 @@ class ItineraryPlanner(
     companion object {
         val BAR_FROM: LocalTime = LocalTime.of(17, 0)
 
-        /** Standard meal times offered by MealChoice. */
-        fun mealTimes(window: PlanWindow): List<MealBlock> =
+        /** Standard meal times offered by MealChoice; with [now], meals that already started are dropped. */
+        fun mealTimes(window: PlanWindow, now: LocalDateTime? = null): List<MealBlock> =
             listOf(
                 MealSlot.LUNCH to LocalTime.of(12, 0),
                 MealSlot.DINNER to LocalTime.of(18, 30),
                 MealSlot.EVENING to LocalTime.of(22, 0),
             ).mapNotNull { (slot, time) ->
                 val at = listOf(window.date.atTime(time), window.date.plusDays(1).atTime(time))
-                    .firstOrNull { it >= window.startAt && it.plusMinutes(MealBlock.MEAL_MINUTES) <= window.endAt }
+                    .firstOrNull {
+                        it >= window.startAt && it.plusMinutes(MealBlock.MEAL_MINUTES) <= window.endAt &&
+                            (now == null || !it.isBefore(now))
+                    }
                 at?.let { MealBlock(slot, it) }
             }
     }

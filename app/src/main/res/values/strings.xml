@@ -86,6 +86,12 @@
     <string name="action_confirm">Confirmer</string>
     <string name="action_retry">Réessayer</string>
     <string name="state_loading">Chargement…</string>
+    <string name="planning_no_events_title">Aucun événement dans ce créneau</string>
+    <string name="planning_no_events_body">Les événements déjà commencés sont masqués. Essayez une heure plus tardive, la soirée, une autre date ou un autre budget.</string>
+    <string name="planning_change_time">Modifier la date et l’heure</string>
+    <string name="selection_no_events_title">Aucun événement possible à %1$s</string>
+    <string name="selection_no_events_body_next">Rien n’est atteignable ici après votre arrêt précédent. Passez à l’arrondissement suivant.</string>
+    <string name="selection_no_events_body_last">Rien n’est atteignable ici après votre arrêt précédent. Revenez en arrière pour changer d’arrondissements ou d’horaire.</string>
     <string name="underway_already_updated">Cet arrêt avait déjà été mis à jour depuis une notification.</string>
     <string name="state_error_title">Une erreur est survenue</string>
     <string name="state_empty_title">Rien à afficher pour le moment</string>

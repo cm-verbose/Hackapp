@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -41,6 +42,11 @@ import com.example.hackapp.scaffold.screens.underway.ScreenUnderwayArrival
 import com.example.hackapp.scaffold.screens.underway.ScreenUnderwayAtStop
 import com.example.hackapp.scaffold.screens.underway.ScreenUnderwayEndOfDay
 import com.example.hackapp.scaffold.screens.underway.ScreenUnderwayLeg
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import com.example.hackapp.domain.UserProfile
 
 /**
  * Handles the navigation between screens which allows for dividing content
@@ -53,6 +59,18 @@ import com.example.hackapp.scaffold.screens.underway.ScreenUnderwayLeg
 fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
     val app = LocalContext.current.applicationContext as HackappApplication
     val vm: FlowViewModel = viewModel(factory = FlowViewModel.Factory(app))
+    val scope = rememberCoroutineScope()
+    // New accounts and unfinished onboarding both go to onboarding (waits for DataStore). The profile
+    // is per device, so a new account first gets a fresh one: no previous person's name or email.
+    val onSignedIn: (Boolean) -> Unit = { isNewUser ->
+        scope.launch {
+            if (isNewUser) {
+                vm.profileStore.clear()
+                withTimeoutOrNull(2_000) { vm.profile.first { it == UserProfile() } }
+            }
+            controller.finishSignIn(afterSignInRoute(vm.profile.filterNotNull().first(), isNewUser))
+        }
+    }
 
     NavHost(
         navController = controller,
@@ -64,7 +82,7 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
     ) {
         composable<ScreenLoginDestination> {
             ScreenLogin(
-                onSignedIn = controller::finishSignIn,
+                onSignedIn = onSignedIn,
                 onRegister = { controller.navigate(RegisterRoute) },
                 onForgotPassword = { controller.navigate(PasswordResetRoute) },
             )
@@ -72,7 +90,7 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
         composable<RegisterRoute> {
             ScreenRegister(
                 onBack = { controller.popBackStack() },
-                onSignedIn = controller::finishSignIn,
+                onSignedIn = onSignedIn,
             )
         }
         composable<PasswordResetRoute> {
@@ -80,7 +98,14 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
         }
         composable<PlanningScreenDestination> {
             Box(Modifier.padding(padding)) {
-                ScreenPlanning(onLogOff = { controller.navigate(ScreenLoginDestination) })
+                ScreenPlanning(
+                    onLogOff = {
+                        controller.navigate(ScreenLoginDestination) {
+                            popUpTo(controller.graph.id) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
         }
         composable<PlacesDestination> {
@@ -130,7 +155,12 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
         }
 
         composable<OnboardingVisitorTypeRoute> {
-            ScreenOnboardingVisitorType(vm, { controller.popBackStack() }, { controller.navigate(OnboardingProfileRoute) })
+            // Right after sign-in this page is the root: no back arrow (popping it would leave a blank screen).
+            ScreenOnboardingVisitorType(
+                vm,
+                onBack = controller.previousBackStackEntry?.let { { controller.popBackStack() } },
+                onNext = { controller.navigate(OnboardingProfileRoute) },
+            )
         }
         composable<OnboardingProfileRoute> {
             ScreenOnboardingProfile(vm, { controller.popBackStack() }, { controller.navigate(OnboardingBudgetAudienceRoute) })
@@ -219,9 +249,8 @@ private fun NavHostController.afterStop(saved: UnderwayProgress?) {
     }
 }
 
-/** Leaves the auth screens for good: new accounts go through onboarding, others go Home. */
-private fun NavHostController.finishSignIn(isNewUser: Boolean) {
-    val next: Any = if (isNewUser) OnboardingVisitorTypeRoute else ScreenHomeDestination
+/** Leaves the auth screens for good, to [next] (see [afterSignInRoute]). */
+private fun NavHostController.finishSignIn(next: Any) {
     navigate(next) {
         popUpTo(ScreenLoginDestination) { inclusive = true }
         launchSingleTop = true

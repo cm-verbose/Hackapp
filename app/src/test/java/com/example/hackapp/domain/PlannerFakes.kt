@@ -114,8 +114,15 @@ internal class FakePlaceRepository(
 /** Every Leg takes [travel] minutes plus [buffer] minutes. */
 internal fun fixedLegs(travel: Int = 10, buffer: Int = 5) = LegEstimator { _, _, _ -> LegEstimate(1000.0, travel, buffer) }
 
-internal fun planner(events: List<Event> = emptyList(), places: PlaceRepository = FakePlaceRepository(emptyList()), legs: LegEstimator = fixedLegs()) =
-    ItineraryPlanner(FakeEventRepository(events), { places }, legs, ZONE)
+/** "Now" for the planner in tests: the start of [DAY], so every fixture Event is still to come. */
+internal val START_OF_DAY: java.time.Clock = java.time.Clock.fixed(DAY.atStartOfDay(ZONE).toInstant(), ZONE)
+
+internal fun planner(
+    events: List<Event> = emptyList(),
+    places: PlaceRepository = FakePlaceRepository(emptyList()),
+    legs: LegEstimator = fixedLegs(),
+    clock: java.time.Clock = START_OF_DAY,
+) = ItineraryPlanner(FakeEventRepository(events), { places }, legs, ZONE, clock)
 
 internal fun input(
     window: PlanWindow = PlanWindow(DAY, java.time.LocalTime.of(10, 0), java.time.LocalTime.of(23, 0)),

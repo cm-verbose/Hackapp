@@ -56,6 +56,13 @@ Priority: **D-P0** = the demo can get stuck. **D-P1** = confusing on stage but s
 
 Notes: `%1$s` is the borough name from the City Pack (`names[district]`). Use typographic apostrophes (’), as the existing strings do. Every message uses the existing `EmptyState` / `InfoCallout` components; nothing new is built.
 
+## Post-demo copy fix (found in the T18b review)
+`selection_no_events_body_next` / `_last` say "after your previous stop", which is wrong when no stop has been chosen yet (the first borough, or Next borough tapped with nothing chosen). Add a neutral variant for when `previous == null`:
+- FR: "Aucun événement n’est encore possible ici dans ce créneau."
+- EN: "No event in this time window can still be reached here."
+
+Keep the existing second sentence of each body ("Passez à l’arrondissement suivant." / "Go to the next borough." or "Go back to change boroughs or times.").
+
 ## Demo test path (when the emulator is signed in)
 1. At about 17:00 today: Plan, keep Day out, Continue. Expect state 1, then "Change date and time" goes back.
 2. Switch to Night out, then pick 2 boroughs. On the last one, choose an event late enough that nothing after it is reachable. Expect state 2 with the "last" body.

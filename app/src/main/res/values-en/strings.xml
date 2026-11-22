@@ -88,6 +88,12 @@
     <string name="action_confirm">Confirm</string>
     <string name="action_retry">Try again</string>
     <string name="state_loading">Loading…</string>
+    <string name="planning_no_events_title">No events in this time window</string>
+    <string name="planning_no_events_body">Events that have already started are hidden. Try a later time, a night out, another date or another budget.</string>
+    <string name="planning_change_time">Change date and time</string>
+    <string name="selection_no_events_title">No events left in %1$s</string>
+    <string name="selection_no_events_body_next">Nothing here can be reached after your previous stop. Go to the next borough.</string>
+    <string name="selection_no_events_body_last">Nothing here can be reached after your previous stop. Go back to change boroughs or times.</string>
     <string name="underway_already_updated">This stop was already updated from a notification.</string>
     <string name="state_error_title">Something went wrong</string>
     <string name="state_empty_title">Nothing to show yet</string>

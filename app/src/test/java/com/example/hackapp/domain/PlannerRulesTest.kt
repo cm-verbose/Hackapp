@@ -96,7 +96,7 @@ class PlannerRulesTest {
     }
 
     @Test fun unpublishedEndNeedsAChosenDeparture() {
-        val planner = ItineraryPlanner(FakeEvents, { error("unused") }, { _, _, _ -> error("unused") }, zone)
+        val planner = ItineraryPlanner(FakeEvents, { error("unused") }, { _, _, _ -> error("unused") }, zone, START_OF_DAY)
         assertNull(planner.eventStop(event(), null))
         val stop = planner.eventStop(event(), java.time.LocalTime.of(22, 0))!!
         assertEquals(LocalDateTime.of(2026, 11, 21, 22, 0), stop.departure)

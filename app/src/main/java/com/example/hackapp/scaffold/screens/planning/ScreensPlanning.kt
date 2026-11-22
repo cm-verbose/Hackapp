@@ -118,7 +118,7 @@ fun ScreenPlanningDateTime(vm: FlowViewModel, onBack: () -> Unit, onNext: () -> 
             value = vm.window.date,
             onValueChange = vm::setDate,
             label = stringResource(R.string.planning_date),
-            firstDate = FlowViewModel.FIRST_DATE,
+            firstDate = vm.firstPlanDate,
             lastDate = FlowViewModel.LAST_DATE,
             modifier = Modifier.entrance(0),
         )
@@ -184,6 +184,14 @@ fun ScreenPlanningDistrictPick(vm: FlowViewModel, onBack: () -> Unit, onNext: ()
             LoadingState()
         } else {
             val c = counts.orEmpty()
+            if (boroughs.none { (c[it] ?: 0) > 0 }) {
+                EmptyState(
+                    title = stringResource(R.string.planning_no_events_title),
+                    body = stringResource(R.string.planning_no_events_body),
+                    actionLabel = stringResource(R.string.planning_change_time),
+                    onAction = onBack,
+                )
+            }
             DistrictMap(
                 map = map,
                 stateOf = { id ->
@@ -225,7 +233,12 @@ fun ScreenPlanningDistrictPick(vm: FlowViewModel, onBack: () -> Unit, onNext: ()
 /** 3/5: let the app plan meals (and when), or skip. */
 @Composable
 fun ScreenPlanningMealChoice(vm: FlowViewModel, onBack: () -> Unit, onNext: () -> Unit) {
-    val options = remember(vm.window) { ItineraryPlanner.mealTimes(vm.window) }
+    val options = remember(vm.window) { ItineraryPlanner.mealTimes(vm.window, vm.now()) }
+    // A meal chosen earlier that no longer fits (window changed, or it has started) is replaced.
+    LaunchedEffect(options) {
+        val chosen = vm.meal
+        if (chosen != null && chosen !in options) vm.chooseMeal(options.firstOrNull())
+    }
     HackappPage(
         title = stringResource(R.string.meal_title),
         onBack = onBack,
@@ -335,7 +348,12 @@ fun ScreenPlanningStopSelection(vm: FlowViewModel, onBack: () -> Unit, onReview:
             if (prompt != null && !promptShown) {
                 MealBlockPrompt(prompt.blockStart.format(HHMM), prompt.blockEnd.format(HHMM), { mealPicker = true })
             }
-            if (v.blocks.isEmpty() && prompt == null) EmptyState(title = stringResource(R.string.state_empty_title))
+            if (v.blocks.isEmpty() && prompt == null) {
+                EmptyState(
+                    title = stringResource(R.string.selection_no_events_title, names[district] ?: district),
+                    body = stringResource(if (isLast) R.string.selection_no_events_body_last else R.string.selection_no_events_body_next),
+                )
+            }
         }
         DataAttribution()
     }

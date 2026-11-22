@@ -1,25 +1,30 @@
 package com.example.hackapp.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
+import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.ui.theme.StopType
 
 /**
- * Figma "LegHeader" (53:1108): the next stop on the Underway Leg screen, drawn on the dark
- * hero card. [stopTypeTag] is a slot for StopTypeTag (Eric's component).
+ * Figma "LegHeader" (53:1108): the next stop on the Underway Leg screen. It draws its own dark hero
+ * card (its text colours are made for it), so it is readable on any page background.
+ * [stopTypeTag] is a slot for StopTypeTag.
  */
 @Composable
 fun LegHeader(
@@ -32,7 +37,11 @@ fun LegHeader(
 ) {
     val colors = HackappTheme.appColors
     Column(
-        modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 16.dp),
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(HackappCorners.ExtraLarge))
+            .background(colors.heroCard)
+            .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -58,7 +67,7 @@ fun LegHeader(
 @Preview(
     name = "LegHeader",
     showBackground = true,
-    backgroundColor = PreviewDefaults.HERO_CARD,
+    backgroundColor = PreviewDefaults.CANVAS,
     widthDp = PreviewDefaults.WIDTH_DP,
 )
 @Composable

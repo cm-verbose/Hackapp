@@ -15,6 +15,7 @@ import com.example.hackapp.services.AppLocale
 import com.example.hackapp.data.model.PriceBracket
 import com.example.hackapp.services.CityServices
 import com.example.hackapp.services.UnderwayNotifier
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -36,13 +37,21 @@ data class UnderwayLoad(val progress: UnderwayProgress?)
 class FlowViewModel(
     private val app: HackappApplication,
     val services: CityServices,
+    /** "Now" for the default date and the already-started rule; tests pass a fixed one. */
+    private val clock: Clock = Clock.system(services.cityPack.timeZone),
 ) : ViewModel() {
     private val zone = services.cityPack.timeZone
     val profileStore: ProfileStore = app.profileStore
     private val underwayStore: UnderwayStore = app.underwayStore
     val notifier: UnderwayNotifier = app.notifier
 
-    val planner = ItineraryPlanner(services.events, { services.places }, services.legs, zone)
+    val planner = ItineraryPlanner(services.events, { services.places }, services.legs, zone, clock)
+
+    fun today(): LocalDate = LocalDate.now(clock.withZone(zone))
+    fun now(): LocalDateTime = LocalDateTime.now(clock.withZone(zone))
+
+    /** First date the picker allows: today, kept inside the data window. */
+    val firstPlanDate: LocalDate get() = defaultDate(today())
 
     /** Null until DataStore has answered, so screens can wait instead of flashing onboarding. */
     val profile: StateFlow<UserProfile?> =
@@ -58,7 +67,7 @@ class FlowViewModel(
     // ---- Draft Itinerary (Planning) ----
     var kind by mutableStateOf(ItineraryKind.DAY_OUT)
         private set
-    var window by mutableStateOf(PlanWindow.default(FIRST_DATE, ItineraryKind.DAY_OUT))
+    var window by mutableStateOf(PlanWindow.default(defaultDate(LocalDate.now(clock.withZone(zone))), ItineraryKind.DAY_OUT))
         private set
     var budgetOverride by mutableStateOf<String?>(null)
         private set
@@ -76,7 +85,7 @@ class FlowViewModel(
 
     fun newDraft() {
         kind = ItineraryKind.DAY_OUT
-        window = PlanWindow.default(FIRST_DATE, kind)
+        window = PlanWindow.default(defaultDate(today()), kind)
         budgetOverride = null
         districts = emptyList()
         wantsMeal = true
@@ -247,5 +256,8 @@ class FlowViewModel(
         /** First and last day of the bundled Event snapshot. */
         val FIRST_DATE: LocalDate = LocalDate.of(2026, 11, 21)
         val LAST_DATE: LocalDate = LocalDate.of(2026, 12, 6)
+
+        /** Default plan date: today, clamped to the bundled data window. */
+        fun defaultDate(today: LocalDate): LocalDate = today.coerceIn(FIRST_DATE, LAST_DATE)
     }
 }
