@@ -799,28 +799,35 @@ private fun previewStop(id: String, name: String, kind: StopKind, district: Stri
     latitude = 45.52,
     longitude = -73.58,
     start = previewTime(hour, minute),
-    plannedDeparture = previewTime(hour + 1, minute),
+    plannedDeparture = previewTime(hour, minute).plusHours(1),
 )
 
-private val PreviewStops = listOf(
-    previewStop("1", "Jazz sur le toit", StopKind.Event, "a", 18, 30),
-    previewStop("2", "Bistro du coin", StopKind.Meal, "a", 19, 30),
-    previewStop("3", "Spectacle d’humour", StopKind.Event, "b", 21),
-    previewStop("4", "Bar à vin", StopKind.Meal, "b", 23, 30),
-)
+// Lazy, so preview data never runs when the page's file is loaded in the app.
+private val PreviewStops by lazy {
+    listOf(
+        previewStop("1", "Jazz sur le toit", StopKind.Event, "a", 18, 30),
+        previewStop("2", "Bistro du coin", StopKind.Meal, "a", 19, 30),
+        previewStop("3", "Spectacle d’humour", StopKind.Event, "b", 21),
+        previewStop("4", "Bar à vin", StopKind.Meal, "b", 23, 30),
+    )
+}
 
-private val PreviewTypes = mapOf(
-    "1" to StopType.Music,
-    "2" to StopType.Meal,
-    "3" to StopType.Comedy,
-    "4" to StopType.Bar,
-)
+private val PreviewTypes by lazy {
+    mapOf(
+        "1" to StopType.Music,
+        "2" to StopType.Meal,
+        "3" to StopType.Comedy,
+        "4" to StopType.Bar,
+    )
+}
 
-private val PreviewBudget = listOf(
-    ReviewBudgetRow(R.string.budget_lunch, BudgetBracket.Under50),
-    ReviewBudgetRow(R.string.budget_late_night, BudgetBracket.Under20),
-    ReviewBudgetRow(R.string.budget_events, BudgetBracket.Under100),
-)
+private val PreviewBudget by lazy {
+    listOf(
+        ReviewBudgetRow(R.string.budget_lunch, BudgetBracket.Under50),
+        ReviewBudgetRow(R.string.budget_late_night, BudgetBracket.Under20),
+        ReviewBudgetRow(R.string.budget_events, BudgetBracket.Under100),
+    )
+}
 
 private fun previewState(
     highlighted: String? = null,
