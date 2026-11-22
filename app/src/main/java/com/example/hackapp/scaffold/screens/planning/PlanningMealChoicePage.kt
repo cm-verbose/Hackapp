@@ -92,6 +92,7 @@ fun PlanningMealChoiceScreen(
             onChangeDateTime(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningMealChoicePage(
         state = state,
         hours = state.windowStart?.let { start -> state.windowEnd?.let { end -> ItineraryHours(start, end) } },

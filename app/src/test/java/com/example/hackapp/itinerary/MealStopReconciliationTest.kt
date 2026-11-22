@@ -49,6 +49,26 @@ class MealStopReconciliationTest {
     }
 
     @Test
+    fun previewListsRemovedAndKeptStopsWithoutChangingTheDraft() {
+        val updated = previous.copy(mealBlocks = listOf(lunch, dinner.copy(start = LocalTime.of(19, 45))))
+        val preview = previewMealChange(previous, updated, Toronto)
+        assertEquals(true, preview.needsConfirmation)
+        assertEquals(listOf("e", "m2"), preview.removed.map { it.stop.id })
+        assertEquals(
+            listOf(StopRemovalReason.NoLongerReachable, StopRemovalReason.MealBlockRemoved),
+            preview.removed.map { it.reason },
+        )
+        assertEquals(listOf("m1"), preview.kept.map { it.id })
+        assertEquals(listOf("m1", "e", "m2"), previous.stops.map { it.id })
+    }
+
+    @Test
+    fun previewNeedsNoConfirmationWhenEveryStopStillFits() {
+        val updated = previous.copy(mealBlocks = listOf(lunch.copy(budget = com.example.hackapp.profile.BudgetBracket.Under20), dinner))
+        assertEquals(false, previewMealChange(previous, updated, Toronto).needsConfirmation)
+    }
+
+    @Test
     fun skippedBlockDoesNotRemoveAnEvent() {
         val updated = previous.copy(mealBlocks = listOf(lunch, dinner.copy(start = LocalTime.of(19, 45), skipped = true)))
         assertEquals(listOf("m1", "e"), reconcileMealStops(previous, updated, Toronto).stops.map { it.id })

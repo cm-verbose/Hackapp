@@ -17,7 +17,9 @@ import com.example.hackapp.itinerary.defaultStart
 import com.example.hackapp.itinerary.fitsWindow
 import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.mealBudget
+import com.example.hackapp.itinerary.PlanningChangePreview
 import com.example.hackapp.itinerary.planningWindow
+import com.example.hackapp.itinerary.previewMealChange
 import com.example.hackapp.itinerary.reconcileMealStops
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.BudgetBracket
@@ -168,6 +170,8 @@ data class PlanningMealChoiceUiState(
     val continueToId: String? = null,
     /** Set by `changeDateAndTime()`. The route navigates to Date and time, then clears it. */
     val changeDateTimeId: String? = null,
+    /** Stops this Meal choice would remove. Nothing is saved until [PlanningMealChoiceViewModel.confirmChange]. */
+    val changeWarning: PlanningChangePreview? = null,
 ) {
     val canContinue: Boolean
         get() = !loading && !loadFailed && !saving && when {
@@ -178,8 +182,12 @@ data class PlanningMealChoiceUiState(
 }
 
 /** Removes Meal Stops whose block is gone or moved, and Event Stops that overlap a block. */
-fun mealStopReconciler(zone: ZoneId) = PlanningChangeReconciler { previous, updated ->
-    reconcileMealStops(previous, updated, zone)
+fun mealStopReconciler(zone: ZoneId): PlanningChangeReconciler = object : PlanningChangeReconciler {
+    override suspend fun reconcile(previous: Itinerary, updated: Itinerary) =
+        reconcileMealStops(previous, updated, zone)
+
+    override suspend fun preview(previous: Itinerary, updated: Itinerary) =
+        previewMealChange(previous, updated, zone)
 }
 
 class PlanningMealChoiceViewModel(
@@ -216,7 +224,18 @@ class PlanningMealChoiceViewModel(
 
     fun onNavigated() = _state.update { it.copy(continueToId = null, changeDateTimeId = null) }
 
-    fun continueToStops() {
+    fun continueToStops() = continueToStops(confirmed = false)
+
+    /** Saves the Meals and the Stops that still fit, after the person accepted the warning. */
+    fun confirmChange() {
+        _state.update { it.copy(changeWarning = null) }
+        continueToStops(confirmed = true)
+    }
+
+    /** Keeps the page as it is and saves nothing. */
+    fun cancelChange() = _state.update { it.copy(changeWarning = null) }
+
+    private fun continueToStops(confirmed: Boolean) {
         val current = _state.value
         if (!current.canContinue) return
         val uid = auth.currentUser?.uid
@@ -233,6 +252,13 @@ class PlanningMealChoiceViewModel(
                     step = maxOf(latest.step, PlanningStep.Stops),
                     updatedAtMillis = nowMillis(),
                 )
+                if (latest.stops.isNotEmpty() && !confirmed) {
+                    val preview = reconciler.preview(latest, updated)
+                    if (preview.needsConfirmation) {
+                        _state.update { it.copy(saving = false, changeWarning = preview) }
+                        return@launch
+                    }
+                }
                 val saved = if (latest.stops.isNotEmpty()) reconciler.reconcile(latest, updated) else updated
                 itineraries.saveItinerary(saved)
                 _state.update { it.copy(saving = false, continueToId = itineraryId) }
