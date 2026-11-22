@@ -148,7 +148,6 @@ fun HomePage(
                 suggestions = state.suggestions.map { ItinerarySuggestion(it.icon, it.title) },
                 modifier = Modifier.fillMaxWidth(),
             )
-            DataAttribution()
         }
         when (content) {
             LoadState.Loading -> LoadingState()
@@ -160,6 +159,7 @@ fun HomePage(
                 }
             }
         }
+        if (state.suggestions.isNotEmpty() || (content as? LoadState.Ready)?.value?.underway != null) DataAttribution()
     }
 }
 

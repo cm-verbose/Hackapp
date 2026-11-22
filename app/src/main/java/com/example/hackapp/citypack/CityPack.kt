@@ -65,7 +65,7 @@ data class CityPack(
 
 val MontrealCityPack = CityPack(
     id = "mtl",
-    displayName = LocalizedText(fr = "Montréal", en = "Montréal"),
+    displayName = LocalizedText(fr = "Montréal", en = "Montreal"),
     timeZone = ZoneId.of("America/Toronto"),
     defaultLocale = Locale.CANADA_FRENCH,
     districtMapAsset = "citypacks/mtl/districts.json",

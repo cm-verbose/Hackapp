@@ -51,7 +51,7 @@ data class UnderwayUi(
     val districtName: String?,
     val nextStopName: String?,
     val strip: List<StripStop>,
-    val currentIndex: Int,
+    val currentIndex: Int?,
     val route: Any,
 )
 
@@ -93,7 +93,7 @@ internal fun Itinerary.toUnderwayUi(
         districtName = (districtIds.firstOrNull() ?: stops.firstOrNull()?.districtId)?.let(districtNames::get),
         nextStopName = next?.name,
         strip = stops.map { StripStop(time(it.start), stopTypes[it.id] ?: StopType.Festival) },
-        currentIndex = nextIndex.coerceAtLeast(0),
+        currentIndex = nextIndex.takeIf { it >= 0 },
         route = openRoute(),
     )
 }
