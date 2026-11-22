@@ -111,3 +111,13 @@ private fun Stop.movedTo(target: Itinerary, zone: ZoneId): Stop {
         plannedDeparture = newStart.plus(length).toOffsetDateTime(),
     )
 }
+
+/**
+ * Drops Meal Blocks that no longer fit this Itinerary's window. When any is dropped, the draft goes
+ * back to the Meal choice step at the latest, so it cannot skip choosing Meals again.
+ */
+fun Itinerary.withFittingMealBlocks(zone: ZoneId): Itinerary {
+    val fitting = mealBlocks.filter { it.fitsWindow(this, zone) }
+    if (fitting.size == mealBlocks.size) return this
+    return copy(mealBlocks = fitting, step = minOf(step, PlanningStep.Meals))
+}
