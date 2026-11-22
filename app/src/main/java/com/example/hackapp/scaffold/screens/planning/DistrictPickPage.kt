@@ -335,16 +335,13 @@ private fun DistrictSheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) { types.forEach { EventTypeLabel(it) } }
                 }
-                FlowRow(
-                    Modifier.padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    // Adding is the main button below the sheet.
-                    if (isSelected) {
-                        HackappSmallTonalButton(stringResource(R.string.action_remove), onRemove)
-                    }
-                    HackappSmallTextButton(stringResource(R.string.district_choose_another), onDismiss)
+                // Adding is the main button below the sheet; another borough is picked on the map.
+                if (isSelected) {
+                    HackappSmallTonalButton(
+                        stringResource(R.string.action_remove),
+                        onRemove,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
                 }
             }
         }
