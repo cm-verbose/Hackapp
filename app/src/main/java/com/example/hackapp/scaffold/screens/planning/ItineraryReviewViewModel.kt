@@ -358,6 +358,7 @@ class ItineraryReviewHolder(
         _state.update {
             it.copy(
                 reschedule = null,
+                actionFailed = false,
                 dialog = ReviewDialog.RemoveAffects(removal.removed, removal.affected, canReschedule = canReschedule),
             )
         }

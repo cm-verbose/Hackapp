@@ -412,4 +412,20 @@ class ItineraryReviewTest {
         holder.refreshStart()
         assertEquals(ReviewStartState.WindowEnded(Nov28), holder.state.value.start)
     }
+
+    @Test
+    fun `cancelling the picker after a failed pick clears the save error`() = runBlocking {
+        events = listOf(showtime("ev-c", 19, 20), showtime("ev-c2", 20, 45))
+        repository.saveItinerary(draft(a, b, c))
+        val holder = holder()
+        holder.load()
+        holder.remove("b")
+        holder.reschedule()
+        failSaves = true
+        holder.pickShowtime("ev-c2")
+        assertTrue(holder.state.value.actionFailed)
+        holder.cancelReschedule()
+        assertFalse(holder.state.value.actionFailed)
+        assertTrue(holder.state.value.dialog is ReviewDialog.RemoveAffects)
+    }
 }
