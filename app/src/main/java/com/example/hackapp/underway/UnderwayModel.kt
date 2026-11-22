@@ -71,7 +71,7 @@ sealed interface UnderwayEvent {
     data class ConfirmArrival(val stopId: String? = null) : UnderwayEvent
     data class Leaving(val stopId: String? = null) : UnderwayEvent
     /** On Leg and Arrival the current Stop. At the Stop, the next Stop. */
-    data class SkipStop(val stopId: String? = null) : UnderwayEvent
+    data class SkipStop(val stopId: String? = null, val fromNotification: Boolean = false) : UnderwayEvent
     data class GoAnyway(val stopId: String) : UnderwayEvent
     data class EndItinerary(val confirmed: Boolean = false) : UnderwayEvent
     data object NotificationBannerHandled : UnderwayEvent

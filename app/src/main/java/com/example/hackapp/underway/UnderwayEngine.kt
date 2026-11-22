@@ -139,6 +139,8 @@ object UnderwayEngine {
             is UnderwayEvent.SkipStop -> when (s.phase) {
                 UnderwayPhase.Leg, UnderwayPhase.Arrival -> when {
                     event.stopId != null && event.stopId != current -> rejectOriginal(Rejection.StaleStop)
+                    // A notification must never end the day without the confirmation dialog.
+                    next == null && event.fromNotification -> rejectOriginal(Rejection.NeedsConfirmation)
                     else -> {
                         val skipped = s.copy(
                             records = s.records + (current!! to s.record(current).copy(skippedAtMillis = nowMs)),
@@ -230,7 +232,8 @@ object UnderwayEngine {
                     stopId = current.id,
                     stopName = current.name,
                     stopStart = current.start,
-                    skipStopId = current.id,
+                    // Skipping the last remaining Stop would end the day: no Skip, the app asks first.
+                    skipStopId = current.id.takeIf { nextStop(ctx, state) != null },
                     isMeal = current.kind == StopKind.Meal,
                 ),
             )

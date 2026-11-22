@@ -390,4 +390,25 @@ class UnderwayEngineTest {
         val meal = UnderwayEngine.scheduledAlerts(ctx, ctx.run(begin(), t(19) to E.SkipStop())).single()
         assertTrue(meal.isMeal)
     }
+
+    @Test
+    fun `the last remaining Stop offers no Skip in its notification`() {
+        // Skipping A then B leaves C as the only Stop.
+        val onC = ctx.run(begin(), t(19) to E.SkipStop(), t(21) to E.SkipStop())
+        assertNull(UnderwayEngine.scheduledAlerts(ctx, onC).single { it.kind == AlertKind.ArrivalReminder }.skipStopId)
+        // With more Stops to come, Skip is offered.
+        assertEquals("a", UnderwayEngine.scheduledAlerts(ctx, begin()).single().skipStopId)
+    }
+
+    @Test
+    fun `a stale Skip from a notification cannot end the day`() {
+        val onC = ctx.run(begin(), t(19) to E.SkipStop(), t(21) to E.SkipStop())
+        val fromNotification = reduce(onC, E.SkipStop("c", fromNotification = true), t(22))
+        assertEquals(Rejection.NeedsConfirmation, fromNotification.rejection)
+        assertEquals(onC, fromNotification.state)
+        // The in-app skip, with its own confirmation dialog, still works.
+        assertEquals(UnderwayPhase.Ended, reduce(onC, E.SkipStop("c"), t(22)).state.phase)
+        // A notification Skip is fine while Stops remain.
+        assertEquals("b", reduce(begin(), E.SkipStop("a", fromNotification = true), t(19)).state.currentStopId)
+    }
 }

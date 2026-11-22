@@ -88,12 +88,15 @@ class AndroidUnderwayNotifier(context: Context, private val zone: java.time.Zone
                 builder.addAction(0, appContext.getString(R.string.action_go_anyway), action(uid, itineraryId, UnderwayAndroid.ACTION_GO_ANYWAY, alert.stopId, alert.id))
             }
         }
-        if (alert.kind == AlertKind.LeaveBy) {
+        // Leave By never offers Skip. Any other alert without a safe Skip offers Open, so the app
+        // shows the confirmation before the day can end.
+        val skipId = alert.skipStopId.takeIf { alert.kind != AlertKind.LeaveBy }
+        if (skipId == null) {
             open?.let {
                 builder.addAction(0, appContext.getString(R.string.notification_action_open), PendingIntent.getActivity(appContext, 1, it, PendingIntent.FLAG_IMMUTABLE))
             }
         } else {
-            alert.skipStopId?.let {
+            skipId.let {
                 builder.addAction(0, appContext.getString(if (alert.isMeal) R.string.action_skip_meal else R.string.action_skip_stop), action(uid, itineraryId, UnderwayAndroid.ACTION_SKIP, it, alert.id))
             }
         }

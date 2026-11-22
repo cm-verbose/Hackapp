@@ -35,7 +35,7 @@ Start -> Leg -> Arrival -> AtStop -> Leg (next Stop) ... -> AtStop (last) -> End
 | `ReturnToLeg` | Arrival | `Leg`, to change transport |
 | `ConfirmArrival(stopId?)` | Leg, Arrival | `AtStop`, records `arrivedAt` (late arrival is only recorded, never replans) |
 | `Leaving(stopId?)` | AtStop, not last Stop | Next `Leg`. Rejected on the last Stop |
-| `SkipStop(stopId?)` | Leg, Arrival (current Stop). AtStop: only the **next** Stop, from the late warning | Marks it skipped, then next `Leg`. Skipping the last remaining Stop ends the day |
+| `SkipStop(stopId?, fromNotification = false)` | Leg, Arrival (current Stop). AtStop: only the **next** Stop, from the late warning | Marks it skipped, then next `Leg`. Skipping the last remaining Stop ends the day, so a `fromNotification` skip of it is rejected with `NeedsConfirmation` and the page asks first |
 | `GoAnyway(stopId)` | AtStop | Dismisses the late warning for that Stop |
 | `EndItinerary(confirmed)` | Any non-ended | Last Stop at AtStop: ends, no confirmation. Otherwise `confirmed = false` returns `Rejection.NeedsConfirmation`, and `true` ends and marks remaining Stops skipped |
 | `NotificationBannerHandled` | Any | Marks the notifications-off banner as shown |
@@ -71,7 +71,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
   - `LeaveBy` (high priority, id `LeaveBy:<stopId>:<nextStopId>`, so skipping the next Stop alerts again for the new one): Leave By - 30 min, at the Stop, never on the last remaining Stop.
   - `AutoEnd` is not an alert but a wake-up alarm at the automatic end (`alarmsToSchedule`), so a forgotten Itinerary ends and awards Stamps with the app closed.
   - `LateWarning`: once per next Stop, when now + transit estimate passes its start, while at the previous Stop.
-- Alert actions (never open the app, except Ouvrir): arrival = `action_arrived` (`ConfirmArrival`) + `action_skip_stop`; leave = `action_leaving` (`Leaving`) + `notification_action_open` (opens the app); late = `action_go_anyway` (`GoAnyway`) + `action_skip_stop` (`SkipStop` of the next Stop).
+- Alert actions (never open the app, except Ouvrir): arrival = `action_arrived` (`ConfirmArrival`) + `action_skip_stop` or `action_skip_meal` (Meal); leave = `action_leaving` (`Leaving`) + `notification_action_open` (opens the app); late = `action_go_anyway` (`GoAnyway`) + `action_skip_stop` or `action_skip_meal` (`SkipStop` of the next Stop). **On the last remaining Stop an alert whose Skip would end the day (the arrival reminder) offers `notification_action_open` instead** (`PlannedAlert.skipStopId` is null), so the app shows the end-early confirmation.
 
 ## Android
 

@@ -58,7 +58,7 @@ class UnderwayActionReceiver : BroadcastReceiver() {
         val event = when (intent.action) {
             UnderwayAndroid.ACTION_ARRIVED -> UnderwayEvent.ConfirmArrival(stop)
             UnderwayAndroid.ACTION_LEAVING -> UnderwayEvent.Leaving(stop)
-            UnderwayAndroid.ACTION_SKIP -> UnderwayEvent.SkipStop(stop)
+            UnderwayAndroid.ACTION_SKIP -> UnderwayEvent.SkipStop(stop, fromNotification = true)
             UnderwayAndroid.ACTION_GO_ANYWAY -> UnderwayEvent.GoAnyway(stop ?: return)
             else -> return
         }
