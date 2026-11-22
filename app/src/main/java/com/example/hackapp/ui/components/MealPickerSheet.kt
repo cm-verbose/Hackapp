@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -94,7 +96,12 @@ fun MealPickerContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(mealPickerTitle(state.kind), style = MaterialTheme.typography.titleLarge, color = scheme.onSurface)
+            Text(
+                mealPickerTitle(state.kind),
+                style = MaterialTheme.typography.titleLarge,
+                color = scheme.onSurface,
+                modifier = Modifier.semantics { heading() },
+            )
             Text(
                 if (budgetLabel != null) stringResource(R.string.meal_picker_subtitle, timeRange, budgetLabel) else timeRange,
                 style = MaterialTheme.typography.bodyMedium,
@@ -102,7 +109,8 @@ fun MealPickerContent(
             )
         }
 
-        if (state.tabs.size > 1) {
+        // Tabs have nothing to switch between when both are empty.
+        if (state.tabs.size > 1 && !state.hasNoOptions) {
             HackappSegmentedButton(
                 options = state.tabs.map { tab ->
                     ChoiceOption(
@@ -117,6 +125,8 @@ fun MealPickerContent(
                 },
                 selected = state.selectedTab,
                 onSelectedChange = onSelectTab,
+                // Long borough names such as Rivière-des-Prairies–Pointe-aux-Trembles need a third line.
+                maxLines = 3,
             )
         }
 
@@ -301,6 +311,11 @@ private fun MealPickerOneTabPreview() = MealPickerPreview(previewState(nextDistr
 @Preview(name = "MealPicker · next District name unknown", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
 @Composable
 private fun MealPickerUnknownDistrictPreview() = MealPickerPreview(previewState(), nextDistrictName = null)
+
+@Preview(name = "MealPicker · longest District name, 360 dp, 1.3x", showBackground = true, widthDp = 360, heightDp = 760, fontScale = 1.3f)
+@Composable
+private fun MealPickerLongestDistrictPreview() =
+    MealPickerPreview(previewState(), nextDistrictName = "Rivière-des-Prairies–Pointe-aux-Trembles")
 
 @Preview(name = "MealPicker · empty next tab", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 400)
 @Composable

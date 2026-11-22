@@ -96,7 +96,10 @@ private fun <T> HackappChoiceChip(option: ChoiceOption<T>, selected: Boolean, on
     )
 }
 
-/** Figma "Segmented button": day/night, transit/Uber, language, Passport city. */
+/**
+ * Figma "Segmented button": day/night, transit/Uber, language, Passport city.
+ * [maxLines] lets a long label, such as a District name, wrap further before it is cut.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> HackappSegmentedButton(
@@ -104,8 +107,9 @@ fun <T> HackappSegmentedButton(
     selected: T,
     onSelectedChange: (T) -> Unit,
     modifier: Modifier = Modifier,
+    maxLines: Int = 2,
 ) {
-    // Labels may wrap to two lines; the row takes the tallest segment's height and the others fill it.
+    // Labels may wrap; the row takes the tallest segment's height and the others fill it.
     SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         options.forEachIndexed { index, option ->
             SegmentedButton(
@@ -116,7 +120,7 @@ fun <T> HackappSegmentedButton(
                 modifier = Modifier.fillMaxHeight(),
                 icon = {},
                 label = {
-                    Text(option.label, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                    Text(option.label, maxLines = maxLines, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                 },
             )
         }

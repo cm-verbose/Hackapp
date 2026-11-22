@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -78,7 +79,12 @@ fun PlannedDepartureContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.planned_departure_title), style = MaterialTheme.typography.titleLarge, color = scheme.onSurface)
+            Text(
+                stringResource(R.string.planned_departure_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = scheme.onSurface,
+                modifier = Modifier.semantics { heading() },
+            )
             Text(
                 stringResource(
                     R.string.planned_departure_subtitle,
@@ -92,7 +98,7 @@ fun PlannedDepartureContent(
         }
 
         Text(
-            stringResource(R.string.planned_departure_no_end, formatDurationMinutes(state.typicalStayMinutes)),
+            stringResource(R.string.planned_departure_no_end),
             style = MaterialTheme.typography.bodyMedium,
             color = scheme.onSurface,
         )
@@ -105,35 +111,43 @@ fun PlannedDepartureContent(
             modifier = Modifier.padding(vertical = 4.dp),
         )
 
-        state.error?.let { error ->
+        val error = state.error
+        if (error != null) {
+            // Both errors mean the same thing to the person: pick a time inside the allowed range.
             Text(
                 when (error) {
-                    DepartureError.OutsideWindow -> stringResource(
-                        R.string.planned_departure_error_outside_window,
+                    DepartureError.OutsideWindow, DepartureError.NotAfterStart -> stringResource(
+                        R.string.planned_departure_error_range,
+                        formatSentenceTime(state.earliestDeparture.toLocalTime()),
                         formatSentenceTime(state.latestDeparture.toLocalTime()),
                     )
-                    DepartureError.NotAfterStart -> stringResource(R.string.planned_departure_error_not_after_start)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.error,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            HackappIconView(HackappIcon.Schedule, tint = scheme.onSurfaceVariant)
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    stringResource(R.string.planned_departure_duration, formatDurationMinutes(state.stayMinutes)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.onSurfaceVariant,
-                )
-                if (state.crossesMidnight) {
+        } else {
+            // The duration describes the last valid choice, which the error message would contradict.
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                HackappIconView(HackappIcon.Schedule, tint = scheme.onSurfaceVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    val duration = formatDurationMinutes(state.stayMinutes)
                     Text(
-                        stringResource(R.string.planned_departure_next_day),
-                        style = MaterialTheme.typography.bodySmall,
+                        if (state.isTypicalStay) {
+                            stringResource(R.string.planned_departure_typical, duration)
+                        } else {
+                            stringResource(R.string.planned_departure_duration, duration)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
                         color = scheme.onSurfaceVariant,
                     )
+                    if (state.crossesMidnight) {
+                        Text(
+                            stringResource(R.string.planned_departure_next_day),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -169,6 +183,7 @@ private fun previewState(
         eventTitle = "Exposition Monet",
         eventType = "exhibition",
         start = start,
+        earliestDeparture = start,
         latestDeparture = windowEnd,
         typicalStayMinutes = 120,
         departure = departure,
