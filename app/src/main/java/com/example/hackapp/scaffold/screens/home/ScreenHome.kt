@@ -1,6 +1,7 @@
 package com.example.hackapp.scaffold.screens.home
 
 import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
+import com.example.hackapp.underway.simulationChanges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -80,7 +81,7 @@ fun ScreenHome(
     val clock = currentUnderwayClock()
     val viewModel: HomeViewModel = viewModel(
         key = "home-${auth.currentUser?.uid}",
-        factory = HomeViewModel.factory(auth.currentUser?.uid, itineraries, profiles, events, cityPack.timeZone, clock::now) {
+        factory = HomeViewModel.factory(auth.currentUser?.uid, itineraries, profiles, events, cityPack.timeZone, clock::now, clock.simulationChanges()) {
             loadDistrictNames(context, cityPack)
         },
     )

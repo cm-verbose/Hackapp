@@ -1,7 +1,10 @@
 package com.example.hackapp.underway
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -29,6 +32,10 @@ interface UnderwayClock {
     /** Emits when the time jumps, so pages can redraw at once. */
     val jumps: Flow<Unit> get() = emptyFlow()
 }
+
+/** The current demo state, then each time demo mode turns on or off. */
+fun UnderwayClock.simulationChanges(): Flow<Boolean> =
+    jumps.onStart { emit(Unit) }.map { isSimulated }.distinctUntilChanged()
 
 class SystemUnderwayClock(override val zone: ZoneId = ZoneId.systemDefault()) : UnderwayClock {
     override fun now(): Instant = Instant.now()

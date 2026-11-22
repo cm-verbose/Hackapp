@@ -27,10 +27,12 @@ import com.example.hackapp.ui.components.icon
 import com.example.hackapp.ui.theme.StopType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -107,6 +109,8 @@ class HomeViewModel(
     private val events: EventRepository,
     private val zone: ZoneId,
     private val now: () -> Instant = Instant::now,
+    /** Emits when demo mode turns on or off: suggestions depend on the date. */
+    private val simulation: Flow<Boolean> = flowOf(false),
     private val loadDistrictNames: suspend () -> Map<String, String>,
 ) : ViewModel() {
     private val retry = MutableStateFlow(0)
@@ -150,10 +154,12 @@ class HomeViewModel(
             firstName.value = optional { uid?.let { firstNameOf(profiles.getProfile(it)?.name) } }
         }
         viewModelScope.launch {
-            suggestions.value = optional {
-                val eligible = eventEligibility(profiles, uid, zone, now())
-                suggestionsFrom(events.search(EventQuery(startsAtOrAfter = now().atZone(zone).toOffsetDateTime())).filter(eligible))
-            }.orEmpty()
+            simulation.collectLatest {
+                suggestions.value = optional {
+                    val eligible = eventEligibility(profiles, uid, zone, now())
+                    suggestionsFrom(events.search(EventQuery(startsAtOrAfter = now().atZone(zone).toOffsetDateTime())).filter(eligible))
+                }.orEmpty()
+            }
         }
         viewModelScope.launch { districtNames.value = loadDistrictNames() }
     }
@@ -178,9 +184,10 @@ class HomeViewModel(
             events: EventRepository,
             zone: ZoneId,
             now: () -> Instant = Instant::now,
+            simulation: Flow<Boolean> = flowOf(false),
             loadDistrictNames: suspend () -> Map<String, String>,
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { HomeViewModel(uid, itineraries, profiles, events, zone, now, loadDistrictNames) }
+            initializer { HomeViewModel(uid, itineraries, profiles, events, zone, now, simulation, loadDistrictNames) }
         }
     }
 }
