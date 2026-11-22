@@ -255,7 +255,8 @@
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">Allow at least 2 hours.</string>
-    <string name="planning_error_latest_end">End by 04:00.</string>
+    <string name="planning_error_end_range">Choose an end time between %1$s and 04:00.</string>
+    <string name="planning_error_start_latest">Start by 02:00.</string>
     <string name="planning_save_error">Couldn’t save. Try again.</string>
     <string name="district_add_first">Add as #1</string>
     <string name="district_max_title">Maximum of %1$d %2$s</string>

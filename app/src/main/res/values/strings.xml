@@ -263,7 +263,8 @@
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">Prévoyez au moins 2 h.</string>
-    <string name="planning_error_latest_end">Terminez au plus tard à 4 h.</string>
+    <string name="planning_error_end_range">Choisissez une fin entre %1$s et 4 h.</string>
+    <string name="planning_error_start_latest">Commencez au plus tard à 2 h.</string>
     <string name="planning_save_error">Impossible d’enregistrer. Réessayez.</string>
     <string name="district_add_first">Ajouter en 1re</string>
     <string name="district_max_title">Maximum de %1$d %2$s</string>

@@ -34,10 +34,23 @@ class PlanningWindowTest {
     }
 
     @Test
-    fun windowEndsNoLaterThanFour() {
+    fun endOutsideTheRangeIsRejected() {
         assertNull(validateTimeWindow(time("18:00"), time("04:00")))
-        assertEquals(TimeWindowError.EndsTooLate, validateTimeWindow(time("18:00"), time("04:01")))
-        assertEquals(TimeWindowError.EndsTooLate, validateTimeWindow(time("03:00"), time("05:00")))
+        assertEquals(TimeWindowError.EndOutOfRange, validateTimeWindow(time("18:00"), time("04:01")))
+        assertEquals(TimeWindowError.EndOutOfRange, validateTimeWindow(time("18:00"), time("17:00")))
+        assertEquals(TimeWindowError.EndOutOfRange, validateTimeWindow(time("18:00"), time("09:00")))
+        assertEquals(time("20:00"), earliestEnd(time("18:00")))
+        assertEquals(time("01:30"), earliestEnd(time("23:30")))
+    }
+
+    @Test
+    fun startAfterTwoLeavesNoValidEnd() {
+        assertNull(validateTimeWindow(time("02:00"), time("04:00")))
+        assertEquals(TimeWindowError.StartsTooLate, validateTimeWindow(time("02:01"), time("04:00")))
+        assertEquals(TimeWindowError.StartsTooLate, validateTimeWindow(time("03:00"), time("05:00")))
+        assertEquals(TimeWindowError.StartsTooLate, validateTimeWindow(time("03:59"), time("03:59")))
+        assertEquals(TimeWindowError.TooShort, validateTimeWindow(time("04:00"), time("04:00")))
+        assertEquals(LATEST_START, time("02:00"))
     }
 
     @Test
