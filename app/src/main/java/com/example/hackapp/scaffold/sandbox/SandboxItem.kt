@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
  * @param width The width of the item in [Dp].
  * @param height The height of the item in [Dp].
  * @param restitution Bounciness factor of the physical body (0.0 = no bounce, 1.0 = fully elastic).
+ * @param angleDegrees Starting rotation.
  * @param content The composable UI content displayed inside the physical shape.
  */
 data class SandboxItem(
@@ -26,5 +27,6 @@ data class SandboxItem(
     val width: Dp = 80.dp,
     val height: Dp = 80.dp,
     val restitution: Float = 0.5f,
+    val angleDegrees: Float = 0f,
     val content: @Composable BoxScope.() -> Unit = {},
 )

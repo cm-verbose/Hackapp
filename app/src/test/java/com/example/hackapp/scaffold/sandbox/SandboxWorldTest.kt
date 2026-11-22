@@ -9,6 +9,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.jbox2d.common.Vec2
+import kotlin.math.sqrt
 
 class SandboxWorldTest {
     private fun item(key: String) = SandboxItem(key, Color.Red, CircleShape, 72.dp, 72.dp)
@@ -57,6 +59,30 @@ class SandboxWorldTest {
     fun `capacity counts the cells that fit`() {
         assertEquals(4 * 8, sandboxCapacity(1080f, 1920f, 216f, 3f))
         assertEquals(0, sandboxCapacity(100f, 1920f, 216f, 3f))
+    }
+
+    @Test
+    fun `the corner control takes one cell from the capacity`() {
+        assertEquals(31, sandboxCapacity(1080f, 1920f, 216f, 3f, keepOutPx = 204f))
+    }
+
+    @Test
+    fun `no Stamp can rest under the corner control`() {
+        val keepOut = 204f
+        val world = SandboxWorld(1080f, 1920f, Density(3f), keepOut).apply {
+            populate((1..20).map { item("s$it") }, 0.05f, 0.1f)
+        }
+        world.world.gravity = Vec2(20f, 28f)
+        repeat(600) { world.world.step(1f / 60f, 8, 3) }
+
+        val radius = 108f
+        world.items.forEach { stamp ->
+            val x = stamp.physicalShape.body.position.x * 100f
+            val y = stamp.physicalShape.body.position.y * 100f
+            val dx = maxOf(1080f - keepOut - x, 0f)
+            val dy = maxOf(1920f - keepOut - y, 0f)
+            assertTrue("${stamp.spec.key} is under the control", sqrt(dx * dx + dy * dy) >= radius - 3f)
+        }
     }
 
     @Test

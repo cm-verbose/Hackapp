@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -32,6 +33,7 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -50,6 +52,9 @@ private const val FREE_ANGULAR_DAMPING = 0.1f
 private const val LOCKED_LINEAR_DAMPING = 1.5f
 private const val LOCKED_ANGULAR_DAMPING = 1.5f
 private const val HEADING_BROADCAST_MS = 300L
+
+/** A held object looks lifted. Its collision size does not change. */
+private const val HELD_SCALE = 1.12f
 
 /** How often a world at rest checks for changes, instead of drawing every frame. */
 private const val IDLE_POLL_MS = 100L
@@ -141,6 +146,7 @@ class SandboxSharing(
  * The physics world. It runs only while the page is started and stops drawing when at rest.
  *
  * @param items What to show, matched by [SandboxItem.key] so updates keep positions.
+ * @param keepOutBottomEnd Side of a solid corner square, so no object can rest under a control.
  * @param sharing Null keeps every object on this device: a fast flick simply bounces.
  * @param onItemClick Called when an object is tapped.
  */
@@ -149,6 +155,7 @@ fun PhysicsScreen(
     items: List<SandboxItem>,
     modifier: Modifier = Modifier,
     gravityLocked: Boolean = false,
+    keepOutBottomEnd: Dp = 0.dp,
     sharing: SandboxSharing? = null,
     onItemClick: (SandboxItem) -> Unit = {},
 ) {
@@ -168,8 +175,9 @@ fun PhysicsScreen(
         val heightPx = constraints.maxHeight.toFloat()
 
         // 1. Initialize the Box2D World once the size is known. List changes go through sync.
-        val sandbox = remember(widthPx, heightPx, density) {
-            SandboxWorld(widthPx, heightPx, density).apply {
+        val keepOutPx = with(density) { keepOutBottomEnd.toPx() }
+        val sandbox = remember(widthPx, heightPx, density, keepOutPx) {
+            SandboxWorld(widthPx, heightPx, density, keepOutPx).apply {
                 populate(items, FREE_LINEAR_DAMPING, FREE_ANGULAR_DAMPING)
             }
         }
@@ -350,11 +358,12 @@ fun PhysicsScreen(
                         )
                     }
                     val isGrabbed = grabber.grabbed === item.physicalShape
+                    val lift by animateFloatAsState(if (isGrabbed) HELD_SCALE else 1f, label = "held")
                     PhysicalShapeItem(
                         physicalShape = item.physicalShape,
                         color = item.spec.color,
                         shadowElevation = if (isGrabbed) 16.dp else 4.dp,
-                        scale = { appear.value },
+                        scale = { appear.value * lift },
                     ) {
                         item.spec.content(this)
                     }
