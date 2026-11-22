@@ -18,6 +18,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
@@ -27,7 +28,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Failure mapping. The interfaces expect: unreadable or foreign data counts as missing (null, or
  * skipped in a list), and a storage failure throws (callers catch Exception and keep going). So
  * Firestore errors, including PERMISSION_DENIED and UNAVAILABLE, propagate from suspend calls and
- * close the observing flows with the same exception. Nothing is swallowed here.
+ * close the observing flows with the same exception. The one exception is a write still pending after
+ * [WRITE_TIMEOUT_MS] (offline): it counts as accepted, and a later server rejection is only logged
+ * by [awaitWrite], because no caller is waiting any more. See [onLateWriteFailure].
  */
 
 private fun DocumentSnapshot.dataOrNull(): Map<String, Any?>? = if (exists()) data else null
@@ -133,11 +136,19 @@ class FirestoreTicketPriceRepository(
 
 /**
  * Firestore write tasks only complete once the server acknowledges. Offline that never happens,
- * although the SDK has queued the write and applies it locally. So a write that is still pending
- * after [WRITE_TIMEOUT_MS] counts as accepted, while a real failure (rules, bad data) still throws.
+ * although the SDK has queued the write and applies it locally. So a write still pending after
+ * [WRITE_TIMEOUT_MS] counts as accepted, while a failure within that time (rules, bad data) throws.
+ * A failure arriving after the timeout can no longer be thrown, so it goes to [onLateWriteFailure]:
+ * a server rejection then leaves the local view ahead of the server until the SDK reverts it.
  */
 internal const val WRITE_TIMEOUT_MS = 2_000L
 
+/** Receives a write failure that arrives after the timeout. Defaults to a log line; replaceable. */
+internal var onLateWriteFailure: (Throwable) -> Unit = { Log.w("FirestoreWrite", "Write rejected after timeout", it) }
+
 private suspend fun awaitWrite(task: Task<Void>) {
-    withTimeoutOrNull(WRITE_TIMEOUT_MS) { task.await() }
+    var finished = false
+    withTimeoutOrNull(WRITE_TIMEOUT_MS) { task.await(); finished = true }
+    // Timed out: the write is queued. Keep listening so a later rejection is not lost.
+    if (!finished) task.addOnFailureListener { onLateWriteFailure(it) }
 }
