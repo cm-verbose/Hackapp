@@ -56,6 +56,8 @@ data class CityPack(
     val districtMapAsset: String,
     val eventSnapshotAsset: String,
     val eventCoverage: EventCoverage,
+    /** The date demo mode opens on: a day with good seed data. Defaults to the first covered day. */
+    val demoDate: LocalDate = eventCoverage.firstDate,
     val transitApp: TransitAppConfig,
     val fareTable: FareTable,
     val rideHail: RideHailConfig,
@@ -73,6 +75,7 @@ val MontrealCityPack = CityPack(
     districtMapAsset = "citypacks/mtl/districts.json",
     eventSnapshotAsset = "citypacks/mtl/events.json",
     eventCoverage = EventCoverage(LocalDate.of(2026, 11, 21), LocalDate.of(2026, 12, 6)),
+    demoDate = LocalDate.of(2026, 11, 28),
     transitApp = TransitAppConfig(displayName = "Chrono", packageName = "quebec.artm.chrono"),
     fareTable = FareTable(
         agencyName = "ARTM",
