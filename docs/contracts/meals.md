@@ -5,7 +5,7 @@ Owner: Domain Engineer, team Meals. Consumer: Feature Engineer. File:
 
 ## Construction
 
-`PlanningMealChoiceViewModel.factory(itineraryId, auth, itineraries, profiles, zone, reconciler = KeepSavedStops)`.
+`PlanningMealChoiceViewModel.factory(itineraryId, auth, itineraries, profiles, zone, reconciler = MealStopReconciler)`.
 `zone` is `LocalCityPack.current.timeZone`. The ViewModel loads on creation.
 
 ## UiState (`state: StateFlow<PlanningMealChoiceUiState>`)
@@ -58,7 +58,7 @@ Unselected options still carry `start` and `budget`; the page may show the time 
 - When `noMealFits` is true, only `planMeals = false` can continue. Offer "I handle meals" and Change date and time.
 - A Meal is selected on first open (no saved answer) for every Meal that fits, with default times, except Late bite when its add-on is off (no Late-night budget on the Itinerary or Profile): it is offered but not preselected, and can be selected by hand. A reopened draft restores `planMeals`, the saved blocks (kind, start, budget). Saved blocks reopen as selected and keep their skipped flag.
 - Blocks are valid when the whole block (start to start + length) is inside the window and half-open overlap with other selected blocks is empty (touching blocks are fine). Windows past midnight are handled: a time before the window start belongs to the next day.
-- Saved blocks keep the id of an existing block of the same kind, otherwise `meal-<kind>`, sorted in window order. If the draft already has Stops, they go through the `PlanningChangeReconciler`.
+- Saved blocks keep the id of an existing block of the same kind, otherwise `meal-<kind>`, sorted in window order. If the draft already has Stops, they go through `MealStopReconciler`: a Meal Stop whose block was removed or moved is removed, Event Stops stay.
 - The Meal budget stored on a block is the chosen bracket or null. Null means search falls back to the Itinerary or Profile budget.
 - Budget summary: a selected Meal whose `effectiveBudget` is null (for example Late bite with its add-on off) adds its actual price to the running total but nothing to the budget limit, so it never makes the Meal or total limit unknown or disables the over-budget warning. The `$100+` bracket still means no upper limit.
 

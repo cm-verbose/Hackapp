@@ -18,6 +18,7 @@ import com.example.hackapp.itinerary.fitsWindow
 import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.mealBudget
 import com.example.hackapp.itinerary.planningWindow
+import com.example.hackapp.itinerary.reconcileMealStops
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
@@ -153,13 +154,16 @@ data class PlanningMealChoiceUiState(
         }
 }
 
+/** Removes Meal Stops whose block is gone or moved. Event Stops stay. */
+val MealStopReconciler = PlanningChangeReconciler { previous, updated -> reconcileMealStops(previous, updated) }
+
 class PlanningMealChoiceViewModel(
     private val itineraryId: String,
     private val auth: AuthService,
     private val itineraries: ItineraryRepository,
     private val profiles: ProfileRepository,
     private val zone: ZoneId,
-    private val reconciler: PlanningChangeReconciler = KeepSavedStops,
+    private val reconciler: PlanningChangeReconciler = MealStopReconciler,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlanningMealChoiceUiState())
@@ -269,7 +273,7 @@ class PlanningMealChoiceViewModel(
             itineraries: ItineraryRepository,
             profiles: ProfileRepository,
             zone: ZoneId,
-            reconciler: PlanningChangeReconciler = KeepSavedStops,
+            reconciler: PlanningChangeReconciler = MealStopReconciler,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer { PlanningMealChoiceViewModel(itineraryId, auth, itineraries, profiles, zone, reconciler) }
         }
