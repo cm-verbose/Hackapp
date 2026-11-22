@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
@@ -43,12 +46,19 @@ fun LateArrivalWarning(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(message, style = MaterialTheme.typography.titleSmall, color = color, modifier = Modifier.fillMaxWidth())
+        Text(
+            message,
+            style = MaterialTheme.typography.titleSmall,
+            color = color,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { liveRegion = LiveRegionMode.Polite },
+        )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            HackappSmallButton(text = goAnywayLabel, onClick = onGoAnyway)
+            HackappSmallTonalButton(text = goAnywayLabel, onClick = onGoAnyway)
             HackappSmallTextButton(text = skipStopLabel, onClick = onSkipStop)
         }
     }

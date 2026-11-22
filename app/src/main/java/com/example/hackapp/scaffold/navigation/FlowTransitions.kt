@@ -3,9 +3,11 @@ package com.example.hackapp.scaffold.navigation
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
@@ -44,6 +46,11 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.flowBackEnter(): EnterTran
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.flowBackExit(): ExitTransition =
     slideOutOfContainer(SlideDirection.End, tween(FLOW_TRANSITION_MILLIS))
+
+/** The same forward slide, for pages that change inside one route. */
+fun <S> AnimatedContentTransitionScope<S>.flowForwardTransform(): ContentTransform =
+    slideIntoContainer(SlideDirection.Start, tween(FLOW_TRANSITION_MILLIS)) togetherWith
+        slideOutOfContainer(SlideDirection.Start, tween(FLOW_TRANSITION_MILLIS))
 
 /** A step that slides in the direction of progress, and back the opposite way. */
 inline fun <reified T : Any> NavGraphBuilder.flowComposable(

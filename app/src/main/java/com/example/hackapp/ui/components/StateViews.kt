@@ -67,13 +67,14 @@ fun ErrorState(
     modifier: Modifier = Modifier,
     title: String = stringResource(R.string.state_error_title),
     body: String? = null,
+    actionLabel: String = stringResource(R.string.action_retry),
 ) {
     StateContainer(modifier) {
         Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
         body?.let {
             Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
-        HackappSmallButton(stringResource(R.string.action_retry), onRetry)
+        HackappSmallButton(actionLabel, onRetry)
     }
 }
 

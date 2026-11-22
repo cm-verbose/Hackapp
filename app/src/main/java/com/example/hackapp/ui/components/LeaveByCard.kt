@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
@@ -30,6 +31,7 @@ fun LeaveByCard(
     modifier: Modifier = Modifier,
     label: String = stringResource(R.string.at_stop_leave_by),
     nextStop: String = stringResource(R.string.at_stop_next, nextStopName, transitMinutes),
+    valueStyle: TextStyle = MaterialTheme.typography.displayMedium,
 ) {
     val color = MaterialTheme.colorScheme.onPrimaryContainer
     Column(
@@ -40,7 +42,7 @@ fun LeaveByCard(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = color, modifier = Modifier.fillMaxWidth())
-        Text(leaveByTime, style = MaterialTheme.typography.displayMedium, color = color, modifier = Modifier.fillMaxWidth())
+        Text(leaveByTime, style = valueStyle, color = color, modifier = Modifier.fillMaxWidth())
         Text(nextStop, style = MaterialTheme.typography.bodyMedium, color = color, modifier = Modifier.fillMaxWidth())
     }
 }

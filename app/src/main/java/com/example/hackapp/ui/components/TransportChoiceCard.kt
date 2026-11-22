@@ -58,7 +58,10 @@ fun TransportChoiceCard(
             onSelectedChange = onSelect,
         )
         if (selected == TransportChoice.Transit) {
-            TransitFareRow(stringResource(R.string.leg_fare_required, fareLabel, fareAgency))
+            TransitFareRow(
+                stringResource(R.string.leg_fare_required, fareLabel, fareAgency),
+                Modifier.fillMaxWidth(),
+            )
         }
     }
 }

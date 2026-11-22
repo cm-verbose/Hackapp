@@ -21,6 +21,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +60,13 @@ fun Stamp(
                 .dashedCircleBorder(2.dp, inkColor),
             contentAlignment = Alignment.Center,
         ) {
-            Text(initials, style = MaterialTheme.typography.titleMedium, color = inkColor, maxLines = 1)
+            Text(
+                initials,
+                style = MaterialTheme.typography.titleMedium,
+                color = inkColor,
+                maxLines = 1,
+                modifier = Modifier.clearAndSetSemantics {},
+            )
         }
         val center = Modifier.fillMaxWidth()
         Text(stampName, style = MaterialTheme.typography.labelLarge, color = scheme.onSurface, textAlign = TextAlign.Center,
