@@ -62,10 +62,13 @@ Living checklist for the current implementation step. Update it in the same chan
 | Start date | **Start** works only on the Itinerary's date, except in demo mode |
 | Resuming drafts | Tapping a draft reopens its last step with all choices kept |
 | Deleting drafts | Drafts have a Delete action with confirmation. Past Itineraries cannot be deleted |
-| Expired drafts | Deleted once their date has passed |
+| Expired drafts | Moved to an **Archived** section in Itineraries once their time window has ended, with a note telling the user they were archived |
 | Event details | Sheet with title, time, venue, price, audience, description when available, ticket link and Add to Itinerary |
 | Skipping a Meal | **Skip this Meal** frees the block so Events in that time appear again |
-| Budget | A per-Meal budget plus a global day budget. **Exact calculation still being decided** |
+| Budget | Separate budgets for lunch (Meal 1), dinner (Meal 2) and total Events, with a possible late-night snack add-on. **Setup details still being decided** |
+| Event prices | Events are never hidden by budget. Free counts as $0. Users can enter a ticket price, which updates shared data so other users see it. **Trust rules still being decided** |
+| Meal cost | Counts at the top of the restaurant's price range. Restaurants above that Meal's budget are hidden. Unknown prices stay visible, rank lower and show as "+ unknown price" |
+| Over budget | Warn but allow the Stop. Selection shows a running total |
 | Ranking | Matching Interests, then known price within budget, then unknown price, then shortest travel time |
 | Repeated showtimes | One card with selectable times. An Event already in the Itinerary is hidden from later gaps |
 | Review map | Same zoom and drag. Tapping a marker highlights its Stop |
