@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Restaurant ETL: inputs, Google cache, build outputs
+**/mtl-food/etl/data/
+**/mtl-food/etl/cache/
+**/mtl-food/etl/out/
+__pycache__/
+*.pyc

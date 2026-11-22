@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AndroidTemplate"
+rootProject.name = "HackApp"
 include(":app")

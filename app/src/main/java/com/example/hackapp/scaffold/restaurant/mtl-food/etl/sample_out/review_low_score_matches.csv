@@ -1,0 +1,38 @@
+business_id,name,osm_name,match_score,address
+100280,PIZZA QUATRE FRERES,Pizza 4 Frères,0.788,1155   Rue Fleury Est
+102839,LA BELLE ITALIENNE,La Bella Italiana,0.759,5884   Rue Jean-Talon Est
+104014,OLIMPIC SPORT BAR,Café Olimpico,0.762,124   Rue Saint-Viateur Ouest
+10646,CAFE MINOA,Café Minou,0.8,5809   Rue Bélanger 
+108367,CREMERIE BOUBOULES,Crèmes Boboule,0.812,4640   Rue Wellington 
+110426,PIZZA DANY,Pizza Chez Danny,0.769,1237 A  Rue Montagne 
+112378,SAIZEN SUSHI,Zanzen Sushi Bar,0.833,5177   Boulevard Décarie 
+114829,BAHN MI BANH/ YIU NILI,Báhn Mì Báhn Yiu,0.811,255 A  Rue Saint-Viateur Ouest
+115965,LA CAPITAL TACOS/ BARRIO,La Capitale Tacos,0.765,1096   Boulevard Saint-Laurent 
+116660,GINKGO CAFE & BAR,Gingko,0.833,308   Rue Sainte-Catherine Est
+117273,H 8 S CAFE,H8S,0.75,2130   Boulevard Saint-Joseph 
+117830,RESTAURANT MR. DAKGALBI,Restaurant Mr. Dakbalgi,0.818,2070  04 Boulevard De Maisonneuve Ouest
+118710,NAMESONTHEWAY,Name's on the Way,0.769,500   Rue Rachel Est
+119017,BAR SAINT-DENIS,Bar St-Denis,0.842,6966   Rue Saint-Denis 
+120810,PIZZERIA NO 900 (ANGUS),Pizzeria n°900,0.765,4091   Rue Molson 
+123510,AA RESTAURANT,Restaurant A.A,0.8,3702  #2 Rue Notre-Dame Ouest
+124135,L'OEUF ALPHA,L’œuf alpha,0.842,2015   Boulevard Rosemont 
+124966,CAFE LLIOS,Cafe Ilios,0.8,9641   Boulevard LaSalle 
+127641,NOUILLES STAR,Noodles Star,0.8,1871   Rue Sainte-Catherine Ouest
+128319,COMPTOIR KOYASUN,Comptoir Koyajo,0.839,6963   Rue Sherbrooke Ouest
+128531,BAGUETTE BROCHETTE BISHOP,Baquette Brochette,0.791,2019   Rue Bishop 
+129164,PANG JI NOUILLES,Pang Ji Guilin Nouilles,0.821,1901   Rue Sainte-Catherine Ouest
+129707,MARCI CAFE RESTAURANT,Marqi,0.8,6600   Rue Saint-Hubert 
+13023,RESTAURANT GO CONG,Restaurant Còcông,0.769,1310   Rue Bélanger 
+130522,RESTAURANT CHAPULQUEBEC,Resto Pub Chaput Québec,0.759,7058   Rue Saint-Hubert 
+130825,DAGWOODS LA SANDWICHERIE,Dagwoods Sandwichs et salades,0.766,6969   Rue Sherbrooke Ouest
+132105,DAK HING BBQ,Dak Hing Barbecue,0.759,4705   Avenue Van Horne 
+13266,LA PLANETE OEUF 09,La planète œuf,0.8,2734   Rue Masson 
+133178,O'TACOS,Mont Tacos,0.824,942   Boulevard Décarie 
+133360,LES SOEURS GRISES VIEUX-ROSEMENT,Brasserie les Sœurs Grises Vieux-Rosemont,0.812,3188   Rue Masson 
+133942,IL TEATROR - RESTAURANT ITALIEN (QUARTIER DES SPACTACLES),Il Teatro (Quartier des spectacles),0.836,1250   Rue Jeanne-Mance 
+134481,CHAMPION 2 POUR 1 PIZZA,Champion Pizza,0.757,3571   Rue Beaubien Est
+16084,RESTAURANT LA CITRONNE,La Citronelle,0.778,1386   Rue Fleury Est
+18289,MC CAROLD,Pub McCarold,0.762,5400   Chemin Côte-des-Neiges 
+60240,CHEZ JACKIE ET FRANCE S.E.N.C.,Chez Jacquie et France,0.756,4609   Rue Bannantyne 
+67649,VEER BAKERS,Veer Bagel,0.762,4840   Rue René-Émard 
+7402,DOURO,Dourd,0.8,6518   Boulevard Saint-Laurent 
