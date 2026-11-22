@@ -36,14 +36,14 @@ class MontrealEventSnapshotTest {
     fun `every event can be planned`() = runBlocking {
         val events = repository.search(EventQuery(includeUnavailable = true))
         val boroughs = boroughIds()
-        assertTrue(events.size > 1000)
+        assertEquals(1292, events.size)
         assertEquals(events.size, events.map { it.id }.toSet().size)
         events.forEach { event ->
             assertTrue(event.id, event.districtId in boroughs)
             assertNotNull(event.id, event.location.latitude)
             assertNotNull(event.id, event.location.longitude)
             event.schedule.endDate?.let { end ->
-                assertTrue(event.id, OffsetDateTime.parse(end) > OffsetDateTime.parse(event.schedule.startDate))
+                assertTrue(event.id, parseEventTime(end)!! > parseEventTime(event.schedule.startDate)!!)
             }
         }
     }

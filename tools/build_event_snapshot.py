@@ -164,9 +164,11 @@ def city_events(raw, locator, stats):
         if not page["times"]:
             stats["city_no_time"] += 1
             continue
-        start = min(page["times"])
-        # Exactly two values are a start and an end. Other counts are sessions, so the end stays empty.
-        end = max(page["times"]) if len(page["times"]) == 2 and max(page["times"]) > start else None
+        # Pages can repeat one time as both -05:00 and -0500, so compare parsed times.
+        moments = sorted({datetime.fromisoformat(t) for t in page["times"]})
+        start = moments[0].isoformat(timespec="seconds")
+        # Exactly two times are a start and an end. Other counts are sessions, so the end stays empty.
+        end = moments[1].isoformat(timespec="seconds") if len(moments) == 2 else None
         # Leg estimates need coordinates, so an Event without them cannot be planned.
         if clean(record.get("lat")) is None or clean(record.get("long")) is None:
             stats["city_no_coordinates"] += 1

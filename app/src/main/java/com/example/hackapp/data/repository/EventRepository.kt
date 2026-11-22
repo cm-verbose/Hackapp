@@ -3,6 +3,7 @@ package com.example.hackapp.data.repository
 import android.content.Context
 import com.example.hackapp.data.Event
 import com.example.hackapp.data.EventStatus
+import com.example.hackapp.data.parseEventTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -10,7 +11,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.OffsetDateTime
-import java.time.format.DateTimeParseException
 
 /** Filters for an Event search. Every filter is optional; bounds apply to the Event's start. */
 data class EventQuery(
@@ -79,11 +79,7 @@ class SnapshotEventRepository(
     }
 
     /** Events without a full start timestamp cannot be planned, so they are not served. */
-    private fun parseStart(event: Event): OffsetDateTime? = try {
-        OffsetDateTime.parse(event.schedule.startDate)
-    } catch (_: DateTimeParseException) {
-        null
-    }
+    private fun parseStart(event: Event): OffsetDateTime? = parseEventTime(event.schedule.startDate)
 
     private fun IndexedEvent.matches(query: EventQuery): Boolean =
         (query.includeUnavailable || event.status == EventStatus.SCHEDULED) &&

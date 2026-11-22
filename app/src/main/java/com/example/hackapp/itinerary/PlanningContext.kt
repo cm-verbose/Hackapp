@@ -1,6 +1,7 @@
 package com.example.hackapp.itinerary
 
 import com.example.hackapp.data.Event
+import com.example.hackapp.data.parseEventTime
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.AudiencePreference
 import com.example.hackapp.profile.BudgetBracket
@@ -11,7 +12,6 @@ import java.time.DateTimeException
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /** The person and moment that Planning decisions are made for. */
@@ -67,18 +67,6 @@ val Itinerary.activeMealBlocks: List<MealBlock>
 fun MealBlock.interval(itinerary: Itinerary, zone: ZoneId): PlanningWindow {
     val blockStart = itinerary.resolve(start, zone).toInstant()
     return PlanningWindow(blockStart, blockStart.plusSeconds(kind.blockMinutes * 60L))
-}
-
-/** The bundled data mixes `-05:00` and `-0500` offsets, and both are usable. Seconds are optional. */
-private val EventTimestamp = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm[:ss][XXX][XX]")
-
-private fun parseEventTime(text: String?): OffsetDateTime? {
-    if (text.isNullOrBlank()) return null
-    return try {
-        OffsetDateTime.parse(text.trim(), EventTimestamp)
-    } catch (_: DateTimeException) {
-        null
-    }
 }
 
 /** Null when the Event has no usable start. */

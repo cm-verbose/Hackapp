@@ -10,8 +10,10 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.hackapp.auth.AuthService
 import com.example.hackapp.citypack.CityPack
 import com.example.hackapp.citypack.EventCoverage
+import com.example.hackapp.data.parseEventTime
 import com.example.hackapp.data.repository.EventRepository
 import com.example.hackapp.itinerary.Itinerary
+import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.OutingKind
 import com.example.hackapp.itinerary.PlanningStep
@@ -27,7 +29,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.OffsetDateTime
 import java.util.UUID
 
 data class PlanningDateTimeUiState(
@@ -132,6 +133,8 @@ class PlanningDateTimeViewModel(
         } else {
             val latest = checkNotNull(itineraries.getItinerary(uid, existingId))
             val updated = latest.copy(
+                // Choosing a new date is what brings an archived draft back to Planning.
+                phase = if (latest.phase == ItineraryPhase.Archived) ItineraryPhase.Planning else latest.phase,
                 step = maxOf(latest.step, PlanningStep.Districts),
                 date = form.date,
                 outingKind = form.outingKind,
@@ -202,8 +205,8 @@ class PlanningDateTimeViewModel(
         val today = LocalDate.now(zone)
         val dates = try {
             withContext(Dispatchers.Default) {
-                events.search().mapTo(HashSet()) { event ->
-                    OffsetDateTime.parse(event.schedule.startDate).atZoneSameInstant(zone).toLocalDate()
+                events.search().mapNotNullTo(HashSet()) { event ->
+                    parseEventTime(event.schedule.startDate)?.atZoneSameInstant(zone)?.toLocalDate()
                 }
             }
         } catch (e: CancellationException) {
