@@ -1,7 +1,6 @@
 package com.example.hackapp.itinerary
 
 import com.example.hackapp.services.LegEstimator
-import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -14,7 +13,7 @@ suspend fun archiveExpiredDrafts(
     now: Instant,
     zone: ZoneId,
 ): List<Itinerary> {
-    val expired = repository.observeItineraries(uid).first()
+    val expired = repository.listItineraries(uid, freshOnly = true)
         .filter { it.phase == ItineraryPhase.Planning && !now.isBefore(it.windowEnd(zone).toInstant()) }
         .map { it.copy(phase = ItineraryPhase.Archived, updatedAtMillis = now.toEpochMilli()) }
     expired.forEach { repository.saveItinerary(it) }
@@ -107,7 +106,7 @@ suspend fun startItinerary(
     val draft = repository.getItinerary(uid, id) ?: return StartResult.NotFound
     startBlock(draft, now, zone, demoMode)?.let { return StartResult.Blocked(it) }
 
-    val underway = repository.observeItineraries(uid).first()
+    val underway = repository.listItineraries(uid)
         .filter { it.phase == ItineraryPhase.Underway && it.id != id }
     if (underway.isNotEmpty() && !confirmEndCurrent) return StartResult.NeedsConfirmation(underway.first())
 

@@ -18,7 +18,10 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 
 /*
  * Failure mapping. The interfaces expect: unreadable or foreign data counts as missing (null, or
@@ -40,7 +43,7 @@ class FirestoreProfileRepository(
         FirestoreDocuments.profileFrom(uid, ref(uid).get().await().dataOrNull())
 
     override suspend fun saveProfile(uid: String, profile: Profile) {
-        ref(uid).set(FirestoreDocuments.profileDoc(uid, profile, clock())).await()
+        awaitWrite(ref(uid).set(FirestoreDocuments.profileDoc(uid, profile, clock())))
     }
 }
 
@@ -65,16 +68,23 @@ class FirestoreItineraryRepository(
         awaitClose { registration.remove() }
     }.distinctUntilChanged()
 
+    override suspend fun listItineraries(uid: String, freshOnly: Boolean): List<Itinerary> {
+        val source = if (freshOnly) Source.SERVER else Source.DEFAULT
+        return collection(uid).get(source).await().documents
+            .mapNotNull { FirestoreDocuments.itineraryFrom(uid, it.id, it.data) }
+            .sortedByDescending { it.updatedAtMillis }
+    }
+
     override suspend fun getItinerary(uid: String, id: String): Itinerary? =
-        FirestoreDocuments.itineraryFrom(uid, id, collection(uid).document(id).get().await().dataOrNull())
+        FirestoreDocuments.itineraryFrom(uid, id, collection(uid).document(id).get().await().dataOrNull(), strict = true)
 
     override suspend fun saveItinerary(itinerary: Itinerary) {
         collection(itinerary.ownerUid).document(itinerary.id)
-            .set(FirestoreDocuments.itineraryDoc(itinerary)).await()
+            .set(FirestoreDocuments.itineraryDoc(itinerary)).let { awaitWrite(it) }
     }
 
     override suspend fun deleteItinerary(uid: String, id: String) {
-        collection(uid).document(id).delete().await()
+        awaitWrite(collection(uid).document(id).delete())
     }
 }
 
@@ -112,11 +122,22 @@ class FirestoreTicketPriceRepository(
 
     override suspend fun saveReport(uid: String, key: ShowtimeKey, priceCad: Double): Boolean {
         if (!isValidTicketPrice(priceCad)) return false
-        reportRef(uid, key).set(FirestoreDocuments.reportDoc(uid, priceCad, FieldValue.serverTimestamp())).await()
+        awaitWrite(reportRef(uid, key).set(FirestoreDocuments.reportDoc(uid, priceCad, FieldValue.serverTimestamp())))
         return true
     }
 
     override suspend fun deleteReport(uid: String, key: ShowtimeKey) {
-        reportRef(uid, key).delete().await()
+        awaitWrite(reportRef(uid, key).delete())
     }
+}
+
+/**
+ * Firestore write tasks only complete once the server acknowledges. Offline that never happens,
+ * although the SDK has queued the write and applies it locally. So a write that is still pending
+ * after [WRITE_TIMEOUT_MS] counts as accepted, while a real failure (rules, bad data) still throws.
+ */
+internal const val WRITE_TIMEOUT_MS = 2_000L
+
+private suspend fun awaitWrite(task: Task<Void>) {
+    withTimeoutOrNull(WRITE_TIMEOUT_MS) { task.await() }
 }

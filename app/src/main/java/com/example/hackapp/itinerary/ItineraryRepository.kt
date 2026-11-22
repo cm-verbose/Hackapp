@@ -2,6 +2,7 @@ package com.example.hackapp.itinerary
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -10,6 +11,12 @@ import kotlinx.coroutines.flow.update
 interface ItineraryRepository {
     /** All of this person's Itineraries, most recently updated first. */
     fun observeItineraries(uid: String): Flow<List<Itinerary>>
+    /**
+     * One-shot read, most recently updated first. [freshOnly] asks for server-confirmed data and
+     * throws when that is impossible (for example offline); local stores ignore it.
+     */
+    suspend fun listItineraries(uid: String, freshOnly: Boolean = false): List<Itinerary> =
+        observeItineraries(uid).first()
     suspend fun getItinerary(uid: String, id: String): Itinerary?
     suspend fun saveItinerary(itinerary: Itinerary)
     suspend fun deleteItinerary(uid: String, id: String)
