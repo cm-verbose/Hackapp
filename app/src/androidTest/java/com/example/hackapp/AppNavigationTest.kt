@@ -21,7 +21,10 @@ import com.example.hackapp.auth.AuthUser
 import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.ActiveCityPack
 import com.example.hackapp.itinerary.InMemoryItineraryRepository
+import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.itinerary.MealKind
+import com.example.hackapp.itinerary.PlanningStep
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
@@ -36,6 +39,7 @@ import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -81,18 +85,25 @@ class AppNavigationTest {
         // District pick needs a tap on the map, so the walk resumes at the next page.
         compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute(savedDraftId())) }
         awaitContinueEnabled()
-        // A first open preselects every Meal that fits: Lunch fits the default day window.
-        compose.onNodeWithText(context.getString(R.string.meal_lunch_at, "12:00")).assertIsSelected()
+        // A first open preselects every Meal that fits the default night window (18:00 to 02:00):
+        // Dinner fits, Lunch does not, and Late bite stays off because the Profile has no add-on.
+        compose.onNodeWithText(context.getString(R.string.meal_dinner_at, "18:30")).assertIsSelected()
         click(R.string.action_continue)
         awaitText(R.string.planning_stops_title)
+        val saved = savedDraft()
+        assertEquals(true, saved.planMeals)
+        assertEquals(listOf(MealKind.Dinner), saved.mealBlocks.map { it.kind })
+        assertEquals(PlanningStep.Stops, saved.step)
         repeat(PAGES_AFTER_MEAL_CHOICE) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
-    /** The draft that Date and time saved. */
-    private fun savedDraftId(): String = runBlocking {
-        itineraries.observeItineraries(TEST_UID).first().single().id
+    /** The one draft of the test user, as last saved. */
+    private fun savedDraft(): Itinerary = runBlocking {
+        itineraries.observeItineraries(TEST_UID).first().single()
     }
+
+    private fun savedDraftId(): String = savedDraft().id
 
     @Test
     fun systemBackLeavesPlanningForHome() {

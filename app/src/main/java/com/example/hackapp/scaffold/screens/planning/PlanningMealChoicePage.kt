@@ -244,11 +244,29 @@ private fun MealCard(
                     modifier = Modifier.width(TimeFieldWidth),
                 )
             }
-            Text(stringResource(R.string.meal_budget_label), style = MaterialTheme.typography.titleSmall, color = scheme.onSurface)
-            // No bracket chosen shows the budget search will fall back to; choosing one overrides it.
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.meal_budget_label),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                // With no bracket chosen, the inherited budget shows as quiet text, not as a chip.
+                if (option.budget == null && option.effectiveBudget != null) {
+                    Text(
+                        budgetBracketLabel(option.effectiveBudget),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                    )
+                }
+            }
             SingleChoiceChips(
                 options = BudgetBracket.entries.map { ChoiceOption(it, budgetBracketLabel(it)) },
-                selected = option.budget ?: option.effectiveBudget,
+                selected = option.budget,
                 onSelectedChange = { onBudgetChange(option.kind, it) },
                 allowDeselect = true,
             )
@@ -305,9 +323,9 @@ private val PreviewHours = ItineraryHours(LocalTime.of(11, 0), LocalTime.of(23, 
 private val PreviewPlanState = PlanningMealChoiceUiState(
     loading = false,
     options = listOf(
-        previewOption(MealKind.Lunch, selected = true, budget = BudgetBracket.Under50),
+        previewOption(MealKind.Lunch, selected = true, effectiveBudget = BudgetBracket.Under50),
         previewOption(MealKind.Dinner, selected = false, effectiveBudget = BudgetBracket.Under50),
-        previewOption(MealKind.LateBite, selected = true),
+        previewOption(MealKind.LateBite, selected = true, budget = BudgetBracket.Under20),
     ),
 )
 

@@ -102,10 +102,15 @@ private inline fun <reified T : Any> NavGraphBuilder.planningPage(
 
 /**
  * Returns to the Date and time step already on the back stack, so the later steps are left again
- * from there. A draft resumed straight at a later step has no such entry, so it is opened instead.
+ * from there. A draft resumed straight at a later step has no such entry, so Date and time opens
+ * in place of the Meal page rather than on top of it.
  */
 private fun NavHostController.returnToDateTime(itineraryId: String) {
-    if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) navigate(PlanningDateTimeRoute(itineraryId))
+    if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) {
+        navigate(PlanningDateTimeRoute(itineraryId)) {
+            popUpTo<PlanningMealChoiceRoute> { inclusive = true }
+        }
+    }
 }
 
 private fun NavHostController.backToHome() {
