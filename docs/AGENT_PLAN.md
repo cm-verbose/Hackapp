@@ -17,15 +17,16 @@ Teams merge in that order. A dependent team starts building once the team it dep
 
 ## Team composition
 
-A **team** is the five roles below, and at most **10 teams** run at once during the writing pass, and at most **15 teams** at every future step of the plan. Use that capacity whenever work can safely run in parallel. Each role starts only when its phase begins, so a team never runs all five agents at once. The main session coordinates the teams, merges finished branches, runs the final checks and reports to you. It is not part of any team.
+A **team** is the six roles below, and at most **5 teams** run at once at every step of the plan. Use that capacity whenever work can safely run in parallel. Each role starts only when its phase begins, so a team never runs all five agents at once. The main session coordinates the teams, merges finished branches, runs the final checks and reports to you. It is not part of any team.
 
 | # | Agent | Model | Writes code? | Skills | Why this model |
 |---|---|---|---|---|---|
-| 1 | **Feature Engineer** | Fable 5.1 (`claude-fable-5-1`) | Yes: Compose pages and components | `figma:figma-design-to-code`, `figma:figma-implement-motion`, `run` | Required coding agent. Handles the largest and most judgment-heavy UI work |
+| 1 | **Feature Engineer** | Opus 5.5 (`claude-opus-5-5`) | Yes: Compose pages and components | `figma:figma-design-to-code`, `figma:figma-implement-motion`, `run` | Handles the largest and most judgment-heavy UI work |
 | 2 | **Domain Engineer** | Sonnet 5.5 (`claude-sonnet-5-5`) | Yes: ViewModels, Planning rules, tests | `domain-modeling`, `simplify` | The planning engine already exists and is tested, so this is mostly well-defined wiring |
 | 3 | **Maquette Designer** | Sonnet 5.5 (`claude-sonnet-5-5`) | No: Figma only | `figma:figma-use`, `figma:figma-generate-design` | Composes frames from the existing design system |
 | 4 | **UX Reviewer** | Opus 5.5 (`claude-opus-5-5`) | No: read-only | `run`, `figma:figma-use` (read-only) | Judges real rendered screens against Figma, the spec and your feedback |
 | 5 | **Code Reviewer** | Opus 5.5 (`claude-opus-5-5`) | No: read-only | `code-review` (high), `security-review` | Reviews with no stake in the code, and looks for subtle time and state bugs |
+| 6 | **Copy Editor** | Sonnet 5.5 (`claude-sonnet-5-5`) | Strings only | `plan-writing`, `quebec-french-ui`, `ux-writing` | Keeps each new screen concise in French and English from the start |
 
 ## Responsibilities
 
@@ -57,7 +58,7 @@ A **team** is the five roles below, and at most **10 teams** run at once during 
 Each team runs through the same five steps. A team's finished feature is one milestone.
 
 1. **Design:** the Maquette Designer updates Figma. **You approve the maquettes.**
-2. **Contract:** the Domain Engineer publishes `UiState`, callbacks and any model changes on the team branch.
+2. **Contract:** the Domain Engineer publishes `UiState`, callbacks and any model changes on the team branch, while the Copy Editor adds the strings.
 3. **Build:** the Domain and Feature Engineers commit atomically to the team branch, from a dedicated worktree.
 4. **Review:** the Code and UX Reviewers check the branch. Owners fix confirmed findings, with at most two rounds before anything left is brought to you.
 5. **Ship:** the team reports back. The main session merges its branch into `feat/ui-foundation` locally, runs all tests and installs on your phone. **Once you approve the milestone, the main session pushes `feat/ui-foundation`.**
@@ -100,6 +101,6 @@ You approve the copy plan before the String Steward applies it. Agent files are 
 
 ## Approved decisions
 
-1. Work runs as teams of these five roles, up to 10 teams during the writing pass and up to 15 at future steps, each on its own branch.
+1. Work runs as teams of these six roles, up to 5 teams at every step, each on its own branch.
 2. You approve every team's Figma maquettes before it builds.
 3. The main session pushes `feat/ui-foundation` after you approve a milestone.

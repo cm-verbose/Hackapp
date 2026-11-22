@@ -8,6 +8,40 @@ Living checklist for the current implementation step. Update it in the same chan
 - **Working branch:** `feat/ui-foundation`
 - **Test device:** physical phone. The emulator can be killed by the host's out-of-memory killer.
 
+## Current status and handoff
+
+Last updated 2026-11-22 05:20. Start here if you are picking up this work.
+
+**Where the code is.** `origin/feat/ui-foundation` is at `5d0eb80` and does **not** contain Planning, Underway, demo mode or the new Passport. That work is on local team branches on Niko's computer until it is merged and pushed:
+
+| Branch | Head | Contains | State |
+|---|---|---|---|
+| `team/planning-fixes` | `9f2cebd` | Meals, Sheets, Selection, Review, Underway, Start, District of stay origin, dark card fix, walking and transit Legs | 457 unit and 9 emulator tests pass. Last build installed for phone review |
+| `team/demo` | `bf9a8dd` | `team/planning-fixes` plus demo engine, Settings switch, Underway control and exit | 478 unit tests pass. Engine code review running. Not run on a device |
+| `team/passport-integration` | `e1ca9ce` | `team/underway` at `c330de1` plus `cmvb`'s `shape-playground` merge, real Stamps, all six shapes, details, list | Builds and passes unit tests. Shrink-as-you-collect sizing in progress. Not run on a device |
+| `team/firestore` (pushed) | `cb16a88` | Firestore repositories, flag off | Not deployed. Needs rule tests, a Cloud Function aggregate and a product decision on the `eventSources` rule |
+
+**Next steps, in order:**
+1. Finish the Passport sizing and the two small demo control refinements, then apply the demo code review findings.
+2. Merge `team/demo` and `team/passport-integration`. Expect one conflict in `HackappApplication.kt`, and keep both sets of wiring.
+3. Run unit and emulator tests, capture screens in French and English, and run UX review on the demo control and Passport.
+4. Install on the phone. Niko approves the milestone there.
+5. Only after that approval, merge into `feat/ui-foundation` and push.
+6. Then do Firestore switch-on, Itinerary sharing through the flicking code (`ThrowChannel`, `ShareMessage.Throw.payload`), the ETL `is_chain=0` chain rows, and the page-by-page review.
+
+**Not yet checked on a real device:** notifications and exact alarms, transit, Uber and walking handoffs, demo mode, Passport physics and tilt, TalkBack, two-device sharing, and an R8 release build.
+
+**Where teammates should start:** create your own branch from `origin/team/planning-fixes`, the last build tested on the phone. Do not commit to `team/planning-fixes`, `team/demo` or `team/passport-integration`, because Niko's teams are still working from them. For Passport or sharing work, look at `origin/team/passport-integration`, and rebase or merge once Demo and Passport are integrated.
+
+**Rules for agents taking over:**
+- Never push or open a PR into `main`. Push `feat/ui-foundation` only after Niko approves a milestone on the phone.
+- New or changed pages need a Figma maquette that Niko approves first.
+- Run one Gradle build and one emulator at a time, through `hackapp-team-build.sh` on Niko's computer, because the host runs out of memory.
+- Never run connected tests on the phone. They uninstall the app and clear its data.
+- Do not commit `.idea`, `.kotlin` or `local.properties`. No Claude co-author trailer.
+- Do not deploy Firestore or change the live Firebase project without approval. No live Google calls, and never delete the Google cache.
+- Contracts for each feature are in `docs/contracts/`. Team roles and workflow are in `docs/AGENT_PLAN.md`.
+
 ## Working rules
 
 - New or changed pages get a Figma maquette before Android work.
@@ -59,6 +93,7 @@ Living checklist for the current implementation step. Update it in the same chan
 | Time window | At least 2 hours, ending no later than 04:00. Day/night switch resets to 10:00–18:00 or 18:00–02:00 |
 | Meal choice | Multi-select within the window: lunch 12:00, dinner 18:30, late bite 22:00, with editable times. Lunch and dinner reserve 90 minutes. Late bite is 45 minutes |
 | Meal Block conflicts | Events with a fixed showtime that overlap a reserved Meal Block are hidden. Long drop-in Events, such as an all-day exhibition, stay visible because they can be visited before or after the Meal. The Meal prompt appears when planning reaches the block |
+| Drop-in stay | A drop-in Stop defaults to arrival plus a typical stay, capped by the published end, the next Meal and the end of the outing. The person can adjust it in the Planned Departure sheet |
 | Meal location | Meal list has **Here** and **In [next borough]** tabs. The second shows only restaurants reachable by the block's start after transit. Choosing one moves planning to that borough after the Meal, and Back can undo it |
 | Advancing boroughs | **Next borough** moves on. **Finish here** skips remaining boroughs and goes to Review, and needs at least one Event. The last borough shows only **Finish**. Back keeps Stops. A borough left with no Stops is dropped |
 | Replacing a borough | The maximum-reached message lists the 3 selected boroughs, and the new one takes the replaced borough's position |
@@ -68,12 +103,42 @@ Living checklist for the current implementation step. Update it in the same chan
 | Late-night Meal name | "Bouchée tardive" everywhere |
 | Meal time field | Opens the same hour and minute rectangles as Date and time |
 | Meal with no bracket | Falls back to the Profile budget for that Meal |
-| Running total | Chosen Event prices plus the top of each chosen restaurant's range, compared with the Event budget plus selected Meal budgets |
+| Running total | Chosen Event prices plus the top of each chosen restaurant's range, compared with the Event budget plus selected Meal budgets. A Meal with no budget adds its actual price to the total and stays out of the limit |
 | Time gaps | A gap ends when the next Meal Block starts, including its margins |
 | Finish here | Disabled until at least one Event is added |
 | Event with no reported price | Show "Prix inconnu" and keep the optional price field |
 | Meal choice with no Meal that fits | Offer "Modifier l'horaire", which returns to Date and time |
 | App writing | Concise, clear and not redundant in French and English. Text that the UI or interaction already makes clear appears only as a last resort |
+| Underway start | Start opens the first Leg right away with its Leave By time, even if the Stop is hours away |
+| Underway handoff | Opening transit or Uber moves to Arrival without assuming they left. They can return to the Leg to change transport |
+| Underway skipping | Skip this Stop is on Leg and Arrival, with a one-tap confirmation |
+| Late and early | Arriving late is recorded with no replanning. I'm leaving works any time after arrival |
+| Go anyway | A late Stop stays on the Itinerary and can still earn its Stamp |
+| Event Stamp rule | Every Event needs at least 20% of its expected time. Count the overlap between the stay (arrived to leaving) and the Event (start to end or Planned Departure). Time before the start does not count. If the person never taps leaving, the stay runs until their next app action, capped at the expected end |
+| Meal Stamp rule | Confirming arrival is enough |
+| Under 20% | The Stop shows as visited in Past, earns no Stamp and says "Trop bref pour un timbre" |
+| Underway notifications | Denied notifications never block Start. Underway shows one dismissible banner with a Settings button, at most once per Itinerary |
+| Underway alerts | Use exact alarms. Ask once at Start, and fall back to normal alerts if declined. Reschedule after a reboot and whenever the app opens. Arrival and Skip work directly from the notification. On the last remaining Stop, the notification offers Open instead of Skip, so the app can warn before the Itinerary ends |
+| Past Leave By | Once the Leave By time has passed, Underway shows Departure: Now instead of a past time |
+| First Leg origin | The first Leg starts from the Profile's District of stay, with no location permission. Its Leave By and travel time are approximate |
+| Back during Underway | The phone Back action returns to Home, where the Underway card resumes. It never ends the Itinerary |
+| Arrival reminder | Fires once. A Stop is never skipped automatically while the Itinerary is active |
+| Late warning | Appears at a Stop when the current time plus travel passes the next Stop start, and as one alert per Stop if the app is closed |
+| Leave By travel time | Always uses the public transit estimate, even with Uber |
+| Transport choice | The first Leg defaults to public transit. Later Legs start on the last choice |
+| Changes while Underway | Only skipping Stops and ending the Itinerary. No adding, moving or editing |
+| Last Stop | Shows End Itinerary instead of I'm leaving, with no extra confirmation |
+| Stamp timing | Awarded once at End of day, including automatic endings, and safe to retry |
+| End of day content | Title, each Stop as visited, skipped or too brief, its Stamp result, and Retour à l'accueil |
+| Lock screen | Notifications show Stop names and times |
+| Ending early | End Itinerary asks for confirmation, marks remaining Stops skipped and goes to End of day |
+| Forgotten Itineraries | End automatically 2 hours after the window closes, keeping Stamps for confirmed Stops |
+| Demo mode | Pins Sat Nov 28 and adds Next moment. **Built at the end**, but Underway must read time and schedule alerts through replaceable interfaces from the start |
+| Demo Stamps | Itineraries run in demo mode can start on any date and earn real Passport Stamps |
+| Demo control | Shown only on Underway. **Moment suivant** jumps to Leave By, arrival, next Stop, then end of day. Start moves the clock to the first Leave By, or 30 minutes before the first Stop. The clock pauses while the app is closed. Turn it off in Settings or the Underway ⋮ menu |
+| Physics Passport | Gravity starts locked. Stamps keep all six playful shapes from the prototype, with a stable shape per Stamp. The first Stamps are full size, and all shapes shrink together to about half size as the collection grows. They show initials and open a details sheet. **Tous les timbres** reaches Stamps that don't fit. No sharing control until Itinerary sharing is built |
+| Travel between Stops | Planning and Underway use a public transit estimate between Districts and walking time within one District. A walk over 20 minutes uses transit instead |
+| Passport direction | Integrate `cmvb`'s physics prototype from `shape-playground`, with real Stamps as the objects. Keep its flicking code for Itinerary sharing later |
 | Onboarding start | Starts at Profile with 3 steps until Resident ships. The Visitor or Resident page stays in the code |
 | Age notice | "18 ans et plus" on Register only |
 | Home suggestions | Not tappable until Event selection can preselect the Event |
@@ -142,7 +207,7 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] District map behavior
 - [x] Itinerary draft and Planning flow
 - [x] Update maquettes from these decisions
-- [ ] Underway pages (grill when we get there)
+- [x] Underway pages grilling
 
 ### 4. Main tabs
 
@@ -151,7 +216,7 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Past Itinerary summary and Archived detail: maquettes, then pages
 - [x] Settings
 - [ ] Confirm Home, Itineraries and Settings on the phone
-- [ ] Passport (`cmvb`)
+- [ ] Passport: `cmvb`'s physics prototype with real Stamps, built on `team/passport-integration`, not yet on a device
 
 ### 5. Planning
 
@@ -163,31 +228,33 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Review pass 1: system Back to Home, sliding transitions, time wheels, optional Budget step, map rotation, borough names
 - [x] App-wide French and English writing pass, UX review and accessibility fixes
 - [ ] Confirm Date and time, Budget and District map gestures on the phone
-- [ ] Meal choice
-- [ ] Event and Meal selection
-- [ ] Keep long drop-in Events visible across Meal Blocks
-- [ ] Planned Departure sheet
+- [x] Meal choice
+- [x] Event and Meal selection
+- [x] Keep long drop-in Events visible across Meal Blocks
+- [x] Planned Departure sheet
 - [x] Itinerary budget override step
-- [ ] Per-Meal budget editing and running total UI
-- [ ] Event details sheet with optional ticket price
+- [x] Per-Meal budget editing and running total UI
+- [x] Event details sheet with optional ticket price
 - [x] `TicketPriceRepository` logic with median of user reports (in memory until Firestore)
-- [ ] Connect Stop edit warnings to Date and time, District pick and Review
-- [ ] Itinerary review
+- [x] Connect Stop edit warnings to Date and time, District pick, Meal choice and Review
+- [x] Itinerary review
+- [ ] Niko approves Planning on the phone
 
 ### 6. Underway
 
-- [ ] Persisted Underway state machine
-- [ ] Leg handoff
-- [ ] Arrival
-- [ ] At the Stop
-- [ ] End of day
-- [ ] Local notifications
+- [x] Persisted Underway state machine
+- [x] Leg handoff
+- [x] Arrival
+- [x] At the Stop
+- [x] End of day
+- [x] Local notifications and exact alarms, not yet tried on a real device
+- [ ] Niko approves Underway on the phone
 
 ### 7. Connect and finish
 
 - [ ] Firestore for Profile, Itineraries and Passport
-- [ ] Idempotent Stamp awarding with chain identity
-- [ ] Demo mode
+- [x] Idempotent Stamp awarding with chain identity
+- [ ] Demo mode: built on `team/demo`, code review and device test pending
 - [ ] Check every screen against Figma
 - [ ] Full rehearsal in French and English
 
