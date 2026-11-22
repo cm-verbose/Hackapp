@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -136,6 +137,7 @@ fun PhysicsScreen(
     val orientation = rememberDeviceOrientation()
     val share = rememberNearbyShare(enabled = shareWithNearby)
     val currentShare by rememberUpdatedState(share)
+    val toaster = rememberToaster()
 
     BoxWithConstraints(
         modifier = modifier
@@ -210,6 +212,7 @@ fun PhysicsScreen(
                 while (accumulator >= fixedDt && steps < maxStepsPerFrame) {
                     grabber.update(fixedDt)
                     sandbox.checkThrow(fixedDt, nowNanos, currentShare, orientation.rotationMatrix)
+                        ?.let { toaster.show(it.message()) }
                     world.step(fixedDt, 8, 3)
                     accumulator -= fixedDt
                     steps++
@@ -225,9 +228,20 @@ fun PhysicsScreen(
         // 3. Exchange shapes and headings with nearby devices.
         if (share != null) {
             LaunchedEffect(share, sandbox) {
-                share.incomingThrows.collect {
-                    sandbox.receive(it, orientation.rotationMatrix, grabber.grabbed)
+                share.incomingThrows.collect { incoming ->
+                    val spec = sandbox.receive(
+                        incoming.message,
+                        orientation.rotationMatrix,
+                        grabber.grabbed,
+                    )
                     haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                    toaster.show(
+                        if (spec != null) {
+                            "Received ${spec.displayName()} from ${incoming.fromName}"
+                        } else {
+                            "Received an unknown item from ${incoming.fromName}"
+                        }
+                    )
                 }
             }
             LaunchedEffect(share) {
@@ -287,15 +301,45 @@ fun PhysicsScreen(
             }
         }
 
-        share?.let { NearbyStatus(it, Modifier.align(Alignment.TopStart).padding(12.dp)) }
+        if (shareWithNearby) {
+            NearbyStatus(share, Modifier.align(Alignment.TopStart).padding(12.dp))
+        }
     }
 }
 
-/** Small pill showing how many devices shapes can be thrown to. */
+private fun SandboxItem.displayName(): String = label ?: "a shape"
+
+/** Toast text telling the thrower what happened to their shape. */
+private fun ThrowOutcome.message(): String {
+    val name = item.spec.displayName()
+    return when (this) {
+        is ThrowOutcome.Sent -> "Sent $name to $peerName"
+        is ThrowOutcome.SharingOff -> "Nearby sharing is off: allow the Nearby devices permission"
+        is ThrowOutcome.NoPeers -> "No nearby device connected yet"
+        is ThrowOutcome.NoTargetInDirection -> "No device in that direction"
+    }
+}
+
+/** Shows toasts, replacing the previous one so rapid throws don't queue up. */
+private class Toaster(private val context: Context) {
+    private var current: Toast? = null
+
+    fun show(text: String) {
+        current?.cancel()
+        current = Toast.makeText(context, text, Toast.LENGTH_SHORT).also { it.show() }
+    }
+}
+
 @Composable
-private fun NearbyStatus(share: NearbyShare, modifier: Modifier = Modifier) {
-    val peers = share.peers.values
-    if (peers.isEmpty()) return
+private fun rememberToaster(): Toaster {
+    val context = LocalContext.current
+    return remember(context) { Toaster(context) }
+}
+
+/** Small pill showing whether shapes can be thrown, and to how many devices. */
+@Composable
+private fun NearbyStatus(share: NearbyShare?, modifier: Modifier = Modifier) {
+    val peers = share?.peers?.values.orEmpty()
     val withUwb = peers.count { it.uwbAzimuthDeg != null }
     Surface(
         modifier = modifier,
@@ -304,9 +348,14 @@ private fun NearbyStatus(share: NearbyShare, modifier: Modifier = Modifier) {
         contentColor = Color.White,
     ) {
         Text(
-            text = buildString {
-                append("${peers.size} nearby")
-                if (withUwb > 0) append(" · UWB")
+            text = when {
+                share == null -> "Nearby sharing off (permission needed)"
+                peers.isEmpty() -> "Searching for nearby devices…"
+                else -> buildString {
+                    append("${peers.size} nearby: ")
+                    append(peers.joinToString { it.name })
+                    if (withUwb > 0) append(" · UWB")
+                }
             },
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),

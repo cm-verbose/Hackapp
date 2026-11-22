@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
  * @param initialY Optional initial Y position in [Dp]. If null, items are arranged around the screen center.
  * @param restitution Bounciness factor of the physical body (0.0 = no bounce, 1.0 = fully elastic).
  * @param friction Surface friction coefficient of the physical body.
+ * @param label Short name of the item, used in messages such as "Received Passport".
  * @param content The composable UI content displayed inside the physical shape.
  */
 data class SandboxItem(
@@ -30,5 +31,6 @@ data class SandboxItem(
     val initialY: Dp? = null,
     val restitution: Float = 0.5f,
     val friction: Float = 0.3f,
+    val label: String? = null,
     val content: @Composable BoxScope.() -> Unit = {}
 )

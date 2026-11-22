@@ -35,6 +35,23 @@ private const val MAX_RECEIVED_ITEMS = 8
 private const val MIN_RECEIVED_SPEED = 6f
 private const val MAX_RECEIVED_SPEED = 25f
 
+/** What happened when a fast shape hit a wall right after being released. */
+sealed interface ThrowOutcome {
+    val item: CreatedPhysicsItem
+
+    /** Sent to the peer named [peerName]; the shape flies off screen. */
+    data class Sent(override val item: CreatedPhysicsItem, val peerName: String) : ThrowOutcome
+
+    /** Nearby sharing isn't running (feature off or permissions denied); the shape bounced. */
+    data class SharingOff(override val item: CreatedPhysicsItem) : ThrowOutcome
+
+    /** No device is connected; the shape bounced. */
+    data class NoPeers(override val item: CreatedPhysicsItem) : ThrowOutcome
+
+    /** Several devices are connected but none lies in that direction; the shape bounced. */
+    data class NoTargetInDirection(override val item: CreatedPhysicsItem) : ThrowOutcome
+}
+
 /** A shape in the simulation. */
 class CreatedPhysicsItem(
     /** Unique per world, used as the composition key. */
@@ -127,21 +144,30 @@ class SandboxWorld(
     /**
      * Call before each world step. If the freshly released shape is fast and about to hit a
      * wall, and a peer lies in that direction, the shape is sent there and flies off screen.
+     *
+     * @return what happened, or `null` if the shape wasn't thrown at a wall.
      */
-    fun checkThrow(dt: Float, nowNanos: Long, share: NearbyShare?, rotation: FloatArray?) {
-        val item = throwCandidate ?: return
+    fun checkThrow(
+        dt: Float,
+        nowNanos: Long,
+        share: NearbyShare?,
+        rotation: FloatArray?,
+    ): ThrowOutcome? {
+        val item = throwCandidate ?: return null
         throwCandidateAge += dt
-        if (throwCandidateAge > THROW_WINDOW_SECONDS || item !in items || share == null) {
+        if (throwCandidateAge > THROW_WINDOW_SECONDS || item !in items) {
             throwCandidate = null
-            return
+            return null
         }
         val body = item.physicalShape.body
         val v = body.linearVelocity
         val speed = v.length()
-        if (speed < THROW_MIN_SPEED || !willHitWall(body, v, dt * 2f)) return
+        if (speed < THROW_MIN_SPEED || !willHitWall(body, v, dt * 2f)) return null
 
         // Only the first wall hit counts, so a bounce never triggers a throw elsewhere.
         throwCandidate = null
+        if (share == null) return ThrowOutcome.SharingOff(item)
+        if (share.peers.isEmpty()) return ThrowOutcome.NoPeers(item)
         val bearing = rotation?.let { ThrowGeometry.screenToBearing(it, v.x, v.y) }
         val candidates = share.peers.values.map { peer ->
             val uwbBearing = if (peer.hasFreshUwb && rotation != null) {
@@ -151,7 +177,8 @@ class SandboxWorld(
             }
             TargetCandidate(peer.endpointId, peer.forwardBearing, uwbBearing)
         }
-        val target = ThrowTargeting.pickTarget(bearing, candidates) ?: return
+        val target = ThrowTargeting.pickTarget(bearing, candidates)
+            ?: return ThrowOutcome.NoTargetInDirection(item)
 
         share.sendThrow(
             target,
@@ -171,6 +198,7 @@ class SandboxWorld(
         body.gravityScale = 0f
         body.linearDamping = 0f
         item.leavingSinceNanos = nowNanos
+        return ThrowOutcome.Sent(item, share.peers[target]?.name ?: "a nearby device")
     }
 
     /** Call after each frame: removes shapes that left and brings own shapes back. */
@@ -192,9 +220,14 @@ class SandboxWorld(
     }
 
     /** Adds a shape thrown from another device, entering from the side it was thrown from. */
-    fun receive(message: ShareMessage.Throw, rotation: FloatArray?, heldShape: PhysicalShape?) {
+    /** @return the received item's spec, or `null` if it isn't in this device's item list. */
+    fun receive(
+        message: ShareMessage.Throw,
+        rotation: FloatArray?,
+        heldShape: PhysicalShape?,
+    ): SandboxItem? {
         val index = message.itemIndex
-        if (index !in specs.indices) return
+        if (index !in specs.indices) return null
 
         // Without a compass on either side, shapes drop in from the top.
         val (dx, dy) = message.bearing
@@ -216,6 +249,7 @@ class SandboxWorld(
 
         val received = items.filter { !it.isOwn && !it.isLeaving && it.physicalShape !== heldShape }
         received.take((received.size - MAX_RECEIVED_ITEMS).coerceAtLeast(0)).forEach(::remove)
+        return spec
     }
 
     private fun spawn(

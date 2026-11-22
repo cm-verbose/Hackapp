@@ -105,7 +105,8 @@ class ThrowGeometryTest {
             TargetCandidate("sideways", forwardBearing = 90f, uwbBearing = null),
         )
         assertEquals("facingBack", ThrowTargeting.pickTarget(0f, peers))
-        assertNull(ThrowTargeting.pickTarget(90f, peers.take(1)))
+        // Neither peer faces back towards a throw to the East.
+        assertNull(ThrowTargeting.pickTarget(90f, peers))
     }
 
     @Test
@@ -122,6 +123,9 @@ class ThrowGeometryTest {
         val unknown = TargetCandidate("only", forwardBearing = null, uwbBearing = null)
         assertEquals("only", ThrowTargeting.pickTarget(null, listOf(unknown)))
         assertEquals("only", ThrowTargeting.pickTarget(45f, listOf(unknown)))
+        // A single peer gets the shape even when it doesn't face the thrower.
+        val sideBySide = TargetCandidate("friend", forwardBearing = 0f, uwbBearing = null)
+        assertEquals("friend", ThrowTargeting.pickTarget(0f, listOf(sideBySide)))
         assertNull(ThrowTargeting.pickTarget(null, listOf(unknown, unknown.copy(id = "other"))))
         assertNull(ThrowTargeting.pickTarget(0f, emptyList()))
     }

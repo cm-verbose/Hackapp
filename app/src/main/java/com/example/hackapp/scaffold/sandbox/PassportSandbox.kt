@@ -43,6 +43,7 @@ fun defaultSandboxItems(): List<SandboxItem> {
             width = 180.dp,
             height = 180.dp,
             color = Color(0xFF1E88E5),
+            label = "Passport",
             content = {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,6 +71,7 @@ fun defaultSandboxItems(): List<SandboxItem> {
             width = 160.dp,
             height = 160.dp,
             color = Color(0xFF43A047),
+            label = "Visa",
             content = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -97,6 +99,7 @@ fun defaultSandboxItems(): List<SandboxItem> {
             width = 100.dp,
             height = 100.dp,
             color = Color(0xFFE53935),
+            label = "Flight",
             content = {
                 Icon(
                     imageVector = Icons.Default.FlightTakeoff,
@@ -111,6 +114,7 @@ fun defaultSandboxItems(): List<SandboxItem> {
             width = 150.dp,
             height = 80.dp,
             color = Color(0xFFFB8C00),
+            label = "Hotel",
             content = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -137,6 +141,7 @@ fun defaultSandboxItems(): List<SandboxItem> {
             width = 110.dp,
             height = 110.dp,
             color = Color(0xFF8E24AA),
+            label = "Stamp",
             content = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
@@ -159,6 +164,7 @@ fun defaultSandboxItems(): List<SandboxItem> {
             width = 160.dp,
             height = 80.dp,
             color = Color(0xFF00ACC1),
+            label = "Ticket",
             content = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

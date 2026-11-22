@@ -153,7 +153,9 @@ object ThrowTargeting {
      * 1. **UWB**: peers whose measured direction is closest to the throw win.
      * 2. **Compass**: phones held face to face point in opposite directions, so the peer whose
      *    forward bearing is closest to the throw's reverse wins.
-     * 3. **Fallback**: with a single peer and no usable direction data, it gets the shape.
+     * 3. **Fallback**: a single connected peer always gets the shape. The compass rule only
+     *    works face to face and is easily thrown off indoors, so with one peer there is no
+     *    point in letting a throw bounce. Direction only decides between several peers.
      */
     fun pickTarget(throwBearing: Float?, peers: List<TargetCandidate>): String? {
         if (peers.isEmpty()) return null
@@ -173,7 +175,6 @@ object ThrowTargeting {
             .minByOrNull { it.second }
         if (compassHit != null) return compassHit.first.id
 
-        val only = peers.singleOrNull() ?: return null
-        return if (only.forwardBearing == null && only.uwbBearing == null) only.id else null
+        return peers.singleOrNull()?.id
     }
 }

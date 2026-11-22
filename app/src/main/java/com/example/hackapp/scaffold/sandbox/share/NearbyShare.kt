@@ -43,6 +43,9 @@ private const val SERVICE_ID = "com.example.hackapp.sandbox.share"
 /** UWB readings older than this are ignored when picking a target. */
 private const val UWB_FRESH_MS = 1_500L
 
+/** A shape thrown to this device by the peer named [fromName]. */
+data class IncomingThrow(val fromName: String, val message: ShareMessage.Throw)
+
 /** A connected nearby device. */
 data class SharePeer(
     val endpointId: String,
@@ -70,15 +73,19 @@ data class SharePeer(
 class NearbyShare(private val context: Context, scope: CoroutineScope) {
 
     private val client = Nearby.getConnectionsClient(context)
-    private val localName = UUID.randomUUID().toString().take(8)
+    /**
+     * Advertised name: the device model for readable messages, plus a random suffix that keeps
+     * names unique and decides which side of a pair requests the connection.
+     */
+    private val localName = "${Build.MODEL} #${UUID.randomUUID().toString().take(4)}"
     private var running = false
     private var lastHeading: ShareMessage.Heading? = null
 
     /** Connected peers by endpoint id. */
     val peers = mutableStateMapOf<String, SharePeer>()
 
-    private val _incomingThrows = MutableSharedFlow<ShareMessage.Throw>(extraBufferCapacity = 16)
-    val incomingThrows: SharedFlow<ShareMessage.Throw> = _incomingThrows
+    private val _incomingThrows = MutableSharedFlow<IncomingThrow>(extraBufferCapacity = 16)
+    val incomingThrows: SharedFlow<IncomingThrow> = _incomingThrows
 
     private val uwb = UwbRanger(
         context = context,
@@ -106,7 +113,10 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
                     peers[endpointId] = it.copy(forwardBearing = message.forwardBearing)
                 }
                 is ShareMessage.UwbHello -> uwb.onHello(endpointId, message)
-                is ShareMessage.Throw -> _incomingThrows.tryEmit(message)
+                is ShareMessage.Throw -> {
+                    val from = peers[endpointId]?.name ?: "a nearby device"
+                    _incomingThrows.tryEmit(IncomingThrow(from, message))
+                }
                 null -> Log.w(TAG, "Unreadable payload from $endpointId")
             }
         }
