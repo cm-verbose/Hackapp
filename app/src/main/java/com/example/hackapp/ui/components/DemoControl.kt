@@ -133,19 +133,16 @@ fun DemoControl(
 @Composable
 private fun DemoTime(dateTime: String, announce: Boolean) {
     val color = HackappTheme.appColors.onWarningContainer
+    // One TalkBack stop. The live region is on the merged node, so a jump reads label and time.
     Row(
+        Modifier.semantics(mergeDescendants = true) { if (announce) liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(Icons.Filled.Schedule, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
         Column {
             Text(stringResource(R.string.demo_mode_title), style = MaterialTheme.typography.labelMedium, color = color)
-            Text(
-                dateTime,
-                style = MaterialTheme.typography.bodyMedium,
-                color = color,
-                modifier = Modifier.semantics { if (announce) liveRegion = LiveRegionMode.Polite },
-            )
+            Text(dateTime, style = MaterialTheme.typography.bodyMedium, color = color)
         }
     }
 }
