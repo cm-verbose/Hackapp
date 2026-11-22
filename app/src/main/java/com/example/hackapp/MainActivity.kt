@@ -10,7 +10,7 @@ import androidx.collection.intSetOf
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
 import com.example.hackapp.scaffold.AppScaffold
-import com.example.hackapp.ui.theme.AndroidTemplateTheme
+import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.widgets.AppWidgetReceiver
 import kotlinx.coroutines.launch
 
@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AndroidTemplateTheme {
+            HackappTheme {
                 AppScaffold()
             }
         }
