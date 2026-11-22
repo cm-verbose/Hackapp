@@ -49,6 +49,7 @@ Create: `PlannedDepartureHolder.create(event, itinerary, zone, latestDeparture, 
 | `stayMinutes` | Stay duration, from `start` to `departure`, to show next to the time |
 | `hasPublishedEnd` | True only for a drop-in. Hides the "no end published" line |
 | `isTypicalStay` | `stayMinutes` equals `typicalStayMinutes`, with no published end or for a drop-in. False when clamped to the limit or edited |
+| `joinsRunning` | A drop-in already running: `start` is the arrival. The subtitle uses `planned_departure_arrival` |
 | `crossesMidnight` | `departure` is on a later day than `start`: show an after-midnight hint |
 | `error`, `rejectedTime` | `OutsideWindow` (outside the range, including a time before the start and a stay of zero or less: one range error) or `NotAfterStart` (no valid time exists: `hasValidTime` is false, `latestDeparture` is not after `earliestDeparture`; never show the range, show a no-time-left message, disable Confirm). The invalid pick leaves `departure` unchanged |
 | `canConfirm` | `error == null` |

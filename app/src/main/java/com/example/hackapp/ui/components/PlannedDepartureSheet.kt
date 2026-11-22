@@ -87,7 +87,7 @@ fun PlannedDepartureContent(
             )
             Text(
                 stringResource(
-                    R.string.planned_departure_subtitle,
+                    if (state.joinsRunning) R.string.planned_departure_arrival else R.string.planned_departure_subtitle,
                     state.eventTitle,
                     venueName ?: stopTypeLabel(eventStopType(state.eventType)),
                     state.start.format(ClockFormat),
@@ -257,6 +257,12 @@ private fun PlannedDepartureNoTimePreview() = PlannedDeparturePreview(
 @Composable
 private fun PlannedDepartureNotAfterStartPreview() =
     PlannedDeparturePreview(previewState(error = DepartureError.NotAfterStart))
+
+@Preview(name = "PlannedDeparture · running drop-in", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP)
+@Composable
+private fun PlannedDepartureRunningPreview() = PlannedDeparturePreview(
+    previewState(stayMinutes = 60).copy(hasPublishedEnd = true, joinsRunning = true),
+)
 
 @Preview(name = "PlannedDeparture · 360 dp, 1.3x", showBackground = true, widthDp = 360, fontScale = 1.3f)
 @Composable

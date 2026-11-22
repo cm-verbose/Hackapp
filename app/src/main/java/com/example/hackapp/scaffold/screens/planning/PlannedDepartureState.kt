@@ -55,6 +55,8 @@ data class PlannedDepartureUiState(
     /** The time the person tried when [error] is set. */
     val rejectedTime: LocalTime? = null,
     val error: DepartureError? = null,
+    /** A drop-in already running: [start] is the person's arrival, not the Event's start. */
+    val joinsRunning: Boolean = false,
 ) {
     /** False when [latestDeparture] is not after [earliestDeparture]: no time is valid. Never show the range. */
     val hasValidTime: Boolean get() = latestDeparture.isAfter(earliestDeparture)
@@ -200,6 +202,7 @@ class PlannedDepartureHolder private constructor(
                 isTypicalStay = showsTypicalStay && stay == typicalStayMinutes(event.type),
                 crossesMidnight = departure.toLocalDate() != start.toLocalDate(),
                 error = if (!latestDeparture.isAfter(start)) DepartureError.NotAfterStart else null,
+                joinsRunning = event.startTime()?.toInstant()?.isBefore(start.toInstant()) == true,
             )
             return PlannedDepartureHolder(zone, latestDeparture, start, departure, showsTypicalStay, state)
         }

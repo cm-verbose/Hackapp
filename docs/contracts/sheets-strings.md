@@ -24,6 +24,7 @@ Maps each maquette element to its string key. Keys exist in `values/strings.xml`
 |---|---|---|
 | Title "Départ prévu" | `planned_departure_title` | Existing |
 | Subtitle "Exposition Monet · Musée des beaux-arts · début 14:00" | `planned_departure_subtitle` | `%1$s` Event, `%2$s` venue, `%3$s` start time (`14:00`) |
+| Subtitle for a drop-in already running "Exposition Monet · Musée des beaux-arts · arrivée 18:00" | `planned_departure_arrival` | Replaces `planned_departure_subtitle` when `joinsRunning`. `%1$s` Event, `%2$s` venue, `%3$s` arrival time |
 | Note "Aucune heure de fin publiée. Durée habituelle : 2 h." | `planned_departure_no_end` | `%1$s` duration, e.g. `2 h` |
 | Wheel label "Heure" / "Minute" | `time_hour`, `time_minute` | Existing. Wheel descriptions use `time_hour_value`, `time_minute_value` |
 | Clock row "Durée : 2 h" | `planned_departure_duration` | `%1$s` duration, updated as the wheels move |

@@ -51,6 +51,17 @@ class PlannedDepartureStateTest {
     }
 
     @Test
+    fun `only a drop-in joined after its start is marked as running`() {
+        val ev = event("e", start = at(Nov28, 10).toString(), end = at(Nov28, 21).toString(), type = "exhibition")
+        val latest = at(Nov28, 21).atZoneSameInstant(Toronto)
+        val joined = PlannedDepartureHolder.create(ev, night(), Toronto, latest, at(Nov28, 18).atZoneSameInstant(Toronto))!!
+        assertTrue(joined.state.value.joinsRunning)
+        val onTime = PlannedDepartureHolder.create(ev, night(), Toronto, latest, at(Nov28, 10).atZoneSameInstant(Toronto))!!
+        assertFalse(onTime.state.value.joinsRunning)
+        assertFalse(holder(19).state.value.joinsRunning)
+    }
+
+    @Test
     fun `no start gives no holder`() {
         assertNull(PlannedDepartureHolder.create(event("x", start = null), night(), Toronto, night().windowEnd(Toronto)))
     }
