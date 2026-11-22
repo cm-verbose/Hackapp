@@ -60,7 +60,7 @@ class FirestoreItineraryRepository(
             } else if (snapshot != null) {
                 trySend(
                     snapshot.documents
-                        .mapNotNull { FirestoreDocuments.itineraryFrom(uid, it.id, it.data) }
+                        .mapNotNull { FirestoreDocuments.itineraryFrom(uid, it.id, it.data, strict = false) }
                         .sortedByDescending { it.updatedAtMillis },
                 )
             }
@@ -71,7 +71,7 @@ class FirestoreItineraryRepository(
     override suspend fun listItineraries(uid: String, freshOnly: Boolean): List<Itinerary> {
         val source = if (freshOnly) Source.SERVER else Source.DEFAULT
         return collection(uid).get(source).await().documents
-            .mapNotNull { FirestoreDocuments.itineraryFrom(uid, it.id, it.data) }
+            .mapNotNull { FirestoreDocuments.itineraryFrom(uid, it.id, it.data, strict = false) }
             .sortedByDescending { it.updatedAtMillis }
     }
 

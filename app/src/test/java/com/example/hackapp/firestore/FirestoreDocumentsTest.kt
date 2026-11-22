@@ -54,7 +54,7 @@ class FirestoreDocumentsTest {
         val thrown = runCatching { FirestoreDocuments.profileFrom(UID, newer) }.exceptionOrNull()
         assertEquals(2, (thrown as NewerSchemaException).version)
         val doc = FirestoreDocuments.itineraryDoc(night(id = "trip")) + ("schemaVersion" to 3)
-        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", doc))
+        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", doc, strict = false))
         assertEquals(true, runCatching { FirestoreDocuments.itineraryFrom(UID, "trip", doc, strict = true) }.isFailure)
     }
 
@@ -62,7 +62,7 @@ class FirestoreDocumentsTest {
     fun `itinerary round trips and keeps its owner and id`() {
         val itinerary = night(id = "trip")
         val doc = FirestoreDocuments.itineraryDoc(itinerary)
-        assertEquals(itinerary, FirestoreDocuments.itineraryFrom(UID, "trip", doc))
+        assertEquals(itinerary, FirestoreDocuments.itineraryFrom(UID, "trip", doc, strict = false))
         assertEquals(UID, doc["ownerUid"])
         assertEquals(itinerary.updatedAtMillis, doc["updatedAtMillis"])
     }
@@ -70,10 +70,10 @@ class FirestoreDocumentsTest {
     @Test
     fun `itinerary stored under another uid or id is skipped`() {
         val doc = FirestoreDocuments.itineraryDoc(night(id = "trip"))
-        assertNull(FirestoreDocuments.itineraryFrom("other", "trip", doc))
-        assertNull(FirestoreDocuments.itineraryFrom(UID, "other-id", doc))
-        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", doc + ("payload" to "{}")))
-        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", null))
+        assertNull(FirestoreDocuments.itineraryFrom("other", "trip", doc, strict = false))
+        assertNull(FirestoreDocuments.itineraryFrom(UID, "other-id", doc, strict = false))
+        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", doc + ("payload" to "{}"), strict = false))
+        assertNull(FirestoreDocuments.itineraryFrom(UID, "trip", null, strict = false))
     }
 
     @Test
@@ -112,5 +112,23 @@ class FirestoreDocumentsTest {
         assertNull(FirestoreDocuments.summaryFrom(mapOf("medianCad" to 17.5)))
         assertNull(FirestoreDocuments.summaryFrom(mapOf("medianCad" to 900.0, "reportCount" to 3L)))
         assertNull(FirestoreDocuments.summaryFrom(mapOf("medianCad" to 10.0, "reportCount" to 0L)))
+    }
+}
+
+class ProfileStateTest {
+    private val failing = object : com.example.hackapp.profile.ProfileRepository {
+        var error: Exception? = null
+        override suspend fun getProfile(uid: String): Profile? = error?.let { throw it }
+        override suspend fun saveProfile(uid: String, profile: Profile) = Unit
+    }
+
+    @Test
+    fun `newer schema becomes UpdateRequired, other failures Failed, nothing Missing`() = kotlinx.coroutines.runBlocking {
+        assertEquals(ProfileState.Missing, failing.loadProfileState("u"))
+        failing.error = NewerSchemaException(4)
+        assertEquals(ProfileState.UpdateRequired(4), failing.loadProfileState("u"))
+        val boom = java.io.IOException("offline")
+        failing.error = boom
+        assertEquals(ProfileState.Failed(boom), failing.loadProfileState("u"))
     }
 }

@@ -41,9 +41,13 @@ internal object FirestoreDocuments {
         "updatedAtMillis" to nowMillis,
     )
 
-    /** Null for a missing, newer-version, foreign or unreadable document: onboarding can run again. */
+    /**
+     * Null for a missing, foreign, older-version or unreadable document: onboarding can run again.
+     * Throws [NewerSchemaException] for a document written by a newer app, so the caller never sends
+     * the person back through onboarding (see [ProfileState]).
+     */
     fun profileFrom(uid: String, doc: Map<String, Any?>?): Profile? {
-        val payload = payloadOf(doc, uid) ?: return null
+        val payload = payloadOf(doc, uid, strict = true) ?: return null
         return ProfileCodec.decode(payload)
     }
 
@@ -55,14 +59,18 @@ internal object FirestoreDocuments {
         "updatedAtMillis" to itinerary.updatedAtMillis,
     )
 
-    /** Null when unreadable or when the stored owner or id does not match where it was found. */
-    fun itineraryFrom(uid: String, docId: String, doc: Map<String, Any?>?, strict: Boolean = false): Itinerary? {
+    /**
+     * Null when unreadable or when the stored owner or id does not match where it was found.
+     * A newer-version document throws [NewerSchemaException] when [strict] (single reads), and is
+     * skipped otherwise (lists), so one newer Itinerary cannot hide the others.
+     */
+    fun itineraryFrom(uid: String, docId: String, doc: Map<String, Any?>?, strict: Boolean): Itinerary? {
         val payload = payloadOf(doc, uid, strict) ?: return null
         val itinerary = ItineraryCodec.decode(payload) ?: return null
         return itinerary.takeIf { it.ownerUid == uid && it.id == docId && doc?.get("id") == docId }
     }
 
-    private fun payloadOf(doc: Map<String, Any?>?, uid: String, strict: Boolean = true): String? {
+    private fun payloadOf(doc: Map<String, Any?>?, uid: String, strict: Boolean): String? {
         if (doc == null) return null
         val version = (doc["schemaVersion"] as? Number)?.toInt() ?: return null
         if (version > SCHEMA_VERSION) {
