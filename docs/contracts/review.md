@@ -21,7 +21,7 @@ The pages are Compose only and hold no rules. All text comes from string resourc
 | `loadEvents` | `suspend (Itinerary) -> List<Event>`: Events of the window. Called only when a removal needs showtimes |
 | `demoMode` | No global demo flag exists yet. Pass the flag when there is one. Default false |
 
-The ViewModel loads on creation. Step 6 is reached only from selection with at least one Event (Finish here).
+The ViewModel loads on creation. It is a thin wrapper over `ItineraryReviewHolder`, the plain class that holds every rule and is unit tested. Step 6 is reached only from selection with at least one Event (Finish here).
 
 ### UiState (`state: StateFlow<ItineraryReviewUiState>`)
 
