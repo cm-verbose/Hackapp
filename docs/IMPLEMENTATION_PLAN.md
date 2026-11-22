@@ -88,7 +88,8 @@ Living checklist for the current implementation step. Update it in the same chan
 - [x] Add data and city service interfaces
 - [x] Bundle the Montréal event snapshot
 - [x] Replace "Hackapp" with Plan[City] in Figma
-- [ ] Merge `cmvb`'s latest `layout` refactor (`5aeb142`), resolving `MainBottomAppBar.kt` and `ScreenHome.kt`
+- [x] Merge `cmvb`'s latest `layout` refactor and `main`
+- [x] Update `screen-list.md` with the grilling decisions
 - [ ] Open a PR from `feat/ui-foundation` into `main`
 - [ ] Update the old data attribution in Figma
 
@@ -114,9 +115,10 @@ Living checklist for the current implementation step. Update it in the same chan
 
 ### 3. Design decisions (grilling)
 
-- [ ] District map behavior
-- [ ] Itinerary draft and Planning flow
+- [x] District map behavior
+- [x] Itinerary draft and Planning flow
 - [ ] Update maquettes from these decisions
+- [ ] Underway pages (grill when we get there)
 
 ### 4. Main tabs
 

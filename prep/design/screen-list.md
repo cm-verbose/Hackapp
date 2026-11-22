@@ -48,8 +48,12 @@ Gender and street address are not collected.
 
 ### 3. Budget and Audience Preference
 
-- Per-person budget: < $20, < $50, < $100, $100+
-- Audience Preference, such as 18+ only, family-friendly or no alcohol-focused events
+- Default budgets, each using the brackets < $20, < $50, < $100 and $100+:
+  - Lunch (Meal 1), per Meal
+  - Dinner (Meal 2), per Meal
+  - Events, total for the Itinerary
+  - Late-night snack, an optional add-on that is off by default
+- Audience Preference: 18+ only, family-friendly and no alcohol, all optional. 18+ only and family-friendly are mutually exclusive
 
 ### 4. Interests and cuisines
 
@@ -72,6 +76,9 @@ Top-level tab between Home and Passport.
 
 - **In planning:** every Itinerary still in Planning. Tapping one resumes Planning
 - **Past:** completed Itineraries, newest first, with their date and confirmed Stop and Stamp counts. Tapping one opens a read-only summary
+- **Archived:** drafts whose time window has ended, with a note that they were archived. One opens read-only with "Archived because its date has passed", **Choose a new date** and **Delete**
+- Drafts in Planning can be deleted after a confirmation. Past Itineraries cannot be deleted
+- A read-only Past summary shows the date, route map, Stops marked confirmed or skipped, and Stamps earned
 - An Itinerary that is Underway stays on Home and is not listed here
 - Empty state with a button to plan a new Itinerary
 
@@ -81,37 +88,54 @@ An Itinerary covers a single day out or night out. Multi-day planning is out of 
 
 ### 1. Date and time
 
-- Date, limited to what the seed data covers
-- Day out (default 10:00–18:00) or night out (default 18:00–02:00), with editable times
-- Optional budget override for this Itinerary
+- Date, limited to Nov 21 to Dec 6, 2026, defaulting to the next date with data. Demo mode can pin Sat Nov 28
+- Day out (default 10:00–18:00) or night out (default 18:00–02:00), with editable times. An Itinerary lasts at least 2 hours and ends no later than 04:00
+- Optional Event budget override for this Itinerary. The Profile is unchanged
 - An Itinerary belongs to the date it starts on, including hours after midnight
+- Continuing creates a draft, which autosaves after every step and resumes at its last step
 
 ### 2. District pick
 
-- Map of the city with District boundaries drawn
-- Choose 1 to 3 Districts, in the order they will be visited
-- Each District shows its name and a red circle counting Events that match the time window, budget and audience
-- A District with zero matching Events is grayed out and cannot be picked
-- Tapping a District shows a very short description and its event types, then confirm or choose another
+- Full-height Canvas map with District boundaries, pinch zoom from 1x to 6x, one-finger drag, double-tap zoom, bounded edges and a reset button
+- Choose 1 to 3 Districts, in visit order, shown as chips over the map. Order changes only by removing and adding a District
+- Each District shows a fixed-size red circle counting Events that start in the time window and fit the audience, including unknown prices. Lower-count overlapping badges hide until zoomed in, and selected Districts always show their order
+- A District with zero matching Events, or a linked city, is grayed out and cannot be picked
+- Tapping a District opens a non-blocking sheet with its name and Event types, and **Add as #N** or **Remove**. Borough descriptions are deferred
+- At the maximum, Add shows a message listing the 3 selected Districts and offers to replace one. The new District takes that visit position
 - Continue once the maximum is reached or the user is satisfied
 
 ### 3. Meal choice
 
 - Is the app planning food, or is the user handling it?
-- If planning food, when do they want to eat? Each answer reserves a 90-minute Meal Block (1 hour plus 15 minutes on each side)
+- If planning food, the user can select any Meals inside the window: lunch at 12:00, dinner at 18:30 and a late bite at 22:00, with editable times
+- Lunch and dinner reserve a 90-minute Meal Block (1 hour plus 15 minutes on each side). A late bite reserves 45 minutes in total
+- Each selected Meal shows an editable budget for this Itinerary
 - If the user handles food, no Meal prompts appear
 
 ### 4. Event and Meal selection
 
 Planning moves strictly through the chosen Districts in order, and the user chooses when to advance to the next one.
 
-- Events are grouped by start time in 1-hour blocks, then by event type
-- Only reachable Events appear: start time at or after the previous Planned Departure plus Leg time and buffer
-- Leg time is a distance-based estimate plus a buffer
-- If an Event has no published end time, the user sets how long they will stay or when they expect to leave. That becomes the Planned Departure, and the source end time stays empty
-- When planning reaches a Meal Block, the user is prompted to choose a Meal
+- The user fills one time gap at a time. Adding a Stop refreshes the list from its departure
+- Events are grouped by start time in 1-hour blocks, then by event type. "Other" Events stay in their own group unless their label cannot be made clearer, in which case they are hidden for the demo
+- Events rank by matching Interests, then known price within budget, then unknown price, then shortest travel time
+- Repeated showtimes of one title at one venue on one day appear as one card with selectable times. An Event already in the Itinerary is hidden from later gaps
+- Tapping an Event opens details with title, time, venue, price, audience, description when available, ticket link, optional ticket price and **Add to Itinerary**
+- Only reachable Events appear: start time at or after the previous Planned Departure plus the public transit Leg estimate and buffer
+- If an Event has no published end time, the Planned Departure sheet opens prefilled with a typical stay for its type. The user can change it, and the source end time stays empty
+- Events that overlap a reserved Meal Block are hidden. When planning reaches the block, the user chooses a Meal or **Skip this Meal**, which frees the block
+- The Meal list has **Here** and, when another District follows, **In [next District]**. The second tab shows only places reachable by the block's start after transit, and choosing one moves planning to that District after the Meal
+- Meal options are open during the block and fit the Meal budget and audience, sorted by distance from the previous Stop with cuisine preferences boosted
 - Bars count as Meals and are available from 17:00, on day and night Itineraries. They are hidden for family-friendly or no-alcohol Audience Preferences
-- Repeat until the window is filled, or finish early with at least one Event
+- **Next District** moves on at any time. **Finish here** skips remaining Districts and goes to Review, and needs at least one Event. The last District shows only **Finish**. Back keeps Stops, and a District left with no Stops is dropped
+- Selection shows a running total of the Event budget plus selected Meal budgets. Going over budget warns but does not block
+
+**Prices:**
+
+- Events are never hidden by budget, and free Events count as $0
+- A Meal counts at the top of its price range. Places above that Meal's budget are hidden. Unknown prices stay visible, rank lower and show as "+ unknown price"
+- Each signed-in user can keep one editable ticket price report per Event, from $0 to $500 CAD. It applies to all showtimes of that title and venue that day, and the user is told it is shared
+- The app shows the median, labeled as the median of user-reported prices, and never shows who reported it
 
 **Event eligibility:**
 
@@ -125,11 +149,13 @@ Planning moves strictly through the chosen Districts in order, and the user choo
 ### 5. Itinerary review
 
 - Map linking all Stops, both Events and Meals
-- Remove a Stop, which returns the user to selection for that time gap
+- The map supports zoom and drag, and tapping a numbered marker highlights its Stop
+- Remove a Stop, which returns the user to selection for that time gap. Later reachable Stops stay, and the app warns before removing others
+- Changing an earlier Planning step warns which Stops will be removed and keeps those that still fit
 - Stops cannot be dragged to reorder
-- Start the Itinerary, which requests notification permission
+- Start the Itinerary, which requests notification permission. It can start only on its own date, except in demo mode
 
-Only one Itinerary can be Underway at a time.
+Only one Itinerary can be Underway at a time. Starting another warns that the current one will end. The old one moves to Past, keeps Stamps for confirmed Stops, and marks remaining Stops as skipped.
 
 ## Underway
 
