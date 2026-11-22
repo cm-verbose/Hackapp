@@ -400,8 +400,7 @@ fun ScreenItineraryReview(vm: FlowViewModel, onBack: () -> Unit, onRemoved: () -
     val mapState by rememberDistrictMap()
     val map = mapState
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        vm.start()
-        onStarted()
+        vm.start { onStarted() }
     }
     HackappPage(
         title = stringResource(R.string.review_title),
@@ -414,10 +413,9 @@ fun ScreenItineraryReview(vm: FlowViewModel, onBack: () -> Unit, onRemoved: () -
                 if (Build.VERSION.SDK_INT >= 33 && !vm.notifier.hasPermission()) {
                     permission.launch(Manifest.permission.POST_NOTIFICATIONS)
                 } else {
-                    vm.start()
-                    onStarted()
+                    vm.start { onStarted() }
                 }
-            }, enabled = vm.stops.isNotEmpty())
+            }, enabled = vm.stops.isNotEmpty() && !vm.saving)
         },
     ) {
         if (map != null && vm.stops.isNotEmpty()) {

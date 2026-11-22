@@ -52,10 +52,21 @@ class UnderwayStore(context: Context) {
         }
     }
 
-    /** Updates the progress in place (used by both the screens and the notification buttons). */
+    /**
+     * Updates the progress in place (used by both the screens and the notification buttons).
+     * Read, change and write happen in one DataStore transaction, so concurrent updates are never
+     * lost. Returns the saved progress, or null when no Itinerary is underway.
+     */
     suspend fun update(change: (UnderwayProgress) -> UnderwayProgress): UnderwayProgress? {
-        val now = current() ?: return null
-        return change(now).also { save(it) }
+        var saved: UnderwayProgress? = null
+        store.edit { prefs ->
+            val now = prefs[PROGRESS]?.let { runCatching { json.decodeFromString<UnderwayProgress>(it) }.getOrNull() }
+                ?: return@edit
+            val next = change(now)
+            prefs[PROGRESS] = json.encodeToString(next)
+            saved = next
+        }
+        return saved
     }
 
     private companion object {

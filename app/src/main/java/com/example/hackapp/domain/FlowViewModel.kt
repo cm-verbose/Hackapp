@@ -4,10 +4,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.hackapp.HackappApplication
+import com.example.hackapp.R
+import com.example.hackapp.services.AppLocale
 import com.example.hackapp.data.model.PriceBracket
 import com.example.hackapp.services.CityServices
 import com.example.hackapp.services.UnderwayNotifier
@@ -16,8 +20,14 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+
+/** One answer from the trip store: [progress] is null when no Itinerary is underway. */
+data class UnderwayLoad(val progress: UnderwayProgress?)
 
 /**
  * State shared by the onboarding, planning and underway screens, scoped to the activity so the
@@ -39,6 +49,9 @@ class FlowViewModel(
         profileStore.profile.stateIn(viewModelScope, SharingStarted.Eagerly, null)
     val underway: StateFlow<UnderwayProgress?> =
         underwayStore.progress.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    /** Null until DataStore has answered, so Underway pages show loading instead of "no Itinerary". */
+    val underwayLoad: StateFlow<UnderwayLoad?> =
+        underwayStore.progress.map { UnderwayLoad(it) }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
     val stamps: StateFlow<List<EarnedStamp>> =
         underwayStore.stamps.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -122,11 +135,60 @@ class FlowViewModel(
     fun draft() = Itinerary(window.date.toString(), districts, stops.toList())
 
     // ---- Underway ----
-    fun start(rideHail: Boolean = false, fromLat: Double? = null, fromLng: Double? = null) {
-        val progress = UnderwayProgress(draft(), useRideHail = rideHail, fromLat = fromLat, fromLng = fromLng)
+    /** True while an Underway change is being written; further taps are ignored until it lands. */
+    var saving by mutableStateOf(false)
+        private set
+
+    /** How many page actions were dropped because their Stop was no longer current (each one shows a message). */
+    var droppedActions by mutableIntStateOf(0)
+        private set
+
+    /** What a write saved, and whether the requested change was applied (false = Stop no longer current). */
+    private data class Written(val progress: UnderwayProgress?, val applied: Boolean = true)
+
+    /**
+     * Runs [write], waits until [underwayLoad] shows its result, then calls [onDone] with the saved
+     * progress (null = no Itinerary). Screens navigate from that value, never from the one they drew.
+     * When the change was not applied, a short message says why after the page has changed.
+     * Order matters: all state ([saving], [droppedActions]) is final before [onDone] runs, so the
+     * callback (or a test resuming on it) sees it, and an action started from the callback is not ignored.
+     */
+    private fun commit(onDone: (UnderwayProgress?) -> Unit, write: suspend () -> Written) {
+        if (saving) return
+        saving = true
         viewModelScope.launch {
+            val written: Written
+            val shown: UnderwayProgress?
+            try {
+                written = write()
+                // A concurrent change (notification button) may replace it first; do not wait forever.
+                withTimeoutOrNull(VISIBLE_TIMEOUT_MS) { underwayLoad.first { it != null && it.progress == written.progress } }
+                shown = underwayLoad.value?.progress ?: written.progress
+            } finally {
+                saving = false
+            }
+            if (!written.applied) droppedActions++
+            onDone(shown)
+            if (!written.applied) {
+                // A Toast outlives the page change and is announced by TalkBack.
+                Toast.makeText(AppLocale.localized(app), R.string.underway_already_updated, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /** Applies [change] only if Stop [at] is still the current one. */
+    private suspend fun updateAt(at: Int, change: (UnderwayProgress) -> UnderwayProgress): Written {
+        var applied = false
+        val saved = underwayStore.update { if (it.index == at) change(it).also { applied = true } else it }
+        return Written(saved, applied)
+    }
+
+    fun start(onDone: (UnderwayProgress?) -> Unit = {}) {
+        val progress = UnderwayProgress(draft())
+        commit(onDone) {
             underwayStore.save(progress)
             if (notifier.hasPermission()) notifier.schedule(progress.itinerary)
+            Written(progress)
         }
     }
 
@@ -138,18 +200,20 @@ class FlowViewModel(
         viewModelScope.launch { underwayStore.update { it.copy(useRideHail = v) } }
     }
 
-    fun arrived() { viewModelScope.launch { underwayStore.update { it.arrived() } } }
+    /*
+     * [at] is the Stop index the page was showing. If the progress has moved on meanwhile (a
+     * notification button), the change is not applied and [onDone] gets the current progress.
+     */
+
+    fun arrived(at: Int, onDone: (UnderwayProgress?) -> Unit = {}) =
+        commit(onDone) { updateAt(at) { it.arrived() } }
 
     /** Leaves the current Stop and skips the next one (late-arrival warning). */
-    fun leaveAndSkipNext() {
-        viewModelScope.launch {
-            underwayStore.update { it.finishCurrent(StopStatus.CONFIRMED).finishCurrent(StopStatus.SKIPPED) }
-        }
-    }
+    fun leaveAndSkipNext(at: Int, onDone: (UnderwayProgress?) -> Unit = {}) =
+        commit(onDone) { updateAt(at) { it.finishCurrent(StopStatus.CONFIRMED).finishCurrent(StopStatus.SKIPPED) } }
 
-    fun finishStop(status: StopStatus) {
-        viewModelScope.launch { underwayStore.update { it.finishCurrent(status) } }
-    }
+    fun finishStop(at: Int, status: StopStatus, onDone: (UnderwayProgress?) -> Unit = {}) =
+        commit(onDone) { updateAt(at) { it.finishCurrent(status) } }
 
     /** Ends the day: confirmed Stops become Stamps, notifications are cancelled, progress is cleared. */
     fun endDay(onDone: () -> Unit) {
@@ -179,6 +243,7 @@ class FlowViewModel(
 
     companion object {
         const val MAX_DISTRICTS = 3
+        private const val VISIBLE_TIMEOUT_MS = 2_000L
         /** First and last day of the bundled Event snapshot. */
         val FIRST_DATE: LocalDate = LocalDate.of(2026, 11, 21)
         val LAST_DATE: LocalDate = LocalDate.of(2026, 12, 6)

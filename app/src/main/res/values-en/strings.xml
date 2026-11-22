@@ -88,6 +88,7 @@
     <string name="action_confirm">Confirm</string>
     <string name="action_retry">Try again</string>
     <string name="state_loading">Loading…</string>
+    <string name="underway_already_updated">This stop was already updated from a notification.</string>
     <string name="state_error_title">Something went wrong</string>
     <string name="state_empty_title">Nothing to show yet</string>
 

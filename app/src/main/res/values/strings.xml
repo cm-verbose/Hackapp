@@ -86,6 +86,7 @@
     <string name="action_confirm">Confirmer</string>
     <string name="action_retry">Réessayer</string>
     <string name="state_loading">Chargement…</string>
+    <string name="underway_already_updated">Cet arrêt avait déjà été mis à jour depuis une notification.</string>
     <string name="state_error_title">Une erreur est survenue</string>
     <string name="state_empty_title">Rien à afficher pour le moment</string>
 

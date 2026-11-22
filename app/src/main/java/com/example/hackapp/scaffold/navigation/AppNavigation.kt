@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hackapp.HackappApplication
 import com.example.hackapp.domain.FlowViewModel
+import com.example.hackapp.domain.UnderwayProgress
 import com.example.hackapp.scaffold.screens.home.ScreenHome
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.scaffold.screens.itinerary.ScreenItinerary
@@ -186,12 +187,12 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
             ScreenUnderwayArrival(
                 vm,
                 onBack = { controller.popBackStack() },
-                onAtStop = { controller.navigate(UnderwayAtStopRoute) },
-                onSkipped = { finished -> controller.afterStop(finished) },
+                onArrived = { p -> if (p?.atStop == true) controller.navigate(UnderwayAtStopRoute) else controller.afterStop(p) },
+                onSkipped = { p -> controller.afterStop(p) },
             )
         }
         composable<UnderwayAtStopRoute> {
-            ScreenUnderwayAtStop(vm, onBack = { controller.popBackStack() }, onLeft = { finished -> controller.afterStop(finished) })
+            ScreenUnderwayAtStop(vm, onBack = { controller.popBackStack() }, onLeft = { p -> controller.afterStop(p) })
         }
         composable<UnderwayEndOfDayRoute> {
             ScreenUnderwayEndOfDay(vm, onDone = { controller.popBackStack(ScreenHomeDestination, inclusive = false) })
@@ -200,15 +201,21 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
 }
 
 private fun NavHostController.goToEndOfDay() {
-    navigate(UnderwayEndOfDayRoute) { popUpTo(UnderwayLegRoute) { inclusive = true } }
+    navigate(UnderwayEndOfDayRoute) {
+        popUpTo(UnderwayLegRoute) { inclusive = true }
+        launchSingleTop = true
+    }
 }
 
-/** After a Stop is left or skipped: the next Leg, or the end of the day when it was the last. */
-private fun NavHostController.afterStop(finished: Boolean) {
-    if (finished) {
-        goToEndOfDay()
-    } else {
-        navigate(UnderwayLegRoute) { popUpTo(UnderwayLegRoute) { inclusive = true } }
+/**
+ * After a Stop is left or skipped, from the progress as saved: the end of the day when nothing is
+ * left, the Stop page if a notification already marked the arrival, else the next Leg.
+ */
+private fun NavHostController.afterStop(saved: UnderwayProgress?) {
+    when {
+        saved == null || saved.finished -> goToEndOfDay()
+        saved.atStop -> navigate(UnderwayAtStopRoute) { popUpTo(UnderwayLegRoute) { inclusive = true } }
+        else -> navigate(UnderwayLegRoute) { popUpTo(UnderwayLegRoute) { inclusive = true } }
     }
 }
 

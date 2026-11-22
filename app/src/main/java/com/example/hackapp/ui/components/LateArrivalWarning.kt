@@ -33,6 +33,7 @@ fun LateArrivalWarning(
     detail: String = stringResource(R.string.late_no_replanning),
     goAnywayLabel: String = stringResource(R.string.action_go_anyway),
     skipStopLabel: String = stringResource(R.string.action_skip_stop),
+    enabled: Boolean = true,
 ) {
     val color = MaterialTheme.colorScheme.onErrorContainer
     Column(
@@ -45,8 +46,8 @@ fun LateArrivalWarning(
         Text(message, style = MaterialTheme.typography.titleSmall, color = color, modifier = Modifier.fillMaxWidth())
         Text(detail, style = MaterialTheme.typography.bodySmall, color = color, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HackappSmallButton(text = goAnywayLabel, onClick = onGoAnyway)
-            HackappSmallTextButton(text = skipStopLabel, onClick = onSkipStop)
+            HackappSmallButton(text = goAnywayLabel, onClick = onGoAnyway, enabled = enabled)
+            HackappSmallTextButton(text = skipStopLabel, onClick = onSkipStop, enabled = enabled)
         }
     }
 }
