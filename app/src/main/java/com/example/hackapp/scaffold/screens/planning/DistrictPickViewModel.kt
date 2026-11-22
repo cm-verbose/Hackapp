@@ -8,12 +8,13 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.hackapp.auth.AuthService
 import com.example.hackapp.citypack.CityPack
 import com.example.hackapp.citypack.DistrictMapData
-import com.example.hackapp.data.Event
 import com.example.hackapp.data.repository.EventQuery
 import com.example.hackapp.data.repository.EventRepository
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.eventEligibility
+import com.example.hackapp.profile.ProfileRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,8 +59,7 @@ class DistrictPickViewModel(
     private val events: EventRepository,
     private val cityPack: CityPack,
     private val loadMap: suspend () -> DistrictMapData,
-    /** The Planning engine's audience rule. Wired in when the Planning work is merged. */
-    private val eligibility: (Event) -> Boolean = { true },
+    private val profiles: ProfileRepository,
     private val reconciler: PlanningChangeReconciler = KeepSavedStops,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
@@ -185,6 +185,7 @@ class DistrictPickViewModel(
                 val uid = checkNotNull(auth.currentUser?.uid)
                 val draft = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                 val map = loadMap()
+                val eligibility = eventEligibility(profiles, uid, cityPack.timeZone)
                 val summary = withContext(Dispatchers.Default) {
                     summarizeDistrictEvents(events.search(windowQuery(draft)), eligibility)
                 }
@@ -217,11 +218,11 @@ class DistrictPickViewModel(
             events: EventRepository,
             cityPack: CityPack,
             loadMap: suspend () -> DistrictMapData,
-            eligibility: (Event) -> Boolean = { true },
+            profiles: ProfileRepository,
             reconciler: PlanningChangeReconciler = KeepSavedStops,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                DistrictPickViewModel(itineraryId, auth, itineraries, events, cityPack, loadMap, eligibility, reconciler)
+                DistrictPickViewModel(itineraryId, auth, itineraries, events, cityPack, loadMap, profiles, reconciler)
             }
         }
     }

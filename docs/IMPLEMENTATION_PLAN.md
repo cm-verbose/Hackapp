@@ -26,20 +26,12 @@ Living checklist for the current implementation step. Update it in the same chan
 | Passport | `cmvb` |
 | Onboarding, then Home, Itineraries, Settings, Planning and Underway | Niko and Claude |
 
-Current agent wave, based on the shared `itinerary/` models:
-
-| Agent | Scope |
-|---|---|
-| Planning core | Persistent `ItineraryRepository`, planning engine, budgets and ticket price logic |
-| Main tabs | Home, Itineraries, Past and Archived views, Settings |
-| District map | Date and time, interactive District map and District pick |
-
 ## Decisions
 
 | Topic | Decision |
 |---|---|
 | App name | Plan[City]: Plan Montréal in French, Plan Montreal in English |
-| Age | Accounts are 18+. Adults planning with children use the family-friendly preference |
+| Age | Accounts are 18+. Adults planning with children use the family-friendly preference, which hides 18+ Events |
 | Navigation | Use `cmvb`'s bottom bar and tab destinations |
 | City selection | Chosen at build time (ADR 0001) |
 | Event data | Bundled `events.json` behind `EventRepository` |
@@ -112,7 +104,7 @@ Current agent wave, based on the shared `itinerary/` models:
 - [x] Password reset
 - [x] Temporary sign-out button on Home
 - [ ] Confirm email sign-in, registration and reset on the phone
-- [ ] Move sign-out to Settings
+- [x] Move sign-out to Settings
 
 ### 2. Onboarding
 
@@ -131,30 +123,33 @@ Current agent wave, based on the shared `itinerary/` models:
 
 - [x] District map behavior
 - [x] Itinerary draft and Planning flow
-- [x] Update maquettes from these decisions (map badges still show counts for selected boroughs, to fix in the District map pass)
+- [x] Update maquettes from these decisions (the Figma map badges still show counts for selected boroughs)
 - [ ] Underway pages (grill when we get there)
 
 ### 4. Main tabs
 
-- [ ] Home
-- [ ] Itineraries: In planning, Past, Archived and empty state (update maquette for Archived)
-- [ ] Past Itinerary summary: maquette, then page
-- [ ] Settings
+- [x] Home
+- [x] Itineraries: In planning, Past, Archived and empty state
+- [x] Past Itinerary summary and Archived detail: maquettes, then pages
+- [x] Settings
+- [ ] Confirm Home, Itineraries and Settings on the phone
 - [ ] Passport (`cmvb`)
 
 ### 5. Planning
 
-- [ ] Domain models: Itinerary, Stop, Leg, Meal Block
-- [ ] `ItineraryRepository`
-- [ ] Planning engine with unit tests: eligibility, ranking, Meal Blocks, reachability, Leave By, after-midnight dates
-- [ ] Date and time
-- [ ] District map with zoom, drag and selection
+- [x] Domain models: Itinerary, Stop, Leg, Meal Block
+- [x] Local `ItineraryRepository`
+- [x] Planning engine with unit tests: eligibility, ranking, Meal Blocks, reachability, Leave By, after-midnight dates
+- [x] Date and time
+- [x] District map with zoom, drag and selection
+- [ ] Confirm Date and time and District map gestures on the phone
 - [ ] Meal choice
 - [ ] Event and Meal selection
 - [ ] Planned Departure sheet
-- [ ] Budget overrides and running total
+- [ ] Budget overrides and running total UI
 - [ ] Event details sheet with optional ticket price
-- [ ] `TicketPriceRepository` with median of user reports
+- [x] `TicketPriceRepository` logic with median of user reports (in memory until Firestore)
+- [ ] Connect Stop edit warnings to Date and time, District pick and Review
 - [ ] Itinerary review
 
 ### 6. Underway
@@ -184,11 +179,13 @@ Current agent wave, based on the shared `itinerary/` models:
 
 ## Data facts for planning
 
-- The snapshot covers Nov 21 to Dec 6, 2026, with 1,236 scheduled Events.
-- 574 scheduled Events (46%) have no published end time.
-- 549 have an unknown price, 671 are free, and only 16 are marked paid. None has a dollar amount.
+- The snapshot covers Nov 21 to Dec 6, 2026, with 1,233 scheduled Events.
+- 571 scheduled Events (46%) have no published end time.
+- 546 have an unknown price, 671 are free, and only 16 are marked paid. None has a dollar amount.
 - On Sat Nov 28 from 18:00 to 02:00, Ville-Marie has 17 Events and Le Plateau-Mont-Royal has 11. Every other District has 2 or fewer.
 
 ## Open questions
 
-Tracked in the current grilling round. Move answers to **Decisions**.
+- Should a long drop-in Event that overlaps a Meal Block stay visible? The current rule hides it.
+
+Move answers to **Decisions**.

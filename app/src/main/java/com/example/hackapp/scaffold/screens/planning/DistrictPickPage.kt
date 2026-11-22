@@ -57,6 +57,7 @@ import com.example.hackapp.citypack.LabelKey
 import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.citypack.loadDistrictMap
 import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.components.BottomActions
 import com.example.hackapp.ui.components.DataAttribution
@@ -94,6 +95,7 @@ fun DistrictPickScreen(
             events = services.events,
             cityPack = services.cityPack,
             loadMap = { loadDistrictMap(context.applicationContext, services.cityPack) },
+            profiles = LocalProfileRepository.current,
         ),
     )
     val state by viewModel.state.collectAsState()

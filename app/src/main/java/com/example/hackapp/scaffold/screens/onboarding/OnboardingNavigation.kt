@@ -23,7 +23,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.example.hackapp.auth.LocalAuthService
+import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.citypack.loadDistrictMap
+import com.example.hackapp.itinerary.LocalItineraryRepository
+import com.example.hackapp.itinerary.archiveExpiredDrafts
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.profile.SessionDestination
 import com.example.hackapp.profile.resolveSessionDestination
@@ -41,6 +44,7 @@ import com.example.hackapp.ui.components.LoadingState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 /** The four onboarding routes. Their nested graph owns the shared [OnboardingViewModel]. */
 fun NavGraphBuilder.onboardingGraph(controller: NavHostController) {
@@ -146,6 +150,8 @@ private fun onboardingViewModel(
 fun SessionGate(onResolved: (SessionDestination) -> Unit) {
     val auth = LocalAuthService.current
     val profiles = LocalProfileRepository.current
+    val itineraries = LocalItineraryRepository.current
+    val zone = LocalCityPack.current.timeZone
     var attempt by remember { mutableIntStateOf(0) }
     var failed by remember { mutableStateOf(false) }
 
@@ -158,6 +164,15 @@ fun SessionGate(onResolved: (SessionDestination) -> Unit) {
         } catch (_: Exception) {
             failed = true
             return@LaunchedEffect
+        }
+        auth.currentUser?.uid?.let { uid ->
+            try {
+                archiveExpiredDrafts(itineraries, uid, Instant.now(), zone)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Archiving runs again on the next launch, so it should never block opening the app.
+            }
         }
         onResolved(destination)
     }

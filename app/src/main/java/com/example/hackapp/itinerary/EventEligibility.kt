@@ -4,9 +4,12 @@ import com.example.hackapp.data.Event
 import com.example.hackapp.data.EventStatus
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.AudiencePreference
+import com.example.hackapp.profile.ProfileRepository
+import java.time.Instant
+import java.time.ZoneId
 
 /** Why an Event is hidden. Price is deliberately absent: Events are never hidden by budget. */
-enum class IneligibleReason { Cancelled, SoldOut, NoUsableStart, Past, AboveAgeRange, ChildrenOnly }
+enum class IneligibleReason { Cancelled, SoldOut, NoUsableStart, Past, AboveAgeRange, AdultsOnly, ChildrenOnly }
 
 private const val ADULT_AGE = 18
 
@@ -40,6 +43,9 @@ fun ineligibleReason(event: Event, context: PlanningContext): IneligibleReason? 
     if ((event.publishedEnd() ?: start).toInstant().isBefore(context.now)) return IneligibleReason.Past
     val minAge = event.targetAudience?.minAge
     if (minAge != null && minAge > context.ageRange.youngestAge) return IneligibleReason.AboveAgeRange
+    if (minAge != null && minAge >= ADULT_AGE && AudiencePreference.FamilyFriendly in context.audience) {
+        return IneligibleReason.AdultsOnly
+    }
     if (event.isChildrenOnly() && AudiencePreference.FamilyFriendly !in context.audience) {
         return IneligibleReason.ChildrenOnly
     }
@@ -48,6 +54,18 @@ fun ineligibleReason(event: Event, context: PlanningContext): IneligibleReason? 
 
 /** Events are never hidden by budget, and "other" Events remain eligible in their own group. */
 fun isEligible(event: Event, context: PlanningContext): Boolean = ineligibleReason(event, context) == null
+
+/** This person's Event filter. Without a saved Profile, no audience rule can apply. */
+suspend fun eventEligibility(
+    profiles: ProfileRepository,
+    uid: String?,
+    zone: ZoneId,
+    now: Instant = Instant.now(),
+): (Event) -> Boolean {
+    val profile = uid?.let { profiles.getProfile(it) } ?: return { true }
+    val context = PlanningContext.from(profile, now, zone)
+    return { event -> isEligible(event, context) }
+}
 
 /**
  * Predicate for District counts: fits the audience and starts in [window], at any price. An Event

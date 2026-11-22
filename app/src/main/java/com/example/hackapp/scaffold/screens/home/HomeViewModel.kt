@@ -12,6 +12,7 @@ import com.example.hackapp.data.repository.EventRepository
 import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.ItineraryRepository
 import com.example.hackapp.itinerary.StopStatus
+import com.example.hackapp.itinerary.eventEligibility
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.scaffold.screens.itinerary.ItineraryCardUi
 import com.example.hackapp.scaffold.screens.itinerary.eventStopType
@@ -150,7 +151,8 @@ class HomeViewModel(
         }
         viewModelScope.launch {
             suggestions.value = optional {
-                suggestionsFrom(events.search(EventQuery(startsAtOrAfter = OffsetDateTime.now(zone))))
+                val eligible = eventEligibility(profiles, uid, zone)
+                suggestionsFrom(events.search(EventQuery(startsAtOrAfter = OffsetDateTime.now(zone))).filter(eligible))
             }.orEmpty()
         }
         viewModelScope.launch { districtNames.value = loadDistrictNames() }

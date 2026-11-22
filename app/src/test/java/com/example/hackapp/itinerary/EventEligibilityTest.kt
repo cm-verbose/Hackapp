@@ -86,6 +86,16 @@ class EventEligibilityTest {
     }
 
     @Test
+    fun `Family-friendly hides adults-only Events`() {
+        val family = context().copy(audience = setOf(AudiencePreference.FamilyFriendly))
+        assertEquals(
+            IneligibleReason.AdultsOnly,
+            ineligibleReason(event("a", audience = TargetAudience(minAge = 18)), family),
+        )
+        assertTrue(isEligible(event("b", audience = TargetAudience(minAge = 12)), family))
+    }
+
+    @Test
     fun `general audiences stay visible without Family-friendly`() {
         listOf("Pour tous", "Famille", "Adultes", "Personnes aînées").forEach { label ->
             assertTrue(label, isEligible(event("a", audience = TargetAudience(description = label)), context()))
