@@ -246,6 +246,16 @@
     <!-- Main tabs -->
 
     <!-- Planning: date and District map -->
+    <string name="planning_budget_reset">Return to the profile budget</string>
+    <string name="planning_error_min_duration">An itinerary lasts at least 2 hours.</string>
+    <string name="planning_error_latest_end">An itinerary ends no later than 04:00.</string>
+    <string name="planning_save_error">Couldn’t save. Try again.</string>
+    <string name="district_add_first">Add as #1</string>
+    <string name="district_max_title">Maximum of %1$d %2$s</string>
+    <string name="district_max_body">To add %1$s, choose which one to replace.</string>
+    <string name="district_replace_label">Replace:</string>
+    <string name="district_replace_action">Replace</string>
+    <string name="district_map_reset">Reset map</string>
 
     <!-- Planning: engine messages -->
 </resources>
