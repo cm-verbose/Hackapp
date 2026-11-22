@@ -19,6 +19,7 @@ import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.mealBudget
 import com.example.hackapp.itinerary.planningWindow
 import com.example.hackapp.itinerary.reconcileMealStops
+import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -57,20 +59,45 @@ data class MealChoiceOption(
     val error: MealTimeError?,
 )
 
-/** The picks a draft opens with: its saved blocks, or every default block that fits (and is not an off add-on) when unanswered. */
+/**
+ * The start a Meal of this kind opens with: its default time clamped into the window so the whole
+ * block fits, or null when the window is shorter than the block.
+ */
+fun MealKind.initialStart(itinerary: Itinerary, zone: ZoneId): LocalTime? {
+    val window = itinerary.planningWindow(zone)
+    val latest = window.end.minusSeconds(blockMinutes * 60L)
+    if (latest.isBefore(window.start)) return null
+    // The default time can fall on the window's day or the next; the occurrence nearest the window wins.
+    fun distance(at: Instant) = when {
+        at.isBefore(window.start) -> Duration.between(at, window.start)
+        at.isAfter(latest) -> Duration.between(latest, at)
+        else -> Duration.ZERO
+    }
+    val wanted = listOf(0L, 1L)
+        .map { itinerary.date.plusDays(it).atTime(defaultStart).atZone(zone).toInstant() }
+        .minBy { distance(it) }
+    val clamped = if (wanted.isBefore(window.start)) window.start else if (wanted.isAfter(latest)) latest else wanted
+    return clamped.atZone(zone).toLocalTime()
+}
+
+/**
+ * The picks a draft opens with: its saved blocks, or when unanswered every default block that fits
+ * unclamped (except an off add-on). Every Meal that can fit at some start is offered, at its clamped start.
+ */
 fun initialMealPicks(itinerary: Itinerary, context: PlanningContext): Map<MealKind, MealPick> =
     MealKind.entries.associateWith { kind ->
         val saved = itinerary.mealBlocks.firstOrNull { it.kind == kind }
         val default = MealBlock(kind.defaultBlockId(), kind, kind.defaultStart)
         val fits = default.fitsWindow(itinerary, context.zone)
+        val start = kind.initialStart(itinerary, context.zone)
         // The Late bite add-on is off without a budget: it stays offered but is not preselected.
         val addOnOn = kind != MealKind.LateBite || itinerary.mealBudget(kind, context) != null
         when {
             saved != null -> MealPick(offered = true, selected = true, start = saved.start, budget = saved.budget)
             else -> MealPick(
-                offered = fits,
+                offered = start != null,
                 selected = fits && addOnOn && itinerary.planMeals == null,
-                start = kind.defaultStart,
+                start = start ?: kind.defaultStart,
             )
         }
     }
@@ -226,8 +253,8 @@ class PlanningMealChoiceViewModel(
                 val uid = checkNotNull(auth.currentUser?.uid)
                 val saved = checkNotNull(itineraries.getItinerary(uid, itineraryId))
                 draft = saved
-                profile = checkNotNull(profiles.getProfile(uid))
-                picks = initialMealPicks(saved, planningContext(checkNotNull(profile)))
+                profile = readProfile(uid)
+                picks = initialMealPicks(saved, planningContext(profile))
                 _state.update {
                     it.copy(
                         loading = false,
@@ -245,8 +272,18 @@ class PlanningMealChoiceViewModel(
         }
     }
 
-    private fun planningContext(profile: Profile) =
-        PlanningContext.from(profile, Instant.ofEpochMilli(nowMillis()), zone)
+    /** A missing or unreadable Profile is tolerated: Meals then have no fallback budget. */
+    private suspend fun readProfile(uid: String): Profile? = try {
+        profiles.getProfile(uid)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun planningContext(profile: Profile?) =
+        profile?.let { PlanningContext.from(it, Instant.ofEpochMilli(nowMillis()), zone) }
+            ?: PlanningContext(Instant.ofEpochMilli(nowMillis()), zone, AgeRange.From25To34)
 
     private fun editPick(kind: MealKind, change: MealPick.() -> MealPick) {
         val pick = picks[kind] ?: return
@@ -260,7 +297,6 @@ class PlanningMealChoiceViewModel(
     /** Recomputes the options from [picks] after applying [change]. */
     private fun publish(change: (PlanningMealChoiceUiState) -> PlanningMealChoiceUiState) {
         val itinerary = draft ?: return
-        val profile = profile ?: return
         val context = planningContext(profile)
         val options = mealChoiceOptions(itinerary, picks, context)
         _state.update { change(it).copy(options = options, noMealFits = options.isEmpty()) }

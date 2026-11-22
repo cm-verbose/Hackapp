@@ -43,24 +43,43 @@ class PlanningMealChoiceTest {
         mealChoiceOptions(it, picks, ctx)
 
     @Test
-    fun offersOnlyBlocksThatFitTheWindow() {
-        // 10:00-18:00: Lunch fits, Dinner (18:30) and Late bite do not.
-        assertEquals(listOf(MealKind.Lunch), options(draft(10, 18)).map { it.kind })
-        // 18:00-02:00 crosses midnight: Dinner and Late bite (22:00-22:45) fit.
-        assertEquals(listOf(MealKind.Dinner, MealKind.LateBite), options(draft(18, 2)).map { it.kind })
+    fun offersEveryMealThatCanFitAfterClampingItsStart() {
+        fun starts(it: Itinerary) = options(it).associate { o -> o.kind to o.start }
+        // 19:00-21:30: Dinner is offered at 19:00 (its 18:30 default is before the window).
+        assertEquals(LocalTime.of(19, 0), starts(draft(19, 21).copy(endTime = LocalTime.of(21, 30)))[MealKind.Dinner])
+        // 10:00-18:00: Dinner clamps to the last start that fits, 16:30.
+        assertEquals(LocalTime.of(16, 30), starts(draft(10, 18))[MealKind.Dinner])
+        // Defaults that fit stay as they are.
+        assertEquals(LocalTime.NOON, starts(draft(10, 18))[MealKind.Lunch])
+        // 18:00-02:00 crosses midnight: Lunch clamps to the window start, Late bite stays at 22:00.
+        val night = starts(draft(18, 2))
+        assertEquals(LocalTime.of(18, 0), night[MealKind.Lunch])
+        assertEquals(LocalTime.of(22, 0), night[MealKind.LateBite])
     }
 
     @Test
-    fun blockMustFitWholeNotJustStart() {
-        // Window ends 13:00: Lunch 12:00-13:30 does not fit.
-        assertTrue(options(draft(10, 13)).isEmpty())
-        // Ends 13:30: it fits exactly.
-        assertEquals(listOf(MealKind.Lunch), options(draft(10, 14).copy(endTime = LocalTime.of(13, 30))).map { it.kind })
+    fun aMealIsOfferedOnlyWhenItsWholeBlockCanFitAtSomeStart() {
+        // A 1-hour window holds no 90-minute block, but it holds the 45-minute Late bite.
+        val short = draft(10, 11)
+        assertEquals(listOf(MealKind.LateBite), options(short).map { it.kind })
+        assertEquals(LocalTime.of(10, 15), options(short).single().start)
+        // Exactly 90 minutes fits Lunch at the window start.
+        val exact = draft(10, 11).copy(endTime = LocalTime.of(11, 30))
+        assertEquals(LocalTime.of(10, 0), options(exact).first { o -> o.kind == MealKind.Lunch }.start)
+        // A 30-minute window fits nothing.
+        assertTrue(options(draft(10, 11).copy(endTime = LocalTime.of(10, 30))).isEmpty())
+    }
+
+    @Test
+    fun onlyDefaultsThatFitUnclampedArePreselected() {
+        val picks = initialMealPicks(draft(19, 21).copy(endTime = LocalTime.of(21, 30)), context())
+        assertTrue(picks.getValue(MealKind.Dinner).offered)
+        assertTrue(picks.values.none { it.selected })
     }
 
     @Test
     fun firstOpenSelectsEveryFittingMealAndRespectsDeclined() {
-        assertTrue(options(draft(10, 22)).all { it.selected })
+        assertEquals(listOf(MealKind.Lunch, MealKind.Dinner), options(draft(10, 22)).filter { it.selected }.map { it.kind })
         val declined = draft(10, 22, planMeals = false)
         assertTrue(options(declined).none { it.selected })
     }
@@ -72,7 +91,7 @@ class PlanningMealChoiceTest {
             blocks = listOf(MealBlock("meal-dinner", MealKind.Dinner, LocalTime.of(19, 0), BudgetBracket.Under50)),
         )
         val result = options(saved)
-        assertEquals(listOf(MealKind.Lunch, MealKind.Dinner), result.map { it.kind })
+        assertEquals(listOf(MealKind.Lunch, MealKind.Dinner, MealKind.LateBite), result.map { it.kind })
         assertFalse(result[0].selected)
         assertTrue(result[1].selected)
         assertEquals(LocalTime.of(19, 0), result[1].start)
@@ -93,7 +112,7 @@ class PlanningMealChoiceTest {
         val it = draft(10, 14)
         val picks = initialMealPicks(it, context())
         fun errorAt(h: Int, m: Int) = options(it, picks + (MealKind.Lunch to picks.getValue(MealKind.Lunch).copy(start = LocalTime.of(h, m))))
-            .single().error
+            .first { o -> o.kind == MealKind.Lunch }.error
         assertNull(errorAt(12, 30))
         assertNull(errorAt(12, 30))
         assertEquals(MealTimeError.OutsideWindow, errorAt(12, 31))
@@ -134,14 +153,14 @@ class PlanningMealChoiceTest {
         val it = draft(10, 14)
         val ctx = context(lunch = BudgetBracket.Under20)
         val picks = initialMealPicks(it, context())
-        val none = options(it, picks, ctx).single()
+        val none = options(it, picks, ctx).first { o -> o.kind == MealKind.Lunch }
         assertNull(none.budget)
         assertEquals(BudgetBracket.Under20, none.effectiveBudget)
-        val chosen = options(it, picks + (MealKind.Lunch to picks.getValue(MealKind.Lunch).copy(budget = BudgetBracket.Under100)), ctx).single()
+        val chosen = options(it, picks + (MealKind.Lunch to picks.getValue(MealKind.Lunch).copy(budget = BudgetBracket.Under100)), ctx).first { o -> o.kind == MealKind.Lunch }
         assertEquals(BudgetBracket.Under100, chosen.effectiveBudget)
         // An Itinerary override wins over the Profile.
         val overridden = it.copy(mealBudgets = MealBudgets(lunch = BudgetBracket.Under50))
-        assertEquals(BudgetBracket.Under50, options(overridden, initialMealPicks(overridden, context()), ctx).single().effectiveBudget)
+        assertEquals(BudgetBracket.Under50, options(overridden, initialMealPicks(overridden, context()), ctx).first { o -> o.kind == MealKind.Lunch }.effectiveBudget)
     }
 
     @Test
@@ -207,5 +226,14 @@ class PlanningMealChoiceTest {
         val it = draft(18, 2, planMeals = true, blocks = listOf(MealBlock("d", MealKind.Dinner, LocalTime.of(18, 30), skipped = true)))
         val saved = it.withMealChoice(true, initialMealPicks(it, context()), zone)
         assertTrue(saved.mealBlocks.single().skipped)
+    }
+
+    @Test
+    fun withoutAProfileMealsHaveNoFallbackBudget() {
+        val bare = PlanningContext(now = Instant.EPOCH, zone = zone, ageRange = AgeRange.From25To34)
+        val it = draft(10, 22)
+        val result = mealChoiceOptions(it, initialMealPicks(it, bare), bare)
+        assertTrue(result.all { o -> o.effectiveBudget == null })
+        assertTrue(result.any { o -> o.selected })
     }
 }
