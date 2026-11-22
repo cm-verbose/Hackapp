@@ -1,6 +1,8 @@
-# Hackapp
+# Plan[City]
 
 A city outing companion that helps a person plan a day or night out, follow it stop by stop, and keep a record of it in a city passport.
+
+The app is named **Plan[City]**, with the City Pack's city in place of the brackets, such as Plan Montréal or Plan Toronto. "Hackapp" remains only the name of the repository and code identifiers.
 
 ## Language
 
@@ -19,7 +21,7 @@ A person's lasting details and defaults, independent of any single Itinerary.
 _Avoid_: Account details, onboarding data
 
 **Audience Preference**:
-A person's chosen filter for the kind of audience an Event suits, such as 18+ only or family-friendly.
+A person's chosen filter for the kind of audience an Event suits, such as 18+ only or family-friendly. Account holders are 18 or older, so family-friendly is how an adult plans an outing with children.
 _Avoid_: Demographic restriction
 
 **Interest**:
@@ -86,7 +88,7 @@ The complete set of city-specific content and options that makes the app work fo
 _Avoid_: City config, market
 
 **Brand**:
-The name and visual identity under which the app is presented.
+The visual identity and naming under which the app is presented. The default app name follows the Plan[City] pattern.
 _Avoid_: Theme, skin, tenant
 
 **Transit App**:

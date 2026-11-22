@@ -6,6 +6,8 @@ Terms are defined in [`GLOSSARY.md`](../../GLOSSARY.md).
 
 ## App-wide rules
 
+- **App name:** the app is named Plan[City], with the City Pack's city in place of the brackets. The Montréal build is Plan Montréal in French and Plan Montreal in English.
+- **Age:** accounts are for people 18 and over. Adults planning an outing with children use the family-friendly Audience Preference.
 - **Languages:** French is the priority and default. English is also required. French lives in `values/strings.xml`, English in `values-en/strings.xml`, and no user-facing text is hardcoded. Settings has a French/English switch.
 - **City labels:** City Packs can override labels, such as "arrondissement" for a District. Toronto can default to English.
 - **Data:** source CSVs are imported into Firestore once. The app queries Events and Places by city and District and keeps them cached for offline use.
@@ -16,7 +18,7 @@ Terms are defined in [`GLOSSARY.md`](../../GLOSSARY.md).
 
 ### Welcome
 
-- App title
+- App title (Plan[City])
 - Log in with Google
 - Log in with email and password
 - Register button
@@ -39,7 +41,7 @@ Terms are defined in [`GLOSSARY.md`](../../GLOSSARY.md).
 ### 2. Profile
 
 - Name and email, prefilled from Google when available
-- Age range
+- Age range: 18–24, 25–34, 35–44, 45–54 or 55+
 - Borough of stay
 
 Gender and street address are not collected.
@@ -63,6 +65,15 @@ Onboarding ends at Home.
 - Itineraries in Planning (a user can have several)
 - The Itinerary that is Underway (at most one), which resumes here after the app is closed
 - Passport
+
+## Itineraries
+
+Top-level tab between Home and Passport.
+
+- **In planning:** every Itinerary still in Planning. Tapping one resumes Planning
+- **Past:** completed Itineraries, newest first, with their date and confirmed Stop and Stamp counts. Tapping one opens a read-only summary
+- An Itinerary that is Underway stays on Home and is not listed here
+- Empty state with a button to plan a new Itinerary
 
 ## Planning
 
@@ -106,8 +117,8 @@ Planning moves strictly through the chosen Districts in order, and the user choo
 
 - Hide cancelled, sold-out and past Events
 - Hide Events with no known start time
-- Hide Events the user is too young for
-- Show children-only Events only with a family-friendly Audience Preference
+- Hide Events whose minimum age is above the person's age range, such as 21+ Events for someone aged 18–24
+- Show children-only Events only with a family-friendly Audience Preference, because every account holder is an adult
 - Keep Events with an unknown price, labelled "prix inconnu", and rank them lower when a budget is set
 - Ticket purchases open the Event's own link
 
