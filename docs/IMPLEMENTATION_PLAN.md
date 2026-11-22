@@ -60,6 +60,16 @@ Living checklist for the current implementation step. Update it in the same chan
 | Removing a Stop | Return to selection for that gap, keep later reachable Stops, and warn before removing others |
 | One Underway Itinerary | Starting a new Itinerary warns that the current one will end. The old one moves to Past, keeps Stamps for confirmed Stops, and marks remaining Stops as skipped |
 | Start date | **Start** works only on the Itinerary's date, except in demo mode |
+| Resuming drafts | Tapping a draft reopens its last step with all choices kept |
+| Deleting drafts | Drafts have a Delete action with confirmation. Past Itineraries cannot be deleted |
+| Expired drafts | Deleted once their date has passed |
+| Event details | Sheet with title, time, venue, price, audience, description when available, ticket link and Add to Itinerary |
+| Skipping a Meal | **Skip this Meal** frees the block so Events in that time appear again |
+| Budget | A per-Meal budget plus a global day budget. **Exact calculation still being decided** |
+| Ranking | Matching Interests, then known price within budget, then unknown price, then shortest travel time |
+| Repeated showtimes | One card with selectable times. An Event already in the Itinerary is hidden from later gaps |
+| Review map | Same zoom and drag. Tapping a marker highlights its Stop |
+| Past summary | Date, route map, Stops marked confirmed or skipped, and Stamps earned. No editing or restart |
 
 ## Checklist
 
