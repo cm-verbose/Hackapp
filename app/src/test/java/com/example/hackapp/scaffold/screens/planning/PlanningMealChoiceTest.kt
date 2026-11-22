@@ -43,32 +43,44 @@ class PlanningMealChoiceTest {
         mealChoiceOptions(it, picks, ctx)
 
     @Test
-    fun offersEveryMealThatCanFitAfterClampingItsStart() {
+    fun offersMealsWhoseDefaultBlockOverlapsTheWindowAtAClampedStart() {
         fun starts(it: Itinerary) = options(it).associate { o -> o.kind to o.start }
-        // 19:00-21:30: Dinner is offered at 19:00 (its 18:30 default is before the window).
-        assertEquals(LocalTime.of(19, 0), starts(draft(19, 21).copy(endTime = LocalTime.of(21, 30)))[MealKind.Dinner])
-        // 10:00-18:00: Dinner clamps to the last start that fits, 16:30.
-        assertEquals(LocalTime.of(16, 30), starts(draft(10, 18))[MealKind.Dinner])
-        // Defaults that fit stay as they are.
-        assertEquals(LocalTime.NOON, starts(draft(10, 18))[MealKind.Lunch])
-        // 18:00-02:00 crosses midnight: Lunch clamps to the window start, Late bite stays at 22:00.
-        val night = starts(draft(18, 2))
-        assertEquals(LocalTime.of(18, 0), night[MealKind.Lunch])
-        assertEquals(LocalTime.of(22, 0), night[MealKind.LateBite])
+        // 19:00-21:30: Dinner opens at 19:00 (its default block overlaps the window). Not Lunch or Late bite.
+        assertEquals(mapOf(MealKind.Dinner to LocalTime.of(19, 0)), starts(draft(19, 21).copy(endTime = LocalTime.of(21, 30))))
+        // 10:00-18:00: only Lunch. Dinner's default block (18:30) starts after the window ends.
+        assertEquals(mapOf(MealKind.Lunch to LocalTime.NOON), starts(draft(10, 18)))
+        // 10:00-19:00: Dinner overlaps, so it clamps to the last start that fits (17:30).
+        assertEquals(LocalTime.of(17, 30), starts(draft(10, 19))[MealKind.Dinner])
+        // 18:00-02:00 crosses midnight: Dinner and Late bite, never Lunch.
+        assertEquals(
+            mapOf(MealKind.Dinner to LocalTime.of(18, 30), MealKind.LateBite to LocalTime.of(22, 0)),
+            starts(draft(18, 2)),
+        )
     }
 
     @Test
-    fun aMealIsOfferedOnlyWhenItsWholeBlockCanFitAtSomeStart() {
-        // A 1-hour window holds no 90-minute block, but it holds the 45-minute Late bite.
-        val short = draft(10, 11)
-        assertEquals(listOf(MealKind.LateBite), options(short).map { it.kind })
-        assertEquals(LocalTime.of(10, 15), options(short).single().start)
-        // Exactly 90 minutes fits Lunch at the window start.
-        val exact = draft(10, 11).copy(endTime = LocalTime.of(11, 30))
-        assertEquals(LocalTime.of(10, 0), options(exact).first { o -> o.kind == MealKind.Lunch }.start)
-        // A 30-minute window fits nothing.
-        assertTrue(options(draft(10, 11).copy(endTime = LocalTime.of(10, 30))).isEmpty())
+    fun nothingIsOfferedWhenNoDefaultBlockTouchesTheWindow() {
+        // 14:00-17:00 sits between Lunch (ends 13:30) and Dinner (starts 18:30).
+        assertTrue(options(draft(14, 17)).isEmpty())
+        // A 30-minute window cannot hold any block even where a default overlaps it.
+        assertTrue(options(draft(12, 13).copy(endTime = LocalTime.of(12, 30))).isEmpty())
     }
+
+    @Test
+    fun blockMustFitAfterClamping() {
+        // 12:00-13:30 holds Lunch exactly; 12:00-13:00 does not.
+        assertEquals(listOf(MealKind.Lunch), options(draft(12, 13).copy(endTime = LocalTime.of(13, 30))).map { it.kind })
+        assertTrue(options(draft(12, 13)).isEmpty())
+    }
+
+    @Test
+    fun savedMealsStayOfferedEvenWhenOutsideTheWindow() {
+        val saved = draft(14, 17, planMeals = true, blocks = listOf(MealBlock("meal-lunch", MealKind.Lunch, LocalTime.NOON)))
+        val result = options(saved)
+        assertEquals(listOf(MealKind.Lunch), result.map { it.kind })
+        assertEquals(MealTimeError.OutsideWindow, result.single().error)
+    }
+
 
     @Test
     fun onlyDefaultsThatFitUnclampedArePreselected() {
@@ -91,7 +103,7 @@ class PlanningMealChoiceTest {
             blocks = listOf(MealBlock("meal-dinner", MealKind.Dinner, LocalTime.of(19, 0), BudgetBracket.Under50)),
         )
         val result = options(saved)
-        assertEquals(listOf(MealKind.Lunch, MealKind.Dinner, MealKind.LateBite), result.map { it.kind })
+        assertEquals(listOf(MealKind.Lunch, MealKind.Dinner), result.map { it.kind })
         assertFalse(result[0].selected)
         assertTrue(result[1].selected)
         assertEquals(LocalTime.of(19, 0), result[1].start)

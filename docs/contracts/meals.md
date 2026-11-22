@@ -16,7 +16,7 @@ Owner: Domain Engineer, team Meals. Consumer: Feature Engineer. File:
 | `loadFailed` | Boolean | Draft or Profile could not be read. Render the error with Retry. |
 | `planMeals` | Boolean | true = the app plans Meals; false = the person handles food. Defaults to true. |
 | `windowStart`, `windowEnd` | LocalTime? | The Itinerary window, set once the draft loads (null before). `windowEnd` may be after midnight. The page needs no second read of the draft. |
-| `options` | List<MealChoiceOption> | The Meals offered, in order Lunch, Dinner, Late bite. A Meal is offered when its whole block can fit in the window at some start; its initial `start` is the default time clamped into the window (19:00-21:30 offers Dinner at 19:00). Empty only when the window is too short for every block. Hide the list when `planMeals` is false. |
+| `options` | List<MealChoiceOption> | The Meals offered, in order Lunch, Dinner, Late bite. A Meal is offered when its default block (12:00, 18:30 or 22:00) overlaps the window and its whole block can fit after clamping its start into the window; the clamped time is the initial `start`. 19:00-21:30 offers only Dinner at 19:00; 18:00-02:00 offers Dinner and Late bite; 14:00-17:00 offers nothing (the "no Meal fits" state). Hide the list when `planMeals` is false. |
 | `noMealFits` | Boolean | No Meal block fits the Itinerary window. Render the "no Meal fits" state with the Change date and time action. |
 | `canContinue` | Boolean | Enables Continue. |
 | `saving` | Boolean | Save in progress. Disable Continue. |
@@ -36,7 +36,7 @@ Owner: Domain Engineer, team Meals. Consumer: Feature Engineer. File:
 | `effectiveBudget` | BudgetBracket? | What search will use: `budget`, else this Itinerary's override, else the Profile budget. Show it as the unselected default. |
 | `error` | MealTimeError? | Only for a selected Meal. `OutsideWindow`: the block leaves the Itinerary window. `Overlaps`: the block overlaps another selected block. |
 
-Offered Meals are those that can fit at some start (default time clamped into the window), plus any Meal restored from the draft. Only Meals whose unclamped default fits are preselected on first open.
+Offered Meals are those whose default block overlaps the window and can fit after clamping, plus any Meal restored from the draft. Only Meals whose unclamped default fits are preselected on first open.
 Unselected options still carry `start` and `budget`; the page may show the time and budget fields only when `selected`.
 
 ## Callbacks

@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -61,21 +60,17 @@ data class MealChoiceOption(
 
 /**
  * The start a Meal of this kind opens with: its default time clamped into the window so the whole
- * block fits, or null when the window is shorter than the block.
+ * block fits, or null when the default block misses the window or the window is shorter than the block.
  */
 fun MealKind.initialStart(itinerary: Itinerary, zone: ZoneId): LocalTime? {
     val window = itinerary.planningWindow(zone)
     val latest = window.end.minusSeconds(blockMinutes * 60L)
     if (latest.isBefore(window.start)) return null
-    // The default time can fall on the window's day or the next; the occurrence nearest the window wins.
-    fun distance(at: Instant) = when {
-        at.isBefore(window.start) -> Duration.between(at, window.start)
-        at.isAfter(latest) -> Duration.between(latest, at)
-        else -> Duration.ZERO
-    }
+    // The default time can fall on the window's day or the next. It counts only when its default
+    // block overlaps the window, so an evening window does not offer Lunch.
     val wanted = listOf(0L, 1L)
         .map { itinerary.date.plusDays(it).atTime(defaultStart).atZone(zone).toInstant() }
-        .minBy { distance(it) }
+        .firstOrNull { window.overlaps(it, it.plusSeconds(blockMinutes * 60L)) } ?: return null
     val clamped = if (wanted.isBefore(window.start)) window.start else if (wanted.isAfter(latest)) latest else wanted
     return clamped.atZone(zone).toLocalTime()
 }
