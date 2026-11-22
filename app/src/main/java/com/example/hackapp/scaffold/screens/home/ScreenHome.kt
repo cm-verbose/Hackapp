@@ -12,9 +12,9 @@ import kotlinx.serialization.Serializable
 object ScreenHomeDestination
 
 @Composable
-fun ScreenHome(outerpaddingValues: PaddingValues) {
+fun ScreenHome(outerPaddingValues: PaddingValues) {
     Scaffold(bottomBar = {
-        ScreenHomeBottomAppBar(outerpaddingValues)
+        ScreenHomeBottomAppBar(outerPaddingValues)
     }) { paddingValues ->
         Box(modifier = Modifier.consumeWindowInsets(paddingValues)) {
 

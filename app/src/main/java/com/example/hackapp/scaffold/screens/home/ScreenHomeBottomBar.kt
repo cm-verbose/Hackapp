@@ -3,7 +3,6 @@ package com.example.hackapp.scaffold.screens.home
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Route
@@ -14,7 +13,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,15 +33,14 @@ val destinationPassport: List<Pair<String, Int>> = listOf(
 /** Home screen bottom app bar. */
 @Composable
 fun ScreenHomeBottomAppBar(padding: PaddingValues) {
-    var selectedIndex by rememberSaveable { mutableStateOf(0) }
+    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     BottomAppBar(
         contentPadding = PaddingValues(0.dp),
-        windowInsets = WindowInsets()
+        windowInsets = WindowInsets(bottom = padding.calculateBottomPadding())
     ) {
         PrimaryTabRow(
             selectedIndex,
             modifier = Modifier
-                .padding(0.dp, 0.dp, 0.dp, padding.calculateBottomPadding())
                 .fillMaxSize()
         ) {
             destinations.forEachIndexed { index, pair ->
