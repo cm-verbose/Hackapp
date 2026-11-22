@@ -432,12 +432,12 @@
     <string name="budget_not_set">Not set</string>
 
     <string name="demo_mode_title">Demo mode</string>
-    <string name="demo_mode_body">Simulates the date and time.</string>
+    <string name="demo_mode_body">Simulates date and time.</string>
     <string name="demo_next_moment">Next moment</string>
     <string name="demo_exit">Exit demo mode</string>
     <string name="demo_exit_body">Your itinerary will end. Your stamps will be kept.</string>
     <string name="demo_exit_confirm">Exit</string>
-    <string name="demo_blocked_real_underway">An itinerary is underway. End it to turn on demo mode.</string>
+    <string name="demo_blocked_real_underway">End your current itinerary first.</string>
     <string name="demo_error">Couldn’t do that.</string>
 
     <!-- Planning: engine messages -->

@@ -447,7 +447,7 @@
     <string name="demo_exit">Quitter le mode démo</string>
     <string name="demo_exit_body">L’itinéraire se terminera. Vos timbres seront conservés.</string>
     <string name="demo_exit_confirm">Quitter</string>
-    <string name="demo_blocked_real_underway">Un itinéraire est en cours. Terminez-le pour activer le mode démo.</string>
+    <string name="demo_blocked_real_underway">Terminez d’abord l’itinéraire en cours.</string>
     <string name="demo_error">Action impossible.</string>
 
     <!-- Planning: engine messages -->
