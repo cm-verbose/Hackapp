@@ -146,6 +146,7 @@ fun PassportPage(
                         gravityLocked = gravityLocked,
                         onGravityLockedChange = onGravityLockedChange,
                         onOpen = { openKey = it },
+                        onShare = actions.onShare,
                         onShowAll = { showAll = true },
                         dragOnSwipe = !scrolls,
                         modifier = if (scrolls) Modifier.fillMaxWidth().height(ScrollingFieldHeight) else rest,
@@ -183,6 +184,7 @@ private fun StampField(
     gravityLocked: Boolean,
     onGravityLockedChange: (Boolean) -> Unit,
     onOpen: (String) -> Unit,
+    onShare: (String) -> Unit,
     onShowAll: () -> Unit,
     dragOnSwipe: Boolean,
     modifier: Modifier = Modifier,
@@ -249,6 +251,8 @@ private fun StampField(
                     itemScale = layout.scale,
                     dragOnSwipe = dragOnSwipe,
                     onItemClick = { onOpen(it.key as String) },
+                    // Press and hold a Stamp to flick it to a friend.
+                    onItemLongPress = { onShare(it.key as String) },
                 )
                 GravityLockButton(
                     locked = gravityLocked,

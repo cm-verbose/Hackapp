@@ -13,7 +13,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalContext
@@ -173,6 +173,7 @@ class SandboxSharing(
  *   scrolls and must keep swipes for itself.
  * @param sharing Null keeps every object on this device: a fast flick simply bounces.
  * @param onItemClick Called when an object is tapped.
+ * @param onItemLongPress Called when one of this screen's own objects is held still for a long press.
  */
 @Composable
 fun PhysicsScreen(
@@ -184,12 +185,14 @@ fun PhysicsScreen(
     dragOnSwipe: Boolean = true,
     sharing: SandboxSharing? = null,
     onItemClick: (SandboxItem) -> Unit = {},
+    onItemLongPress: ((SandboxItem) -> Unit)? = null,
 ) {
     val tilt by rememberTiltState(enabled = !gravityLocked)
     // Read from inside the long-running simulation loop without restarting it.
     val isGravityLocked by rememberUpdatedState(gravityLocked)
     val currentSharing by rememberUpdatedState(sharing)
     val currentOnItemClick by rememberUpdatedState(onItemClick)
+    val currentOnItemLongPress by rememberUpdatedState(onItemLongPress)
     val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -333,10 +336,31 @@ fun PhysicsScreen(
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         downPosition[0] = down.position
-                        val up = waitForUpOrCancellation() ?: return@awaitEachGesture
-                        val quick = up.uptimeMillis - down.uptimeMillis < viewConfiguration.longPressTimeoutMillis
-                        val still = (up.position - down.position).getDistance() < viewConfiguration.touchSlop
-                        if (quick && still) sandbox.itemAt(up.position)?.let { currentOnItemClick(it.spec) }
+                        var moved = false
+                        var cancelled = false
+                        // Up before the long-press timeout is a tap; still held after it is a long press.
+                        val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                            while (true) {
+                                val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id }
+                                if (change == null) {
+                                    cancelled = true
+                                    return@withTimeoutOrNull null
+                                }
+                                if (change.changedToUpIgnoreConsumed()) return@withTimeoutOrNull change
+                                if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) moved = true
+                            }
+                            @Suppress("UNREACHABLE_CODE") null
+                        }
+                        if (cancelled || moved) return@awaitEachGesture
+                        if (up != null) {
+                            sandbox.itemAt(up.position)?.let { currentOnItemClick(it.spec) }
+                        } else {
+                            val onLong = currentOnItemLongPress ?: return@awaitEachGesture
+                            sandbox.itemAt(down.position)?.takeIf { it.isOwn }?.let {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onLong(it.spec)
+                            }
+                        }
                     }
                 }
                 .pointerInput(grabber, sandbox, dragOnSwipe) {
