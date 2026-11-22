@@ -140,6 +140,12 @@
     <string name="budget_under_50">&lt; $50</string>
     <string name="budget_under_100">&lt; $100</string>
     <string name="budget_100_plus">$100+</string>
+    <string name="budget_lunch">Lunch (Meal 1)</string>
+    <string name="budget_dinner">Dinner (Meal 2)</string>
+    <string name="budget_events">Events (total)</string>
+    <string name="budget_late_night">Late-night snack</string>
+    <string name="budget_late_night_description">Optional. Add a budget for a late bite.</string>
+    <string name="onboarding_save_error">Couldn’t save your profile. Try again.</string>
     <string name="audience_title">Audience</string>
     <string name="audience_adults_only">18+ only</string>
     <string name="audience_family_friendly">Family-friendly</string>
