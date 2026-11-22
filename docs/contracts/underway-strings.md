@@ -29,14 +29,17 @@ Time arguments: sentences and notification titles use `19 h 15` in French and `1
 |---|---|---|---|
 | `underway_skip_title` | Sauter %1$s? | Skip %1$s? | Skip confirmation title (`%1$s` = Stop name) |
 | `underway_skip_confirm` | Sauter | Skip | Skip confirmation button |
+| `underway_skip_body` | Il ne donnera pas de timbre. | It won’t earn a stamp. | Skip confirmation body |
+| `underway_more_options` | Plus d’options | More options | Overflow menu accessibility label |
+| `underway_last_stop` | Dernier arrêt | Last stop | Label on the last Stop |#; s#^| Skip confirmation | .*#| Skip confirmation | `underway_skip_title`, `underway_skip_body`, `underway_skip_confirm`, `action_cancel` |#
 | `underway_end_early_title` | Terminer l’itinéraire? | End itinerary? | End-early dialog title |
 | `underway_end_early_body` | Les arrêts restants seront marqués comme sautés. | Remaining stops will be marked as skipped. | End-early dialog body |
 | `end_of_day_status_visited` | Visité | Visited | Result label, Stop attended with a Stamp or not |
 | `end_of_day_too_brief` | Trop bref pour un timbre | Too brief for a stamp | Result label, visited under 20% |
 | `end_of_day_stamp_new` | Nouveau timbre | New stamp | Stamp result, Stamp earned |
 | `arrival_change_transport` | Changer de transport | Change transport | Arrival action, returns to the Leg |
-| `underway_notifications_off` | Notifications désactivées. Vous manquerez vos rappels. | Notifications are off. You will miss your reminders. | Banner, once per Itinerary |
-| `underway_notifications_open_settings` | Ouvrir les paramètres | Open settings | Banner action |
+| `underway_notifications_off` | Notifications désactivées | Notifications off | Banner title, once per Itinerary |
+| `underway_notifications_open_settings` | Réglages | Settings | Banner action |
 | `underway_banner_dismiss` | Fermer | Dismiss | Banner close icon description |
 | `underway_exact_alarm_rationale` | Autorisez les alarmes précises pour recevoir vos rappels à l’heure. | Allow exact alarms so reminders arrive on time. | Exact-alarm request at Start |
 | `underway_exact_alarm_allow` | Autoriser | Allow | Exact-alarm request, accept |
