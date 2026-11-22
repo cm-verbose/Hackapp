@@ -109,3 +109,10 @@ Not given a key: `Loading` and `Saving` (use a progress indicator), the after-mi
 | `bar` | `venue_type_bar` |
 
 `venue_type_dessert` reads "Desserts" in both languages, as a category label.
+
+## Review fixes
+
+| Element | Key | Note |
+|---|---|---|
+| Planned Departure, `crossesMidnight` hint | `planned_departure_next_day` | "Le lendemain" / "Next day" |
+| Meal picker second tab while the borough name is unavailable | `meal_tab_next` | Fallback for `meal_tab_in_district` |

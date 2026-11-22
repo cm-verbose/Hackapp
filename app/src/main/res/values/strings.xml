@@ -184,6 +184,7 @@
     <string name="meal_picker_subtitle">%1$s · budget : %2$s</string>
     <string name="meal_tab_here">Ici</string>
     <string name="meal_tab_in_district">Dans %1$s</string>
+    <string name="meal_tab_next">Arrondissement suivant</string>
     <string name="meal_picker_walk">%1$d m · %2$d min à pied</string>
     <string name="meal_picker_price_unknown">Prix inconnu</string>
     <string name="venue_type_restaurant">Restaurant</string>
@@ -200,6 +201,7 @@
     <string name="planned_departure_subtitle">%1$s · %2$s · début %3$s</string>
     <string name="planned_departure_no_end">Aucune heure de fin publiée. Durée habituelle : %1$s.</string>
     <string name="planned_departure_duration">Durée : %1$s</string>
+    <string name="planned_departure_next_day">Le lendemain</string>
     <string name="planned_departure_error_outside_window">Partez au plus tard à %1$s.</string>
     <string name="planned_departure_error_not_after_start">Choisissez une heure après le début.</string>
     <!-- Event details sheet -->
