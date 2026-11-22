@@ -93,11 +93,6 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
             ItineraryShareScreen(
                 itineraryId = entry.toRoute<ShareItineraryRoute>().itineraryId,
                 onBack = { controller.popBackStack() },
-                onOpenReceived = { route ->
-                    controller.navigate(route) {
-                        popUpTo<ShareItineraryRoute> { inclusive = true }
-                    }
-                },
             )
         }
     }

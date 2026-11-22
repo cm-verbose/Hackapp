@@ -65,6 +65,7 @@ import com.example.hackapp.scaffold.sandbox.share.ShareOffer
 import com.example.hackapp.scaffold.sandbox.share.rememberNearbyShare
 import com.example.hackapp.scaffold.screens.itinerary.loadDistrictNames
 import com.example.hackapp.ui.components.HackappPrimaryButton
+import com.example.hackapp.ui.theme.HackappTheme
 import kotlinx.coroutines.CancellationException
 
 /** How long the rest of the screen takes to fade to the overlay colour. */
@@ -87,7 +88,7 @@ class FlickCard(
  * Itineraries screen's drafts). The screen fades to the "Day or night out" card colour
  * (primaryContainer) and the [cards] drop from where they were, pulled by the phone's tilt.
  * Swipe a card to move it; flick it toward a nearby phone to send a copy, as on the Share
- * Itinerary page. Itineraries thrown from a nearby phone can be received here too.
+ * Itinerary page. Itineraries thrown from a nearby phone land here too: tap one to open and save it.
  *
  * Place it over the whole screen. Hide the original cards while it is shown.
  */
@@ -95,7 +96,6 @@ class FlickCard(
 fun ItineraryFlickOverlay(
     cards: List<FlickCard>,
     onClose: () -> Unit,
-    onOpenReceived: (Any) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onClose)
@@ -121,7 +121,9 @@ fun ItineraryFlickOverlay(
     }
     val names by produceState(emptyMap<String, String>()) { value = loadDistrictNames(context, cityPack) }
     var status by remember { mutableStateOf<ShareStatus?>(null) }
-    var incoming by remember { mutableStateOf<Pair<SharedItinerary, String?>?>(null) }
+    val catches = remember { Catches<SharedItinerary>() }
+    var opened by remember { mutableStateOf<Any?>(null) }
+    val hero = HackappTheme.appColors.hero
 
     val fade = remember { Animatable(0f) }
     LaunchedEffect(Unit) { fade.animateTo(1f, tween(FADE_MILLIS)) }
@@ -215,11 +217,19 @@ fun ItineraryFlickOverlay(
                             },
                             onReceive = { _, _ -> },
                             payloadFor = { key -> payloads[key] },
-                            onPayload = { data, from ->
+                            // A thrown Itinerary flies in as it was thrown; tapping it opens it.
+                            receivedItem = { data, from ->
                                 val shared = decodeSharedItinerary(data)
-                                if (shared == null) status = ShareStatus.ReceiveFailed else incoming = shared to from?.let(::readableDeviceName)
+                                if (shared == null) {
+                                    status = ShareStatus.ReceiveFailed
+                                    null
+                                } else {
+                                    itineraryCardItem(catches.add(shared, from?.let(::readableDeviceName)), shared.itinerary, names, hero)
+                                }
                             },
+                            removedKeys = catches.removed,
                         ),
+                        onItemClick = { item -> if (item.key in catches.byKey) opened = item.key },
                     )
                 }
             }
@@ -242,14 +252,5 @@ fun ItineraryFlickOverlay(
         }
     }
 
-    incoming?.let { (shared, from) ->
-        IncomingItineraryDialog(
-            shared = shared,
-            fromName = from,
-            districtNames = names,
-            onDismiss = { incoming = null },
-            onStatus = { status = it },
-            onOpenReceived = onOpenReceived,
-        )
-    }
+    CaughtItineraryDialog(catches, opened, names, onClose = { opened = null }, onStatus = { status = it })
 }

@@ -409,6 +409,7 @@
     <string name="share_stamp_received_from">%1$s, from %2$s</string>
     <string name="share_stamp_keepsake_note">It goes to your received stamps, not your own.</string>
     <string name="share_stamp_keep">Keep</string>
+    <string name="share_stamp_saved">Added to your received stamps</string>
     <string name="share_offer_stamp">%1$s wants to send you a stamp</string>
     <string name="share_offer_itinerary">%1$s wants to send you an itinerary</string>
     <string name="share_offer_receive">Receive</string>
@@ -523,6 +524,7 @@
     <string name="share_no_target">No phone in that direction.</string>
     <string name="share_receive_error">This itinerary can’t be opened here.</string>
     <string name="share_save_error">Couldn’t save the itinerary. Try again.</string>
+    <string name="share_saved">Added to your itineraries</string>
     <plurals name="share_ready_to_send">
         <item quantity="one">%d phone ready. Flick the card toward it.</item>
         <item quantity="other">%d phones ready. Flick the card toward one.</item>

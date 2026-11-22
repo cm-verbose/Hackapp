@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.AlertDialog
@@ -48,17 +47,14 @@ import com.example.hackapp.itinerary.decodeSharedItinerary
 import com.example.hackapp.itinerary.importSharedItinerary
 import com.example.hackapp.itinerary.toSharePayload
 import com.example.hackapp.scaffold.sandbox.PhysicsScreen
-import com.example.hackapp.scaffold.sandbox.SandboxItem
 import com.example.hackapp.scaffold.sandbox.SandboxSharing
 import com.example.hackapp.scaffold.sandbox.ThrowOutcome
 import com.example.hackapp.scaffold.sandbox.share.ShareOffer
 import com.example.hackapp.scaffold.sandbox.share.rememberNearbyShare
 import com.example.hackapp.scaffold.screens.itinerary.itineraryTitle
 import com.example.hackapp.scaffold.screens.itinerary.loadDistrictNames
-import com.example.hackapp.scaffold.screens.itinerary.openRoute
 import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappTopBar
-import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -73,20 +69,18 @@ internal sealed interface ShareStatus {
     data object NoTarget : ShareStatus
     data object ReceiveFailed : ShareStatus
     data object SaveFailed : ShareStatus
+    data object Saved : ShareStatus
 }
 
 /**
- * Flick an Itinerary to a phone nearby, through the Passport's physics and Nearby code. Both phones
- * open this page: the sender from its Itinerary, the receiver from Home. The receiver gets a copy
- * and decides whether to add it. With [itineraryId] null, the page only receives.
- *
- * @param onOpenReceived opens the receiver's new copy, by its typed route.
+ * Flick an Itinerary to a phone nearby, through the Passport's physics and Nearby code. The
+ * receiver's card flies in as it was thrown; tapping it opens it, and Add saves a copy without
+ * leaving the page. With [itineraryId] null, the page only receives.
  */
 @Composable
 fun ItineraryShareScreen(
     itineraryId: String?,
     onBack: () -> Unit,
-    onOpenReceived: (Any) -> Unit,
 ) {
     val context = LocalContext.current
     val cityPack = LocalCityPack.current
@@ -105,24 +99,12 @@ fun ItineraryShareScreen(
     }
     val names by produceState(emptyMap<String, String>()) { value = loadDistrictNames(context, cityPack) }
     var status by remember { mutableStateOf<ShareStatus?>(null) }
-    var incoming by remember { mutableStateOf<Pair<SharedItinerary, String?>?>(null) }
+    val catches = remember { Catches<SharedItinerary>() }
+    var opened by remember { mutableStateOf<Any?>(null) }
     val payload = remember(own) { own?.toSharePayload() }
+    val hero = HackappTheme.appColors.hero
 
-    val ownItem = own?.let { itinerary ->
-        val title = itineraryTitle(itinerary.date, itinerary.districtIds.firstOrNull()?.let(names::get))
-        val stops = pluralStringResource(R.plurals.stops_count, itinerary.activeStops.size, itinerary.activeStops.size)
-        val colors = HackappTheme.appColors
-        SandboxItem(
-            key = OWN_KEY,
-            color = colors.hero,
-            shape = RoundedCornerShape(HackappCorners.Large),
-            width = 220.dp,
-            height = 140.dp,
-            restitution = 0.3f,
-        ) {
-            ShareToken(title, stops)
-        }
-    }
+    val ownItem = own?.let { itineraryCardItem(OWN_KEY, it, names, hero) }
     val items = listOfNotNull(ownItem.takeIf { payload != null })
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
@@ -163,11 +145,19 @@ fun ItineraryShareScreen(
                     },
                     onReceive = { _, _ -> },
                     payloadFor = { key -> payload.takeIf { key == OWN_KEY } },
-                    onPayload = { data, from ->
+                    // A thrown Itinerary flies in as it was thrown; tapping it opens it.
+                    receivedItem = { data, from ->
                         val shared = decodeSharedItinerary(data)
-                        if (shared == null) status = ShareStatus.ReceiveFailed else incoming = shared to from?.let(::readableDeviceName)
+                        if (shared == null) {
+                            status = ShareStatus.ReceiveFailed
+                            null
+                        } else {
+                            itineraryCardItem(catches.add(shared, from?.let(::readableDeviceName)), shared.itinerary, names, hero)
+                        }
                     },
+                    removedKeys = catches.removed,
                 ),
+                onItemClick = { item -> if (item.key in catches.byKey) opened = item.key },
             )
             if (share == null) {
                 HackappPrimaryButton(
@@ -184,21 +174,35 @@ fun ItineraryShareScreen(
         }
     }
 
-    incoming?.let { (shared, from) ->
-        IncomingItineraryDialog(
-            shared = shared,
-            fromName = from,
-            districtNames = names,
-            onDismiss = { incoming = null },
-            onStatus = { status = it },
-            onOpenReceived = onOpenReceived,
-        )
-    }
+    CaughtItineraryDialog(catches, opened, names, onClose = { opened = null }, onStatus = { status = it })
+}
+
+/** The caught Itinerary [key], opened: saving it takes it off the screen. */
+@Composable
+internal fun CaughtItineraryDialog(
+    catches: Catches<SharedItinerary>,
+    key: Any?,
+    districtNames: Map<String, String>,
+    onClose: () -> Unit,
+    onStatus: (ShareStatus) -> Unit,
+) {
+    val (shared, from) = key?.let { catches.byKey[it] } ?: return
+    IncomingItineraryDialog(
+        shared = shared,
+        fromName = from,
+        districtNames = districtNames,
+        onDismiss = onClose,
+        onStatus = onStatus,
+        onSaved = {
+            catches.saved(key)
+            onStatus(ShareStatus.Saved)
+        },
+    )
 }
 
 /**
- * Asks whether to keep an Itinerary received from [fromName]. Adding saves the person's own copy
- * and opens it; a failure is reported through [onStatus].
+ * A received Itinerary, opened: its title and Stops, and whether to keep it. Adding saves the
+ * person's own copy; a failure is reported through [onStatus].
  */
 @Composable
 internal fun IncomingItineraryDialog(
@@ -207,7 +211,7 @@ internal fun IncomingItineraryDialog(
     districtNames: Map<String, String>,
     onDismiss: () -> Unit,
     onStatus: (ShareStatus) -> Unit,
-    onOpenReceived: (Any) -> Unit,
+    onSaved: () -> Unit,
 ) {
     val cityPack = LocalCityPack.current
     val uid = LocalAuthService.current.currentUser?.uid
@@ -221,7 +225,14 @@ internal fun IncomingItineraryDialog(
                 if (fromName != null) stringResource(R.string.share_received_from, fromName) else stringResource(R.string.share_received),
             )
         },
-        text = { Text(itineraryTitle(itinerary.date, itinerary.districtIds.firstOrNull()?.let(districtNames::get))) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(itineraryTitle(itinerary.date, itinerary.districtIds.firstOrNull()?.let(districtNames::get)))
+                itinerary.activeStops.forEach { stop ->
+                    Text(stop.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        },
         confirmButton = {
             TextButton(onClick = {
                 onDismiss()
@@ -234,7 +245,7 @@ internal fun IncomingItineraryDialog(
                     }
                     try {
                         itineraries.saveItinerary(copy)
-                        onOpenReceived(copy.openRoute())
+                        onSaved()
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {
@@ -251,7 +262,7 @@ internal fun IncomingItineraryDialog(
 
 /** The thrown card: the Itinerary title and its number of Stops. */
 @Composable
-private fun ShareToken(title: String, stops: String) {
+internal fun ShareToken(title: String, stops: String) {
     val colors = HackappTheme.appColors
     Column(
         Modifier.fillMaxSize().padding(16.dp),
@@ -279,6 +290,7 @@ internal fun statusText(status: ShareStatus): String = when (status) {
     ShareStatus.NoTarget -> stringResource(R.string.share_no_target)
     ShareStatus.ReceiveFailed -> stringResource(R.string.share_receive_error)
     ShareStatus.SaveFailed -> stringResource(R.string.share_save_error)
+    ShareStatus.Saved -> stringResource(R.string.share_saved)
 }
 
 /** Nearby names are "<model> #abcd"; the suffix only keeps names unique. */

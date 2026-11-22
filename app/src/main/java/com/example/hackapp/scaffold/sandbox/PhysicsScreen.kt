@@ -154,6 +154,13 @@ class SandboxSharing(
     val payloadFor: (key: Any) -> String? = { null },
     /** Called with the data of every received throw that carried any. */
     val onPayload: (payload: String, fromName: String?) -> Unit = { _, _ -> },
+    /**
+     * Builds the object a received throw carries, from its data, so it flies in as sent. Give each
+     * one a new key. Null falls back to this screen's item at the sender's index.
+     */
+    val receivedItem: (payload: String, fromName: String?) -> SandboxItem? = { _, _ -> null },
+    /** Received objects to take away, by key, such as ones already saved. */
+    val removedKeys: Set<Any> = emptySet(),
 )
 
 /**
@@ -297,12 +304,15 @@ fun PhysicsScreen(
         if (channel != null) {
             LaunchedEffect(channel, sandbox) {
                 channel.incomingThrows.collect { incoming ->
-                    val spec = sandbox.receive(incoming.message, orientation.rotationMatrix, grabber.grabbed)
+                    val built = incoming.message.payload?.let { currentSharing?.receivedItem?.invoke(it, incoming.fromName) }
+                    val spec = sandbox.receive(incoming.message, orientation.rotationMatrix, grabber.grabbed, built)
                     shareHaptics.received()
                     currentSharing?.onReceive?.invoke(spec, incoming.fromName)
                     incoming.message.payload?.let { currentSharing?.onPayload?.invoke(it, incoming.fromName) }
                 }
             }
+            val removed = sharing?.removedKeys.orEmpty()
+            LaunchedEffect(sandbox, removed) { sandbox.removeReceived(removed) }
             LaunchedEffect(channel, lifecycle) {
                 lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     while (true) {

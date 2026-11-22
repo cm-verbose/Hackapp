@@ -113,10 +113,6 @@ fun ScreenItinerary(
                     }
                 },
                 onClose = { sharingFrom = null },
-                onOpenReceived = {
-                    sharingFrom = null
-                    onOpenItinerary(it)
-                },
             )
         } else if (from != null) {
             // The drafts are gone (deleted or started): nothing left to share.

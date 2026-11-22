@@ -60,9 +60,9 @@ import java.util.UUID
 private const val STAMP_KEY = "own-stamp"
 
 /**
- * Flick a Stamp, with its photo, to a phone nearby. The friend keeps it as a keepsake: it is shown
- * apart in their Passport and never counts as one of their Stamps. With [stampKey] null the page
- * only receives.
+ * Flick a Stamp, with its photo, to a phone nearby. On the friend's phone it flies in as it was
+ * thrown; tapping it opens it, and Keep adds it as a keepsake: shown apart in their Passport and
+ * never counted as one of their Stamps. With [stampKey] null the page only receives.
  */
 @Composable
 fun StampShareScreen(stampKey: String?, onBack: () -> Unit) {
@@ -87,11 +87,13 @@ fun StampShareScreen(stampKey: String?, onBack: () -> Unit) {
     val ownPhoto = remember(own) { own?.second?.let(::decodePhoto) }
     val payload = remember(own) { own?.let { (stamp, photo) -> stamp.toSharedPayload(photo) } }
     var status by remember { mutableStateOf<String?>(null) }
-    var incoming by remember { mutableStateOf<Pair<SharedStamp, String?>?>(null) }
+    val catches = remember { Catches<SharedStamp>() }
+    var opened by remember { mutableStateOf<Any?>(null) }
     val sentText = stringResource(R.string.share_sent)
     val noPeersText = stringResource(R.string.share_no_peers)
     val noTargetText = stringResource(R.string.share_no_target)
     val receiveErrorText = stringResource(R.string.share_receive_error)
+    val savedText = stringResource(R.string.share_stamp_saved)
 
     val colors = HackappTheme.stopTypeColors
     val items = own?.let { (stamp, _) ->
@@ -146,20 +148,40 @@ fun StampShareScreen(stampKey: String?, onBack: () -> Unit) {
                     },
                     onReceive = { _, _ -> },
                     payloadFor = { key -> payload.takeIf { key == STAMP_KEY } },
-                    onPayload = { data, from ->
+                    // A thrown Stamp flies in as it was thrown; tapping it opens it.
+                    receivedItem = { data, from ->
                         val shared = decodeSharedStamp(data)
-                        if (shared == null) status = receiveErrorText else incoming = shared to from?.let(::readableDeviceName)
+                        if (shared == null) {
+                            status = receiveErrorText
+                            null
+                        } else {
+                            val key = catches.add(shared, from?.let(::readableDeviceName))
+                            val disc = colors[stampStopType(shared.kind, shared.category)]
+                            val photo = shared.photo?.let(::decodePhoto)
+                            SandboxItem(key = key, color = disc, shape = CircleShape, width = 160.dp, height = 160.dp, restitution = 0.4f) {
+                                StampDisc(
+                                    initials = stampInitials(shared.name),
+                                    discColor = disc,
+                                    inkColor = colors.onStopType,
+                                    photo = photo,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
                     },
+                    removedKeys = catches.removed,
                 ),
+                onItemClick = { item -> if (item.key in catches.byKey) opened = item.key },
             )
         }
     }
 
-    incoming?.let { (shared, from) ->
+    val openedKey = opened
+    openedKey?.let { catches.byKey[it] }?.let { (shared, from) ->
         val photo = remember(shared) { shared.photo?.let(::decodePhoto) }
         val disc = colors[stampStopType(shared.kind, shared.category)]
         AlertDialog(
-            onDismissRequest = { incoming = null },
+            onDismissRequest = { opened = null },
             icon = {
                 StampDisc(
                     initials = stampInitials(shared.name),
@@ -178,7 +200,7 @@ fun StampShareScreen(stampKey: String?, onBack: () -> Unit) {
             text = { Text(stringResource(R.string.share_stamp_keepsake_note)) },
             confirmButton = {
                 TextButton(onClick = {
-                    incoming = null
+                    opened = null
                     val owner = uid ?: return@TextButton
                     if (shared.cityId != cityPack.id) {
                         status = receiveErrorText
@@ -201,12 +223,13 @@ fun StampShareScreen(stampKey: String?, onBack: () -> Unit) {
                                 photo = shared.photo,
                             ),
                         )
-                        onBack()
+                        catches.saved(openedKey)
+                        status = savedText
                     }
                 }) { Text(stringResource(R.string.share_stamp_keep)) }
             },
             dismissButton = {
-                TextButton(onClick = { incoming = null }) { Text(stringResource(R.string.share_decline)) }
+                TextButton(onClick = { opened = null }) { Text(stringResource(R.string.share_decline)) }
             },
         )
     }

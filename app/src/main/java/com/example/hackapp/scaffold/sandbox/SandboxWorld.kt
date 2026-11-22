@@ -571,8 +571,10 @@ class SandboxWorld(
         message: ShareMessage.Throw,
         rotation: FloatArray?,
         heldShape: PhysicalShape?,
+        /** The object to catch, built from the throw's payload; else this world's item at the same index. */
+        built: SandboxItem? = null,
     ): SandboxItem? {
-        val spec = specs.getOrNull(message.itemIndex) ?: return null
+        val spec = built ?: specs.getOrNull(message.itemIndex) ?: return null
 
         // Without a compass on either side, shapes drop in from the top.
         val (dx, dy) = message.bearing
@@ -619,6 +621,12 @@ class SandboxWorld(
         val item = CreatedPhysicsItem(nextId++, spec, shape, isOwn, popIn)
         if (itemScale != 1f) applyScale(item, itemScale)
         items += item
+    }
+
+    /** Takes received objects with these keys out of the world, such as one the person saved. */
+    fun removeReceived(keys: Set<Any>) {
+        if (keys.isEmpty()) return
+        items.filter { !it.isOwn && it.spec.key in keys }.forEach(::remove)
     }
 
     private fun remove(item: CreatedPhysicsItem) {

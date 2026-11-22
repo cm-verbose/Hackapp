@@ -143,10 +143,6 @@ fun ScreenHome(
                     },
                 ),
                 onClose = { sharingFrom = null },
-                onOpenReceived = {
-                    sharingFrom = null
-                    onOpenItinerary(it)
-                },
             )
         } else if (from != null) {
             // The Itinerary is no longer underway: nothing left to share.

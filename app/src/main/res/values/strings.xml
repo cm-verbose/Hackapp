@@ -417,6 +417,7 @@
     <string name="share_stamp_received_from">%1$s, de %2$s</string>
     <string name="share_stamp_keepsake_note">Il s’ajoute à vos timbres reçus, pas à vos timbres.</string>
     <string name="share_stamp_keep">Garder</string>
+    <string name="share_stamp_saved">Ajouté à vos timbres reçus</string>
     <string name="share_offer_stamp">%1$s veut vous envoyer un timbre</string>
     <string name="share_offer_itinerary">%1$s veut vous envoyer un itinéraire</string>
     <string name="share_offer_receive">Recevoir</string>
@@ -535,6 +536,7 @@
     <string name="share_no_target">Aucun téléphone dans cette direction.</string>
     <string name="share_receive_error">Impossible d’ouvrir cet itinéraire ici.</string>
     <string name="share_save_error">Impossible d’enregistrer l’itinéraire. Réessayez.</string>
+    <string name="share_saved">Ajouté à vos itinéraires</string>
     <plurals name="share_ready_to_send">
         <item quantity="one">%d téléphone prêt. Lancez la carte vers lui.</item>
         <item quantity="other">%d téléphones prêts. Lancez la carte vers l’un d’eux.</item>
