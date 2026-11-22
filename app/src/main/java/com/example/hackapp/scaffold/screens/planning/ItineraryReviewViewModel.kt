@@ -99,6 +99,8 @@ data class RescheduleStep(
     /** 0-based. */
     val index: Int,
     val total: Int,
+    /** Every affected Stop that Réorganiser would remove, including ones already rescheduled. */
+    val affected: List<Stop> = emptyList(),
 )
 
 sealed interface ReviewNavigation {
@@ -411,7 +413,7 @@ class ItineraryReviewHolder(
                 hasPublishedEnd = it.suggestedDeparture.hasPublishedEnd,
             )
         }
-        return RescheduleStep(stop, options, index, queue.size)
+        return RescheduleStep(stop, options, index, queue.size, affected = queue)
     }
 
     private fun failed() = _state.update { it.copy(busy = false, actionFailed = true) }
