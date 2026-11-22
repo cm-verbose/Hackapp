@@ -22,6 +22,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -34,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.example.hackapp.R
 import com.example.hackapp.citypack.DistrictMapData
 import com.example.hackapp.components.DistrictEventCount
 import com.example.hackapp.ui.theme.HackappTheme
@@ -111,9 +114,9 @@ fun DistrictPickMap(
             districts.mapNotNull { d ->
                 val marker = markers[d.id]?.takeIf { it.showLabel } ?: return@mapNotNull null
                 val text = buildString {
-                    marker.order?.let { append(it).append(" · ") }
+                    marker.order?.let { append(it).append("\u00a0· ") }
                     append(breakableName(d.shape.name))
-                    if (marker.count > 0) append(" · ").append(marker.count)
+                    if (marker.count > 0) append("\u00a0· ").append(marker.count)
                 }
                 val layout = measurer.measure(
                     text = text,
@@ -158,10 +161,12 @@ fun DistrictPickMap(
         val districtNames = remember(districts) { districts.associate { it.id to it.shape.name } }
         // Pinned markers come last, so they draw on top.
         shown.sortedBy { it.second.pinned }.forEach { (placed, label) ->
-            if (label.id !in visible) return@forEach
+            val marker = placed.marker
+            // A marker hidden by overlap keeps an invisible node, so TalkBack can still reach the District.
+            val hidden = label.id !in visible
+            if (hidden && !marker.pickable) return@forEach
             key(label.id) {
-                val marker = placed.marker
-                val showsName = showNames
+                val showsName = showNames && !hidden
                 val background = when {
                     marker.order != null -> cs.secondaryContainer
                     marker.previewed -> cs.primary
@@ -175,6 +180,11 @@ fun DistrictPickMap(
                 }
                 val halo = if (label.pinned) null else Shadow(cs.surface, blurRadius = 6f)
                 val name = districtNames[label.id].orEmpty()
+                val description = when {
+                    marker.order != null -> pluralStringResource(R.plurals.map_district_selected, marker.count, name, marker.order, marker.count)
+                    !marker.pickable -> stringResource(R.string.map_district_unavailable, name)
+                    else -> pluralStringResource(R.plurals.map_district_description, marker.count, name, marker.count)
+                }
                 Box(
                     Modifier
                         .offset {
@@ -194,7 +204,7 @@ fun DistrictPickMap(
                                 },
                         )
                         .clearAndSetSemantics {
-                            contentDescription = name
+                            contentDescription = description
                             if (marker.pickable) {
                                 onClick {
                                     onDistrictTap(label.id)
@@ -203,7 +213,7 @@ fun DistrictPickMap(
                             }
                         },
                 ) {
-                    if (!showsName) {
+                    if (!showsName && !hidden) {
                         if (marker.order != null) {
                             DistrictEventCount(
                                 result = marker.order,

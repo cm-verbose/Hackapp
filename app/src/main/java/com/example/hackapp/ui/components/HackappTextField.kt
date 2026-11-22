@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -59,7 +64,7 @@ fun HackappTextField(
         trailingIcon = if (value.isNotEmpty() && enabled) {
             {
                 IconButton(onClick = { onValueChange("") }) {
-                    Icon(Icons.Outlined.Cancel, contentDescription = stringResource(R.string.action_clear))
+                    Icon(Icons.Outlined.Cancel, contentDescription = stringResource(R.string.action_clear_field, label))
                 }
             }
         } else {
@@ -69,7 +74,11 @@ fun HackappTextField(
     )
 }
 
-/** A read-only field that opens a picker when tapped (date, time, budget, District). */
+/**
+ * A read-only field that opens a picker when tapped (date, time, budget, District).
+ * TalkBack sees one button named [label] whose state is [value]; the field itself is silent.
+ * [choiceList] adds the drop-down arrow for pickers that open a list of options.
+ */
 @Composable
 fun HackappPickerField(
     value: String,
@@ -77,6 +86,7 @@ fun HackappPickerField(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    choiceList: Boolean = false,
 ) {
     Box(modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -86,12 +96,23 @@ fun HackappPickerField(
             readOnly = true,
             singleLine = true,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = if (choiceList) {
+                { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) }
+            } else {
+                null
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clearAndSetSemantics {},
         )
         Box(
             Modifier
                 .matchParentSize()
-                .clickable(enabled = enabled, role = Role.DropdownList, onClickLabel = label, onClick = onClick),
+                .semantics {
+                    contentDescription = label
+                    if (value.isNotBlank()) stateDescription = value
+                }
+                .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         )
     }
 }
@@ -106,5 +127,6 @@ private fun HackappTextFieldPreview() = HackappTheme {
         HackappTextField("nikola@exemple.ca", {}, stringResource(R.string.auth_email), keyboardType = KeyboardType.Email)
         HackappTextField("secret", {}, stringResource(R.string.auth_password), isPassword = true)
         HackappPickerField("sam. 28 nov. 2026", stringResource(R.string.planning_date), {})
+        HackappPickerField("Ville-Marie", stringResource(R.string.profile_district_of_stay), {}, choiceList = true)
     }
 }

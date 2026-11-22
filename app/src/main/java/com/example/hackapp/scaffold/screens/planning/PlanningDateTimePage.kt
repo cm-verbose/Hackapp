@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappSegmentedButton
 import com.example.hackapp.ui.components.HackappTimeField
 import com.example.hackapp.ui.components.LoadingState
+import com.example.hackapp.ui.components.formatSentenceTime
 import com.example.hackapp.ui.theme.HackappTheme
 import java.time.LocalDate
 import java.time.LocalTime
@@ -104,7 +106,6 @@ fun PlanningDateTimePage(
             state.loading -> LoadingState()
             state.loadFailed -> ErrorState(onRetry = onRetry)
             else -> {
-                Text(stringResource(R.string.planning_when_title), style = MaterialTheme.typography.headlineSmall)
                 HackappDateField(
                     value = state.date,
                     onValueChange = onDateChange,
@@ -126,12 +127,12 @@ fun PlanningDateTimePage(
                 }
                 state.windowError?.let { error ->
                     Text(
-                        stringResource(
-                            when (error) {
-                                TimeWindowError.TooShort -> R.string.planning_error_min_duration
-                                TimeWindowError.EndsTooLate -> R.string.planning_error_latest_end
-                            },
-                        ),
+                        when (error) {
+                            TimeWindowError.TooShort -> stringResource(R.string.planning_error_min_duration)
+                            TimeWindowError.EndOutOfRange ->
+                                stringResource(R.string.planning_error_end_range, formatSentenceTime(earliestEnd(state.start), LocalConfiguration.current.locales[0]))
+                            TimeWindowError.StartsTooLate -> stringResource(R.string.planning_error_start_latest)
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -141,6 +142,7 @@ fun PlanningDateTimePage(
     }
 }
 
+/** A time inside a sentence: `20 h` / `20 h 30` in French, `20:00` / `20:30` in English. */
 private val PreviewCoverage = EventCoverage(LocalDate.of(2026, 11, 21), LocalDate.of(2026, 12, 6))
 
 @Composable

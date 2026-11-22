@@ -98,16 +98,6 @@ fun PlanningBudgetChoicePage(
             state.loading -> LoadingState()
             state.loadFailed -> ErrorState(onRetry = onRetry)
             else -> {
-                Text(
-                    stringResource(R.string.planning_budget_question),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    stringResource(R.string.planning_budget_current),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
                 CurrentBudgetCard(state.selection)
             }
         }
@@ -122,6 +112,11 @@ private fun CurrentBudgetCard(selection: BudgetSelection) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                stringResource(R.string.budget_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             BudgetValueRow(stringResource(R.string.budget_lunch), bracketText(selection.lunch))
             BudgetValueRow(stringResource(R.string.budget_dinner), bracketText(selection.dinner))
             BudgetValueRow(stringResource(R.string.budget_events), bracketText(selection.events))
@@ -210,12 +205,7 @@ fun PlanningBudgetEditPage(
             state.loadFailed -> ErrorState(onRetry = onRetry)
             else -> {
                 Text(
-                    stringResource(R.string.planning_budget_edit_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    stringResource(R.string.planning_budget_edit_note),
+                    stringResource(R.string.planning_budget_edit_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

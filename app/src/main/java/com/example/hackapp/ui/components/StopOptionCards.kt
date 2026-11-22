@@ -68,11 +68,10 @@ fun EventOptionCard(
     val parts = buildList {
         add(time)
         add(price.text())
-        if (endTime == null) add(stringResource(R.string.end_time_unpublished))
     }
     HorizontalInfoCard(
         title = title,
-        subtitle = parts.joinToString(" · "),
+        subtitle = parts.joinToString("\u00a0· "),
         selected = selected,
         onClick = onClick,
         modifier = modifier,
@@ -91,7 +90,7 @@ fun MealOptionCard(
 ) {
     HorizontalInfoCard(
         title = name,
-        subtitle = "$details · ${price.text()}",
+        subtitle = "$details\u00a0· ${price.text()}",
         selected = selected,
         onClick = onClick,
         modifier = modifier,

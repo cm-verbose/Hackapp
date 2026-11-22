@@ -132,8 +132,8 @@ fun HomePage(
         (content as? LoadState.Ready)?.value?.underway?.let { underway ->
             UnderwayItineraryCard(
                 itineraryName = itineraryTitle(underway.date, underway.districtName),
-                nextStop = if (underway.nextStopTime != null && underway.nextStopName != null) {
-                    stringResource(R.string.home_next_stop, underway.nextStopTime, underway.nextStopName)
+                nextStop = if (underway.nextStopName != null) {
+                    stringResource(R.string.home_next_stop, underway.nextStopName)
                 } else {
                     ""
                 },
@@ -146,10 +146,8 @@ fun HomePage(
         if (state.suggestions.isNotEmpty()) {
             ItinerarySuggestionsCard(
                 suggestions = state.suggestions.map { ItinerarySuggestion(it.icon, it.title) },
-                onSuggestionClick = { onPlanItinerary() },
                 modifier = Modifier.fillMaxWidth(),
             )
-            DataAttribution()
         }
         when (content) {
             LoadState.Loading -> LoadingState()
@@ -161,6 +159,7 @@ fun HomePage(
                 }
             }
         }
+        if (state.suggestions.isNotEmpty() || (content as? LoadState.Ready)?.value?.underway != null) DataAttribution()
     }
 }
 
@@ -175,7 +174,6 @@ private val PreviewHomeState = HomeUiState(
             underway = UnderwayUi(
                 date = LocalDate.of(2026, 11, 28),
                 districtName = "Le Plateau",
-                nextStopTime = "19:30",
                 nextStopName = "Bistro du coin",
                 strip = listOf(StripStop("18:30", StopType.Music), StripStop("19:30", StopType.Meal)),
                 currentIndex = 1,

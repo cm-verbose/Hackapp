@@ -17,8 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.hackapp.R
 import com.example.hackapp.ui.theme.HackappTheme
 import com.example.hackapp.ui.theme.StopType
 
@@ -31,14 +35,14 @@ private val OtherDot = 14.dp
 
 /**
  * Figma "ItineraryStrip" (38:1027): the Stops of the Underway Itinerary as dots coloured by
- * StopType, joined by outline-variant lines. The Stop at [currentIndex] (default: first) is
- * larger and outlined.
+ * StopType, joined by outline-variant lines. The Stop at [currentIndex] is
+ * larger and outlined; null highlights none.
  */
 @Composable
 fun ItineraryStrip(
     stops: List<StripStop>,
     modifier: Modifier = Modifier,
-    currentIndex: Int = 0,
+    currentIndex: Int? = null,
 ) {
     val colors = HackappTheme.stopTypeColors
     val scheme = MaterialTheme.colorScheme
@@ -53,9 +57,18 @@ fun ItineraryStrip(
                         .background(scheme.outlineVariant),
                 )
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val current = i == currentIndex
+            val description = stringResource(
+                if (current) R.string.strip_stop_current else R.string.strip_stop,
+                stop.time,
+                stopTypeLabel(stop.type),
+            )
+            Column(
+                Modifier.clearAndSetSemantics { contentDescription = description },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Box(Modifier.size(CurrentDot), contentAlignment = Alignment.Center) {
-                    val current = i == currentIndex
                     Box(
                         Modifier
                             .size(if (current) CurrentDot else OtherDot)

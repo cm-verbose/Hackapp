@@ -13,9 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.hackapp.ui.theme.HackappTheme
 
 /**
@@ -34,6 +36,8 @@ fun DistrictEventCount(
     modifier: Modifier = Modifier,
     textColor: Color = MaterialTheme.colorScheme.onPrimary,
 ) {
+    // The text is a fraction of the badge in dp, not sp, so font scaling never pushes "99+" out of the disc.
+    val fontSize = with(LocalDensity.current) { (badgeSize * 0.44f).toSp() }
     Box(
         modifier
             .size(badgeSize)
@@ -42,7 +46,7 @@ fun DistrictEventCount(
     ) {
         Text(
             text = if (result > 99) "99+" else result.toString(),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelLarge.copy(fontSize = fontSize, lineHeight = fontSize, letterSpacing = 0.sp),
             color = textColor,
             maxLines = 1,
             softWrap = false,
@@ -63,6 +67,7 @@ private fun DistrictEventCountStatesPreview() = HackappTheme {
         DistrictEventCount(result = 8)
         DistrictEventCount(result = 22)
         DistrictEventCount(result = 140)
+        DistrictEventCount(result = 140, badgeSize = 24.dp)
         DistrictEventCount(result = 0, badgeColor = MaterialTheme.colorScheme.outline)
     }
 }

@@ -4,11 +4,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -57,15 +66,29 @@ fun ColumnScope.BudgetFields(
     ) {
         Column(Modifier.weight(1f)) {
             BudgetTitle(stringResource(R.string.budget_late_night))
-            Text(
-                stringResource(R.string.budget_late_night_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
         Switch(checked = lateNightEnabled, onCheckedChange = null)
     }
-    if (lateNightEnabled) SingleChoiceChips(brackets, lateNight, onLateNightChange, allowDeselect = true)
+    // Turning the switch on reveals chips below the fold: scroll them into view once laid out.
+    var wasEnabled by remember { mutableStateOf(lateNightEnabled) }
+    val turnedOn = lateNightEnabled && !wasEnabled
+    SideEffect { wasEnabled = lateNightEnabled }
+    if (lateNightEnabled) {
+        val requester = remember { BringIntoViewRequester() }
+        LaunchedEffect(Unit) {
+            if (turnedOn) {
+                withFrameNanos {}
+                requester.bringIntoView()
+            }
+        }
+        SingleChoiceChips(
+            brackets,
+            lateNight,
+            onLateNightChange,
+            modifier = Modifier.bringIntoViewRequester(requester),
+            allowDeselect = true,
+        )
+    }
 }
 
 @Composable

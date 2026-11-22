@@ -65,7 +65,7 @@ data class CityPack(
 
 val MontrealCityPack = CityPack(
     id = "mtl",
-    displayName = LocalizedText(fr = "Montréal", en = "Montréal"),
+    displayName = LocalizedText(fr = "Montréal", en = "Montreal"),
     timeZone = ZoneId.of("America/Toronto"),
     defaultLocale = Locale.CANADA_FRENCH,
     districtMapAsset = "citypacks/mtl/districts.json",
@@ -78,7 +78,7 @@ val MontrealCityPack = CityPack(
     ),
     rideHail = RideHailConfig(displayName = "Uber", packageName = "com.ubercab"),
     attribution = LocalizedText(
-        fr = "Données : Has Things (hasthings.com), Ville de Montréal, © contributeurs OpenStreetMap",
+        fr = "Données\u00A0: Has Things (hasthings.com), Ville de Montréal, © les contributeurs d’OpenStreetMap",
         en = "Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors",
     ),
     labels = mapOf(

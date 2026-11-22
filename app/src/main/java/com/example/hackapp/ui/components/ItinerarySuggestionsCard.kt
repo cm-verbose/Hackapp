@@ -1,7 +1,6 @@
 package com.example.hackapp.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,6 @@ data class ItinerarySuggestion(val icon: HackappIcon, val title: String)
 @Composable
 fun ItinerarySuggestionsCard(
     suggestions: List<ItinerarySuggestion>,
-    onSuggestionClick: (ItinerarySuggestion) -> Unit,
     modifier: Modifier = Modifier,
     label: String = stringResource(R.string.home_suggestions),
 ) {
@@ -44,14 +42,12 @@ fun ItinerarySuggestionsCard(
         Text(label, style = MaterialTheme.typography.labelLarge, color = scheme.onSurfaceVariant)
         suggestions.forEach { s ->
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { onSuggestionClick(s) },
+                Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                HackappIconView(s.icon, size = 22.dp, tint = scheme.onSurface)
-                Text(s.title, style = MaterialTheme.typography.titleMedium, color = scheme.onSurface, modifier = Modifier.weight(1f))
+                HackappIconView(s.icon, size = 22.dp, tint = scheme.onSurfaceVariant)
+                Text(s.title, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -66,6 +62,5 @@ private fun ItinerarySuggestionsCardPreview() = HackappTheme {
             ItinerarySuggestion(HackappIcon.Restaurant, "Tournée gourmande dans Ville-Marie"),
             ItinerarySuggestion(HackappIcon.People, "Dimanche en famille à Rosemont"),
         ),
-        onSuggestionClick = {},
     )
 }

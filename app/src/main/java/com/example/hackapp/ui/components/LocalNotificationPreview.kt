@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
+import java.time.LocalTime
 
 /**
  * Figma "LocalNotificationPreview" (30:743): an in-app mock of an Android local notification
@@ -80,7 +81,7 @@ private fun ActionText(text: String, onClick: () -> Unit) {
 private fun LocalNotificationArrivalPreview() = HackappTheme {
     LocalNotificationPreview(
         title = stringResource(R.string.notification_arrival_title),
-        body = stringResource(R.string.notification_arrival_body, "Jazz sur le toit", "18:30"),
+        body = stringResource(R.string.notification_arrival_body, "Jazz sur le toit", formatSentenceTime(LocalTime.of(18, 30))),
         primaryAction = stringResource(R.string.action_arrived),
         secondaryAction = stringResource(R.string.action_skip_stop),
         modifier = Modifier.padding(8.dp),
@@ -90,9 +91,10 @@ private fun LocalNotificationArrivalPreview() = HackappTheme {
 @Preview(name = "LocalNotificationPreview · leave by", showBackground = true, backgroundColor = PreviewDefaults.CANVAS, widthDp = PreviewDefaults.WIDTH_DP)
 @Composable
 private fun LocalNotificationLeavePreview() = HackappTheme {
+    val leaveBy = formatSentenceTime(LocalTime.of(19, 15))
     LocalNotificationPreview(
-        title = stringResource(R.string.notification_leave_title),
-        body = stringResource(R.string.notification_leave_body, "Jazz sur le toit", "19:15"),
+        title = stringResource(R.string.notification_leave_title, leaveBy),
+        body = stringResource(R.string.notification_leave_body, "Jazz sur le toit"),
         primaryAction = stringResource(R.string.action_leaving),
         modifier = Modifier.padding(8.dp),
     )

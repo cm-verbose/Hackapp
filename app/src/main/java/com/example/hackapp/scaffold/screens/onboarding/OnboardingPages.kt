@@ -16,11 +16,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -36,6 +38,7 @@ import com.example.hackapp.profile.AudiencePreference
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.Interest
 import com.example.hackapp.profile.VisitorType
+import com.example.hackapp.profile.hidesBars
 import com.example.hackapp.scaffold.screens.BudgetFields
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
@@ -52,24 +55,22 @@ import com.example.hackapp.ui.components.SingleChoiceChips
 import com.example.hackapp.ui.components.stopTypeLabel
 import com.example.hackapp.ui.theme.HackappTheme
 
-internal const val ONBOARDING_STEPS = 4
+/** Profile, Budget and Audience, Interests. The Visitor type step is skipped until Resident ships. */
+internal const val ONBOARDING_STEPS = 3
 
+/** Not part of the flow until Resident ships; kept, with its route, so the step can return. */
 @Composable
 fun OnboardingVisitorTypePage(state: OnboardingUiState, onContinue: () -> Unit, onSignOut: () -> Unit) {
     HackappPage(
-        title = stringResource(R.string.onboarding_step, 1, ONBOARDING_STEPS),
-        step = 1,
-        totalSteps = ONBOARDING_STEPS,
+        title = "",
         bottomActions = {
             HackappPrimaryButton(stringResource(R.string.action_continue), onContinue)
             HackappTextActionButton(stringResource(R.string.settings_sign_out), onSignOut)
         },
     ) {
         PageHeading(stringResource(R.string.onboarding_visitor_type_title))
-        BodyText(stringResource(R.string.onboarding_visitor_type_subtitle))
         HorizontalInfoCard(
             title = stringResource(R.string.visitor_title),
-            subtitle = stringResource(R.string.visitor_description),
             selected = state.draft.visitorType == VisitorType.Visitor,
             onClick = {},
             trailing = null,
@@ -88,29 +89,30 @@ fun OnboardingVisitorTypePage(state: OnboardingUiState, onContinue: () -> Unit, 
 @Composable
 fun OnboardingProfilePage(
     state: OnboardingUiState,
-    onBack: () -> Unit,
     onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onAgeRangeChange: (AgeRange?) -> Unit,
     onDistrictChange: (String) -> Unit,
     onRetryDistricts: () -> Unit,
     onContinue: () -> Unit,
+    onSignOut: () -> Unit,
 ) {
     val draft = state.draft
     var pickingDistrict by rememberSaveable { mutableStateOf(false) }
+    var emailTouched by rememberSaveable { mutableStateOf(false) }
+    var emailWasFocused by remember { mutableStateOf(false) }
     val districtLabel = stringResource(R.string.profile_district_of_stay)
 
     HackappPage(
-        title = stringResource(R.string.onboarding_step, 2, ONBOARDING_STEPS),
-        onBack = onBack,
-        step = 2,
+        title = "",
+        step = 1,
         totalSteps = ONBOARDING_STEPS,
         bottomActions = {
             HackappPrimaryButton(stringResource(R.string.action_continue), onContinue, enabled = draft.isProfileStepValid)
+            HackappTextActionButton(stringResource(R.string.settings_sign_out), onSignOut)
         },
     ) {
         PageHeading(stringResource(R.string.profile_title))
-        BodyText(stringResource(R.string.profile_prefill_note))
         HackappTextField(draft.name, onNameChange, stringResource(R.string.profile_name))
         HackappTextField(
             value = draft.email,
@@ -118,7 +120,11 @@ fun OnboardingProfilePage(
             label = stringResource(R.string.auth_email),
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Done,
-            errorText = if (draft.email.isNotBlank() && !draft.isEmailValid) {
+            modifier = Modifier.onFocusChanged {
+                if (emailWasFocused && !it.isFocused) emailTouched = true
+                emailWasFocused = it.isFocused
+            },
+            errorText = if (emailTouched && draft.email.isNotBlank() && !draft.isEmailValid) {
                 stringResource(R.string.auth_error_invalid_email)
             } else {
                 null
@@ -133,6 +139,7 @@ fun OnboardingProfilePage(
                 value = districts.value.firstOrNull { it.id == draft.districtOfStayId }?.name.orEmpty(),
                 label = districtLabel,
                 onClick = { pickingDistrict = true },
+                choiceList = true,
             )
         }
     }
@@ -176,9 +183,9 @@ fun OnboardingBudgetAudiencePage(
 ) {
     val draft = state.draft
     HackappPage(
-        title = stringResource(R.string.onboarding_step, 3, ONBOARDING_STEPS),
+        title = "",
         onBack = onBack,
-        step = 3,
+        step = 2,
         totalSteps = ONBOARDING_STEPS,
         bottomActions = {
             HackappPrimaryButton(stringResource(R.string.action_continue), onContinue, enabled = draft.isBudgetStepValid)
@@ -200,7 +207,7 @@ fun OnboardingBudgetAudiencePage(
         )
         SectionTitle(stringResource(R.string.audience_title))
         MultiChoiceChips(audienceOptions(), draft.audience, onAudienceChange)
-        BodyText(stringResource(R.string.audience_bars_hidden_note))
+        if (draft.audience.hidesBars) BodyText(stringResource(R.string.audience_bars_hidden_note))
     }
 }
 
@@ -216,9 +223,9 @@ fun OnboardingInterestsPage(
 ) {
     val draft = state.draft
     HackappPage(
-        title = stringResource(R.string.onboarding_step, 4, ONBOARDING_STEPS),
+        title = "",
         onBack = onBack,
-        step = 4,
+        step = 3,
         totalSteps = ONBOARDING_STEPS,
         bottomActions = {
             if (state.saveFailed) {
@@ -229,7 +236,10 @@ fun OnboardingInterestsPage(
                 )
             }
             HackappPrimaryButton(stringResource(R.string.action_finish), onFinish, enabled = !state.saving)
-            HackappTextActionButton(stringResource(R.string.action_skip), onSkip, enabled = !state.saving)
+            // Skipping drops chosen Interests and cuisines, so it is offered only when none is chosen.
+            if (draft.interests.isEmpty() && draft.cuisineGroups.isEmpty()) {
+                HackappTextActionButton(stringResource(R.string.action_skip), onSkip, enabled = !state.saving)
+            }
         },
     ) {
         PageHeading(stringResource(R.string.interests_title))

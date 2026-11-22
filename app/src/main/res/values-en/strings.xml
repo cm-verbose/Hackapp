@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Plan Montreal</string>
     <!-- English. French (values/) is the default locale. Source: Figma page "strings.xml". -->
-    <string name="app_widget_description">A simple widget</string>
     <!-- Design system: strings used by the Qindong components -->
     <string name="stop_type_music">Music</string>
     <string name="stop_type_festival">Festival</string>
@@ -14,24 +13,21 @@
     <string name="stop_type_family">Family</string>
     <string name="stop_type_meal">Meal</string>
     <string name="stop_type_bar">Bar</string>
-    <string name="home_underway_label">UNDERWAY</string>
-    <string name="home_next_stop">Next stop %1$s · %2$s</string>
-    <string name="home_resume_itinerary">Resume itinerary</string>
-    <string name="home_plan_title">Your outing, made to measure</string>
-    <string name="home_plan_body">A day or night out in %1$s, stop by stop.</string>
+    <string name="home_underway_label">Underway</string>
+    <string name="home_next_stop">Next stop: %1$s</string>
+    <string name="home_resume_itinerary">Resume</string>
+    <string name="home_plan_title">Day or night out in %1$s</string>
     <string name="home_plan_action">Plan an itinerary</string>
-    <string name="home_suggestions">SUGGESTIONS</string>
-    <string name="selection_meal_block_title">Meal block %1$s – %2$s</string>
-    <string name="selection_meal_block_body">Choose a restaurant or bar (from 17:00).</string>
+    <string name="home_suggestions">Suggestions</string>
+    <string name="selection_meal_block_title">Meal block</string>
     <string name="selection_choose_meal">Choose a meal</string>
     <string name="leg_next_stop_label">Next stop</string>
-    <string name="leg_fare_required">Fare needed: %1$s</string>
-    <string name="leg_fare_single_ride">1 ride</string>
-    <string name="leg_depart">Depart</string>
+    <string name="leg_fare_required">Ticket needed: %1$s · %2$s fare</string>
+    <string name="leg_depart">Departure</string>
     <string name="leg_travel">Travel</string>
-    <string name="leg_arrive">Arrive</string>
+    <string name="leg_arrive">Arrival</string>
     <string name="leg_now">Now</string>
-    <string name="leg_walk_minutes">≈ %1$d min walk</string>
+    <string name="leg_walk_minutes">≈ %1$d min</string>
     <plurals name="stamps_count">
         <item quantity="one">%d stamp</item>
         <item quantity="other">%d stamps</item>
@@ -41,74 +37,71 @@
         <item quantity="other">%d boroughs</item>
     </plurals>
     <!-- Qindong 2 components -->
+    <string name="data_licences">Licences: Has Things and OpenStreetMap, ODbL 1.0 · Ville de Montréal, CC BY 4.0</string>
     <string name="data_attribution">Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors</string>
-    <string name="map_district_boundaries">Map · borough boundaries</string>
     <string name="district_add_as_position">Add as #%1$d</string>
     <string name="district_choose_another">Choose another</string>
-    <string name="meal_plan_yes">Yes, plan my meals</string>
+    <string name="meal_plan_yes">Plan my meals</string>
     <string name="meal_plan_no">I’ll handle it</string>
-    <string name="meal_block_note">Each meal reserves a 90-minute block: 1 h, plus 15 min before and after.</string>
-    <string name="leg_stop_progress">Next stop · %1$d of %2$d</string>
-    <string name="leg_start_from_location">Starts %1$s · leaving from your location</string>
+    <string name="meal_block_note">%1$d-min block</string>
+    <string name="leg_stop_progress">Next stop · %1$d of %2$d</string>
+    <string name="leg_start_from_location">Starts %1$s</string>
     <string name="arrival_en_route">On the way</string>
     <string name="arrival_expected">Expected arrival %1$s</string>
-    <string name="arrival_not_detected_note">Arrival isn’t detected by GPS, so please confirm it.</string>
     <string name="action_skip_stop">Skip this stop</string>
+    <string name="action_skip_meal">Skip this meal</string>
     <string name="action_go_anyway">Go anyway</string>
     <string name="at_stop_leave_by">Leave by</string>
-    <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
-    <string name="late_warning">You may arrive late at %1$s.</string>
-    <string name="late_no_replanning">No automatic replanning.</string>
+    <string name="at_stop_next">Next stop: %1$s · ≈ %2$d min</string>
+    <string name="late_warning">You may be late: %1$s</string>
     <!-- Authentication messages (not on the Figma strings page) -->
-    <string name="password_reset_body">Enter your email and we’ll send you a link to choose a new password.</string>
-    <string name="password_reset_sent">If an account exists for this email, the link has been sent.</string>
+    <string name="password_reset_sent">If this email has an account, we’ve sent a link.</string>
     <string name="auth_error_invalid_credentials">Incorrect email or password.</string>
-    <string name="auth_error_invalid_email">This email isn’t valid.</string>
-    <string name="auth_error_email_in_use">An account already exists for this email. Sign in or continue with Google.</string>
-    <string name="auth_error_weak_password">Choose a password with at least 6 characters.</string>
+    <string name="auth_error_invalid_email">Enter a valid email.</string>
+    <string name="auth_error_email_in_use">This email already has an account. Sign in or continue with Google.</string>
+    <string name="auth_error_weak_password">Password must be at least 6 characters.</string>
     <string name="auth_error_password_mismatch">Passwords don’t match.</string>
     <string name="auth_error_network">Can’t connect. Check your network and try again.</string>
-    <string name="auth_error_provider_disabled">Email sign-in isn’t enabled yet.</string>
+    <string name="auth_error_provider_disabled">This sign-in method isn’t available. Try another.</string>
     <string name="auth_error_google">Google sign-in failed. Try again.</string>
     <string name="auth_error_unknown">Something went wrong. Try again.</string>
     <!-- First Eric Group components -->
     <string name="action_remove">Remove</string>
-    <string name="action_arrived">I’ve arrived</string>
+    <string name="action_arrived">I’m here</string>
     <string name="action_leaving">I’m leaving</string>
-    <string name="notification_preview_header">%1$s · now</string>
+    <string name="notification_preview_header">%1$s · now</string>
     <string name="notification_arrival_title">Have you arrived?</string>
-    <string name="notification_arrival_body">%1$s was due to start at %2$s.</string>
-    <string name="notification_leave_title">Leaving in 30 min</string>
-    <string name="notification_leave_body">Leave %1$s by %2$s to arrive on time.</string>
+    <string name="notification_arrival_body">%1$s · %2$s</string>
+    <string name="notification_leave_title">Leave by %1$s</string>
+    <string name="notification_leave_body">Next stop: %1$s</string>
 
     <!-- Shared controls and states (not on the Figma strings page) -->
     <string name="action_back">Back</string>
-    <string name="action_clear">Clear</string>
+    <string name="action_clear_field">Clear %1$s field</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_reschedule">Reschedule</string>
+    <string name="action_reorganize">Reorganize</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_retry">Try again</string>
     <string name="state_loading">Loading…</string>
-    <string name="state_error_title">Something went wrong</string>
-    <string name="state_empty_title">Nothing to show yet</string>
+    <string name="state_error_title">Couldn’t load</string>
+    <string name="state_empty_title">Nothing to show</string>
 
     <!-- Common (Figma frame 55:7) -->
     <string name="action_continue">Continue</string>
     <string name="action_finish">Finish</string>
     <string name="action_skip">Skip</string>
-    <string name="action_add">+ Add</string>
-    <string name="action_open">Open</string>
     <string name="label_or">or</string>
     <string name="label_coming_soon">Coming soon</string>
     <string name="price_unknown">price unknown</string>
-    <string name="price_free">Free</string>
-    <string name="end_time_unpublished">end time not published</string>
+    <string name="price_free">free</string>
     <string name="nav_home">Home</string>
     <string name="nav_itineraries">Itineraries</string>
     <string name="nav_passport">Passport</string>
 
     <!-- Authentication: WelcomeScreen, RegisterScreen -->
-    <string name="welcome_title">Your outing, made to measure.</string>
-    <string name="welcome_tagline">Plan your outing, follow it stop by stop, and collect your stamps.</string>
+    <string name="welcome_title">Your outing, made to measure</string>
+    <string name="welcome_tagline">Plan, follow each stop, collect your stamps.</string>
     <string name="auth_continue_with_google">Continue with Google</string>
     <string name="auth_email">Email</string>
     <string name="auth_password">Password</string>
@@ -116,56 +109,46 @@
     <string name="auth_forgot_password">Forgot password?</string>
     <string name="auth_sign_in">Sign in</string>
     <string name="auth_create_account">Create an account</string>
-    <string name="register_one_account_note">One account per email: Google or password sign-in reach the same profile, itineraries and passport.</string>
     <string name="register_submit">Create my account</string>
+    <string name="register_age_notice">18 and over</string>
     <string name="password_reset_title">Reset password</string>
     <string name="password_reset_send">Send reset link</string>
 
     <!-- Onboarding -->
     <string name="onboarding_step">Step %1$d of %2$d</string>
     <string name="onboarding_visitor_type_title">How are you exploring the city?</string>
-    <string name="onboarding_visitor_type_subtitle">Choose how you explore.</string>
-    <string name="visitor_title">Visitor</string>
-    <string name="visitor_description">I’m exploring a city I don’t live in</string>
-    <string name="resident_title">Resident</string>
+    <string name="visitor_title">I’m visiting</string>
+    <string name="resident_title">I live here</string>
     <string name="profile_title">Your profile</string>
-    <string name="profile_prefill_note">Prefilled from Google when available.</string>
     <string name="profile_name">Name</string>
     <string name="profile_age_range">Age range</string>
     <!-- City Pack may override the District label -->
-    <string name="profile_district_of_stay">Borough of stay</string>
+    <string name="profile_district_of_stay">Borough where you’re staying</string>
     <string name="budget_audience_title">Budget and audience</string>
-    <string name="budget_subtitle">Per person, per outing.</string>
-    <string name="budget_under_20">&lt; $20</string>
-    <string name="budget_under_50">&lt; $50</string>
-    <string name="budget_under_100">&lt; $100</string>
+    <string name="budget_subtitle">Per person</string>
+    <string name="budget_under_20">&lt; $20</string>
+    <string name="budget_under_50">&lt; $50</string>
+    <string name="budget_under_100">&lt; $100</string>
     <string name="budget_100_plus">$100+</string>
-    <string name="budget_lunch">Lunch (Meal 1)</string>
-    <string name="budget_dinner">Dinner (Meal 2)</string>
-    <string name="budget_events">Events (total)</string>
-    <string name="budget_late_night">Late-night snack</string>
-    <string name="budget_late_night_description">Optional. Add a budget for a late bite.</string>
+    <string name="budget_lunch">Lunch</string>
+    <string name="budget_dinner">Dinner</string>
+    <string name="budget_events">All events</string>
+    <string name="budget_late_night">Late bite</string>
     <string name="onboarding_save_error">Couldn’t save your profile. Try again.</string>
     <string name="audience_title">Audience</string>
     <string name="audience_adults_only">18+ only</string>
     <string name="audience_family_friendly">Family-friendly</string>
     <string name="audience_no_alcohol">No alcohol</string>
-    <string name="audience_bars_hidden_note">Bars are hidden for family-friendly or no-alcohol preferences.</string>
+    <string name="audience_bars_hidden_note">Bars hidden</string>
     <string name="interests_title">Interests and cuisines</string>
-    <string name="interests_subtitle">Optional. Used to rank results, never to hide them.</string>
+    <string name="interests_subtitle">Ranks results without hiding any</string>
     <string name="interests_event_types">Event types</string>
     <string name="interests_cuisines">Cuisines</string>
     <string name="stop_kind_event">Event</string>
+    <string name="planning_stops_title">Stops</string>
     <string name="stop_kind_meal">Meal</string>
 
     <!-- Cuisines (align with restaurant data) -->
-    <string name="cuisine_quebecois">Québécois</string>
-    <string name="cuisine_italian">Italian</string>
-    <string name="cuisine_lebanese">Lebanese</string>
-    <string name="cuisine_japanese">Japanese</string>
-    <string name="cuisine_vegetarian">Vegetarian</string>
-    <string name="cuisine_cafe">Café</string>
-    <string name="cuisine_bistro">Bistro</string>
 
     <!-- HomeScreen -->
     <string name="home_greeting">Hello %1$s</string>
@@ -173,7 +156,6 @@
 
     <!-- Planning -->
     <string name="planning_new_itinerary">New itinerary</string>
-    <string name="planning_when_title">When are you going out?</string>
     <string name="planning_date">Date</string>
     <string name="planning_day_out">Day out</string>
     <string name="planning_night_out">Night out</string>
@@ -181,46 +163,42 @@
     <string name="planning_end">End</string>
     <!-- City Pack may override the District label -->
     <string name="district_pick_title">Boroughs</string>
-    <string name="district_pick_instructions">Choose 1 to 3 boroughs, in the order you’ll visit them.</string>
+    <string name="district_pick_instructions">Choose 1 to 3, in the order you’ll visit them.</string>
     <string name="meal_title">Meals</string>
-    <string name="meal_question">Should we plan your meals?</string>
-    <string name="meal_when">When do you want to eat?</string>
-    <string name="meal_lunch_at">Lunch · %1$s</string>
-    <string name="meal_dinner_at">Dinner · %1$s</string>
-    <string name="meal_late_bite_at">Late bite · %1$s</string>
-    <string name="selection_district_progress">Borough %1$d of %2$d · %3$s → %4$s</string>
+    <string name="meal_lunch_at">Lunch · %1$s</string>
+    <string name="meal_dinner_at">Dinner · %1$s</string>
+    <string name="meal_late_bite_at">Late bite · %1$s</string>
+    <string name="selection_district_progress">Borough %1$d of %2$d</string>
     <string name="selection_finish_here">Finish here</string>
     <string name="selection_next_district">Next borough</string>
-    <string name="planned_departure_title">When will you leave?</string>
+    <string name="planned_departure_title">Planned departure</string>
     <string name="review_title">Review</string>
     <string name="review_planned_departure">planned departure %1$s</string>
-    <string name="review_remove_note">Removing a stop takes you back to selection for that time slot. Stops can’t be reordered.</string>
+    <string name="review_remove_note">Removing a stop takes you back to selection for that time slot.</string>
     <string name="review_start">Start itinerary</string>
     <string name="review_notification_note">We’ll ask you to allow notifications.</string>
 
     <!-- Underway -->
-    <string name="leg_how_to_get_there">How are you getting there?</string>
+    <string name="leg_how_to_get_there">Getting there</string>
     <string name="leg_mode_transit">Public transit</string>
-    <string name="leg_fare_source">Based on the %1$s fare table.</string>
     <string name="leg_open_transit_app">Open %1$s</string>
-    <string name="leg_google_maps_directions">Directions in Google Maps</string>
-    <string name="arrival_reminder_note">If not confirmed 30 min after the expected time:</string>
-    <string name="at_stop_alert_note">High-priority alert 30 min before:</string>
+    <string name="leg_google_maps_directions">Open in Google Maps</string>
     <string name="notification_channel_underway">Underway itinerary</string>
-    <string name="end_of_day_title">End of day</string>
-    <string name="end_of_day_hero_night">What a night!</string>
-    <string name="end_of_day_hero_day">What a day!</string>
-    <string name="end_of_day_no_stamp">no stamp</string>
+    <string name="end_of_day_title">Itinerary ended</string>
+    <string name="end_of_day_no_stamp">No stamp</string>
+    <string name="past_stamps_none">None</string>
+    <string name="end_of_day_already_in_passport">Already in your passport</string>
     <string name="end_of_day_new_stamps_section">New stamps</string>
-    <string name="end_of_day_confirmed_only">Only confirmed stops earn a stamp.</string>
-    <string name="end_of_day_finish">End the day</string>
+    <string name="end_of_day_finish">End itinerary</string>
+    <string name="end_itinerary_warning">End itinerary? Remaining stops will be marked as skipped.</string>
+    <string name="handoff_unavailable">Couldn’t open %1$s. Try another option.</string>
+    <string name="end_of_day_done">Back to Home</string>
 
     <!-- Passport and Settings -->
     <string name="passport_title">Passport</string>
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
     <string name="settings_profile">Profile</string>
-    <string name="settings_profile_description">Name, email, age, borough</string>
     <string name="settings_sign_out">Sign out</string>
 
     <plurals name="stops_count">
@@ -235,50 +213,66 @@
         <item quantity="one">%d stop skipped</item>
         <item quantity="other">%d stops skipped</item>
     </plurals>
+    <plurals name="map_district_description">
+        <item quantity="one">%1$s, %2$d event</item>
+        <item quantity="other">%1$s, %2$d events</item>
+    </plurals>
+    <plurals name="map_district_selected">
+        <item quantity="one">%1$s, choice %2$d, %3$d event</item>
+        <item quantity="other">%1$s, choice %2$d, %3$d events</item>
+    </plurals>
+    <string name="map_district_unavailable">%1$s, unavailable</string>
+    <plurals name="map_route_description">
+        <item quantity="one">Itinerary map, %d stop</item>
+        <item quantity="other">Itinerary map, %d stops</item>
+    </plurals>
+    <string name="strip_stop">%1$s, %2$s</string>
+    <string name="strip_stop_current">%1$s, %2$s, next stop</string>
     <plurals name="new_stamps_in_passport">
-        <item quantity="one">%d new stamp in your passport.</item>
-        <item quantity="other">%d new stamps in your passport.</item>
+        <item quantity="one">%d new stamp</item>
+        <item quantity="other">%d new stamps</item>
     </plurals>
 
     <!-- Main tabs -->
     <string name="home_greeting_anonymous">Hello</string>
-    <string name="itinerary_title_in">%1$s in %2$s</string>
-    <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
+    <string name="itinerary_date_pattern">MMM d</string>
+    <string name="itinerary_title_in">%1$s · %2$s</string>
+    <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
     <string name="itineraries_past">Past</string>
-    <string name="itineraries_archived">Archived</string>
-    <string name="itineraries_archived_note">Archived because its date has passed.</string>
-    <string name="itineraries_empty_body">Your planned and past itineraries will appear here.</string>
+    <string name="itineraries_archived">Archived · never started</string>
+    <string name="itineraries_archived_note">Archived: date passed</string>
+    <string name="itineraries_empty_body">No itineraries</string>
     <string name="itinerary_menu">Itinerary options</string>
     <string name="itinerary_not_found">Itinerary not found</string>
     <string name="action_delete">Delete</string>
     <string name="itinerary_delete_title">Delete this itinerary?</string>
-    <string name="itinerary_delete_body">This draft will be permanently deleted.</string>
-    <string name="itinerary_delete_error">Could not delete this itinerary. Try again.</string>
-    <string name="past_stamps_earned">Stamps earned</string>
+    <string name="itinerary_delete_body">This can’t be undone.</string>
+    <string name="itinerary_delete_error">Couldn’t delete this itinerary. Try again.</string>
+    <string name="past_stamps_earned">Stamps</string>
     <string name="stop_status_confirmed">Confirmed</string>
     <string name="stop_status_skipped">Skipped</string>
     <string name="archived_choose_new_date">Choose a new date</string>
     <string name="settings_no_preferences">No preferences</string>
+    <string name="settings_events_budget">All events: %1$s</string>
 
     <!-- Planning: date and District map -->
-    <string name="planning_error_min_duration">An itinerary lasts at least 2 hours.</string>
-    <string name="planning_error_latest_end">An itinerary ends no later than 04:00.</string>
+    <string name="planning_error_min_duration">Allow at least 2 hours.</string>
+    <string name="planning_error_end_range">Choose an end time between %1$s and 04:00.</string>
+    <string name="planning_error_start_latest">Start by 02:00.</string>
     <string name="planning_save_error">Couldn’t save. Try again.</string>
     <string name="district_add_first">Add as #1</string>
     <string name="district_max_title">Maximum of %1$d %2$s</string>
-    <string name="district_max_body">To add %1$s, choose which one to replace.</string>
-    <string name="district_replace_label">Replace:</string>
+    <string name="district_max_body">Replace which one with %1$s?</string>
     <string name="district_replace_action">Replace</string>
     <string name="district_map_reset">Reset map</string>
     <string name="time_hour">Hour</string>
+    <string name="time_hour_value">Hour: %1$s</string>
     <string name="time_minute">Minute</string>
+    <string name="time_minute_value">Minute: %1$s</string>
     <string name="planning_budget_title">Budget</string>
-    <string name="planning_budget_question">Change your budget for this outing?</string>
-    <string name="planning_budget_current">This is the budget currently set for this outing.</string>
     <string name="planning_budget_keep">Keep this budget</string>
-    <string name="planning_budget_change">Change for this outing</string>
-    <string name="planning_budget_edit_title">Budget for this outing</string>
-    <string name="planning_budget_edit_note">These changes apply to this Itinerary only.</string>
+    <string name="planning_budget_change">Change for this itinerary</string>
+    <string name="planning_budget_edit_subtitle">Per person, for this itinerary</string>
     <string name="budget_off">Off</string>
     <string name="budget_not_set">Not set</string>
 

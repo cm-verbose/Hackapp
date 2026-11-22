@@ -49,10 +49,9 @@ import java.time.format.DateTimeFormatter
 data class UnderwayUi(
     val date: LocalDate,
     val districtName: String?,
-    val nextStopTime: String?,
     val nextStopName: String?,
     val strip: List<StripStop>,
-    val currentIndex: Int,
+    val currentIndex: Int?,
     val route: Any,
 )
 
@@ -92,10 +91,9 @@ internal fun Itinerary.toUnderwayUi(
     return UnderwayUi(
         date = date,
         districtName = (districtIds.firstOrNull() ?: stops.firstOrNull()?.districtId)?.let(districtNames::get),
-        nextStopTime = next?.let { time(it.start) },
         nextStopName = next?.name,
         strip = stops.map { StripStop(time(it.start), stopTypes[it.id] ?: StopType.Festival) },
-        currentIndex = nextIndex.coerceAtLeast(0),
+        currentIndex = nextIndex.takeIf { it >= 0 },
         route = openRoute(),
     )
 }

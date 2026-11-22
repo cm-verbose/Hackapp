@@ -1,0 +1,264 @@
+# Writing team key ownership
+
+Each string key belongs to exactly one team. Only that team may change it. To change another team's key, raise it for the main session.
+
+## access: Access (auth, onboarding, Settings) (74)
+
+- `action_finish`: OnboardingPages.kt
+- `action_skip`: OnboardingPages.kt
+- `age_range_18_24` [missing EN]: OnboardingPages.kt, ScreenSettings.kt
+- `age_range_25_34` [missing EN]: OnboardingPages.kt, ScreenSettings.kt
+- `age_range_35_44` [missing EN]: OnboardingPages.kt, ScreenSettings.kt
+- `age_range_45_54` [missing EN]: OnboardingPages.kt, ScreenSettings.kt
+- `age_range_55_plus` [missing EN]: OnboardingPages.kt, ScreenSettings.kt
+- `app_name`: ScreenLogin.kt, LocalNotificationPreview.kt
+- `audience_adults_only`: OnboardingPages.kt, ScreenSettings.kt
+- `audience_bars_hidden_note`: OnboardingPages.kt
+- `audience_family_friendly`: OnboardingPages.kt, ScreenSettings.kt
+- `audience_no_alcohol`: OnboardingPages.kt, ScreenSettings.kt
+- `audience_title`: OnboardingPages.kt
+- `auth_continue_with_google`: GoogleLoginButton.kt, HackappButtons.kt
+- `auth_create_account`: ScreenLogin.kt, ScreenRegister.kt
+- `auth_email`: ScreenLogin.kt, ScreenPasswordReset.kt, ScreenRegister.kt, OnboardingPages.kt, HackappTextField.kt
+- `auth_error_email_in_use`: AuthFormSupport.kt
+- `auth_error_google`: AuthFormSupport.kt
+- `auth_error_invalid_credentials`: AuthFormSupport.kt
+- `auth_error_invalid_email`: AuthFormSupport.kt, OnboardingPages.kt
+- `auth_error_network`: AuthFormSupport.kt
+- `auth_error_password_mismatch`: ScreenRegister.kt
+- `auth_error_provider_disabled`: AuthFormSupport.kt
+- `auth_error_unknown`: AuthFormSupport.kt
+- `auth_error_weak_password`: AuthFormSupport.kt
+- `auth_forgot_password`: ScreenLogin.kt, HackappButtons.kt
+- `auth_password`: ScreenLogin.kt, ScreenRegister.kt, HackappTextField.kt
+- `auth_password_confirm`: ScreenRegister.kt
+- `auth_sign_in`: ScreenLogin.kt
+- `budget_100_plus`: BudgetFields.kt, ScreenSettings.kt
+- `budget_audience_title`: OnboardingPages.kt, ScreenSettings.kt
+- `budget_subtitle`: OnboardingPages.kt
+- `budget_under_100`: BudgetFields.kt, ScreenSettings.kt
+- `budget_under_20`: BudgetFields.kt, ScreenSettings.kt
+- `budget_under_50`: BudgetFields.kt, ScreenSettings.kt
+- `cuisine_bistro`: unused
+- `cuisine_cafe`: unused
+- `cuisine_italian`: unused
+- `cuisine_japanese`: unused
+- `cuisine_lebanese`: unused
+- `cuisine_quebecois`: unused
+- `cuisine_vegetarian`: unused
+- `interests_cuisines`: OnboardingPages.kt
+- `interests_event_types`: OnboardingPages.kt
+- `interests_subtitle`: OnboardingPages.kt
+- `interests_title`: OnboardingPages.kt, ScreenSettings.kt
+- `label_coming_soon`: RoutePlaceholder.kt, OnboardingPages.kt, HorizontalInfoCard.kt
+- `label_or`: ScreenLogin.kt
+- `language_english` [missing EN]: ScreenSettings.kt
+- `language_french` [missing EN]: ScreenSettings.kt
+- `onboarding_save_error`: OnboardingPages.kt
+- `onboarding_step`: OnboardingPages.kt, AppChrome.kt
+- `onboarding_visitor_type_subtitle`: OnboardingPages.kt
+- `onboarding_visitor_type_title`: OnboardingPages.kt
+- `password_reset_body`: ScreenPasswordReset.kt
+- `password_reset_send`: ScreenPasswordReset.kt
+- `password_reset_sent`: ScreenPasswordReset.kt
+- `password_reset_title`: ScreenPasswordReset.kt
+- `profile_age_range`: OnboardingPages.kt
+- `profile_district_of_stay`: OnboardingPages.kt
+- `profile_name`: OnboardingPages.kt
+- `profile_prefill_note`: OnboardingPages.kt, AppChrome.kt
+- `profile_title`: OnboardingPages.kt, AppChrome.kt
+- `register_one_account_note`: ScreenRegister.kt
+- `register_submit`: ScreenRegister.kt
+- `resident_title`: OnboardingPages.kt, HorizontalInfoCard.kt
+- `settings_language`: ScreenSettings.kt
+- `settings_no_preferences`: ScreenSettings.kt
+- `settings_profile`: ScreenSettings.kt
+- `settings_profile_description`: unused
+- `visitor_description`: OnboardingPages.kt, HorizontalInfoCard.kt
+- `visitor_title`: OnboardingPages.kt, HorizontalInfoCard.kt
+- `welcome_tagline`: ScreenLogin.kt
+- `welcome_title`: ScreenLogin.kt
+
+## home: Home and Itineraries (35)
+
+- `action_delete`: ItineraryDetailPages.kt, ItineraryUi.kt, ScreenItinerary.kt
+- `archived_choose_new_date`: ItineraryDetailPages.kt
+- `end_of_day_no_stamp`: unused
+- `home_greeting`: ScreenHome.kt
+- `home_greeting_anonymous`: ScreenHome.kt
+- `home_next_stop`: ScreenHome.kt, UnderwayItineraryCard.kt
+- `home_plan_action`: PlanItineraryCard.kt
+- `home_plan_body`: PlanItineraryCard.kt
+- `home_plan_title`: PlanItineraryCard.kt
+- `home_planning_section`: ScreenHome.kt, ScreenItinerary.kt
+- `home_resume_itinerary`: UnderwayItineraryCard.kt
+- `home_suggestions`: ItinerarySuggestionsCard.kt
+- `home_underway_label`: UnderwayItineraryCard.kt
+- `itineraries_archived`: ScreenItinerary.kt
+- `itineraries_archived_note`: ItineraryDetailPages.kt, ScreenItinerary.kt
+- `itineraries_empty_body`: ScreenItinerary.kt
+- `itineraries_past`: ScreenItinerary.kt
+- `itinerary_date_pattern` [missing EN]: ItineraryUi.kt
+- `itinerary_date_window`: ItineraryDetailPages.kt
+- `itinerary_delete_body`: ItineraryUi.kt
+- `itinerary_delete_error`: ItineraryDetailPages.kt, ScreenItinerary.kt
+- `itinerary_delete_title`: ItineraryUi.kt
+- `itinerary_menu`: ScreenItinerary.kt
+- `itinerary_not_found`: ItineraryDetailPages.kt
+- `itinerary_title_in`: ItineraryUi.kt
+- `nav_home`: MainBottomAppBar.kt
+- `nav_itineraries`: MainBottomAppBar.kt, ItineraryDetailPages.kt, ScreenItinerary.kt
+- `nav_passport`: MainBottomAppBar.kt
+- `past_stamps_earned`: ItineraryDetailPages.kt
+- `past_stamps_none`: ItineraryDetailPages.kt
+- `stamps_count`: ItineraryUi.kt, HeroHeader.kt
+- `stop_kind_meal`: ItineraryDetailPages.kt
+- `stop_status_confirmed`: ItineraryDetailPages.kt
+- `stop_status_skipped`: ItineraryDetailPages.kt
+- `stops_count`: ItineraryUi.kt
+
+## planning: Planning (71)
+
+- `action_remove`: DistrictPickPage.kt, StopRow.kt
+- `action_reorganize`: unused
+- `action_reschedule`: unused
+- `budget_dinner`: BudgetFields.kt, PlanningBudgetPages.kt
+- `budget_events`: BudgetFields.kt, PlanningBudgetPages.kt
+- `budget_late_night`: BudgetFields.kt, PlanningBudgetPages.kt
+- `budget_late_night_description`: BudgetFields.kt
+- `budget_lunch`: BudgetFields.kt, PlanningBudgetPages.kt
+- `budget_not_set`: PlanningBudgetPages.kt
+- `budget_off`: PlanningBudgetPages.kt
+- `district_add_as_position`: DistrictPickPage.kt, DistrictPreviewSheet.kt
+- `district_add_first`: DistrictPickPage.kt
+- `district_choose_another`: DistrictPickPage.kt, DistrictPreviewSheet.kt
+- `district_map_reset`: DistrictPickPage.kt
+- `district_max_body`: DistrictPickPage.kt
+- `district_max_title`: DistrictPickPage.kt
+- `district_order_chip` [missing EN]: DistrictPickPage.kt
+- `district_pick_instructions`: DistrictPickPage.kt
+- `district_pick_title`: DistrictPickPage.kt
+- `district_replace_action`: DistrictPickPage.kt
+- `district_replace_label`: DistrictPickPage.kt
+- `meal_block_note`: InfoCallout.kt
+- `meal_dinner_at`: unused
+- `meal_late_bite_at`: unused
+- `meal_lunch_at`: unused
+- `meal_plan_no`: RadioOptionRow.kt
+- `meal_plan_yes`: RadioOptionRow.kt
+- `meal_question`: unused
+- `meal_title`: PlanningNavigation.kt
+- `meal_when`: unused
+- `planned_departure_title`: DateTimeFields.kt
+- `planning_budget_change`: PlanningBudgetPages.kt
+- `planning_budget_current`: PlanningBudgetPages.kt
+- `planning_budget_edit_note`: PlanningBudgetPages.kt
+- `planning_budget_edit_title`: PlanningBudgetPages.kt
+- `planning_budget_keep`: PlanningBudgetPages.kt
+- `planning_budget_question`: PlanningBudgetPages.kt
+- `planning_budget_title`: PlanningBudgetPages.kt
+- `planning_date`: PlanningDateTimePage.kt, DateTimeFields.kt, HackappTextField.kt
+- `planning_day_out`: PlanningDateTimePage.kt, ChoiceControls.kt
+- `planning_end`: PlanningDateTimePage.kt
+- `planning_error_latest_end`: PlanningDateTimePage.kt
+- `planning_error_min_duration`: PlanningDateTimePage.kt
+- `planning_new_itinerary`: PlanningDateTimePage.kt
+- `planning_night_out`: PlanningDateTimePage.kt, ChoiceControls.kt
+- `planning_save_error`: DistrictPickPage.kt, PlanningBudgetPages.kt, PlanningDateTimePage.kt
+- `planning_start`: PlanningDateTimePage.kt, DateTimeFields.kt
+- `planning_stops_title`: PlanningNavigation.kt
+- `planning_when_title`: PlanningDateTimePage.kt
+- `review_notification_note`: unused
+- `review_planned_departure`: unused
+- `review_remove_note`: unused
+- `review_start`: unused
+- `review_title`: PlanningNavigation.kt
+- `selection_choose_meal`: MealBlockPrompt.kt
+- `selection_district_progress`: unused
+- `selection_finish_here`: unused
+- `selection_meal_block_body`: MealBlockPrompt.kt
+- `selection_meal_block_title`: MealBlockPrompt.kt
+- `selection_next_district`: unused
+- `selection_time_block` [missing EN]: StopOptionCards.kt
+- `stop_type_bar`: StopTypeTag.kt
+- `stop_type_cinema`: ChoiceControls.kt, StopTypeTag.kt
+- `stop_type_comedy`: ChoiceControls.kt, StopTypeTag.kt
+- `stop_type_exhibition`: StopTypeTag.kt
+- `stop_type_family`: DistrictPreviewSheet.kt, StopTypeTag.kt
+- `stop_type_festival`: StopTypeTag.kt
+- `stop_type_meal`: LegHeader.kt, StopTypeTag.kt
+- `stop_type_music`: ChoiceControls.kt, DistrictPreviewSheet.kt, StopTypeTag.kt
+- `stop_type_sport`: StopTypeTag.kt
+- `stop_type_theatre`: StopTypeTag.kt
+
+## underway: Underway and Passport (29)
+
+- `arrival_en_route`: AppNavigation.kt, ArrivalStatusCard.kt
+- `arrival_expected`: ArrivalStatusCard.kt
+- `at_stop_leave_by`: AppNavigation.kt, LeaveByCard.kt
+- `at_stop_next`: LeaveByCard.kt
+- `end_of_day_already_in_passport`: unused
+- `end_of_day_done`: unused
+- `end_of_day_finish`: unused
+- `end_of_day_new_stamps_section`: unused
+- `end_of_day_title`: AppNavigation.kt
+- `leg_arrive`: LegTimes.kt
+- `leg_depart`: LegTimes.kt
+- `leg_fare_required`: TransitFareRow.kt, TransportChoiceCard.kt
+- `leg_google_maps_directions`: unused
+- `leg_how_to_get_there`: TransportChoiceCard.kt
+- `leg_mode_transit`: TransportChoiceCard.kt
+- `leg_next_stop_label`: AppNavigation.kt, LegHeader.kt
+- `leg_now`: LegHeader.kt, LegTimes.kt
+- `leg_open_transit_app`: unused
+- `leg_start_from_location`: NextStopCard.kt
+- `leg_stop_progress`: NextStopCard.kt
+- `leg_travel`: LegTimes.kt
+- `leg_walk_minutes`: LegHeader.kt, LegTimes.kt
+- `notification_arrival_body`: LocalNotificationPreview.kt
+- `notification_arrival_title`: LocalNotificationPreview.kt
+- `notification_channel_underway`: unused
+- `notification_leave_body`: LocalNotificationPreview.kt
+- `notification_leave_title`: LocalNotificationPreview.kt
+- `notification_preview_header`: LocalNotificationPreview.kt
+- `passport_title`: unused
+
+## shared: Shared (actions, states, navigation, reused text) (37)
+
+- `action_add`: unused
+- `action_arrived`: LocalNotificationPreview.kt
+- `action_back`: AppChrome.kt
+- `action_cancel`: ItineraryUi.kt, DistrictPickPage.kt, DateTimeFields.kt
+- `action_clear`: HackappTextField.kt
+- `action_confirm`: DateTimeFields.kt
+- `action_continue`: RoutePlaceholder.kt, OnboardingPages.kt, DistrictPickPage.kt, PlanningBudgetPages.kt, PlanningDateTimePage.kt, AppChrome.kt, HackappButtons.kt
+- `action_go_anyway`: LateArrivalWarning.kt
+- `action_leaving`: LocalNotificationPreview.kt
+- `action_open`: unused
+- `action_retry`: StateViews.kt
+- `action_skip_stop`: LateArrivalWarning.kt, LocalNotificationPreview.kt
+- `app_widget_description`: unused
+- `data_attribution`: DataAttribution.kt
+- `districts_count`: HeroHeader.kt
+- `late_no_replanning`: LateArrivalWarning.kt
+- `late_warning`: LateArrivalWarning.kt
+- `map_district_description`: DistrictPickMap.kt
+- `map_district_selected`: DistrictPickMap.kt
+- `map_district_unavailable`: DistrictPickMap.kt
+- `map_route_description`: ItineraryRouteMap.kt
+- `map_district_boundaries`: unused
+- `new_stamps_in_passport`: unused
+- `price_free`: StopOptionCards.kt
+- `price_unknown`: StopOptionCards.kt
+- `settings_sign_out`: OnboardingPages.kt, GoogleLogoffButton.kt, ScreenSettings.kt
+- `settings_title`: ScreenHome.kt, ScreenSettings.kt
+- `state_empty_title`: StateViews.kt
+- `state_error_title`: StateViews.kt
+- `state_loading`: StateViews.kt
+- `strip_stop`: ItineraryStrip.kt
+- `strip_stop_current`: ItineraryStrip.kt
+- `stop_kind_event`: ItineraryDetailPages.kt
+- `stops_confirmed`: unused
+- `stops_skipped`: unused
+- `time_hour`: TimeWheels.kt
+- `time_minute`: TimeWheels.kt

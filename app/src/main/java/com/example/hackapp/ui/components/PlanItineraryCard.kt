@@ -26,8 +26,7 @@ fun PlanItineraryCard(
     cityName: String,
     onPlan: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.home_plan_title),
-    body: String = stringResource(R.string.home_plan_body, cityName),
+    title: String = stringResource(R.string.home_plan_title, cityName),
     actionLabel: String = stringResource(R.string.home_plan_action),
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -39,7 +38,6 @@ fun PlanItineraryCard(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(title, style = MaterialTheme.typography.headlineMedium, color = scheme.onPrimaryContainer)
-        Text(body, style = MaterialTheme.typography.bodyLarge, color = scheme.onPrimaryContainer)
         HackappSmallButton(text = actionLabel, onClick = onPlan)
     }
 }

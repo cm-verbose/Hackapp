@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,35 +65,36 @@ fun HackappTopBar(
     )
 }
 
-/** Figma's progress bar under the app bar: a filled segment and the remaining track. */
+/**
+ * Figma's progress bar under the app bar: one segment per step, the first [current] filled,
+ * plus the step count as text. TalkBack reads the text once for the whole control.
+ */
 @Composable
 fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
     val done = current.coerceIn(0, total)
-    val description = stringResource(R.string.onboarding_step, done, total)
-    Row(
+    Column(
         modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .semantics { contentDescription = description },
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (done > 0) {
-            Box(
-                Modifier
-                    .weight(done.toFloat())
-                    .height(4.dp)
-                    .background(scheme.primary, CircleShape),
-            )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(total) { index ->
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .background(if (index < done) scheme.primary else scheme.surfaceContainerHighest, CircleShape),
+                )
+            }
         }
-        if (done < total) {
-            Box(
-                Modifier
-                    .weight((total - done).toFloat())
-                    .height(4.dp)
-                    .background(scheme.secondaryContainer, CircleShape),
-            )
-        }
+        Text(
+            stringResource(R.string.onboarding_step, done, total),
+            style = MaterialTheme.typography.labelMedium,
+            color = scheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -135,16 +136,20 @@ fun HackappPage(
     ) {
         HackappTopBar(title, onBack = onBack, containerColor = containerColor, contentColor = contentColor)
         if (step != null && totalSteps != null) StepProgress(step, totalSteps)
+        val scrollState = rememberScrollState()
         Column(
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             content = content,
         )
-        if (bottomActions != null) BottomActions(content = bottomActions)
+        if (bottomActions != null) {
+            if (scrollState.canScrollForward) HorizontalDivider()
+            BottomActions(content = bottomActions)
+        }
     }
 }
 
@@ -152,13 +157,12 @@ fun HackappPage(
 @Composable
 private fun HackappPagePreview() = HackappTheme {
     HackappPage(
-        title = stringResource(R.string.onboarding_step, 2, 4),
+        title = stringResource(R.string.profile_title),
         onBack = {},
         step = 2,
-        totalSteps = 4,
+        totalSteps = 3,
         bottomActions = { HackappPrimaryButton(stringResource(R.string.action_continue), {}) },
     ) {
         Text(stringResource(R.string.profile_title), style = MaterialTheme.typography.headlineSmall)
-        Text(stringResource(R.string.profile_prefill_note), style = MaterialTheme.typography.bodyMedium)
     }
 }

@@ -80,7 +80,7 @@ fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
                     icon = {
                         Icon(
                             painter = item.painter(),
-                            contentDescription = item.title
+                            contentDescription = null
                         )
                     }
                 )

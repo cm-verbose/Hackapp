@@ -43,7 +43,6 @@ import com.example.hackapp.scaffold.navigation.PastItineraryRoute
 import com.example.hackapp.scaffold.navigation.PlanningDateTimeRoute
 import com.example.hackapp.scaffold.screens.onboarding.LoadState
 import com.example.hackapp.ui.components.ErrorState
-import com.example.hackapp.ui.components.InfoCallout
 import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.PlanItineraryCard
 import com.example.hackapp.ui.theme.HackappTheme
@@ -114,7 +113,7 @@ fun ItinerariesPage(
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        if (state.deleteFailed) InfoCallout(stringResource(R.string.itinerary_delete_error))
+        if (state.deleteFailed) DeleteErrorNote()
         when (val content = state.content) {
             LoadState.Loading -> LoadingState()
             LoadState.Failed -> ErrorState(onRetry = onRetry)
@@ -154,11 +153,6 @@ private fun ItinerarySectionList(
     if (content.archived.isNotEmpty()) {
         SectionLabel(stringResource(R.string.itineraries_archived))
         content.archived.forEach { card -> ItineraryCard(card, onClick = { onOpen(card) }) }
-        Text(
-            stringResource(R.string.itineraries_archived_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 

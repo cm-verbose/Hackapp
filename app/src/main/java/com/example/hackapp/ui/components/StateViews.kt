@@ -11,6 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,8 +35,12 @@ private fun StateContainer(modifier: Modifier, content: @Composable () -> Unit) 
 @Composable
 fun LoadingState(modifier: Modifier = Modifier, message: String = stringResource(R.string.state_loading)) {
     StateContainer(modifier) {
-        CircularProgressIndicator()
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        CircularProgressIndicator(
+            Modifier.semantics {
+                contentDescription = message
+                liveRegion = LiveRegionMode.Polite
+            },
+        )
     }
 }
 

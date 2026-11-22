@@ -16,8 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -25,6 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,13 +42,16 @@ import com.example.hackapp.ui.theme.HackappTheme
 /**
  * Figma "Horizontal card": initial avatar, title, subtitle and a media area.
  * [trailing] replaces the default media placeholder. [onClick] null makes it display-only.
+ * [leadingIcon] replaces the initial in the avatar disc; [subtitleMaxLines] lets a longer subtitle show.
  */
 @Composable
 fun HorizontalInfoCard(
     title: String,
-    subtitle: String,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
     avatarText: String = title.take(1).uppercase(),
+    leadingIcon: ImageVector? = null,
+    subtitleMaxLines: Int = 2,
     selected: Boolean = false,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -55,6 +64,7 @@ fun HorizontalInfoCard(
         containerColor = if (selected) scheme.primaryContainer else scheme.surfaceContainerLowest,
         disabledContainerColor = scheme.surfaceContainerLowest,
     )
+    val selectedState = if (selected) Modifier.semantics { this.selected = true } else Modifier
     val body: @Composable () -> Unit = {
         Row(
             Modifier
@@ -71,7 +81,11 @@ fun HorizontalInfoCard(
                     .background(scheme.primaryContainer, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(avatarText, style = MaterialTheme.typography.titleMedium, color = scheme.onPrimaryContainer)
+                if (leadingIcon != null) {
+                    Icon(leadingIcon, contentDescription = null, tint = scheme.onPrimaryContainer, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(avatarText, style = MaterialTheme.typography.titleMedium, color = scheme.onPrimaryContainer)
+                }
             }
             Column(
                 Modifier
@@ -80,15 +94,17 @@ fun HorizontalInfoCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(title, style = MaterialTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant, maxLines = subtitleMaxLines, overflow = TextOverflow.Ellipsis)
+                }
             }
             trailing?.invoke()
         }
     }
     if (onClick != null) {
-        OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border) { body() }
+        OutlinedCard(onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth().then(selectedState), shape = shape, colors = colors, border = border) { body() }
     } else {
-        Card(modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border) { body() }
+        Card(modifier = modifier.fillMaxWidth().then(selectedState), shape = shape, colors = colors, border = border) { body() }
     }
 }
 
@@ -109,7 +125,6 @@ private fun HorizontalInfoCardPreview() = HackappTheme {
     Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HorizontalInfoCard(
             title = stringResource(R.string.visitor_title),
-            subtitle = stringResource(R.string.visitor_description),
             selected = true,
             onClick = {},
         )
@@ -118,6 +133,13 @@ private fun HorizontalInfoCardPreview() = HackappTheme {
             subtitle = stringResource(R.string.label_coming_soon),
             enabled = false,
             onClick = {},
+        )
+        HorizontalInfoCard(
+            title = stringResource(R.string.visitor_title),
+            subtitle = stringResource(R.string.label_coming_soon),
+            leadingIcon = Icons.Filled.Info,
+            subtitleMaxLines = 3,
+            trailing = null,
         )
     }
 }

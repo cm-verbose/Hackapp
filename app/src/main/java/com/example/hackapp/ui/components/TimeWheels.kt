@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +39,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -71,21 +74,32 @@ fun HackappTimeWheels(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.Top,
     ) {
-        TimeUnitWheel(hour, HOURS, stringResource(R.string.time_hour), onHourChange)
+        TimeUnitWheel(hour, HOURS, stringResource(R.string.time_hour), R.string.time_hour_value, onHourChange)
         Box(Modifier.height(WheelHeight), contentAlignment = Alignment.Center) {
             Text(":", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.onSurface)
         }
-        TimeUnitWheel(minute, MINUTES, stringResource(R.string.time_minute), onMinuteChange)
+        TimeUnitWheel(minute, MINUTES, stringResource(R.string.time_minute), R.string.time_minute_value, onMinuteChange)
     }
 }
 
+/**
+ * [label] names the unit; [valueTemplate] formats unit and value together for TalkBack.
+ * Flicking stays a touch gesture: TalkBack gets one node per wheel that opens the typed input on tap.
+ */
 @Composable
-private fun TimeUnitWheel(value: Int, count: Int, label: String, onValueChange: (Int) -> Unit) {
+private fun TimeUnitWheel(
+    value: Int,
+    count: Int,
+    label: String,
+    @StringRes valueTemplate: Int,
+    onValueChange: (Int) -> Unit,
+) {
     val scheme = MaterialTheme.colorScheme
     val pageCount = count * WHEEL_LOOPS
     val pagerState = rememberPagerState(initialPage = wheelPageFor(value, count, pageCount / 2)) { pageCount }
     val latestChange by rememberUpdatedState(onValueChange)
     var editing by rememberSaveable { mutableStateOf(false) }
+    val description = stringResource(valueTemplate, twoDigits(value))
 
     LaunchedEffect(pagerState, count) {
         snapshotFlow { pagerState.currentPage }.collect { page -> latestChange(Math.floorMod(page, count)) }
@@ -103,11 +117,23 @@ private fun TimeUnitWheel(value: Int, count: Int, label: String, onValueChange: 
                 .size(WheelWidth, WheelHeight)
                 .clip(RoundedCornerShape(HackappCorners.Medium))
                 .background(if (editing) scheme.primaryContainer else scheme.surfaceContainerHighest)
-                .semantics { contentDescription = "$label ${twoDigits(value)}" },
+                .then(
+                    if (editing) {
+                        Modifier
+                    } else {
+                        Modifier.clearAndSetSemantics {
+                            contentDescription = description
+                            onClick {
+                                editing = true
+                                true
+                            }
+                        }
+                    },
+                ),
             contentAlignment = Alignment.Center,
         ) {
             if (editing) {
-                TimeUnitInput(value, count, onValueChange = { latestChange(it) }, onDone = { editing = false })
+                TimeUnitInput(value, count, label, onValueChange = { latestChange(it) }, onDone = { editing = false })
             } else {
                 VerticalPager(
                     state = pagerState,
@@ -121,7 +147,7 @@ private fun TimeUnitWheel(value: Int, count: Int, label: String, onValueChange: 
                     Box(
                         Modifier
                             .fillMaxSize()
-                            .clickable(role = Role.Button, onClickLabel = label) { editing = true },
+                            .clickable(role = Role.Button) { editing = true },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -133,13 +159,12 @@ private fun TimeUnitWheel(value: Int, count: Int, label: String, onValueChange: 
                 }
             }
         }
-        Text(label, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
     }
 }
 
-/** Starts with the value selected, so the first digit replaces it. */
+/** Starts with the value selected, so the first digit replaces it. [label] is the unit read by TalkBack. */
 @Composable
-private fun TimeUnitInput(value: Int, count: Int, onValueChange: (Int) -> Unit, onDone: () -> Unit) {
+private fun TimeUnitInput(value: Int, count: Int, label: String, onValueChange: (Int) -> Unit, onDone: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val focusRequester = remember { FocusRequester() }
     var hadFocus by remember { mutableStateOf(false) }
@@ -165,6 +190,7 @@ private fun TimeUnitInput(value: Int, count: Int, onValueChange: (Int) -> Unit, 
         keyboardActions = KeyboardActions(onDone = { onDone() }),
         modifier = Modifier
             .fillMaxWidth()
+            .semantics { contentDescription = label }
             .focusRequester(focusRequester)
             .onFocusChanged {
                 if (hadFocus && !it.isFocused) onDone()

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -259,7 +258,7 @@ private fun MapHeader(
                                 Text(
                                     stringResource(R.string.district_order_chip, index + 1, state.nameOf(id)),
                                     style = MaterialTheme.typography.labelLarge,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                                 )
@@ -318,10 +317,10 @@ private fun DistrictSheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) { types.forEach { EventTypeLabel(it) } }
                 }
-                Row(
+                FlowRow(
                     Modifier.padding(top = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     if (isSelected) {
                         HackappSmallTonalButton(stringResource(R.string.action_remove), onRemove)
@@ -340,6 +339,7 @@ private fun DistrictSheet(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MaximumReachedContent(
     state: DistrictPickUiState,
@@ -364,12 +364,6 @@ private fun MaximumReachedContent(
         color = scheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 4.dp),
     )
-    Text(
-        stringResource(R.string.district_replace_label),
-        style = MaterialTheme.typography.labelLarge,
-        color = scheme.onSurface,
-        modifier = Modifier.padding(top = 8.dp),
-    )
     Column(Modifier.selectableGroup()) {
         state.selected.forEachIndexed { index, selectedId ->
             RadioOptionRow(
@@ -379,10 +373,10 @@ private fun MaximumReachedContent(
             )
         }
     }
-    Row(
+    FlowRow(
         Modifier.padding(top = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         HackappSmallTonalButton(
             text = stringResource(R.string.district_replace_action),
