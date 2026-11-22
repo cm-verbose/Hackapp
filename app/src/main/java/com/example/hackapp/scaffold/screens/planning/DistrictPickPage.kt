@@ -105,6 +105,7 @@ fun DistrictPickScreen(
             onContinue(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     DistrictPickPage(
         state = state,
         onBack = onBack,

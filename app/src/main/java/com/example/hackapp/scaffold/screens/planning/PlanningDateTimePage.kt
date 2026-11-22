@@ -60,6 +60,7 @@ fun PlanningDateTimeScreen(
             onContinue(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningDateTimePage(
         state = state,
         onBack = onBack,

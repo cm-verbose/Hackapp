@@ -65,6 +65,7 @@ fun PlanningBudgetChoiceScreen(
             onKept(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningBudgetChoicePage(state, onBack, viewModel::retry, viewModel::keep, onChange)
 }
 
@@ -162,6 +163,7 @@ fun PlanningBudgetEditScreen(
             onSaved(id)
         }
     }
+    StopChangeWarningDialog(state.changeWarning, viewModel::confirmChange, viewModel::cancelChange)
     PlanningBudgetEditPage(
         state = state,
         onBack = onBack,
