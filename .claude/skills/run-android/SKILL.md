@@ -79,6 +79,12 @@ Firebase keeps the session across launches, so log in once and avoid `pm clear` 
   - FINE works the same way while it is still declared: `& $adb shell pm grant com.example.hackapp android.permission.ACCESS_FINE_LOCATION`
 - Check: `& $adb shell dumpsys package com.example.hackapp | Select-String 'POST_NOTIFICATIONS|LOCATION'`
 
+## 9a. Offline check (demo mode: local data only)
+- Network off: `& $adb shell svc wifi disable; & $adb shell svc data disable`
+- Network on (always restore): `& $adb shell svc wifi enable; & $adb shell svc data enable`
+- Check: `& $adb shell dumpsys connectivity | Select-String 'NetworkAgentInfo' | Select-Object -First 3`. No lines means no active network.
+- Sign in **before** going offline: Firebase Auth needs network, and an existing session survives offline. Screens that load remote images (Coil) should degrade gracefully; note any crash with `& $adb logcat -d -s AndroidRuntime:E`.
+
 ## 10. Underway alarms and notifications (`services/UnderwayNotifier.kt`)
 - Behaviour: inexact `setAndAllowWhileIdle` alarms.
   - `com.example.hackapp.ARRIVAL_CHECK` fires 30 minutes after a stop starts.
