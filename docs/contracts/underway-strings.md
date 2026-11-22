@@ -30,6 +30,9 @@ Time arguments: sentences and notification titles use `19 h 15` in French and `1
 | `underway_skip_title` | Sauter %1$s? | Skip %1$s? | Skip confirmation title (`%1$s` = Stop name) |
 | `underway_skip_confirm` | Sauter | Skip | Skip confirmation button |
 | `underway_skip_body` | Il ne donnera pas de timbre. | It won’t earn a stamp. | Skip confirmation body |
+| `underway_skip_last_body` | Il ne donnera pas de timbre. L’itinéraire se terminera. | It won’t earn a stamp. Your itinerary will end. | Skip confirmation body when skipping the last Stop (replaces `underway_skip_body`) |
+| `underway_end_confirm` | Terminer | End | Confirm button of the end-early dialog (replaces `end_of_day_finish` there) |
+| `end_of_day_stamp_pending` | Timbre à venir | Stamp pending | Stamp result while the Stamp is not yet awarded |
 | `underway_more_options` | Plus d’options | More options | Overflow menu accessibility label |
 | `underway_last_stop` | Dernier arrêt | Last stop | Label on the last Stop |
 | `notification_action_open` | Ouvrir | Open | Leave By notification action, opens the app |
@@ -57,10 +60,10 @@ Time arguments: sentences and notification titles use `19 h 15` in French and `1
 |---|---|
 | Leg, with Leave By | `leg_next_stop_label`, `at_stop_leave_by`, `leg_depart`, `leg_travel`, `leg_arrive`, `leg_now`, `leg_fare_required`; skip: `action_skip_stop` |
 | Arrival (after handoff) | `arrival_en_route`, `arrival_expected`, `action_arrived`, `arrival_change_transport`, `action_skip_stop` |
-| Skip confirmation | `underway_skip_title`, `underway_skip_confirm`, `action_cancel` |
+| Skip confirmation | `underway_skip_title`, `underway_skip_body` (last Stop: `underway_skip_last_body`), `underway_skip_confirm`, `action_cancel` |
 | At the Stop | `at_stop_leave_by`, `at_stop_next`, `action_leaving` (last Stop: `end_of_day_finish`) |
 | Late warning | `late_warning`, `action_go_anyway`, `action_skip_stop` |
-| End-early dialog | `underway_end_early_title`, `underway_end_early_body`, `end_of_day_finish`, `action_cancel` |
+| End-early dialog | `underway_end_early_title`, `underway_end_early_body`, `underway_end_confirm`, `action_cancel` |
 | Notifications-off banner | `underway_notifications_off`, `underway_notifications_open_settings`, `underway_banner_dismiss` |
 | Exact-alarm request | `underway_exact_alarm_rationale`, `underway_exact_alarm_allow`, `underway_exact_alarm_later` |
 | End of day | `end_of_day_title`; per Stop: `end_of_day_status_visited` or `stop_status_skipped`, then `end_of_day_new_stamps_section` / `end_of_day_stamp_new`, `end_of_day_already_in_passport`, `end_of_day_too_brief` or `end_of_day_no_stamp`; `end_of_day_done` |

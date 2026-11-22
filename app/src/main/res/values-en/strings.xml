@@ -196,6 +196,9 @@
     <string name="underway_skip_title">Skip %1$s?</string>
     <string name="underway_skip_confirm">Skip</string>
     <string name="underway_skip_body">It won’t earn a stamp.</string>
+    <string name="underway_skip_last_body">It won’t earn a stamp. Your itinerary will end.</string>
+    <string name="underway_end_confirm">End</string>
+    <string name="end_of_day_stamp_pending">Stamp pending</string>
     <string name="underway_more_options">More options</string>
     <string name="underway_last_stop">Last stop</string>
     <string name="underway_end_early_title">End itinerary?</string>

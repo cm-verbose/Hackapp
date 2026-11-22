@@ -202,6 +202,9 @@
     <string name="underway_skip_title">Sauter %1$s?</string>
     <string name="underway_skip_confirm">Sauter</string>
     <string name="underway_skip_body">Il ne donnera pas de timbre.</string>
+    <string name="underway_skip_last_body">Il ne donnera pas de timbre. L’itinéraire se terminera.</string>
+    <string name="underway_end_confirm">Terminer</string>
+    <string name="end_of_day_stamp_pending">Timbre à venir</string>
     <string name="underway_more_options">Plus d’options</string>
     <string name="underway_last_stop">Dernier arrêt</string>
     <string name="underway_end_early_title">Terminer l’itinéraire?</string>
