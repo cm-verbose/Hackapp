@@ -59,4 +59,13 @@
     <string name="late_no_replanning">Pas de replanification automatique.</string>
     <!-- Authentication (layout branch) -->
     <string name="text_sign_in_with_google">Se connecter avec Google</string>
+    <!-- First Eric Group components -->
+    <string name="action_remove">Retirer</string>
+    <string name="action_arrived">Je suis arrivé·e</string>
+    <string name="action_leaving">Je pars</string>
+    <string name="notification_preview_header">%1$s · maintenant</string>
+    <string name="notification_arrival_title">Êtes-vous arrivé·e?</string>
+    <string name="notification_arrival_body">%1$s devait commencer à %2$s.</string>
+    <string name="notification_leave_title">Départ dans 30 min</string>
+    <string name="notification_leave_body">Quittez %1$s avant %2$s pour arriver à l’heure.</string>
 </resources>
