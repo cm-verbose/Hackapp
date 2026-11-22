@@ -2,7 +2,7 @@ package com.example.hackapp.ui.components.map
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +13,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -108,25 +111,39 @@ fun ItineraryRouteMap(
         },
     ) { t, _ ->
         val half = with(LocalDensity.current) { MarkerTouchSize.toPx() / 2 }
+        if (onStopClick != null) {
+            // One handler for all markers, so a close neighbour's touch area cannot steal the tap.
+            val currentPoints by rememberUpdatedState(points)
+            val currentTransform by rememberUpdatedState(t)
+            val currentOnClick by rememberUpdatedState(onStopClick)
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { tap ->
+                            nearestWithin(tap, currentPoints, half) { currentTransform.toScreen(it.second) }
+                                ?.let { currentOnClick(it.first) }
+                        }
+                    },
+            )
+        }
         points.forEach { (stop, p) ->
             val c = stopColors[stop.type]
             val s = t.toScreen(p)
             val highlighted = stop.order == highlightedOrder
-            val markerLabel = stringResource(R.string.strip_stop, stop.order.toString(), stop.name.orEmpty())
+            val markerLabel = stringResource(R.string.review_marker_description, stop.order, stop.name.orEmpty())
             val interaction = if (onStopClick == null) {
                 Modifier.clearAndSetSemantics {}
             } else {
-                Modifier
-                    .clearAndSetSemantics {
-                        contentDescription = markerLabel
-                        role = Role.Button
-                        selected = highlighted
-                        onClick {
-                            onStopClick(stop)
-                            true
-                        }
+                Modifier.clearAndSetSemantics {
+                    contentDescription = markerLabel
+                    role = Role.Button
+                    selected = highlighted
+                    onClick {
+                        onStopClick(stop)
+                        true
                     }
-                    .clickable { onStopClick(stop) }
+                }
             }
             Box(
                 Modifier
@@ -149,6 +166,14 @@ fun ItineraryRouteMap(
 }
 
 private val MarkerTouchSize = 48.dp
+
+/** The item whose position is closest to [tap], if it is within [radius]. */
+internal fun <T> nearestWithin(tap: Offset, items: List<T>, radius: Float, position: (T) -> Offset): T? =
+    items
+        .map { it to (position(it) - tap).getDistance() }
+        .filter { (_, distance) -> distance <= radius }
+        .minByOrNull { (_, distance) -> distance }
+        ?.first
 
 @Preview(name = "ItineraryRouteMap", showBackground = true, backgroundColor = 0xFFF0F0F1, widthDp = 380)
 @Composable

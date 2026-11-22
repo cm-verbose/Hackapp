@@ -412,4 +412,41 @@ class ItineraryReviewTest {
         holder.refreshStart()
         assertEquals(ReviewStartState.WindowEnded(Nov28), holder.state.value.start)
     }
+
+    @Test
+    fun `cancelling the picker after a failed pick clears the save error`() = runBlocking {
+        events = listOf(showtime("ev-c", 19, 20), showtime("ev-c2", 20, 45))
+        repository.saveItinerary(draft(a, b, c))
+        val holder = holder()
+        holder.load()
+        holder.remove("b")
+        holder.reschedule()
+        failSaves = true
+        holder.pickShowtime("ev-c2")
+        assertTrue(holder.state.value.actionFailed)
+        holder.cancelReschedule()
+        assertFalse(holder.state.value.actionFailed)
+        assertTrue(holder.state.value.dialog is ReviewDialog.RemoveAffects)
+    }
+
+    @Test
+    fun `the picker lists every Stop that Reorganize would remove`() = runBlocking {
+        val c2 = at(stop("c2", at(Nov28, 19, 25), at(Nov28, 20), sourceId = "ev-d2"), 45.52)
+        events = listOf(
+            showtime("ev-c", 19, 20), showtime("ev-c2", 20, 45),
+            event("ev-d2", start = at(Nov28, 19, 25).toString(), title = "Other", venue = "W", latitude = 45.52),
+            event("ev-d3", start = at(Nov28, 22, 30).toString(), title = "Other", venue = "W", latitude = 45.52),
+        )
+        repository.saveItinerary(draft(a, b, c, c2))
+        val holder = holder()
+        holder.load()
+        holder.remove("b")
+        holder.reschedule()
+        val first = holder.state.value.reschedule!!
+        assertEquals(listOf("c", "c2"), first.affected.map { it.id })
+        holder.pickShowtime("ev-c2")
+        val second = holder.state.value.reschedule!!
+        assertEquals("c2", second.stop.id)
+        assertEquals(listOf("c", "c2"), second.affected.map { it.id })
+    }
 }

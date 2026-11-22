@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso
 import androidx.compose.ui.test.performClick
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,8 +24,10 @@ import com.example.hackapp.auth.LocalAuthService
 import com.example.hackapp.citypack.ActiveCityPack
 import com.example.hackapp.itinerary.InMemoryItineraryRepository
 import com.example.hackapp.itinerary.Itinerary
+import com.example.hackapp.itinerary.ItineraryPhase
 import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.itinerary.MealKind
+import com.example.hackapp.itinerary.OutingKind
 import com.example.hackapp.itinerary.PlanningStep
 import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.StopKind
@@ -35,6 +38,7 @@ import com.example.hackapp.profile.Profile
 import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.profile.VisitorType
 import com.example.hackapp.scaffold.navigation.AppNavigation
+import com.example.hackapp.scaffold.navigation.ItineraryReviewRoute
 import com.example.hackapp.scaffold.navigation.PlanningMealChoiceRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
@@ -44,10 +48,13 @@ import com.example.hackapp.ui.theme.HackappTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDate
+import java.time.LocalTime
 
 /** Walks the typed route graph, which can only fail at runtime. */
 @RunWith(AndroidJUnit4::class)
@@ -110,6 +117,54 @@ class AppNavigationTest {
         compose.waitForIdle()
         repeat(UNDERWAY_PAGES) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    @Test
+    fun startFromReviewOpensUnderwayAboveHome() {
+        val zone = ActiveCityPack.timeZone
+        val today = LocalDate.now(zone)
+        // A night window ends after midnight, so it is still open at any time of the test day.
+        val start = today.atTime(18, 0).atZone(zone).toOffsetDateTime()
+        val draft = Itinerary(
+            id = "start-draft",
+            ownerUid = TEST_UID,
+            cityId = ActiveCityPack.id,
+            step = PlanningStep.Review,
+            date = today,
+            outingKind = OutingKind.Night,
+            startTime = LocalTime.of(18, 0),
+            endTime = LocalTime.of(2, 0),
+            districtIds = listOf(TEST_DISTRICT),
+            stops = listOf(
+                Stop(
+                    id = "start-stop",
+                    kind = StopKind.Event,
+                    sourceId = "test-event",
+                    name = "Test",
+                    districtId = TEST_DISTRICT,
+                    latitude = 45.5075,
+                    longitude = -73.5540,
+                    start = start,
+                    plannedDeparture = start.plusMinutes(30),
+                    hasPublishedEnd = true,
+                ),
+            ),
+            createdAtMillis = 0,
+            updatedAtMillis = 0,
+        )
+        runBlocking { itineraries.saveItinerary(draft) }
+        compose.runOnIdle { controller.navigate(ItineraryReviewRoute(draft.id)) }
+        awaitEnabled(R.string.review_start)
+        click(R.string.review_start)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            controller.currentBackStackEntry?.destination?.hasRoute<UnderwayLegRoute>() == true
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText(context.getString(R.string.leg_next_stop_label)).assertIsDisplayed()
+        compose.runOnIdle {
+            assertTrue(controller.previousBackStackEntry?.destination?.hasRoute<ScreenHomeDestination>() == true)
+        }
+        assertEquals(ItineraryPhase.Underway, savedDraft().phase)
     }
 
     /** The one draft of the test user, as last saved. */
