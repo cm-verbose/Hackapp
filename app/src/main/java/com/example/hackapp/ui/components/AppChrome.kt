@@ -1,6 +1,10 @@
 package com.example.hackapp.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.runtime.getValue
+import com.example.hackapp.ui.motion.HackappMotion
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +75,8 @@ fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
     val done = current.coerceIn(0, total)
     val description = stringResource(R.string.onboarding_step, done, total)
+    // The filled part slides to the new step instead of jumping.
+    val filled by animateFloatAsState(done.toFloat(), tween(HackappMotion.Medium, easing = HackappMotion.Decelerate), label = "stepProgress")
     Row(
         modifier
             .fillMaxWidth()
@@ -78,18 +84,18 @@ fun StepProgress(current: Int, total: Int, modifier: Modifier = Modifier) {
             .semantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (done > 0) {
+        if (filled > 0.001f) {
             Box(
                 Modifier
-                    .weight(done.toFloat())
+                    .weight(filled)
                     .height(4.dp)
                     .background(scheme.primary, CircleShape),
             )
         }
-        if (done < total) {
+        if (total - filled > 0.001f) {
             Box(
                 Modifier
-                    .weight((total - done).toFloat())
+                    .weight(total - filled)
                     .height(4.dp)
                     .background(scheme.secondaryContainer, CircleShape),
             )

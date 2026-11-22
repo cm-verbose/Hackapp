@@ -11,7 +11,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.graphicsLayer
+import com.example.hackapp.ui.motion.HackappMotion
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -112,9 +115,11 @@ fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
                     },
                     text = { Text(item.title) },
                     icon = {
+                        val lift by animateFloatAsState(if (selectedIndex == index) 1.18f else 1f, HackappMotion.bouncy(), label = "tabIcon")
                         Icon(
                             painter = item.painter(),
-                            contentDescription = item.title
+                            contentDescription = item.title,
+                            modifier = Modifier.graphicsLayer { scaleX = lift; scaleY = lift },
                         )
                     }
                 )

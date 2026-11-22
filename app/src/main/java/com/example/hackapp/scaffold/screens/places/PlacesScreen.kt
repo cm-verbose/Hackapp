@@ -86,14 +86,14 @@ fun PlacesScreen() {
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(shown, key = { it.id }) { PlaceCard(it) }
+            items(shown, key = { it.id }) { PlaceCard(it, Modifier.animateItem()) }
         }
     }
 }
 
 @Composable
-private fun PlaceCard(p: Place) {
-    Card(Modifier.fillMaxWidth()) {
+private fun PlaceCard(p: Place, modifier: Modifier = Modifier) {
+    Card(modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(p.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))

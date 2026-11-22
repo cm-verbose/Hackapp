@@ -10,6 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.compositeOver
+import com.example.hackapp.ui.motion.floatingOrbs
+import com.example.hackapp.ui.motion.shimmerSweep
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,7 +38,9 @@ fun PlanItineraryCard(
     Column(
         modifier
             .clip(RoundedCornerShape(HackappCorners.ExtraLarge))
-            .background(scheme.primaryContainer)
+            .background(Brush.linearGradient(listOf(scheme.primaryContainer, scheme.tertiaryContainer.copy(alpha = 0.55f).compositeOver(scheme.primaryContainer))))
+            .floatingOrbs(scheme.primary.copy(alpha = 0.30f), scheme.tertiary.copy(alpha = 0.25f))
+            .shimmerSweep()
             .padding(horizontal = 20.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

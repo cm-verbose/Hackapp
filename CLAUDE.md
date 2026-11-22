@@ -7,7 +7,7 @@ Single entry point for AI agents. Read this first. If anything here is unclear o
 - App name pattern: **Plan[City]**, using the City Pack's city. Montréal is **Plan Montréal** (`app_name`; EN "Plan Montreal"). "Hackapp" is only the repository and code identifier (root project `HackApp`).
 - Accounts are for people 18 and over; adults planning with children use the family-friendly Audience Preference.
 - Gradle: AGP 9.5.2, Kotlin 2.4.21, minSdk 29, compileSdk 37. Namespace and `applicationId` are both `com.example.hackapp` (the `applicationId` was `com.example.androidtemplate` until the `layout` merge on 2026-11-21; an old install on a device stays as a separate app).
-- Version catalog: `gradle/libs.versions.toml`. Navigation is Compose Navigation with `@Serializable` destinations (`scaffold/navigation/AppNavigation.kt`): start = `ScreenLoginDestination` -> `PlanningScreenDestination` (only a log-out button so far); `PlacesDestination` (restaurant browse) is registered but not the start. ScreenA/ScreenB were deleted.
+- Version catalog: `gradle/libs.versions.toml`. Navigation is Compose Navigation with `@Serializable` destinations (`scaffold/navigation/AppNavigation.kt`): start = `ScreenLoginDestination` -> onboarding (if Firebase `isNewUser`) or `ScreenHomeDestination`; Home leads to Planning 1-5 and Underway; Itinerary/Passport are tabs; `PlacesDestination` and the old `PlanningScreenDestination` are still registered. ScreenA/ScreenB were deleted.
 - Auth (from branch `layout`): Google sign-in with Firebase Auth + Credential Manager (`auth/AuthHandler.kt`, `auth/AuthTag.kt`, `scaffold/screens/login/`). `MainActivity` calls `FirebaseApp.initializeApp`. Config in `app/google-services.json` (committed by the `layout` branch; it contains the Firebase API key).
 - Git: work happens on feature branches (current: `feat-business`); main branch is `main`. Do not commit unless asked.
 
@@ -28,6 +28,14 @@ Single entry point for AI agents. Read this first. If anything here is unclear o
 | `app/src/main/res/values/strings.xml`, `values-en/strings.xml` | **French is the default locale** (`values/`), English in `values-en/`. Text comes from the Figma "strings.xml" page |
 | `app/src/main/java/com/example/hackapp/auth/`, `scaffold/screens/{login,planning}/` | Google sign-in (Firebase), from branch `layout` |
 | `app/src/main/java/com/example/hackapp/scaffold/screens/places/PlacesScreen.kt` | Restaurant browse screen (search + venue-type chips) over `PlaceRepository` |
+| `app/src/main/java/com/example/hackapp/domain/` | Trip flow logic: `Profile`/`ProfileStore`, `Itinerary`, `EventRules`, `Planner`, `UnderwayStore`, `FlowViewModel` |
+| `app/src/main/java/com/example/hackapp/services/` | `UnderwayNotifier` (alarms/notifications), `AppLocale`, `CityServices`, `LegEstimator`, `TripHandoff` |
+| `app/src/main/java/com/example/hackapp/{citypack,viewmodel,widgets}/` | City pack data, events UI state (`viewmodel/{montreal,toronto}`), home-screen widget |
+| `scaffold/screens/{onboarding,planning,underway,settings,home,itinerary,passport}/` | Flow screens (see section 8) |
+| `docs/adr/` | Architecture decision records |
+| `docs/implementation-plan.md` | Task board and current plan (team-lead) |
+| `docs/{engineering,ux,design,qa}/`, `docs/skills-inventory.md` | Team audit reports and design decisions |
+| `.claude/agents/`, `.claude/skills/` | Agent team role definitions; project skills (`places-db`, `add-compose-component`) |
 
 ## 3. Restaurant system architecture
 ```
@@ -90,6 +98,8 @@ Inputs go in `etl/data/` (not in the repo): `businesses.csv` (City "Établisseme
 cd etl && pip install -r requirements.txt
 python -m mtl_food_etl.pipeline --city data/businesses.csv --osm data/export.geojson \
     --boundary data/boundaries.geojson --no-google --out out/
+# --no-google builds a DB WITHOUT Google data. To refresh the shipped DB from the cache with zero
+# Google calls, use --google-key= instead (see section 8 and the places-db skill); boundary file is data/boundaries.json
 # Google (costs money): add --google-limit 50 first; needs GOOGLE_MAPS_API_KEY
 # then copy out/places.db to <repo>/app/src/main/assets/databases/places.db
 python tests/test_etl.py
@@ -162,7 +172,7 @@ Conventions: colours/type/corners only from theme tokens; user-facing text from 
 - Data version bumped to 2 (`DB_VERSION`, `PlacesDatabase.VERSION`); `app/schemas/.../2.json` exported. `PlacesDatabaseTest` passes on the `Medium_Phone` AVD emulator.
 - Boundary polygons loaded (`--boundary data/boundaries.json`, re-run with an empty Google key so zero API calls); DB bumped to version 3 (`DB_VERSION`, `PlacesDatabase.VERSION`), copied into assets, `connectedDebugAndroidTest` passes.
 - Added `PlaceDao.getAllActive()`, `PlaceRepository.allPlaces()` and a browse screen `scaffold/screens/places/PlacesScreen.kt` (search + venue-type chips), now the start destination in `AppNavigation.kt`.
-- To re-run the ETL with the cache but **no** Google calls: unset `GOOGLE_MAPS_API_KEY` and pass `--google-key ""` (do not use `--no-google`, it ignores the cache and drops all Google data).
+- To re-run the ETL with the cache but **no** Google calls: unset `GOOGLE_MAPS_API_KEY` and pass `--google-key=` (in Windows PowerShell 5.1, `--google-key ""` does not work: the empty argument is dropped and argparse aborts; do not use `--no-google`, it ignores the cache and drops all Google data).
 - Numbered companies ("9513-5836 QUEBEC INC."): `text.trade_name` + `pipeline.step_names`. Order: OSM/Google name, then the trade name inside the legal name (9 places), then the nearest cached Google search candidate within 25 m (5 places, listed in `out/review_name_rescues.csv` for manual check; guesses, no type check), else the place is removed (10, `out/removed_unnamed.csv`). Data version 4, 5,694 places. Zero Google calls.
 - Known name noise left as is: food trucks named like `(kamio) Name (plaque RP2503H-6)` or `... Quebec Inc. (plaque RR7075F)`.
 - All of the above is committed on `feat-business` (user commits, e.g. `ffb457a`, `c3c1b91`).
@@ -171,6 +181,9 @@ Conventions: colours/type/corners only from theme tokens; user-facing text from 
 - Committed as 8 commits (`9165aff`..`a617867`): icons/preview helpers, small buttons, home components, leg/meal components, Qindong 2 strings, underway cards, planning helpers, placeholder maps.
 - Merged `origin/layout` into `feat-business` (`b8cde2f`): Google sign-in (Firebase), login/planning screens, app rename, `applicationId` -> `com.example.hackapp`. Conflicts resolved by keeping both Gradle sides (Room/KSP + google-services/Credentials/Firebase), Login -> Planning navigation (Places kept as a route), French-default strings. `ExampleInstrumentedTest` now expects `com.example.hackapp`. `assembleDebug` compiles; tests need a running emulator (`No connected devices!` otherwise). Not pushed yet (the user pushes).
 - Toronto restaurant DB: research done, work **paused** by the user (see open item 9).
+
+- **Flow screens built (2026-11-21, not committed yet)**: Onboarding 1-4, Planning 1-5, Underway (Leg, Arrival, AtStop, EndOfDay), Settings; Passport/Itinerary tabs untouched. Code: `domain/` (`Profile.kt` + `ProfileStore` on DataStore, `Itinerary.kt`, `EventRules.kt`, `Planner.kt` = `ItineraryPlanner`, `UnderwayStore.kt`, `FlowViewModel.kt` activity-scoped draft state), `services/UnderwayNotifier.kt` (inexact alarms: arrival check +30 min with Arrived/Skip buttons, leave reminder -30 min), `services/AppLocale.kt` (FR/EN switch via `attachBaseContext`, no AppCompat), screens under `scaffold/screens/{onboarding,planning,underway,settings}`. Event `type` -> `StopType` in `eventStopType` (`other` is hidden). Meals: `PlaceRepository.search` around the last stop (or the district's places centroid), `Place.borough` == district id. Motion helpers in `ui/motion/Motion.kt`, transitions in `scaffold/navigation/NavTransitions.kt`.
+- Known gaps: the whole flow was not driven end to end on a device (login needs real credentials); `TestNavHostController` crashes at teardown when a test pushes 3+ pages in a row (so `AppNavigationTest` opens each page directly); travel times are distance estimates; notification actions are untested on a device; the profile edit in Settings reuses the onboarding pages.
 
 ### Open items
 1. [DONE] Download the City borough boundary GeoJSON into `etl/data/boundaries.json` and re-run with `--boundary` (DONE: file is `etl/data/boundaries.json`, 19/19 boroughs assigned).

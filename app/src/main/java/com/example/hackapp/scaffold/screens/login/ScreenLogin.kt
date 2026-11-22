@@ -1,6 +1,9 @@
 package com.example.hackapp.scaffold.screens.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import com.example.hackapp.ui.motion.entrance
+import com.example.hackapp.ui.motion.pulse
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -99,16 +102,17 @@ private fun WelcomeContent(
             Row(
                 Modifier
                     .padding(top = 8.dp)
+                    .entrance(0)
                     .background(scheme.primary, CircleShape)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium, color = scheme.onPrimary)
-                HackappIconView(HackappIcon.Star, size = 22.dp, tint = scheme.onPrimary)
+                Box(Modifier.pulse(0.9f, 1.15f)) { HackappIconView(HackappIcon.Star, size = 22.dp, tint = scheme.onPrimary) }
             }
-            Text(stringResource(R.string.welcome_title), style = MaterialTheme.typography.displaySmall, color = colors.onHero)
-            Text(stringResource(R.string.welcome_tagline), style = MaterialTheme.typography.bodyLarge, color = colors.onHeroCard)
+            Text(stringResource(R.string.welcome_title), style = MaterialTheme.typography.displaySmall, color = colors.onHero, modifier = Modifier.entrance(1))
+            Text(stringResource(R.string.welcome_tagline), style = MaterialTheme.typography.bodyLarge, color = colors.onHeroCard, modifier = Modifier.entrance(2))
 
             GoogleLoginButton(
                 onSignedIn = onSignedIn,
@@ -117,7 +121,8 @@ private fun WelcomeContent(
                 contentColor = scheme.onSurfaceVariant,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(top = 8.dp),
+                    .padding(top = 8.dp)
+                    .entrance(3),
             )
             Text(
                 stringResource(R.string.label_or),
@@ -126,6 +131,7 @@ private fun WelcomeContent(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             HackappTextField(
+                modifier = Modifier.entrance(4),
                 value = email,
                 onValueChange = { email = it; error = null },
                 label = stringResource(R.string.auth_email),
@@ -133,6 +139,7 @@ private fun WelcomeContent(
                 enabled = !busy,
             )
             HackappTextField(
+                modifier = Modifier.entrance(5),
                 value = password,
                 onValueChange = { password = it; error = null },
                 label = stringResource(R.string.auth_password),

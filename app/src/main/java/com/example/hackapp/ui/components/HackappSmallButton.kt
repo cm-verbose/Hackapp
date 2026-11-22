@@ -10,7 +10,10 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import com.example.hackapp.ui.motion.pressScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,10 +30,12 @@ private val SmallButtonMinHeight = 40.dp
 /** Filled button (primary). */
 @Composable
 fun HackappSmallButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val source = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = SmallButtonMinHeight),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = SmallButtonMinHeight),
         contentPadding = SmallButtonPadding,
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }
@@ -38,10 +43,12 @@ fun HackappSmallButton(text: String, onClick: () -> Unit, modifier: Modifier = M
 /** Tonal button (secondary container). */
 @Composable
 fun HackappSmallTonalButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val source = remember { MutableInteractionSource() }
     FilledTonalButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = SmallButtonMinHeight),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = SmallButtonMinHeight),
         contentPadding = SmallButtonPadding,
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }
@@ -49,10 +56,12 @@ fun HackappSmallTonalButton(text: String, onClick: () -> Unit, modifier: Modifie
 /** Text button (primary label, no container). */
 @Composable
 fun HackappSmallTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val source = remember { MutableInteractionSource() }
     TextButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = SmallButtonMinHeight),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = SmallButtonMinHeight),
         contentPadding = SmallButtonPadding,
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }

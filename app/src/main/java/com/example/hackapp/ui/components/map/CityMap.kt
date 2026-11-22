@@ -3,7 +3,11 @@ package com.example.hackapp.ui.components.map
 import android.graphics.Rect as AndroidRect
 import android.graphics.RectF
 import android.graphics.Region
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.key
+import com.example.hackapp.ui.motion.HackappMotion
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -72,6 +76,8 @@ fun CityMap(
     content: @Composable BoxScope.(MapTransform, List<ParsedDistrict>) -> Unit = { _, _ -> },
 ) {
     val districts = rememberParsedDistricts(map)
+    // Each district eases to its new colour (selected / previewed / unavailable) instead of snapping.
+    val fills = districts.map { d -> key(d.id) { animateColorAsState(fillOf(d), tween(HackappMotion.Medium), label = "districtFill") } }
     val stroke = MaterialTheme.colorScheme.surface
     val (vbX, vbY, vbW, vbH) = map.viewBox
     val area: Rect = remember(map, focus) {
@@ -103,8 +109,8 @@ fun CityMap(
         ) {
             translate(t.origin.x, t.origin.y) {
                 scale(s, s, pivot = Offset.Zero) {
-                    districts.forEach { d ->
-                        drawPath(d.path, fillOf(d))
+                    districts.forEachIndexed { i, d ->
+                        drawPath(d.path, fills[i].value)
                         drawPath(d.path, stroke, style = Stroke(width = 1.5f * density.density / s))
                     }
                     overlay(t)

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import com.example.hackapp.ui.theme.HackappTheme
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.remember
+import com.example.hackapp.ui.motion.popIn
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -54,7 +55,7 @@ fun DistrictMap(
         districts.forEach { d ->
             val count = eventCountOf(d.id) ?: return@forEach
             val p = t.toScreen(d.label)
-            Box(Modifier.offset { IntOffset((p.x - half).roundToInt(), (p.y - half).roundToInt()) }) {
+            Box(Modifier.offset { IntOffset((p.x - half).roundToInt(), (p.y - half).roundToInt()) }.popIn(delayMillis = (districts.indexOf(d) * 25).coerceAtMost(500))) {
                 // Eric's component (branch components/Eric): result, badgeColor, badgeSize.
                 DistrictEventCount(result = count, badgeColor = if (count == 0) cs.outline else cs.primary, badgeSize = badgeSize)
             }

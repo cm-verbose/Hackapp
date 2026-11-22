@@ -12,7 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import com.example.hackapp.ui.motion.pressScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,12 +38,14 @@ fun HackappPrimaryButton(
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
 ) {
+    val source = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled,
         colors = colors,
         contentPadding = PagePadding,
-        modifier = modifier.heightIn(min = PageButtonMinHeight),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = PageButtonMinHeight),
     ) { Text(text, style = MaterialTheme.typography.titleMedium) }
 }
 
@@ -52,12 +57,14 @@ fun HackappOutlineButton(
     enabled: Boolean = true,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
+    val source = remember { MutableInteractionSource() }
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
         colors = ButtonDefaults.outlinedButtonColors(contentColor = contentColor),
         contentPadding = PagePadding,
-        modifier = modifier.heightIn(min = PageButtonMinHeight),
+        interactionSource = source,
+        modifier = modifier.pressScale(source).heightIn(min = PageButtonMinHeight),
     ) { Text(text, style = MaterialTheme.typography.titleSmall) }
 }
 
