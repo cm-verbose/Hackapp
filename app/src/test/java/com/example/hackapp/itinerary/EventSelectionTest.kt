@@ -36,17 +36,26 @@ class EventSelectionTest {
     }
 
     @Test
-    fun `the estimator is asked for transit`() {
-        var mode: com.example.hackapp.services.LegMode? = null
-        val spy = LegEstimator { _, _, m ->
-            mode = m
-            LegEstimate(1.0, 1, 1)
+    fun `the estimator is asked for walking inside a District and transit across Districts`() {
+        fun modeFor(district: String): com.example.hackapp.services.LegMode? {
+            var mode: com.example.hackapp.services.LegMode? = null
+            val spy = LegEstimator { _, _, m ->
+                mode = m
+                LegEstimate(1.0, 1, 1)
+            }
+            reachableShowtimes(
+                EventSearch(
+                    night(stops = listOf(previous)),
+                    listOf(event("a", start = at(Nov28, 20).toString(), district = district)),
+                    context(),
+                    district,
+                ),
+                spy,
+            )
+            return mode
         }
-        reachableShowtimes(
-            EventSearch(night(stops = listOf(previous)), listOf(event("a", start = at(Nov28, 20).toString())), context(), HERE),
-            spy,
-        )
-        assertEquals(com.example.hackapp.services.LegMode.TRANSIT, mode)
+        assertEquals(com.example.hackapp.services.LegMode.WALK, modeFor(HERE))
+        assertEquals(com.example.hackapp.services.LegMode.TRANSIT, modeFor(NEXT))
     }
 
     @Test

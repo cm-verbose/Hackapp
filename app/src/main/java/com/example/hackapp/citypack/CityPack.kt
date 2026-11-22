@@ -37,6 +37,8 @@ data class LegEstimatorConfig(
     val walkBufferMinutes: Int = 5,
     val transitBufferMinutes: Int = 10,
     val rideHailBufferMinutes: Int = 8,
+    /** A walk longer than this between two places of one District is treated as a transit Leg. */
+    val maxWalkMinutes: Int = 20,
 )
 
 /** The inclusive range of dates covered by the pack's Event snapshot. */

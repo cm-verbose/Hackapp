@@ -11,4 +11,8 @@ internal object PreviewDefaults {
     const val WIDTH_DP = 380
     const val CANVAS = 0xFFF0F0F1L
     const val HERO_CARD = 0xFF181A1BL
+    const val DARK_CANVAS = 0xFF19120EL
+
+    /** Dark surfaceContainerLow, the default bottom sheet colour. */
+    const val DARK_SHEET = 0xFF211A17L
 }

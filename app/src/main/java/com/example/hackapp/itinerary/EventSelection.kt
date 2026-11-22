@@ -120,7 +120,9 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
             val start = event.startTime()?.atZoneSameInstant(zone) ?: return@mapNotNull null
             val dropIn = event.isDropIn()
             val target = event.latLng() ?: return@mapNotNull null
-            val leg = legOrigin?.let { estimator.transit(it, target) }
+            val leg = legOrigin?.let {
+                estimator.defaultEstimate(search.gap.previous?.districtId, event.districtId, it, target)
+            }
 
             // Earliest moment the person can be there: the window, now, and the Leg from the previous Stop.
             val previous = search.gap.previous
@@ -146,7 +148,7 @@ fun reachableShowtimes(search: EventSearch, estimator: LegEstimator): List<Reach
             }
             val next = search.gap.next
             if (next != null) {
-                val mustLeave = next.start.toInstant().minusSeconds(estimator.transit(target, next.latLng).totalMinutes * 60L)
+                val mustLeave = next.start.toInstant().minusSeconds(estimator.defaultEstimate(event.districtId, next.districtId, target, next.latLng).totalMinutes * 60L)
                 if (leaves.isAfter(mustLeave)) {
                     // A drop-in can be left early for the next Stop. A fixed showtime cannot.
                     if (!dropIn) return@mapNotNull null

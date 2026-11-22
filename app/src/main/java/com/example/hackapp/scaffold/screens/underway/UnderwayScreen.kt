@@ -262,7 +262,10 @@ private fun LegContent(
     }
     var transport by rememberSaveable(stop.id, view.transport) { mutableStateOf(view.transport.toChoice()) }
     var failedApp by rememberSaveable(stop.id) { mutableStateOf<String?>(null) }
-    val ui = legUi(view, info.stops, now, services.legs, transport)
+    // Walking is the default Leg inside a District until the person picks another way to get there.
+    var chosen by rememberSaveable(stop.id) { mutableStateOf(false) }
+    val walking = view.walking && !chosen
+    val ui = legUi(view, info.stops, now, services.legs, transport, walking)
     if (ui == null) {
         UnderwayExitErrorPage(onExitToHome)
         return
@@ -281,7 +284,7 @@ private fun LegContent(
     var opening by remember(stop.id) { mutableStateOf(false) }
 
     /** Rereads the state first: a notification action may have moved on from the Stop on screen. */
-    fun handoff(appName: String, choice: TransportChoice, open: () -> HandoffResult) {
+    fun handoff(appName: String, choice: com.example.hackapp.underway.TransportChoice, open: () -> HandoffResult) {
         if (opening) return
         opening = true
         scope.launch {
@@ -299,7 +302,7 @@ private fun LegContent(
                     failedApp = appName
                 } else {
                     failedApp = null
-                    dispatch(UnderwayEvent.OpenTransport(choice.toEngine(), stop.id))
+                    dispatch(UnderwayEvent.OpenTransport(choice, stop.id))
                 }
             } finally {
                 opening = false
@@ -315,23 +318,30 @@ private fun LegContent(
         chrome = chrome,
         onTransportChange = {
             transport = it
+            chosen = true
             failedApp = null
         },
         onOpenTransport = {
             when (transport) {
-                TransportChoice.Transit -> handoff(labels.transitAppName, TransportChoice.Transit) {
+                TransportChoice.Transit -> handoff(labels.transitAppName, TransportChoice.Transit.toEngine()) {
                     services.transit.openTransitApp(destination)
                 }
-                TransportChoice.RideHail -> handoff(labels.rideHailName, TransportChoice.RideHail) {
+                TransportChoice.RideHail -> handoff(labels.rideHailName, TransportChoice.RideHail.toEngine()) {
                     services.rideHail.requestRide(destination)
                 }
             }
         },
         onOpenDirections = {
-            handoff(directionsAppName, TransportChoice.Transit) { services.transit.openDirections(destination) }
+            handoff(directionsAppName, TransportChoice.Transit.toEngine()) { services.transit.openDirections(destination) }
         },
         onSkip = { onAskSkip(stop.id) },
         onArrived = { dispatch(UnderwayEvent.ConfirmArrival(stop.id)) },
+        walking = walking,
+        onOpenWalking = {
+            handoff(directionsAppName, com.example.hackapp.underway.TransportChoice.Walk) {
+                services.transit.openWalkingDirections(destination)
+            }
+        },
     )
 }
 

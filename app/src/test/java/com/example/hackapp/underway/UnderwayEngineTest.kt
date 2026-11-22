@@ -447,4 +447,115 @@ class UnderwayEngineTest {
         val old = UnderwayCodec.encode(arrival).replace(Regex(",?\"handoffAtMillis\":\\d+"), "")
         assertNull(UnderwayCodec.decode(old)!!.handoffAtMillis)
     }
+
+    // ---- walking inside a District ----
+
+    /** Walking: 5 minutes of travel plus 5 of buffer. Transit: 20 plus 10. Ride hail: 8 plus 8. */
+    private val modeLegs = object : com.example.hackapp.services.LegEstimator {
+        override fun estimate(from: LatLng, to: LatLng, mode: com.example.hackapp.services.LegMode) = when (mode) {
+            com.example.hackapp.services.LegMode.WALK -> com.example.hackapp.services.LegEstimate(400.0, 5, 5)
+            com.example.hackapp.services.LegMode.TRANSIT -> com.example.hackapp.services.LegEstimate(400.0, 20, 10)
+            com.example.hackapp.services.LegMode.RIDE_HAIL -> com.example.hackapp.services.LegEstimate(400.0, 8, 8)
+        }
+    }
+
+    /** A in HERE 19:00-20:50, B in HERE 21:00-22:30, C in another District 22:30. */
+    private fun walkItinerary() = night(
+        stops = listOf(
+            stop("a", at(Nov28, 19), at(Nov28, 20, 50)),
+            stop("b", at(Nov28, 21), at(Nov28, 22, 30)),
+            stop("c", at(Nov28, 22, 30), at(Nov28, 23), district = com.example.hackapp.itinerary.NEXT),
+        ),
+    )
+
+    private fun walkCtx() = UnderwayContext(walkItinerary(), modeLegs, com.example.hackapp.itinerary.Toronto)
+
+    @Test
+    fun `a Leg inside a District walks by default and one across Districts does not`() {
+        val c = walkCtx()
+        val toB = c.run(begin(walkItinerary()), t(19) to E.ConfirmArrival(), t(19, 30) to E.Leaving())
+        assertTrue(UnderwayEngine.view(c, toB, t(19, 31), true).walking)
+        // Leave By is 21:00 minus the walk (5 + 5), and arrival adds the 5 minutes of walking.
+        assertEquals(at(Nov28, 20, 50), UnderwayEngine.view(c, toB, t(19, 31), true).leaveBy)
+        assertEquals(at(Nov28, 20, 55), UnderwayEngine.view(c, toB, t(19, 31), true).expectedArrival)
+        val toC = c.run(toB, t(21) to E.ConfirmArrival(), t(21, 10) to E.Leaving())
+        val view = UnderwayEngine.view(c, toC, t(21, 11), true)
+        assertFalse(view.walking)
+        // Transit: Leave By is 22:30 minus 30 minutes, then 20 minutes of travel.
+        assertEquals(at(Nov28, 22), view.leaveBy)
+        assertEquals(at(Nov28, 22, 20), view.expectedArrival)
+    }
+
+    @Test
+    fun `picking transit or Uber uses its own time and ends the walking default for that Leg`() {
+        val c = walkCtx()
+        val toB = c.run(begin(walkItinerary()), t(19) to E.ConfirmArrival(), t(19, 30) to E.Leaving())
+        val transit = reduce2(c, toB, E.OpenTransport(TransportChoice.Transit, "b"), t(20))
+        val tv = UnderwayEngine.view(c, transit, t(20), true)
+        assertFalse(tv.walking)
+        assertEquals(at(Nov28, 20, 50).plusMinutes(20), tv.expectedArrival)
+        val uber = reduce2(c, transit, E.OpenTransport(TransportChoice.Uber, "b"), t(20, 5))
+        assertEquals(at(Nov28, 20, 50).plusMinutes(8), UnderwayEngine.view(c, uber, t(20, 5), true).expectedArrival)
+        val back = reduce2(c, uber, E.ReturnToLeg, t(20, 6))
+        assertFalse(UnderwayEngine.view(c, back, t(20, 6), true).walking)
+        // The next Leg starts again on its own default: Uber is not carried onto a walk.
+        val atB = reduce2(c, back, E.ConfirmArrival("b"), t(21))
+        assertFalse(atB.legTransportChosen)
+        val toC = reduce2(c, atB, E.Leaving(), t(21, 10))
+        assertEquals(TransportChoice.Uber, UnderwayEngine.view(c, toC, t(21, 11), true).transport)
+        assertFalse(UnderwayEngine.view(c, toC, t(21, 11), true).walking)
+    }
+
+    @Test
+    fun `opening walking directions records a walk and keeps it walking`() {
+        val c = walkCtx()
+        val toB = c.run(begin(walkItinerary()), t(19) to E.ConfirmArrival(), t(19, 30) to E.Leaving())
+        val walk = reduce2(c, toB, E.OpenTransport(TransportChoice.Walk, "b"), t(20))
+        assertEquals(UnderwayPhase.Arrival, walk.phase)
+        assertTrue(UnderwayEngine.view(c, walk, t(20), true).walking)
+    }
+
+    @Test
+    fun `the late warning counts the walk, not transit`() {
+        val c = walkCtx()
+        val atB = c.run(begin(walkItinerary()), t(19) to E.ConfirmArrival(), t(19, 30) to E.Leaving(), t(21) to E.ConfirmArrival())
+        // C starts 22:30 and the transit Leg takes 30 minutes: late after 22:00.
+        assertNull(UnderwayEngine.view(c, atB, t(22), true).lateWarningStop)
+        assertEquals("c", UnderwayEngine.view(c, atB, t(22, 1), true).lateWarningStop?.id)
+        val atA = c.run(begin(walkItinerary()), t(19) to E.ConfirmArrival())
+        // B starts 21:00 and the walk takes 10 minutes: late only after 20:50.
+        assertNull(UnderwayEngine.view(c, atA, t(20, 50), true).lateWarningStop)
+        assertEquals("b", UnderwayEngine.view(c, atA, t(20, 51), true).lateWarningStop?.id)
+    }
+
+    @Test
+    fun `the first Leg from the District of stay walks when the stay District is the Stop's`() {
+        val c = walkCtx()
+        val here = UnderwayEngine.begin(walkItinerary(), t(18), LatLng(45.5, -73.6), originDistrictId = com.example.hackapp.itinerary.HERE)!!
+        val view = UnderwayEngine.view(c, here, t(18), true)
+        assertTrue(view.walking)
+        assertEquals(at(Nov28, 18, 50), view.leaveBy)
+        val other = UnderwayEngine.begin(walkItinerary(), t(18), LatLng(45.5, -73.6), originDistrictId = com.example.hackapp.itinerary.NEXT)!!
+        val across = UnderwayEngine.view(c, other, t(18), true)
+        assertFalse(across.walking)
+        assertEquals(at(Nov28, 18, 30), across.leaveBy)
+        // No known District or point: transit, and nothing to walk from.
+        assertFalse(UnderwayEngine.view(c, begin(walkItinerary()), t(18), true).walking)
+    }
+
+    @Test
+    fun `saved state from before walking still loads with the default`() {
+        val old = UnderwayCodec.encode(begin())
+            .replace(Regex(",?\"originDistrictId\":(null|\"[^\"]*\")"), "")
+            .replace(Regex(",?\"legTransportChosen\":(true|false)"), "")
+        val state = UnderwayCodec.decode(old)!!
+        assertNull(state.originDistrictId)
+        assertFalse(state.legTransportChosen)
+    }
+
+    private fun reduce2(c: UnderwayContext, s: UnderwayState, e: E, time: java.time.Instant): UnderwayState {
+        val tr = UnderwayEngine.reduce(c, s, e, time)
+        check(tr.rejection == null) { "$e rejected: ${tr.rejection}" }
+        return tr.state
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,8 @@ import com.example.hackapp.scaffold.screens.planning.MealOptionRow
 import com.example.hackapp.scaffold.screens.planning.MealPickerUiState
 import com.example.hackapp.scaffold.screens.planning.MealPrice
 import com.example.hackapp.scaffold.screens.planning.MealTab
+import com.example.hackapp.scaffold.screens.planning.MealTravel
+import com.example.hackapp.services.LegMode
 import com.example.hackapp.ui.theme.HackappTheme
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -177,7 +180,7 @@ fun venueTypeLabel(type: VenueType): String = stringResource(
     },
 )
 
-/** One Meal option: name, venue type, walking distance when known, and the price range or "Price unknown" muted. */
+/** One Meal option: name, venue type, distance and travel time when known, and the price range or "Price unknown" muted. */
 @Composable
 private fun MealOptionRow(row: MealOptionRow, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
@@ -194,12 +197,17 @@ private fun MealOptionRow(row: MealOptionRow, onClick: () -> Unit) {
                 Text(row.name, style = MaterialTheme.typography.titleSmall, color = scheme.onSurface)
                 Text(venueTypeLabel(row.venueType), style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
                 val metres = row.distanceMeters
-                val minutes = row.walkingMinutes
-                if (metres != null && minutes != null) {
+                val travel = row.travel
+                if (metres != null && travel != null) {
+                    val walks = travel.mode == LegMode.WALK
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        HackappIconView(HackappIcon.DirectionsWalk, size = 16.dp, tint = scheme.onSurfaceVariant)
+                        HackappIconView(
+                            if (walks) HackappIcon.DirectionsWalk else HackappIcon.DirectionsTransit,
+                            size = 16.dp,
+                            tint = scheme.onSurfaceVariant,
+                        )
                         Text(
-                            stringResource(R.string.meal_picker_walk, metres, minutes),
+                            stringResource(if (walks) R.string.meal_picker_walk else R.string.meal_picker_transit, metres, travel.minutes),
                             style = MaterialTheme.typography.labelMedium,
                             color = scheme.onSurfaceVariant,
                         )
@@ -246,13 +254,14 @@ private fun previewRow(
     price: MealPrice,
     next: Boolean = false,
     venueType: VenueType = VenueType.RESTAURANT,
+    mode: LegMode = if (next) LegMode.TRANSIT else LegMode.WALK,
 ) =
     MealOptionRow(
         placeId = id,
         name = name,
         venueType = venueType,
         distanceMeters = metres,
-        walkingMinutes = minutes,
+        travel = minutes?.let { MealTravel(mode, it) },
         price = price,
         inNextDistrict = next,
         matchesCuisine = false,
@@ -303,6 +312,17 @@ private fun MealPickerPreview(
 @Preview(name = "MealPicker · two tabs", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
 @Composable
 private fun MealPickerTwoTabsPreview() = MealPickerPreview(previewState())
+
+@Preview(
+    name = "MealPicker · dark",
+    showBackground = true,
+    backgroundColor = PreviewDefaults.DARK_SHEET,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    widthDp = PreviewDefaults.WIDTH_DP,
+    heightDp = 640,
+)
+@Composable
+private fun MealPickerDarkPreview() = MealPickerPreview(previewState())
 
 @Preview(name = "MealPicker · one tab, no budget", showBackground = true, widthDp = PreviewDefaults.WIDTH_DP, heightDp = 640)
 @Composable

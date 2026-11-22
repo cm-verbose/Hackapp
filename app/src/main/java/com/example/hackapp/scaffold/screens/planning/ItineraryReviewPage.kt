@@ -168,12 +168,23 @@ fun ItineraryReviewScreen(
                     ),
                 )
             },
-            starter = coordinator.reviewStarter { uid ->
-                resolveStayOrigin(
-                    loadDistrictId = { profiles.getProfile(uid)?.districtOfStayId },
-                    loadMap = { loadDistrictMap(appContext, services.cityPack) },
-                )
-            },
+            starter = coordinator.reviewStarter(
+                originFor = { uid ->
+                    resolveStayOrigin(
+                        loadDistrictId = { profiles.getProfile(uid)?.districtOfStayId },
+                        loadMap = { loadDistrictMap(appContext, services.cityPack) },
+                    )
+                },
+                originDistrictFor = { uid ->
+                    try {
+                        profiles.getProfile(uid)?.districtOfStayId
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
+                },
+            ),
             demoMode = { coordinator.clock.isSimulated },
             clock = coordinator.clock::now,
             planningClock = coordinator.clock::planningNow,

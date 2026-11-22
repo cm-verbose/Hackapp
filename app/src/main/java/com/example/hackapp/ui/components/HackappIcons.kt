@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.DirectionsTransit
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Group
@@ -81,6 +82,7 @@ enum class HackappIcon(val vector: ImageVector) {
 
     // Planning sheets (maquettes 141:2520, 141:2614, 141:3622)
     DirectionsWalk(Icons.AutoMirrored.Filled.DirectionsWalk),
+    DirectionsTransit(Icons.Filled.DirectionsTransit),
     Schedule(Icons.Filled.Schedule),
     Place(Icons.Filled.Place),
     Sell(Icons.Filled.Sell),

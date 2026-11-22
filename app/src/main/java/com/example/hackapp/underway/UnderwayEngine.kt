@@ -7,7 +7,10 @@ import com.example.hackapp.itinerary.Stop
 import com.example.hackapp.itinerary.StopStatus
 import com.example.hackapp.itinerary.activeStops
 import com.example.hackapp.itinerary.completeUnderway
+import com.example.hackapp.itinerary.defaultEstimate
+import com.example.hackapp.itinerary.defaultLegMode
 import com.example.hackapp.itinerary.latLng
+import com.example.hackapp.itinerary.legBetween
 import com.example.hackapp.itinerary.leaveBy
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.itinerary.transit
@@ -25,7 +28,7 @@ object UnderwayEngine {
     const val AUTO_END_HOURS = 2L
 
     /** The first Leg opens right away. Null when the Itinerary has no active Stop. */
-    fun begin(itinerary: Itinerary, now: Instant, origin: LatLng?): UnderwayState? {
+    fun begin(itinerary: Itinerary, now: Instant, origin: LatLng?, originDistrictId: String? = null): UnderwayState? {
         val order = itinerary.activeStops.sortedBy { it.start.toInstant() }.map { it.id }
         if (order.isEmpty()) return null
         return UnderwayState(
@@ -37,6 +40,7 @@ object UnderwayEngine {
             startedAtMillis = now.toEpochMilli(),
             originLat = origin?.lat,
             originLng = origin?.lng,
+            originDistrictId = originDistrictId,
         )
     }
 
@@ -66,7 +70,7 @@ object UnderwayEngine {
         ctx.stopOf(nextAfter(state, state.currentStopId))
 
     private fun lateSince(ctx: UnderwayContext, from: Stop, next: Stop): Instant =
-        next.start.minusMinutes(ctx.estimator.transit(from.latLng, next.latLng).totalMinutes.toLong()).toInstant()
+        next.start.minusMinutes(ctx.estimator.legBetween(from, next).totalMinutes.toLong()).toInstant()
 
     // ---- transitions ----
 
@@ -109,7 +113,7 @@ object UnderwayEngine {
             is UnderwayEvent.OpenTransport -> when (s.phase) {
                 UnderwayPhase.Leg, UnderwayPhase.Arrival ->
                     if (event.stopId != null && event.stopId != current) rejectOriginal(Rejection.StaleStop)
-                    else done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice, handoffAtMillis = nowMs))
+                    else done(s.copy(phase = UnderwayPhase.Arrival, transport = event.choice, handoffAtMillis = nowMs, legTransportChosen = true))
                 else -> rejectOriginal(Rejection.WrongPhase)
             }
             UnderwayEvent.ReturnToLeg ->
@@ -122,6 +126,7 @@ object UnderwayEngine {
                     s.copy(
                         phase = UnderwayPhase.AtStop,
                         handoffAtMillis = null,
+                        legTransportChosen = false,
                         records = s.records + (current!! to s.record(current).copy(arrivedAtMillis = nowMs)),
                     ),
                 )
@@ -134,6 +139,7 @@ object UnderwayEngine {
                         phase = UnderwayPhase.Leg,
                         currentStopId = next,
                         handoffAtMillis = null,
+                        legTransportChosen = false,
                         records = s.records + (current!! to s.record(current).copy(leftAtMillis = nowMs)),
                     ),
                 )
@@ -151,7 +157,7 @@ object UnderwayEngine {
                             val ended = endDay(ctx, skipped, now, EndReason.Finished)
                             done(ended, listOf(UnderwayEffect.DayEnded))
                         } else {
-                            done(skipped.copy(phase = UnderwayPhase.Leg, currentStopId = next, handoffAtMillis = null))
+                            done(skipped.copy(phase = UnderwayPhase.Leg, currentStopId = next, handoffAtMillis = null, legTransportChosen = false))
                         }
                     }
                 }
@@ -319,6 +325,31 @@ object UnderwayEngine {
 
     // ---- views and results ----
 
+    /**
+     * How the Leg to [to] is travelled: what the person picked for this Leg, else walking when the
+     * default says so, else the last choice between transit and Uber (transit at first).
+     */
+    private fun legMode(
+        ctx: UnderwayContext,
+        state: UnderwayState,
+        fromDistrict: String?,
+        from: LatLng,
+        to: Stop,
+    ): LegMode {
+        if (state.legTransportChosen) {
+            return when (state.transport) {
+                TransportChoice.Walk -> LegMode.WALK
+                TransportChoice.Uber -> LegMode.RIDE_HAIL
+                TransportChoice.Transit -> LegMode.TRANSIT
+            }
+        }
+        return when {
+            defaultLegMode(fromDistrict, to.districtId, from, to.latLng, ctx.estimator) == LegMode.WALK -> LegMode.WALK
+            state.transport == TransportChoice.Uber -> LegMode.RIDE_HAIL
+            else -> LegMode.TRANSIT
+        }
+    }
+
     fun view(ctx: UnderwayContext, state: UnderwayState, now: Instant, notificationsAllowed: Boolean): UnderwayView {
         val current = ctx.stopOf(state.currentStopId).takeIf { state.phase != UnderwayPhase.Ended }
         val next = if (current != null) nextStop(ctx, state) else null
@@ -328,19 +359,25 @@ object UnderwayEngine {
         } else {
             null
         }
+        val originPoint = if (state.originLat != null && state.originLng != null) {
+            LatLng(state.originLat, state.originLng)
+        } else {
+            null
+        }
         val leave = when {
             current == null -> null
             state.phase == UnderwayPhase.AtStop -> leaveBy(current, next, ctx.estimator)
             legFrom != null -> leaveBy(legFrom, current, ctx.estimator)
-            state.originLat != null && state.originLng != null -> current.start.minusMinutes(
-                ctx.estimator.transit(LatLng(state.originLat, state.originLng), current.latLng).totalMinutes.toLong(),
+            originPoint != null -> current.start.minusMinutes(
+                ctx.estimator.defaultEstimate(state.originDistrictId, current.districtId, originPoint, current.latLng)
+                    .totalMinutes.toLong(),
             )
             else -> null
         }
         // As the Leg hero shows it: leave at Leave By (or now if later) plus the travel time of the
         // chosen transport. With no previous Stop there is no estimate, so it stays null.
         val expected = if (current != null && legFrom != null && leave != null) {
-            val mode = if (state.transport == TransportChoice.Uber) LegMode.RIDE_HAIL else LegMode.TRANSIT
+            val mode = legMode(ctx, state, legFrom.districtId, legFrom.latLng, current)
             val minutes = ctx.estimator.estimate(legFrom.latLng, current.latLng, mode).travelMinutes
             // On Arrival the clock stops at the handoff, so the time does not move every minute.
             val from = if (state.phase == UnderwayPhase.Arrival) {
@@ -352,6 +389,11 @@ object UnderwayEngine {
             departs.plusSeconds(minutes * 60L).atZone(ctx.zone).toOffsetDateTime()
         } else {
             null
+        }
+        val walking = current != null && state.phase != UnderwayPhase.AtStop && when {
+            legFrom != null -> legMode(ctx, state, legFrom.districtId, legFrom.latLng, current) == LegMode.WALK
+            originPoint != null -> legMode(ctx, state, state.originDistrictId, originPoint, current) == LegMode.WALK
+            else -> false
         }
         val late = if (state.phase == UnderwayPhase.AtStop && current != null && next != null &&
             next.id !in state.dismissedLateWarnings && now.isAfter(lateSince(ctx, current, next))
@@ -369,7 +411,8 @@ object UnderwayEngine {
             leaveBy = leave,
             nextStop = next,
             isLastStop = current != null && next == null,
-            transport = state.transport,
+            transport = if (state.transport == TransportChoice.Uber) TransportChoice.Uber else TransportChoice.Transit,
+            walking = walking,
             remainingStops = pending(state).size,
             lateWarningStop = late,
             endNeedsConfirmation = pending(state).isNotEmpty(),

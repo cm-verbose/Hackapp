@@ -58,6 +58,7 @@ class UnderwayCoordinator(
         origin: LatLng?,
         demoMode: Boolean = false,
         confirmEndCurrent: Boolean = false,
+        originDistrictId: String? = null,
     ): UnderwayStartResult = lock.withLock {
         val demoClock = (clock as? DemoClock)?.takeIf { demoMode && it.isSimulated }
         val current = if (demoMode) clock.now() else clock.realNow()
@@ -78,7 +79,7 @@ class UnderwayCoordinator(
             is StartResult.NeedsConfirmation -> return UnderwayStartResult.NeedsConfirmation(r.current)
             StartResult.NotFound -> return UnderwayStartResult.NotFound
         }
-        val state = UnderwayEngine.begin(started, now, origin)?.copy(demoRun = demoClock != null)
+        val state = UnderwayEngine.begin(started, now, origin, originDistrictId)?.copy(demoRun = demoClock != null)
             ?: return UnderwayStartResult.NotFound
         states.save(state)
         reschedule(uid, started, state)

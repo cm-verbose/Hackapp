@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import com.example.hackapp.data.model.LatLng
 import com.example.hackapp.data.model.PriceRange
 import com.example.hackapp.data.model.VenueType
 import com.example.hackapp.itinerary.Itinerary
@@ -7,6 +8,7 @@ import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.MealOption
 import com.example.hackapp.itinerary.MealSearch
 import com.example.hackapp.itinerary.Stop
+import com.example.hackapp.itinerary.defaultLegMode
 import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.mealOptions
 import com.example.hackapp.itinerary.mealStop
@@ -35,14 +37,26 @@ sealed interface MealPrice {
     data object Unknown : MealPrice
 }
 
+/** The shown estimate. [minutes] leaves out the buffer, like the travel time on the Leg page. */
+data class MealTravel(val mode: LegMode, val minutes: Int)
+
+/** The shared default: walking inside the reference District when it is short, transit otherwise. */
+internal fun mealTravelMode(
+    referenceDistrictId: String,
+    placeDistrictId: String?,
+    from: LatLng,
+    to: LatLng,
+    estimator: LegEstimator,
+): LegMode = defaultLegMode(referenceDistrictId, placeDistrictId, from, to, estimator)
+
 data class MealOptionRow(
     val placeId: Long,
     val name: String,
     val venueType: VenueType,
     /** Straight-line distance from the previous Stop, rounded. Null without a reference point. */
     val distanceMeters: Int?,
-    /** Walking time in minutes, without buffer. Null without a reference point. */
-    val walkingMinutes: Int?,
+    /** Travel from the previous Stop. Null without a reference point. */
+    val travel: MealTravel?,
     val price: MealPrice,
     val inNextDistrict: Boolean,
     val matchesCuisine: Boolean,
@@ -91,6 +105,7 @@ fun mealPickerRows(search: MealSearch, estimator: LegEstimator): Pair<List<MealO
     val zone = search.context.zone
     val previous = previousStopBefore(search.itinerary, search.block, zone)
     val origin = previous?.latLng ?: search.origin
+    val referenceDistrictId = previous?.districtId ?: search.currentDistrictId
     val options = mealOptions(search, estimator)
 
     fun row(option: MealOption): MealOptionRow {
@@ -101,7 +116,10 @@ fun mealPickerRows(search: MealSearch, estimator: LegEstimator): Pair<List<MealO
             name = place.name,
             venueType = place.venueType,
             distanceMeters = option.distanceMeters?.let { Math.round(it).toInt() },
-            walkingMinutes = origin?.let { estimator.estimate(it, place.location, LegMode.WALK).travelMinutes },
+            travel = origin?.let {
+                val mode = mealTravelMode(referenceDistrictId, place.borough, it, place.location, estimator)
+                MealTravel(mode, estimator.estimate(it, place.location, mode).travelMinutes)
+            },
             price = if (price == null) MealPrice.Unknown else MealPrice.Range(price, option.topPriceCad),
             inNextDistrict = option.inNextDistrict,
             matchesCuisine = option.matchesCuisine,

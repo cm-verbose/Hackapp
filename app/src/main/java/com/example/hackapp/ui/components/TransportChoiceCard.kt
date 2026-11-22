@@ -28,7 +28,7 @@ enum class TransportChoice { Transit, RideHail }
  */
 @Composable
 fun TransportChoiceCard(
-    selected: TransportChoice,
+    selected: TransportChoice?,
     onSelect: (TransportChoice) -> Unit,
     rideHailName: String,
     fareLabel: String,
@@ -49,13 +49,13 @@ fun TransportChoiceCard(
             style = MaterialTheme.typography.titleSmall,
             color = scheme.onSurface,
         )
-        HackappSegmentedButton(
+        HackappSegmentedButton<TransportChoice?>(
             options = listOf(
-                ChoiceOption(TransportChoice.Transit, stringResource(R.string.leg_mode_transit)),
-                ChoiceOption(TransportChoice.RideHail, rideHailName),
+                ChoiceOption<TransportChoice?>(TransportChoice.Transit, stringResource(R.string.leg_mode_transit)),
+                ChoiceOption<TransportChoice?>(TransportChoice.RideHail, rideHailName),
             ),
             selected = selected,
-            onSelectedChange = onSelect,
+            onSelectedChange = { choice -> choice?.let(onSelect) },
         )
         if (selected == TransportChoice.Transit) {
             TransitFareRow(

@@ -13,6 +13,7 @@ Maps each maquette element to its string key. Keys exist in `values/strings.xml`
 | Tab "Ici" | `meal_tab_here` | |
 | Tab "Dans Ville-Marie" | `meal_tab_in_district` | `%1$s` borough name. Written as "Dans", never "à", because of names like Le Plateau |
 | Row: "120 m · 2 min à pied" | `meal_picker_walk` | `%1$d` metres, `%2$d` minutes. Walking icon is decorative |
+| Row, Meal in another borough: "900 m · 18 min en transport" | `meal_picker_transit` | Same arguments as `meal_picker_walk`: `%1$d` metres, `%2$d` minutes. The transit icon is decorative |
 | Row price "10–20 $" | none | Formatted in code (en dash, `10–20 $`) |
 | Row price, no report | `meal_picker_price_unknown` | "Prix inconnu" / "Price unknown" |
 | Row "Bistro · Restaurant" | none | Assembled in code from cuisine and venue type labels. Joining strings is flagged by the plan; use a dedicated key if the Feature Engineer wants one |

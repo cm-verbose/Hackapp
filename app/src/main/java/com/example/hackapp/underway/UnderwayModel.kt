@@ -14,7 +14,7 @@ import java.time.ZoneId
 enum class UnderwayPhase { Leg, Arrival, AtStop, Ended }
 
 @Serializable
-enum class TransportChoice { Transit, Uber }
+enum class TransportChoice { Transit, Uber, Walk }
 
 @Serializable
 enum class EndReason { Finished, EndedEarly, Automatic, Replaced }
@@ -57,6 +57,10 @@ data class UnderwayState(
     val handoffAtMillis: Long? = null,
     /** Started in demo mode: reads simulated time and never schedules a real alarm. */
     val demoRun: Boolean = false,
+    /** The District the first Leg starts from (the Profile's District of stay), when known. */
+    val originDistrictId: String? = null,
+    /** True once the person picked a way to travel for this Leg: the default mode no longer applies. */
+    val legTransportChosen: Boolean = false,
 )
 
 /** Everything the engine needs besides the state. The Itinerary is read-only here. */
@@ -131,6 +135,8 @@ data class UnderwayView(
     val nextStop: Stop?,
     val isLastStop: Boolean,
     val transport: TransportChoice,
+    /** The Leg is walking: the default inside a District, or a chosen walk. Never true on a Leg with no start point. */
+    val walking: Boolean,
     val remainingStops: Int,
     val lateWarningStop: Stop?,
     val endNeedsConfirmation: Boolean,
