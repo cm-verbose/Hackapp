@@ -1,5 +1,10 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -190,27 +195,28 @@ internal fun DistrictSuggestionDialog(
     actions: SelectionGuidanceActions,
 ) {
     val meal = suggestion.kind == ContinueKind.Meal
+    val stay = {
+        actions.onDismissDistrict()
+        if (meal) actions.onChooseMeal()
+    }
     AlertDialog(
-        onDismissRequest = actions.onDismissDistrict,
+        onDismissRequest = stay,
         title = {
             Text(
                 stringResource(
                     if (meal) R.string.selection_continue_meal else R.string.selection_continue_event,
-                    currentDistrictName,
+                    nextDistrictName,
                 ),
             )
         },
         confirmButton = {
-            TextButton(onClick = {
-                actions.onDismissDistrict()
-                if (meal) actions.onChooseMeal()
-            }) {
-                Text(stringResource(if (meal) R.string.selection_continue_choose_meal else R.string.selection_continue_add_event))
+            TextButton(onClick = actions.onAcceptDistrict) {
+                Text(stringResource(R.string.selection_move_on_action, nextDistrictName))
             }
         },
         dismissButton = {
-            TextButton(onClick = actions.onAcceptDistrict) {
-                Text(stringResource(R.string.selection_move_on_action, nextDistrictName))
+            TextButton(onClick = stay) {
+                Text(stringResource(R.string.selection_stay_in, currentDistrictName))
             }
         },
     )
@@ -258,6 +264,78 @@ internal fun SelectionTransitionOverlay(transition: SelectionTransition, onFinis
             caption = stringResource(R.string.selection_transition_meal),
             icon = Icons.Filled.Restaurant,
         )
+    }
+}
+
+/** Where the borough panel is while the move-on question is open. */
+internal enum class PeekMode { Peek, Continue, Reverse }
+
+/** The panel shows this much of itself while it waits for the answer. */
+private const val PEEK_FRACTION = 0.28f
+private const val PEEK_IN_MILLIS = 500
+private const val PEEK_CONTINUE_MILLIS = 450
+private const val PEEK_REVERSE_MILLIS = 400
+
+/**
+ * The next borough's panel, paused partway in while the move-on question is open. [PeekMode.Continue]
+ * finishes the slide, holds, then wipes away like the other panels. [PeekMode.Reverse] slides it
+ * back out. [onFinished] runs once it has left the screen either way.
+ */
+@Composable
+internal fun BoroughPeekOverlay(name: String, mode: PeekMode, onFinished: () -> Unit) {
+    val colors = HackappTheme.appColors
+    val scheme = MaterialTheme.colorScheme
+    // 0 is off screen to the end side, 1 covers the screen, 2 has wiped off to the start side.
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(mode) {
+        when (mode) {
+            PeekMode.Peek -> progress.animateTo(PEEK_FRACTION, tween(PEEK_IN_MILLIS))
+            PeekMode.Continue -> {
+                progress.animateTo(1f, tween(PEEK_CONTINUE_MILLIS))
+                delay(INTRO_HOLD_MILLIS)
+                progress.animateTo(2f, tween(INTRO_WIPE_MILLIS))
+                onFinished()
+            }
+            PeekMode.Reverse -> {
+                progress.animateTo(0f, tween(PEEK_REVERSE_MILLIS))
+                onFinished()
+            }
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val width = constraints.maxWidth.toFloat()
+        val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val shift = width * (1f - progress.value)
+                    translationX = if (ltr) shift else -shift
+                }
+                .background(Brush.linearGradient(listOf(colors.hero, scheme.primary))),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+            ) {
+                Icon(Icons.Filled.Place, contentDescription = null, tint = scheme.onPrimary, modifier = Modifier.size(112.dp))
+                Text(
+                    stringResource(R.string.selection_transition_district),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onPrimary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    name,
+                    style = MaterialTheme.typography.displaySmall,
+                    color = scheme.onPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { heading() },
+                )
+            }
+        }
     }
 }
 

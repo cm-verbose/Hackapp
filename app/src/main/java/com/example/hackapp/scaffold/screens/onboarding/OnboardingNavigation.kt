@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.onboarding
 
+import com.example.hackapp.HackappApplication
 import com.example.hackapp.scaffold.screens.underway.currentUnderwayClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -143,6 +144,7 @@ fun SessionGate(onResolved: (SessionDestination) -> Unit) {
     val itineraries = LocalItineraryRepository.current
     val zone = LocalCityPack.current.timeZone
     val clock = currentUnderwayClock()
+    val app = LocalContext.current.applicationContext as? HackappApplication
     var attempt by remember { mutableIntStateOf(0) }
     var failed by remember { mutableStateOf(false) }
 
@@ -157,6 +159,13 @@ fun SessionGate(onResolved: (SessionDestination) -> Unit) {
             return@LaunchedEffect
         }
         auth.currentUser?.uid?.let { uid ->
+            try {
+                app?.applyDemoDefault(uid)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Demo mode can still be turned on in Settings.
+            }
             try {
                 // In demo mode any planned Itinerary must stay startable, whatever its date.
                 if (!clock.isSimulated) archiveExpiredDrafts(itineraries, uid, clock.realNow(), zone)

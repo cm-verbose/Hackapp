@@ -1,5 +1,6 @@
 package com.example.hackapp.ui.components
 
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -135,6 +136,8 @@ fun HackappPage(
     /** Pinned under the app bar, outside the scrolling content, so it pushes the content down. */
     belowTopBar: (@Composable () -> Unit)? = null,
     bottomActions: (@Composable ColumnScope.() -> Unit)? = null,
+    /** The height of the scrolling area in pixels, for content that sizes itself to the screen. */
+    onViewportHeight: ((Int) -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -153,6 +156,7 @@ fun HackappPage(
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .then(if (onViewportHeight != null) Modifier.onSizeChanged { onViewportHeight(it.height) } else Modifier)
                 .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

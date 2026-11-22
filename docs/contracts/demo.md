@@ -58,7 +58,7 @@ Exit cannot be cancelled once it holds the lock. If storage fails, `exit` throws
 
 ## Stamps
 
-Demo Stamps are real Passport Stamps and stay after exit. They follow the normal rules (Meal arrival, 20% for Events, one Stamp per identity). `PassportStamp.date` is the Itinerary's date. `awardedAtMillis` is **real** time, so a simulated date never sorts above Stamps earned later.
+Demo Stamps are real Passport Stamps and stay after exit. They follow the normal rules (a confirmed arrival, one Stamp per identity). `PassportStamp.date` is the Itinerary's date. `awardedAtMillis` is **real** time, so a simulated date never sorts above Stamps earned later.
 
 ## API
 

@@ -190,11 +190,27 @@ fun PlanningStopSelectionScreen(
         onFinishDay = viewModel::finishCompleteDay,
         onUndoChoice = viewModel::undoLastChoice,
     )
+    // While the move-on question is open, the next borough's panel waits partway in behind it.
+    var peek by remember { mutableStateOf<BoroughPeek?>(null) }
+    val suggestion = state.districtSuggestion.takeUnless { state.dayComplete }
+    LaunchedEffect(suggestion) {
+        if (suggestion != null && peek == null) peek = BoroughPeek(suggestion.districtId, nameOf(suggestion.districtId), PeekMode.Peek)
+    }
+    val questionActions = guidance.copy(
+        onAcceptDistrict = {
+            peek = peek?.copy(mode = PeekMode.Continue)
+            guidance.onAcceptDistrict()
+        },
+        onDismissDistrict = {
+            peek = peek?.copy(mode = PeekMode.Reverse)
+            guidance.onDismissDistrict()
+        },
+    )
     if (state.dayComplete) {
         DayCompleteDialog(state.canFinish, guidance)
     } else {
-        state.districtSuggestion?.let { suggestion ->
-            DistrictSuggestionDialog(suggestion, state.districtId?.let(nameOf).orEmpty(), nameOf(suggestion.districtId), guidance)
+        suggestion?.let {
+            DistrictSuggestionDialog(it, state.districtId?.let(nameOf).orEmpty(), nameOf(it.districtId), questionActions)
         }
     }
 
@@ -220,7 +236,11 @@ fun PlanningStopSelectionScreen(
         val movedForward = previous != null && previous != district &&
             state.districtIds.indexOf(previous) < state.districtIds.indexOf(district)
         when {
+            // The paused panel finishes this move itself.
+            movedForward && peek?.districtId == district -> Unit
             movedForward -> transition = SelectionTransition.District(nameOf(district))
+            // The move-on question already marks this boundary.
+            state.districtSuggestion != null -> Unit
             dueMeal != null && dueMeal.blockId != shownMealBlock -> transition = SelectionTransition.Meal(dueMeal.kind)
         }
         shownMealBlock = dueMeal?.blockId
@@ -291,6 +311,11 @@ fun PlanningStopSelectionScreen(
                 onDismiss = viewModel::dismissSheet,
                 budgetLabel = sheet.block.budget?.let { budgetBracketLabel(it) },
             )
+        }
+    }
+    peek?.let { shown ->
+        key(shown.districtId) {
+            BoroughPeekOverlay(shown.name, shown.mode, onFinished = { peek = null })
         }
     }
     transition?.let { shown ->
@@ -966,3 +991,6 @@ private fun SelectionErrorPreview() = PreviewPage(
     PlanningStopSelectionUiState(loading = false, loadFailed = true),
     districtName = null,
 )
+
+/** The next borough's panel and where it is while the move-on question is open. */
+private data class BoroughPeek(val districtId: String, val name: String, val mode: PeekMode)

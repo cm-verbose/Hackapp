@@ -302,49 +302,9 @@ fun UnderwayAtStopPage(
 
 /** Figma Results `160:2756`. The day is over, so it has no overflow menu. */
 @OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun UnderwayEndOfDayPage(
-    ui: EndOfDayUi,
-    onDone: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    HackappPage(
-        title = stringResource(R.string.end_of_day_title),
-        modifier = modifier,
-        onBack = onDone,
-        bottomActions = { HackappPrimaryButton(stringResource(R.string.end_of_day_done), onDone) },
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ui.results.forEach { DayResultRow(it) }
-        }
-        if (ui.newStamps.isNotEmpty()) {
-            Text(
-                stringResource(R.string.end_of_day_new_stamps_section),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.semantics { heading() },
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                ui.newStamps.forEach { stamp ->
-                    Stamp(
-                        initials = stampInitials(stamp.name),
-                        stampName = stamp.name,
-                        date = itineraryShortDate(stamp.date),
-                        district = stamp.districtName,
-                        modifier = Modifier.semantics(mergeDescendants = true) {},
-                    )
-                }
-            }
-        }
-        DataAttribution()
-    }
-}
 
 @Composable
-private fun DayResultRow(result: DayResultUi) {
+internal fun DayResultRow(result: DayResultUi) {
     val scheme = MaterialTheme.colorScheme
     val visited = result.outcome != StopOutcome.Skipped
     val status = stringResource(if (visited) R.string.end_of_day_status_visited else R.string.stop_status_skipped)

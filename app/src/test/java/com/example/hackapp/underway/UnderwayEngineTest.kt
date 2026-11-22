@@ -160,52 +160,10 @@ class UnderwayEngineTest {
     }
 
     @Test
-    fun `an Event needs exactly 20 percent of its expected time`() {
-        // 19:00-21:00 is 120 min, so 24 min is the boundary.
-        assertEquals(StopOutcome.Visited, visitOutcome(t(19), t(19, 24)))
-        assertEquals(StopOutcome.TooBrief, visitOutcome(t(19), t(19, 23)))
-    }
-
-    @Test
-    fun `time before the start does not count`() {
-        assertEquals(StopOutcome.Visited, visitOutcome(t(18, 30), t(19, 24)))
-        assertEquals(StopOutcome.TooBrief, visitOutcome(t(18), t(19, 23)))
-        assertEquals(StopOutcome.TooBrief, visitOutcome(t(18), t(18, 59)))
-    }
-
-    @Test
-    fun `time after the Planned Departure does not count`() {
-        assertEquals(StopOutcome.TooBrief, visitOutcome(t(20, 40), t(22)))
-        assertEquals(StopOutcome.Visited, visitOutcome(t(20, 36), t(22)))
-    }
-
-    @Test
-    fun `with no leaving tap the stay runs to the next action, capped at the expected end`() {
-        val c = ctxOf(night(stops = listOf(stopA(), stopB())))
-        fun outcome(arrive: java.time.Instant, next: java.time.Instant): StopOutcome {
-            val atA = c.run(begin(night(stops = listOf(stopA(), stopB()))), arrive to E.ConfirmArrival())
-            val after = UnderwayEngine.reduce(c, atA, E.SkipStop("b"), next).state
-            return UnderwayEngine.reduce(c, after, E.EndItinerary(confirmed = true), next).state.outcomes.getValue("a")
-        }
-        assertEquals(StopOutcome.Visited, outcome(t(19), t(19, 30)))
-        assertEquals(StopOutcome.TooBrief, outcome(t(19), t(19, 10)))
-        // Next action at 23:00 is capped at 21:00: arriving 20:50 gives 10 of 120 minutes.
-        assertEquals(StopOutcome.TooBrief, outcome(t(20, 50), t(23)))
-        assertEquals(StopOutcome.Visited, outcome(t(19, 5), t(23)))
-    }
-
-    @Test
-    fun `a drop-in Event, which starts at the arrival, uses the same 20 percent rule`() {
-        val exhibition = stop("x", at(Nov28, 14), at(Nov28, 18))
-        val itinerary = day(stops = listOf(exhibition, stop("y", at(Nov28, 18), at(Nov28, 19))))
-        val c = ctxOf(itinerary)
-        fun outcome(leave: java.time.Instant): StopOutcome {
-            val s = c.run(begin(itinerary, t(9)), t(14) to E.ConfirmArrival(), leave to E.Leaving())
-            return UnderwayEngine.reduce(c, s, E.EndItinerary(true), leave).state.outcomes.getValue("x")
-        }
-        // 14:00-18:00 is 240 min, so the boundary is 48 min.
-        assertEquals(StopOutcome.Visited, outcome(t(14, 48)))
-        assertEquals(StopOutcome.TooBrief, outcome(t(14, 47)))
+    fun `any confirmed arrival is a visit, however short the stay`() {
+        assertEquals(StopOutcome.Visited, visitOutcome(t(19), t(19, 1)))
+        assertEquals(StopOutcome.Visited, visitOutcome(t(18), t(18, 59)))
+        assertEquals(StopOutcome.Visited, visitOutcome(t(20, 59), t(22)))
     }
 
     @Test
@@ -320,9 +278,9 @@ class UnderwayEngineTest {
         val synced = UnderwayEngine.syncItinerary(itinerary, s, t(19, 10))
         assertEquals(listOf(StopStatus.Confirmed, StopStatus.Skipped, StopStatus.Skipped), synced.stops.map { it.status })
         assertEquals(com.example.hackapp.itinerary.ItineraryPhase.Completed, synced.phase)
-        // 10 of 120 minutes: visited but too brief, so it earns no Stamp.
-        assertEquals(StopOutcome.TooBrief, s.outcomes["a"])
-        assertEquals(StopStatus.Skipped, UnderwayEngine.stampItinerary(itinerary, s).stops.first().status)
+        // Ten minutes is enough: every confirmed arrival earns its Stamp.
+        assertEquals(StopOutcome.Visited, s.outcomes["a"])
+        assertEquals(StopStatus.Confirmed, UnderwayEngine.stampItinerary(itinerary, s).stops.first().status)
         assertEquals(StopStatus.Confirmed, synced.stops.first().status)
     }
 

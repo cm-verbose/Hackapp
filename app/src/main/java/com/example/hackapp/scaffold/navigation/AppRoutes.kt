@@ -47,6 +47,10 @@ import kotlinx.serialization.Serializable
 /** Flick an Itinerary to a nearby phone. A null [itineraryId] only receives. */
 @Serializable data class ShareItineraryRoute(val itineraryId: String? = null)
 
+/** Flick a Stamp to a friend, or receive one with [stampKey] null. */
+@Serializable data class ShareStampRoute(val stampKey: String? = null)
+
 // Underway
 /** One route for Leg, Arrival, At the Stop and End of day: the page follows the Underway phase. */
-@Serializable data object UnderwayLegRoute
+/** Underway. [started] plays the start panel once, right after Start in Review. */
+@Serializable data class UnderwayLegRoute(val started: Boolean = false)

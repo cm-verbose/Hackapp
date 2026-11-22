@@ -19,6 +19,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.passport.PlaceStampIdentityResolver
+import com.example.hackapp.passport.KeepsakeStore
+import com.example.hackapp.passport.StampPhotoStore
 import com.example.hackapp.passport.StampRepository
 import com.example.hackapp.passport.createStampRepository
 import com.example.hackapp.underway.DemoClock
@@ -40,6 +42,10 @@ class HackappApplication : Application() {
 
     val stampRepository: StampRepository by lazy { createStampRepository(this) }
 
+    val stampPhotos: StampPhotoStore by lazy { StampPhotoStore(this) }
+
+    val keepsakes: KeepsakeStore by lazy { KeepsakeStore(this) }
+
     /** The one clock for the app. Real time unless demo mode is on. See docs/contracts/demo.md. */
     val underwayClock: DemoClock by lazy {
         DemoClock(
@@ -51,6 +57,18 @@ class HackappApplication : Application() {
     }
 
     val demoController: DemoController by lazy { DemoController(underwayCoordinator, underwayClock) }
+
+    /**
+     * Demo mode starts on (revision 2026-11-22). It is turned on once per account, the first time
+     * that account opens the app, so turning it off in Settings stays off.
+     */
+    suspend fun applyDemoDefault(uid: String) {
+        val prefs = getSharedPreferences("demo_default", MODE_PRIVATE)
+        val key = "applied_$uid"
+        if (prefs.getBoolean(key, false)) return
+        demoController.enable(uid)
+        prefs.edit().putBoolean(key, true).apply()
+    }
 
     /**
      * Underway: state machine, alarms, notifications and Stamp awarding. Places are looked up by id,

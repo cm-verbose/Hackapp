@@ -1,5 +1,14 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import kotlinx.coroutines.delay
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.IconButton
 import androidx.annotation.StringRes
@@ -299,7 +308,10 @@ fun ItineraryReviewPage(
 ) {
     val ready = !state.loading && !state.loadFailed
     val districtNames = remember(map) { map?.districts?.associate { it.id to it.name }.orEmpty() }
+    var viewport by remember { mutableIntStateOf(0) }
+    var listHeight by remember { mutableIntStateOf(0) }
     HackappPage(
+        onViewportHeight = { viewport = it },
         title = stringResource(R.string.review_title),
         onBack = onBack,
         step = REVIEW_STEP,
@@ -337,8 +349,13 @@ fun ItineraryReviewPage(
                         stops = routeStops,
                         highlightedOrder = state.stops.firstOrNull { it.highlighted }?.number,
                         onStopClick = { marker -> byNumber[marker.order]?.let { onSelectStop(it.stop.id) } },
+                        modifier = Modifier.height(reviewMapHeight(viewport, listHeight)),
                     )
                 }
+                Column(
+                    Modifier.onSizeChanged { listHeight = it.height },
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
                 Column {
                     state.stops.forEach { row ->
                         StopRow(
@@ -359,6 +376,7 @@ fun ItineraryReviewPage(
                 ReviewBudgetCard(budgetRows)
                 // Over budget moves to the bottom actions, so it stays visible above Start.
                 state.budget?.takeUnless { it.isOverBudget }?.let { ReviewTotal(it) }
+                }
             }
         }
     }
@@ -1052,4 +1070,37 @@ private fun RescheduleEmptyPreview() = HackappTheme {
         onReorganize = {},
         onCancel = {},
     )
+}
+
+private val ReviewMapMin = 160.dp
+private const val REVIEW_MAP_HOLD_MILLIS = 700L
+private const val REVIEW_MAP_SHRINK_MILLIS = 900
+
+/**
+ * The Review map opens at half the page, then shrinks until everything below it fits without
+ * scrolling. It never goes under [ReviewMapMin]: a long Itinerary scrolls instead.
+ */
+@Composable
+private fun reviewMapHeight(viewportPx: Int, listPx: Int): Dp {
+    val density = LocalDensity.current
+    val height = remember { Animatable(0f) }
+    var opened by remember { mutableStateOf(false) }
+    LaunchedEffect(viewportPx, listPx) {
+        if (viewportPx <= 0 || listPx <= 0) return@LaunchedEffect
+        with(density) {
+            val half = viewportPx / 2f
+            // The page's padding (16 dp top and bottom) and the gap above the list.
+            val fits = viewportPx - listPx - 48.dp.toPx()
+            val target = fits.coerceIn(ReviewMapMin.toPx(), half)
+            if (!opened) {
+                opened = true
+                height.snapTo(half)
+                delay(REVIEW_MAP_HOLD_MILLIS)
+                height.animateTo(target, tween(REVIEW_MAP_SHRINK_MILLIS, easing = FastOutSlowInEasing))
+            } else {
+                height.animateTo(target, tween(REVIEW_MAP_SHRINK_MILLIS / 2))
+            }
+        }
+    }
+    return with(density) { if (height.value <= 0f) (viewportPx / 2f).coerceAtLeast(ReviewMapMin.toPx()).toDp() else height.value.toDp() }
 }

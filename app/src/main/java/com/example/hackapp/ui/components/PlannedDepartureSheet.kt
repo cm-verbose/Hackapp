@@ -1,15 +1,14 @@
 package com.example.hackapp.ui.components
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,18 +47,14 @@ fun PlannedDepartureSheet(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    // Opens fully, so Confirm and Cancel are on screen at once. Swiping down still dismisses it.
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    ) {
+    FullScreenSheet(onDismiss = onDismiss) {
         PlannedDepartureContent(
             state = state,
             venueName = venueName,
             onTimeChange = onTimeChange,
             onConfirm = onConfirm,
             onCancel = onDismiss,
-            modifier = Modifier.navigationBarsPadding(),
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -83,6 +78,13 @@ fun PlannedDepartureContent(
             .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+      // Everything above the actions scrolls, so Confirm and Cancel stay on screen at any text size.
+      Column(
+        Modifier
+            .weight(1f)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+      ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 stringResource(R.string.planned_departure_title),
@@ -169,6 +171,7 @@ fun PlannedDepartureContent(
             }
         }
 
+      }
         HackappPrimaryButton(
             text = stringResource(R.string.action_confirm),
             onClick = onConfirm,

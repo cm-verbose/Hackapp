@@ -40,6 +40,7 @@
     <string name="data_licences">Licences: Has Things and OpenStreetMap, ODbL 1.0 · Ville de Montréal, CC BY 4.0</string>
     <string name="data_attribution">Data: Has Things (hasthings.com), Ville de Montréal, © OpenStreetMap contributors</string>
     <string name="district_add_as_position">Add as #%1$d</string>
+    <string name="district_add_to_list">Add to list</string>
     <string name="district_choose_another">Choose another</string>
     <string name="meal_plan_yes">Plan my meals</string>
     <string name="meal_plan_no">I’ll handle it</string>
@@ -204,10 +205,9 @@
     <string name="selection_reorder_action">Sort by time</string>
     <string name="selection_reorder_keep">Keep this order</string>
     <string name="selection_move_on_action">Go to %1$s</string>
-    <string name="selection_continue_event">Add another event in %1$s?</string>
-    <string name="selection_continue_meal">Have a meal in %1$s?</string>
-    <string name="selection_continue_add_event">Add an event</string>
-    <string name="selection_continue_choose_meal">Choose a meal</string>
+    <string name="selection_stay_in">Stay in %1$s</string>
+    <string name="selection_continue_event">Find your next event in %1$s?</string>
+    <string name="selection_continue_meal">Eat your meal in %1$s?</string>
     <string name="selection_day_complete_title">Your day is full</string>
     <string name="selection_day_complete_body">No other events or meals fit the rest of your day.</string>
     <string name="selection_day_complete_finish">Finish itinerary</string>
@@ -343,6 +343,8 @@
     <string name="leg_open_transit_app">Open %1$s</string>
     <string name="leg_google_maps_directions">Open in Google Maps</string>
     <string name="notification_channel_underway">Underway itinerary</string>
+    <string name="underway_start_title">Let’s go</string>
+    <string name="underway_start_caption">Your itinerary starts now</string>
     <string name="end_of_day_title">Itinerary ended</string>
     <string name="end_of_day_no_stamp">No stamp</string>
     <string name="past_stamps_none">None</string>
@@ -351,7 +353,17 @@
     <string name="end_of_day_finish">End itinerary</string>
     <string name="end_itinerary_warning">End itinerary? Remaining stops will be marked as skipped.</string>
     <string name="handoff_unavailable">Couldn’t open %1$s. Try another option.</string>
+    <string name="handoff_address_copied">Address copied: %1$s. Paste it into Plan a trip.</string>
     <string name="end_of_day_done">Back to Home</string>
+    <string name="end_of_day_open_passport">See my passport</string>
+    <plurals name="end_of_day_visited">
+        <item quantity="one">%d stop visited</item>
+        <item quantity="other">%d stops visited</item>
+    </plurals>
+    <plurals name="end_of_day_stamps_earned">
+        <item quantity="one">%d new stamp</item>
+        <item quantity="other">%d new stamps</item>
+    </plurals>
     <string name="underway_skip_title">Skip %1$s?</string>
     <string name="underway_skip_confirm">Skip</string>
     <string name="underway_skip_body">It won’t earn a stamp.</string>
@@ -386,6 +398,24 @@
     <string name="passport_empty_title">No stamps yet</string>
     <string name="passport_empty_body">Confirm a stop to earn a stamp.</string>
     <string name="passport_all_stamps">All stamps</string>
+    <string name="passport_received">Received stamps</string>
+    <string name="passport_received_from">From %1$s</string>
+    <string name="passport_keepsake_remove">Remove</string>
+    <string name="passport_photo_gallery">Choose a photo</string>
+    <string name="passport_photo_camera">Take a photo</string>
+    <string name="passport_photo_remove">Remove photo</string>
+    <string name="passport_stamp_share">Share</string>
+    <string name="passport_receive">Receive a stamp</string>
+    <string name="share_stamp_title">Share stamp</string>
+    <string name="share_stamp_receive_title">Receive a stamp</string>
+    <string name="share_stamp_received">%1$s received</string>
+    <string name="share_stamp_received_from">%1$s, from %2$s</string>
+    <string name="share_stamp_keepsake_note">It goes to your received stamps, not your own.</string>
+    <string name="share_stamp_keep">Keep</string>
+    <plurals name="passport_received_count">
+        <item quantity="one">%d received</item>
+        <item quantity="other">%d received</item>
+    </plurals>
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
     <string name="settings_profile">Profile</string>

@@ -160,7 +160,7 @@ class UnderwayCoordinatorTest {
     }
 
     @Test
-    fun `a too brief Event is visited but earns no Stamp`() = runBlocking {
+    fun `a short Event visit still earns a Stamp`() = runBlocking {
         save(draft())
         val c = coordinator()
         c.start(UID, "it-1", null)
@@ -170,10 +170,10 @@ class UnderwayCoordinatorTest {
         ev(c, E.EndItinerary(confirmed = true))
         val day = c.endOfDay(UID, "it-1")!!
         val a = day.results.first { it.stop.id == "a" }
-        assertEquals(StopOutcome.TooBrief, a.outcome)
-        assertEquals(StopStampResult.NoStamp, a.stamp)
+        assertEquals(StopOutcome.Visited, a.outcome)
+        assertTrue(a.stamp is StopStampResult.NewStamp)
         assertEquals(com.example.hackapp.itinerary.StopStatus.Confirmed, a.stop.status)
-        assertEquals(0, stamps.inner.observeStamps(UID).first().size)
+        assertEquals(1, stamps.inner.observeStamps(UID).first().size)
     }
 
     @Test

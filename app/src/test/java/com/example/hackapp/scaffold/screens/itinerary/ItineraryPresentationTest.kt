@@ -95,7 +95,7 @@ class ItineraryPresentationTest {
 
     @Test
     fun otherPhasesOpenTheirOwnPage() {
-        assertEquals(UnderwayLegRoute, itinerary("a", ItineraryPhase.Underway).openRoute())
+        assertEquals(UnderwayLegRoute(), itinerary("a", ItineraryPhase.Underway).openRoute())
         assertEquals(PastItineraryRoute("a"), itinerary("a", ItineraryPhase.Completed).openRoute())
         assertEquals(ArchivedItineraryRoute("a"), itinerary("a", ItineraryPhase.Archived).openRoute())
     }

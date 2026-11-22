@@ -69,7 +69,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
             onBack = { controller.popBackStack() },
             // A started Itinerary has left Planning, so its steps leave the back stack.
             onStarted = {
-                controller.navigate(UnderwayLegRoute) {
+                controller.navigate(UnderwayLegRoute(started = true)) {
                     popUpTo(ScreenHomeDestination)
                     launchSingleTop = true
                 }

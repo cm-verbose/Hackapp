@@ -140,8 +140,23 @@ fun DistrictPickPage(
     onMoveSelected: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val scheme = MaterialTheme.colorScheme
+    // Until the list is full, adding is the main action and Continue waits in the app bar.
+    val full = state.selected.size >= MAX_DISTRICTS
     Column(Modifier.fillMaxSize().background(scheme.surface)) {
-        HackappTopBar(stringResource(R.string.district_pick_title), onBack = onBack)
+        HackappTopBar(
+            stringResource(R.string.district_pick_title),
+            onBack = onBack,
+            actions = {
+                if (!full && !state.loading && !state.loadFailed) {
+                    HackappSmallTextButton(
+                        stringResource(R.string.action_continue),
+                        onContinue,
+                        enabled = state.canContinue,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                }
+            },
+        )
         StepProgress(2, PLANNING_STEPS)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             val map = state.map
@@ -211,11 +226,25 @@ fun DistrictPickPage(
                                     color = scheme.error,
                                 )
                             }
-                            HackappPrimaryButton(
-                                text = stringResource(R.string.action_continue),
-                                onClick = onContinue,
-                                enabled = state.canContinue,
-                            )
+                            if (full) {
+                                HackappPrimaryButton(
+                                    text = stringResource(R.string.action_continue),
+                                    onClick = onContinue,
+                                    enabled = state.canContinue,
+                                )
+                            } else {
+                                val previewed = state.previewId?.takeIf { it !in state.selected }
+                                val position = state.selected.size + 1
+                                HackappPrimaryButton(
+                                    text = when {
+                                        previewed == null -> stringResource(R.string.district_add_to_list)
+                                        position == 1 -> stringResource(R.string.district_add_first)
+                                        else -> stringResource(R.string.district_add_as_position, position)
+                                    },
+                                    onClick = onAdd,
+                                    enabled = previewed != null,
+                                )
+                            }
                         }
                     }
                 }
@@ -311,15 +340,9 @@ private fun DistrictSheet(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
+                    // Adding is the main button below the sheet.
                     if (isSelected) {
                         HackappSmallTonalButton(stringResource(R.string.action_remove), onRemove)
-                    } else {
-                        val position = state.selected.size + 1
-                        HackappSmallTonalButton(
-                            if (position == 1) stringResource(R.string.district_add_first)
-                            else stringResource(R.string.district_add_as_position, position),
-                            onAdd,
-                        )
                     }
                     HackappSmallTextButton(stringResource(R.string.district_choose_another), onDismiss)
                 }

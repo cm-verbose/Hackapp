@@ -39,6 +39,7 @@
     <string name="data_licences">Licences : Has Things et OpenStreetMap, ODbL 1.0 · Ville de Montréal, CC BY 4.0</string>
     <string name="data_attribution">Données : Has Things (hasthings.com), Ville de Montréal, © les contributeurs d’OpenStreetMap</string>
     <string name="district_add_as_position">Ajouter en %1$de</string>
+    <string name="district_add_to_list">Ajouter à la liste</string>
     <string name="district_choose_another">Choisir un autre</string>
     <string name="meal_plan_yes">Planifier mes repas</string>
     <string name="meal_plan_no">Je m’en occupe</string>
@@ -210,10 +211,9 @@
     <string name="selection_reorder_action">Trier par heure</string>
     <string name="selection_reorder_keep">Garder l’ordre</string>
     <string name="selection_move_on_action">Aller dans %1$s</string>
-    <string name="selection_continue_event">Ajouter un autre événement dans %1$s?</string>
-    <string name="selection_continue_meal">Prendre un repas dans %1$s?</string>
-    <string name="selection_continue_add_event">Ajouter un événement</string>
-    <string name="selection_continue_choose_meal">Choisir un repas</string>
+    <string name="selection_stay_in">Rester dans %1$s</string>
+    <string name="selection_continue_event">Trouver votre prochain événement dans %1$s?</string>
+    <string name="selection_continue_meal">Prendre votre repas dans %1$s?</string>
     <string name="selection_day_complete_title">Journée complète</string>
     <string name="selection_day_complete_body">Plus aucun événement ni repas ne convient à la suite de la journée.</string>
     <string name="selection_day_complete_finish">Terminer l’itinéraire</string>
@@ -350,6 +350,8 @@
     <string name="leg_google_maps_directions">Ouvrir dans Google Maps</string>
     <string name="app_name_google_maps" translatable="false">Google Maps</string>
     <string name="notification_channel_underway">Itinéraire en cours</string>
+    <string name="underway_start_title">C’est parti</string>
+    <string name="underway_start_caption">Votre itinéraire commence</string>
     <string name="end_of_day_title">Itinéraire terminé</string>
     <string name="end_of_day_no_stamp">Aucun timbre</string>
     <string name="past_stamps_none">Aucun</string>
@@ -358,7 +360,17 @@
     <string name="end_of_day_finish">Terminer l’itinéraire</string>
     <string name="end_itinerary_warning">Terminer l’itinéraire? Les arrêts restants seront marqués comme sautés.</string>
     <string name="handoff_unavailable">Impossible d’ouvrir %1$s. Essayez une autre option.</string>
+    <string name="handoff_address_copied">Adresse copiée : %1$s. Collez-la dans Planifier un trajet.</string>
     <string name="end_of_day_done">Retour à l’accueil</string>
+    <string name="end_of_day_open_passport">Voir mon passeport</string>
+    <plurals name="end_of_day_visited">
+        <item quantity="one">%d arrêt visité</item>
+        <item quantity="other">%d arrêts visités</item>
+    </plurals>
+    <plurals name="end_of_day_stamps_earned">
+        <item quantity="one">%d nouveau timbre</item>
+        <item quantity="other">%d nouveaux timbres</item>
+    </plurals>
     <string name="underway_skip_title">Sauter %1$s?</string>
     <string name="underway_skip_confirm">Sauter</string>
     <string name="underway_skip_body">Il ne donnera pas de timbre.</string>
@@ -393,7 +405,25 @@
     <string name="passport_empty_title">Aucun timbre</string>
     <string name="passport_empty_body">Confirmez un arrêt pour obtenir un timbre.</string>
     <string name="passport_all_stamps">Tous les timbres</string>
-    <string name="passport_stamp_district_date" translatable="false">%1$s Â· %2$s</string>
+    <string name="passport_received">Timbres reçus</string>
+    <string name="passport_received_from">Reçu de %1$s</string>
+    <string name="passport_keepsake_remove">Retirer</string>
+    <string name="passport_photo_gallery">Choisir une photo</string>
+    <string name="passport_photo_camera">Prendre une photo</string>
+    <string name="passport_photo_remove">Retirer la photo</string>
+    <string name="passport_stamp_share">Partager</string>
+    <string name="passport_receive">Recevoir un timbre</string>
+    <string name="share_stamp_title">Partager le timbre</string>
+    <string name="share_stamp_receive_title">Recevoir un timbre</string>
+    <string name="share_stamp_received">%1$s reçu</string>
+    <string name="share_stamp_received_from">%1$s, de %2$s</string>
+    <string name="share_stamp_keepsake_note">Il s’ajoute à vos timbres reçus, pas à vos timbres.</string>
+    <string name="share_stamp_keep">Garder</string>
+    <plurals name="passport_received_count">
+        <item quantity="one">%d timbre reçu</item>
+        <item quantity="other">%d timbres reçus</item>
+    </plurals>
+    <string name="passport_stamp_district_date" translatable="false">%1$s · %2$s</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_language">Langue</string>
     <string name="language_french" translatable="false">Français</string>

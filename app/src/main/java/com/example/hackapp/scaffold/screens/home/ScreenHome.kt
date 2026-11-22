@@ -202,7 +202,7 @@ private val PreviewHomeState = HomeUiState(
                 nextStopName = "Bistro du coin",
                 strip = listOf(StripStop("18:30", StopType.Music), StripStop("19:30", StopType.Meal)),
                 currentIndex = 1,
-                route = UnderwayLegRoute,
+                route = UnderwayLegRoute(),
             ),
             planning = listOf(
                 ItineraryCardUi("1", LocalDate.of(2026, 11, 28), "Verdun", 3, null, PlanningDistrictPickRoute("1")),

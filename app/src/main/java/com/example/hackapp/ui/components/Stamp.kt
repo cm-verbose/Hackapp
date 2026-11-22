@@ -1,5 +1,9 @@
 package com.example.hackapp.ui.components
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -90,16 +94,23 @@ fun StampDisc(
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
     initialsScale: () -> Float = { 1f },
     roundOutline: Boolean = true,
+    photo: ImageBitmap? = null,
 ) {
     var boxSize by remember { mutableStateOf(IntSize.Zero) }
     var textSize by remember { mutableStateOf(IntSize.Zero) }
     Box(
         modifier
             .background(discColor, shape)
+            .then(if (photo != null) Modifier.clip(shape) else Modifier)
             .dashedBorder(2.dp, inkColor, shape)
             .onSizeChanged { boxSize = it },
         contentAlignment = Alignment.Center,
     ) {
+        if (photo != null) {
+            // The person's photo fills the Stamp; a wash of its colour keeps the initials readable.
+            Image(photo, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+            Box(Modifier.matchParentSize().background(discColor.copy(alpha = 0.45f)))
+        }
         Text(
             initials,
             style = textStyle,

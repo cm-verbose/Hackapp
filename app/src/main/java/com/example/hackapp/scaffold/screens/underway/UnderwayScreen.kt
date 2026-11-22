@@ -1,5 +1,12 @@
 package com.example.hackapp.scaffold.screens.underway
 
+import androidx.compose.ui.Modifier
+import com.example.hackapp.scaffold.screens.planning.SelectionIntroOverlay
+import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import com.example.hackapp.services.copyDestinationForTransit
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
@@ -59,8 +66,30 @@ private class UnderwayItineraryInfo(val itinerary: Itinerary, val stops: Underwa
  * notification action taken outside the app can never leave a stale page on screen.
  */
 @Composable
-fun UnderwayScreen(onExitToHome: () -> Unit, onShare: (String) -> Unit = {}) {
+fun UnderwayScreen(
+    onExitToHome: () -> Unit,
+    onShare: (String) -> Unit = {},
+    onOpenPassport: () -> Unit = onExitToHome,
+    showStart: Boolean = false,
+) {
     BackHandler(onBack = onExitToHome)
+    // The start panel covers the first page from its first frame, once per Start.
+    var startPending by rememberSaveable { mutableStateOf(showStart) }
+    Box(Modifier.fillMaxSize()) {
+        UnderwayScreenContent(onExitToHome, onShare, onOpenPassport)
+        if (startPending) {
+            SelectionIntroOverlay(
+                onFinished = { startPending = false },
+                title = stringResource(R.string.underway_start_title),
+                caption = stringResource(R.string.underway_start_caption),
+                icon = Icons.Filled.DirectionsWalk,
+            )
+        }
+    }
+}
+
+@Composable
+private fun UnderwayScreenContent(onExitToHome: () -> Unit, onShare: (String) -> Unit, onOpenPassport: () -> Unit) {
     val uid = LocalAuthService.current.currentUser?.uid
     if (uid == null) {
         UnderwayExitErrorPage(onExitToHome)
@@ -155,6 +184,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit, onShare: (String) -> Unit = {}) {
             districtNames = (info as? LoadState.Ready)?.value?.stops?.districtNames.orEmpty(),
             onRetry = viewModel::retry,
             onDone = onExitToHome,
+            onOpenPassport = onOpenPassport,
         )
         state is LoadState.Failed -> UnderwayErrorPage(onRetry = viewModel::onResume, onBack = onExitToHome)
         data == null -> UnderwayLoadingPage(onBack = onExitToHome)
@@ -324,6 +354,7 @@ private fun LegContent(
         fareAgency = fare.agencyName,
     )
     val destination = stop.handoffDestination()
+    val appContext = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     var opening by remember(stop.id) { mutableStateOf(false) }
     // The other app opened, but the page only moves on once the person is back, so they see it change.
@@ -365,7 +396,7 @@ private fun LegContent(
     }
 
     /** Rereads the state first: a notification action may have moved on from the Stop on screen. */
-    fun handoff(appName: String, choice: com.example.hackapp.underway.TransportChoice, open: () -> HandoffResult) {
+    fun handoff(appName: String, choice: com.example.hackapp.underway.TransportChoice, open: suspend () -> HandoffResult) {
         if (opening) return
         opening = true
         scope.launch {
@@ -405,6 +436,7 @@ private fun LegContent(
         onOpenTransport = {
             when (transport) {
                 TransportChoice.Transit -> handoff(labels.transitAppName, TransportChoice.Transit.toEngine()) {
+                    copyDestinationForTransit(appContext, destination)
                     services.transit.openTransitApp(destination)
                 }
                 TransportChoice.RideHail -> handoff(labels.rideHailName, TransportChoice.RideHail.toEngine()) {
@@ -432,6 +464,7 @@ private fun EndOfDayContent(
     districtNames: Map<String, String>,
     onRetry: () -> Unit,
     onDone: () -> Unit,
+    onOpenPassport: () -> Unit,
 ) {
     when (endOfDay) {
         LoadState.Loading -> UnderwayLoadingPage(onBack = onDone)
@@ -439,6 +472,7 @@ private fun EndOfDayContent(
         is LoadState.Ready -> UnderwayEndOfDayPage(
             endOfDayUi(endOfDay.value, districtNames),
             onDone,
+            onOpenPassport = onOpenPassport,
         )
     }
 }

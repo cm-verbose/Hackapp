@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -62,7 +60,7 @@ fun MealPickerSheet(
 ) {
     val map by rememberDistrictMap()
     val nextDistrictName = state.nextDistrictId?.let { id -> map?.districts?.firstOrNull { it.id == id }?.name }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    FullScreenSheet(onDismiss = onDismiss) {
         MealPickerContent(
             state = state,
             nextDistrictName = nextDistrictName,
@@ -70,7 +68,7 @@ fun MealPickerSheet(
             onSelectTab = onSelectTab,
             onChoose = onChoose,
             onSkip = onSkip,
-            modifier = Modifier.navigationBarsPadding(),
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -159,7 +157,7 @@ fun MealPickerContent(
 private fun ColumnScope.MealOptionList(options: List<MealOptionRow>, onChoose: (Long) -> Unit) {
     Column(
         Modifier
-            .weight(1f, fill = false)
+            .weight(1f)
             .verticalScroll(rememberScrollState()),
     ) {
         options.forEach { row -> MealOptionRow(row) { onChoose(row.placeId) } }

@@ -88,6 +88,16 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Handoff return | Opening transit, Uber or maps moves to Arrival only once the person is back in the app: the Leg stays 0.8 s, then slides for 650 ms. A handoff that never leaves the app moves on after 3 s (revision 2 2026-11-22) |
 | Arrival question | Arrival asks "Êtes-vous sur place?" / "Have you arrived?" with **Confirmer l'arrivée** (revision 2 2026-11-22) |
 | Planned Departure sheet | Opens fully, so Confirm and Cancel are visible at once; swipe down still dismisses (revision 2 2026-11-22) |
+| Planned Departure sheet | Event details, Meal picker and Planned Departure open as a full-screen sheet drawn in the app window, so their buttons always clear the navigation bar; swipe down on the handle, Back or a tap outside closes them (revision 3 2026-11-22) |
+| Move-on question | "Trouver votre prochain événement dans [next]?" or "Prendre votre repas dans [next]?", with **Aller dans [next]** or **Rester dans [here]**. The next borough's panel waits partway in behind the question: it finishes on Go, slides back on Stay (revision 3 2026-11-22) |
+| Review map | Opens at half the page, then shrinks until the Stops, budget and total fit without scrolling, never below 160 dp (revision 3 2026-11-22) |
+| Start panel | Start in Review plays a "C’est parti" colour panel over the first Underway page (revision 3 2026-11-22) |
+| Chrono handoff | Chrono accepts no destination from other apps (no directions link; it ignores search intents). The Stop’s street address, found with the on-device Geocoder, else its name, is copied to the clipboard first, with a toast to paste it into Plan a trip (revision 3 2026-11-22) |
+| Stamp rule | Any confirmed arrival earns the Stamp, however short the stay. The 20% minimum for Events is removed (revision 3 2026-11-22) |
+| Demo mode default | Demo mode is turned on once per account, the first time it opens the app; turning it off in Settings stays off (revision 3 2026-11-22) |
+| End of day | A celebration: hero colours, confetti, new Stamps popping in. **Voir mon passeport** opens the Passport with Home underneath (revision 3 2026-11-22) |
+| Stamp photos | A Stamp can take a photo from the gallery or camera as its background, kept on the device only. Sharing a Stamp sends it with a small copy of the photo. The friend keeps it as a keepsake under **Timbres reçus**, never as one of their Stamps (revision 3 2026-11-22) |
+| Borough list buttons | Until the list is full, **Ajouter à la liste** is the main button and **Continuer** sits in the app bar. Once full, **Continuer** is the main button (revision 3 2026-11-22) |
 | Home delete | Holding down a draft on Home asks to delete it (revision 2026-11-22) |
 | Stamp shapes | Each new Stamp stores a random shape seed when awarded. Older Stamps keep their key-based shape (revision 2026-11-22) |
 | Demo control look | 85% opacity with a 60% background, so it reads as a demo tool (revision 2026-11-22) |
@@ -128,9 +138,9 @@ Last updated 2026-11-22 05:40. Start here if you are picking up this work.
 | Underway skipping | Skip this Stop is on Leg and Arrival, with a one-tap confirmation |
 | Late and early | Arriving late is recorded with no replanning. I'm leaving works any time after arrival |
 | Go anyway | A late Stop stays on the Itinerary and can still earn its Stamp |
-| Event Stamp rule | Every Event needs at least 20% of its expected time. Count the overlap between the stay (arrived to leaving) and the Event (start to end or Planned Departure). Time before the start does not count. If the person never taps leaving, the stay runs until their next app action, capped at the expected end |
+| Event Stamp rule | **Superseded by "Stamp rule" (revision 3 2026-11-22): any confirmed arrival earns the Stamp.** Was: every Event needs at least 20% of its expected time. Count the overlap between the stay (arrived to leaving) and the Event (start to end or Planned Departure). Time before the start does not count. If the person never taps leaving, the stay runs until their next app action, capped at the expected end |
 | Meal Stamp rule | Confirming arrival is enough |
-| Under 20% | The Stop shows as visited in Past, earns no Stamp and says "Trop bref pour un timbre" |
+| Under 20% | **Superseded (revision 3 2026-11-22).** Was: the Stop shows as visited in Past, earns no Stamp and says "Trop bref pour un timbre" |
 | Underway notifications | Denied notifications never block Start. Underway shows one dismissible banner with a Settings button, at most once per Itinerary |
 | Underway alerts | Use exact alarms. Ask once at Start, and fall back to normal alerts if declined. Reschedule after a reboot and whenever the app opens. Arrival and Skip work directly from the notification. On the last remaining Stop, the notification offers Open instead of Skip, so the app can warn before the Itinerary ends |
 | Past Leave By | Once the Leave By time has passed, Underway shows Departure: Now instead of a past time |

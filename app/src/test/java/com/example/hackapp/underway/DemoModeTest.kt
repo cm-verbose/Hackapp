@@ -159,7 +159,7 @@ class DemoModeTest {
         // Stop B: skipped.
         send(E.SkipStop("b"))
 
-        // Stop C, after midnight: five minutes of an hour is too brief.
+        // Stop C, after midnight: five minutes still earns a Stamp.
         advanceTo(t(0, 30, Nov29))
         send(E.ConfirmArrival("c"))
         passTime(5)
@@ -168,17 +168,17 @@ class DemoModeTest {
         val end = coordinator.endOfDay(UID, "it-1")!!
         assertEquals(EndReason.Finished, end.reason)
         assertEquals(
-            listOf(StopOutcome.Visited, StopOutcome.Skipped, StopOutcome.TooBrief),
+            listOf(StopOutcome.Visited, StopOutcome.Skipped, StopOutcome.Visited),
             end.results.map { it.outcome },
         )
         assertTrue(end.results[0].stamp is StopStampResult.NewStamp)
         assertEquals(StopStampResult.NoStamp, end.results[1].stamp)
-        assertEquals(StopStampResult.NoStamp, end.results[2].stamp)
+        assertTrue(end.results[2].stamp is StopStampResult.NewStamp)
 
         val passport = stamps.observeStamps(UID).first()
-        assertEquals(listOf("a"), passport.map { it.stopId })
-        assertEquals(Nov28, passport.single().date)
-        assertEquals("Sorted by real time", real.toEpochMilli(), passport.single().awardedAtMillis)
+        assertEquals(listOf("a", "c"), passport.map { it.stopId }.sorted())
+        assertEquals(Nov28, passport.first { it.stopId == "a" }.date)
+        assertTrue("Sorted by real time", passport.all { it.awardedAtMillis == real.toEpochMilli() })
         assertEquals(ItineraryPhase.Completed, itineraries.getItinerary(UID, "it-1")!!.phase)
         assertEquals(DemoAdvance.NothingUnderway, demo.nextMoment(UID))
     }

@@ -1,6 +1,8 @@
 package com.example.hackapp.scaffold.screens.passport
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.ImageBitmap
+import com.example.hackapp.passport.StampKeepsake
 import com.example.hackapp.passport.PassportStamp
 import com.example.hackapp.passport.PassportState
 import com.example.hackapp.passport.StampKind
@@ -19,6 +21,11 @@ data class PassportStampUi(
     val date: String,
     val type: StopType,
     val shape: StampShape,
+    /** The person's own background photo, when they added one. */
+    val photo: ImageBitmap? = null,
+    /** True for a keepsake a friend sent: shown apart, never counted as a Stamp. */
+    val received: Boolean = false,
+    val from: String? = null,
 ) {
     /** What TalkBack reads for the Stamp. */
     val description: String get() = listOf(name, district, date).joinToString(", ")
@@ -113,3 +120,17 @@ internal fun stampShapeFor(key: String): StampShape {
     hash = hash xor (hash ushr 16)
     return StampShape.entries[Math.floorMod(hash, StampShape.entries.size)]
 }
+
+/** A keepsake as the Passport lists it. */
+internal fun StampKeepsake.toUi(districtNames: Map<String, String>, dateFormat: DateTimeFormatter, photo: ImageBitmap?) = PassportStampUi(
+    key = "keepsake:$id",
+    initials = stampInitials(name),
+    name = name,
+    district = districtNames[districtId] ?: districtId,
+    date = localDate?.format(dateFormat) ?: date,
+    type = stampStopType(kind, category),
+    shape = shapeSeed?.let(::stampShapeForSeed) ?: stampShapeFor(id),
+    photo = photo,
+    received = true,
+    from = fromName,
+)

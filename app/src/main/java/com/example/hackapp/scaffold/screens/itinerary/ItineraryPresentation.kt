@@ -54,7 +54,7 @@ fun Itinerary.openRoute(): Any = when (phase) {
         PlanningStep.Stops -> PlanningStopSelectionRoute(id)
         PlanningStep.Review -> ItineraryReviewRoute(id)
     }
-    ItineraryPhase.Underway -> UnderwayLegRoute
+    ItineraryPhase.Underway -> UnderwayLegRoute()
     ItineraryPhase.Completed -> PastItineraryRoute(id)
     ItineraryPhase.Archived -> ArchivedItineraryRoute(id)
 }

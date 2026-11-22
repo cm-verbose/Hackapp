@@ -142,7 +142,7 @@ class AppNavigationTest {
         }
         assertEquals(PlanningStep.Review, savedDraft().step)
         // This draft was not started, so the Underway route has nothing to show and returns Home.
-        compose.runOnIdle { controller.navigate(UnderwayLegRoute) }
+        compose.runOnIdle { controller.navigate(UnderwayLegRoute()) }
         awaitHome()
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }

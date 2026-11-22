@@ -1,5 +1,7 @@
 package com.example.hackapp.scaffold.screens.passport
 
+import com.example.hackapp.ui.components.HackappSmallButton
+import com.example.hackapp.ui.components.HackappSmallTonalButton
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -100,9 +102,12 @@ fun PassportPage(
     onGravityLockedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    keepsakes: List<PassportStampUi> = emptyList(),
+    actions: StampActions = StampActions(),
 ) {
     var openKey by rememberSaveable { mutableStateOf<String?>(null) }
     var showAll by rememberSaveable { mutableStateOf(false) }
+    var showReceived by rememberSaveable { mutableStateOf(false) }
     val stamps = (content as? PassportContent.Ready)?.stamps.orEmpty()
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
@@ -127,6 +132,7 @@ fun PassportPage(
                 PassportContent.Loading -> LoadingState(rest)
                 PassportContent.Unavailable -> ErrorState(onRetry = onRetry, modifier = rest)
                 is PassportContent.Ready -> if (content.stamps.isEmpty()) {
+                    ReceivedRow(keepsakes.size, onOpen = { showReceived = true }, onReceive = actions.onReceive)
                     PassportEmpty(rest)
                 } else {
                     HeroHeader(
@@ -134,6 +140,7 @@ fun PassportPage(
                         subtitle = pluralStringResource(R.plurals.districts_count, content.districtCount, content.districtCount),
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    ReceivedRow(keepsakes.size, onOpen = { showReceived = true }, onReceive = actions.onReceive)
                     StampField(
                         stamps = content.stamps,
                         gravityLocked = gravityLocked,
@@ -155,9 +162,17 @@ fun PassportPage(
             onDismiss = { showAll = false },
         )
     }
-    // Composed after the list, so it opens on top and closing it returns to the list.
-    stamps.firstOrNull { it.key == openKey }?.let { stamp ->
-        StampDetailsSheet(stamp, onDismiss = { openKey = null })
+    if (showReceived && keepsakes.isNotEmpty()) {
+        ModalBottomSheetList(
+            title = stringResource(R.string.passport_received),
+            stamps = keepsakes,
+            onOpen = { openKey = it },
+            onDismiss = { showReceived = false },
+        )
+    }
+    // Composed after the lists, so it opens on top and closing it returns to the list.
+    (stamps + keepsakes).firstOrNull { it.key == openKey }?.let { stamp ->
+        StampDetailsSheet(stamp, actions, onDismiss = { openKey = null })
     }
 }
 
@@ -214,6 +229,7 @@ private fun StampField(
                                 shape = outline,
                                 initialsScale = { readableInitialsScale(itemScale()) },
                                 roundOutline = stamp.shape.isRound,
+                                photo = stamp.photo,
                                 modifier = Modifier.fillMaxSize().clearAndSetSemantics {
                                     contentDescription = stamp.description
                                     role = Role.Button
@@ -289,6 +305,7 @@ private fun StampBadge(
         shape = stamp.shape.outline(scale),
         textStyle = textStyle,
         roundOutline = stamp.shape.isRound,
+        photo = stamp.photo,
         modifier = modifier.size(stamp.shape.widthDp.dp * scale, stamp.shape.heightDp.dp * scale),
     )
 }
@@ -338,13 +355,80 @@ private fun PassportEmpty(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StampDetailsSheet(stamp: PassportStampUi, onDismiss: () -> Unit) {
+private fun StampDetailsSheet(stamp: PassportStampUi, actions: StampActions, onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        StampDetails(stamp, Modifier.navigationBarsPadding())
+        Column(Modifier.navigationBarsPadding()) {
+            StampDetails(stamp)
+            StampActionsRow(stamp, actions, onDone = onDismiss)
+        }
+    }
+}
+
+/** What the Stamp details can do. Received keepsakes can only be removed. */
+data class StampActions(
+    val onPickPhoto: (key: String) -> Unit = {},
+    val onTakePhoto: (key: String) -> Unit = {},
+    val onRemovePhoto: (key: String) -> Unit = {},
+    val onShare: (key: String) -> Unit = {},
+    val onReceive: () -> Unit = {},
+    val onRemoveKeepsake: (key: String) -> Unit = {},
+)
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StampActionsRow(stamp: PassportStampUi, actions: StampActions, onDone: () -> Unit) {
+    FlowRow(
+        Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (stamp.received) {
+            stamp.from?.let {
+                Text(
+                    stringResource(R.string.passport_received_from, it),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            HackappSmallTextButton(stringResource(R.string.passport_keepsake_remove), {
+                actions.onRemoveKeepsake(stamp.key)
+                onDone()
+            })
+        } else {
+            HackappSmallTonalButton(stringResource(R.string.passport_photo_gallery), { actions.onPickPhoto(stamp.key) })
+            HackappSmallTonalButton(stringResource(R.string.passport_photo_camera), { actions.onTakePhoto(stamp.key) })
+            if (stamp.photo != null) {
+                HackappSmallTextButton(stringResource(R.string.passport_photo_remove), { actions.onRemovePhoto(stamp.key) })
+            }
+            HackappSmallButton(stringResource(R.string.passport_stamp_share), {
+                onDone()
+                actions.onShare(stamp.key)
+            })
+        }
+    }
+}
+
+/** "Received" count and the way to receive a Stamp from a friend. */
+@Composable
+private fun ReceivedRow(count: Int, onOpen: () -> Unit, onReceive: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+        if (count > 0) {
+            HackappSmallTextButton(pluralStringResource(R.plurals.passport_received_count, count, count), onOpen)
+        }
+        HackappSmallTonalButton(stringResource(R.string.passport_receive), onReceive)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModalBottomSheetList(title: String, stamps: List<PassportStampUi>, onOpen: (String) -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
+        AllStampsList(stamps, onOpen, title = title)
     }
 }
 
@@ -378,10 +462,15 @@ private fun AllStampsSheet(stamps: List<PassportStampUi>, onOpen: (String) -> Un
 }
 
 @Composable
-private fun AllStampsList(stamps: List<PassportStampUi>, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun AllStampsList(
+    stamps: List<PassportStampUi>,
+    onOpen: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    title: String = stringResource(R.string.passport_all_stamps),
+) {
     Column(modifier.fillMaxWidth()) {
         Text(
-            stringResource(R.string.passport_all_stamps),
+            title,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
