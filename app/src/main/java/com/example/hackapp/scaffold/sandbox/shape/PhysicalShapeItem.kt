@@ -1,4 +1,5 @@
 package com.example.hackapp.scaffold.sandbox.shape
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
@@ -11,7 +12,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.cos
+import kotlin.math.sin
 
+private val ShadowColor = Color.Black.copy(alpha = 0.35f)
+
+/**
+ * Draws a [PhysicalShape] at its simulated position and rotation.
+ *
+ * The drop shadow is a flat, offset silhouette of the shape rather than a Material elevation
+ * shadow. Elevation shadows of concave outlines (the star and cookie shapes) are re-tessellated
+ * by Skia every time the shape rotates, which is slow enough to freeze the render thread on
+ * mid-range devices and trigger an ANR while shapes spin.
+ *
+ * @param shadowElevation How far the shadow is offset below the shape; larger looks lifted.
+ */
 @Composable
 fun PhysicalShapeItem(
     physicalShape: PhysicalShape,
@@ -23,8 +38,9 @@ fun PhysicalShapeItem(
     val density = LocalDensity.current
     val widthDp = with(density) { physicalShape.widthPx.toDp() }
     val heightDp = with(density) { physicalShape.heightPx.toDp() }
+    val shadowOffsetPx = with(density) { shadowElevation.toPx() } / 2f
 
-    Surface(
+    Box(
         modifier = Modifier
             .size(widthDp, heightDp)
             .graphicsLayer {
@@ -37,13 +53,28 @@ fun PhysicalShapeItem(
                     scaleY = it
                 }
             },
-        shape = physicalShape.shape,
-        color = color,
-        shadowElevation = shadowElevation,
     ) {
         Box(
-            contentAlignment = Alignment.Center,
-            content = content,
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer {
+                    // Offset straight down on screen whatever the shape's rotation: the parent
+                    // layer is rotated by θ, so the local offset is the screen offset rotated by -θ.
+                    val theta = Math.toRadians(physicalShape.rotationDegrees.toDouble())
+                    translationX = (shadowOffsetPx * sin(theta)).toFloat()
+                    translationY = (shadowOffsetPx * cos(theta)).toFloat()
+                }
+                .background(ShadowColor, physicalShape.shape),
         )
+        Surface(
+            modifier = Modifier.matchParentSize(),
+            shape = physicalShape.shape,
+            color = color,
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                content = content,
+            )
+        }
     }
 }

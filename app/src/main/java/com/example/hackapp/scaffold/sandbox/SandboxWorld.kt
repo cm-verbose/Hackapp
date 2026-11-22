@@ -1,6 +1,8 @@
 package com.example.hackapp.scaffold.sandbox
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Density
 import com.example.hackapp.scaffold.sandbox.share.NearbyShare
 import com.example.hackapp.scaffold.sandbox.share.ShareMessage
@@ -8,6 +10,7 @@ import com.example.hackapp.scaffold.sandbox.share.TargetCandidate
 import com.example.hackapp.scaffold.sandbox.share.ThrowGeometry
 import com.example.hackapp.scaffold.sandbox.share.ThrowTargeting
 import com.example.hackapp.scaffold.sandbox.shape.PhysicalShape
+import com.example.hackapp.scaffold.sandbox.shape.toMeters
 import com.example.hackapp.scaffold.sandbox.shape.toPixels
 import com.example.hackapp.scaffold.sandbox.simulatedworld.createBoundaryWalls
 import com.example.hackapp.scaffold.sandbox.simulatedworld.createPhysicalShape
@@ -16,11 +19,14 @@ import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.World
 
+private const val TAG = "SandboxWorld"
+
 /** Minimum speed (m/s) for a released shape to leave the screen instead of bouncing. */
 private const val THROW_MIN_SPEED = 10f
 
-/** How long after release a shape can still be thrown, in simulated seconds. */
-private const val THROW_WINDOW_SECONDS = 0.6f
+/** Cap (m/s) on the speed a flick gives a shape, so it can't tunnel through other shapes. */
+private const val MAX_FLICK_SPEED = 40f
+
 
 /** How long a thrown shape takes to reappear on the device it was thrown from. */
 private const val RESPAWN_DELAY_NANOS = 3_000_000_000L
@@ -98,7 +104,6 @@ class SandboxWorld(
 
     /** The most recently released shape, which may be thrown while it's fresh. */
     private var throwCandidate: CreatedPhysicsItem? = null
-    private var throwCandidateAge = 0f
 
     /** Where each own shape starts and reappears, in pixels. */
     private val homes: List<Pair<Float, Float>> = specs.mapIndexed { index, spec ->
@@ -135,37 +140,50 @@ class SandboxWorld(
     fun grabbableShapes(): List<PhysicalShape> =
         items.filter { !it.isLeaving }.map { it.physicalShape }
 
-    /** Call when the user lets go of [shape]: a fast release may throw it to another device. */
-    fun onReleased(shape: PhysicalShape?) {
+    /** Whether a shape released with this finger velocity (pixels per second) would be thrown. */
+    fun isThrowSpeed(fingerVelocityPx: Offset): Boolean =
+        fingerVelocityPx.getDistance().toMeters() >= THROW_MIN_SPEED
+
+    /**
+     * Call when the user lets go of [shape], with the finger's velocity in pixels per second.
+     *
+     * The shape leaves with the finger's velocity, not its own: a shape dragged into a wall
+     * or another shape bounces while held, so at release it can be moving the opposite way to
+     * the flick, which would throw it to the wrong device. A fast enough release may then be
+     * thrown to another device by [checkThrow].
+     */
+    fun onReleased(shape: PhysicalShape?, fingerVelocityPx: Offset) {
         throwCandidate = items.firstOrNull { it.physicalShape === shape }
-        throwCandidateAge = 0f
+        val body = shape?.body ?: return
+        val finger = Vec2(fingerVelocityPx.x.toMeters(), fingerVelocityPx.y.toMeters())
+        val speed = finger.length()
+        body.linearVelocity = if (speed > MAX_FLICK_SPEED) finger.mul(MAX_FLICK_SPEED / speed) else finger
+        Log.d(TAG, "Released at ${body.linearVelocity.length()} m/s (throw needs $THROW_MIN_SPEED)")
     }
 
     /**
-     * Call before each world step. If the freshly released shape is fast and about to hit a
-     * wall, and a peer lies in that direction, the shape is sent there and flies off screen.
+     * Call before each world step. A shape released at [THROW_MIN_SPEED] or faster is thrown
+     * right away: if a peer lies in that direction, it is sent there and flies off screen,
+     * passing through the other shapes.
      *
-     * @return what happened, or `null` if the shape wasn't thrown at a wall.
+     * The throw is decided at release rather than when the shape reaches a wall, because with
+     * several large shapes on screen a flick almost always hits another shape first.
+     *
+     * @return what happened, or `null` if the release was too slow to be a throw.
      */
     fun checkThrow(
-        dt: Float,
         nowNanos: Long,
         share: NearbyShare?,
         rotation: FloatArray?,
     ): ThrowOutcome? {
         val item = throwCandidate ?: return null
-        throwCandidateAge += dt
-        if (throwCandidateAge > THROW_WINDOW_SECONDS || item !in items) {
-            throwCandidate = null
-            return null
-        }
+        throwCandidate = null
+        if (item !in items) return null
         val body = item.physicalShape.body
         val v = body.linearVelocity
         val speed = v.length()
-        if (speed < THROW_MIN_SPEED || !willHitWall(body, v, dt * 2f)) return null
+        if (speed < THROW_MIN_SPEED) return null
 
-        // Only the first wall hit counts, so a bounce never triggers a throw elsewhere.
-        throwCandidate = null
         if (share == null) return ThrowOutcome.SharingOff(item)
         if (share.peers.isEmpty()) return ThrowOutcome.NoPeers(item)
         val bearing = rotation?.let { ThrowGeometry.screenToBearing(it, v.x, v.y) }
@@ -178,7 +196,8 @@ class SandboxWorld(
             TargetCandidate(peer.endpointId, peer.forwardBearing, uwbBearing)
         }
         val target = ThrowTargeting.pickTarget(bearing, candidates)
-            ?: return ThrowOutcome.NoTargetInDirection(item)
+        Log.d(TAG, "Throw at $speed m/s, bearing=$bearing, candidates=$candidates -> target=$target")
+        if (target == null) return ThrowOutcome.NoTargetInDirection(item)
 
         share.sendThrow(
             target,
@@ -282,16 +301,6 @@ class SandboxWorld(
         if (throwCandidate === item) throwCandidate = null
     }
 
-    /** Whether [body]'s bounds, moved by [velocity] for [seconds], cross a screen edge. */
-    private fun willHitWall(body: Body, velocity: Vec2, seconds: Float): Boolean {
-        val box = body.boundsPx() ?: return false
-        val mx = velocity.x.toPixels() * seconds
-        val my = velocity.y.toPixels() * seconds
-        return (velocity.x < 0f && box.lowerBound.x + mx <= 0f) ||
-            (velocity.x > 0f && box.upperBound.x + mx >= widthPx) ||
-            (velocity.y < 0f && box.lowerBound.y + my <= 0f) ||
-            (velocity.y > 0f && box.upperBound.y + my >= heightPx)
-    }
 
     private fun isOffScreen(body: Body): Boolean {
         val box = body.boundsPx() ?: return true

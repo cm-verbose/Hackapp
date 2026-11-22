@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.sandbox
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -196,16 +197,20 @@ fun defaultSandboxItems(): List<SandboxItem> {
  * @param modifier The modifier to be applied to the sandbox layout.
  * @param items List of [SandboxItem]s containing composable UI content and physical parameters.
  * @param gravityLocked When `true`, device-tilt gravity no longer applies to the items.
+ * @param snackbarHostState Where to show messages about shapes sent to and received from
+ * nearby devices, see [PhysicsScreen].
  */
 @Composable
 fun PassportSandbox(
     modifier: Modifier = Modifier,
     items: List<SandboxItem> = defaultSandboxItems(),
     gravityLocked: Boolean = false,
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     PhysicsScreen(
         modifier = modifier,
         items = items,
         gravityLocked = gravityLocked,
+        snackbarHostState = snackbarHostState,
     )
 }

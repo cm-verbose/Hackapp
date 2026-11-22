@@ -19,6 +19,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
@@ -34,6 +36,9 @@ import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import java.util.UUID
@@ -41,9 +46,26 @@ import kotlin.math.abs
 
 private const val TAG = "NearbyShare"
 private const val SERVICE_ID = "com.example.hackapp.sandbox.share"
+private val STRATEGY = Strategy.P2P_CLUSTER
 
 /** UWB readings older than this are ignored when picking a target. */
 private const val UWB_FRESH_MS = 1_500L
+
+/** Delay before retrying advertising or discovery after a failure. */
+private const val START_RETRY_MS = 5_000L
+
+/** How often discovered but unconnected devices are (re)tried. */
+private const val CONNECT_RETRY_MS = 4_000L
+
+/**
+ * How long the device with the larger name waits for the other side to request before it
+ * requests itself. Bluetooth discovery is often one-sided, so the side that should request
+ * may never see the other.
+ */
+private const val FALLBACK_REQUEST_MS = 8_000L
+
+/** API level of Android 17, which introduced ACCESS_LOCAL_NETWORK. */
+private const val ANDROID_17 = 37
 
 /** A shape thrown to this device by the peer named [fromName]. */
 data class IncomingThrow(val fromName: String, val message: ShareMessage.Throw)
@@ -66,13 +88,15 @@ data class SharePeer(
  * instant (finding and connecting to a device takes a few seconds).
  *
  * Every device both advertises and discovers ([Strategy.P2P_CLUSTER]). To avoid both sides of
- * a pair requesting at once, only the device with the smaller random name requests; the same
- * comparison decides who is the UWB controller. Connections are accepted without a
- * confirmation prompt.
+ * a pair requesting at once, the device with the smaller random name requests first; the
+ * other side only requests if no connection appears within [FALLBACK_REQUEST_MS], since
+ * discovery is often one-sided. Failed requests are retried every [CONNECT_RETRY_MS] while the
+ * device stays discovered. The same name comparison decides who is the UWB controller.
+ * Connections are accepted without a confirmation prompt.
  *
  * Must be used from the main thread.
  */
-class NearbyShare(private val context: Context, scope: CoroutineScope) {
+class NearbyShare(private val context: Context, private val scope: CoroutineScope) {
 
     private val client = Nearby.getConnectionsClient(context)
     /**
@@ -89,6 +113,10 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
      */
     var error by mutableStateOf<String?>(null)
         private set
+
+    private var advertisingError: String? = null
+    private var discoveryError: String? = null
+    private var retryJob: Job? = null
 
     /** Connected peers by endpoint id. */
     val peers = mutableStateMapOf<String, SharePeer>()
@@ -114,6 +142,15 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
     /** Endpoint names learnt while connecting, before the connection is established. */
     private val pendingNames = mutableMapOf<String, String>()
 
+    /** A discovered device running the sandbox, which we may not be connected to yet. */
+    private class Discovered(val name: String, val foundAtMs: Long) {
+        var requesting = false
+    }
+
+    /** Devices currently in discovery range, by endpoint id. */
+    private val discovered = mutableMapOf<String, Discovered>()
+    private var connectJob: Job? = null
+
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             val bytes = payload.asBytes() ?: return
@@ -124,6 +161,7 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
                 is ShareMessage.UwbHello -> uwb.onHello(endpointId, message)
                 is ShareMessage.Throw -> {
                     val from = peers[endpointId]?.name ?: "a nearby device"
+                    Log.d(TAG, "Received throw from $from: $message")
                     _incomingThrows.tryEmit(IncomingThrow(from, message))
                 }
                 null -> Log.w(TAG, "Unreadable payload from $endpointId")
@@ -141,7 +179,9 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
 
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
             val name = pendingNames.remove(endpointId) ?: return
+            discovered[endpointId]?.requesting = false
             if (!resolution.status.isSuccess) {
+                // Retried by connectLoop while the device is still discovered.
                 Log.d(TAG, "Connection to $endpointId failed: ${resolution.status}")
                 return
             }
@@ -158,50 +198,149 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
 
     private val discoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            if (info.serviceId != SERVICE_ID || endpointId in peers) return
-            if (localName >= info.endpointName) return // The other device requests.
-            client.requestConnection(localName, endpointId, connectionCallback)
-                .addOnFailureListener { Log.d(TAG, "Request to $endpointId failed", it) }
+            if (info.serviceId != SERVICE_ID) return
+            discovered[endpointId] = Discovered(info.endpointName, SystemClock.elapsedRealtime())
+            maybeRequest(endpointId)
         }
 
-        override fun onEndpointLost(endpointId: String) {}
+        override fun onEndpointLost(endpointId: String) {
+            discovered.remove(endpointId)
+        }
+    }
+
+    /**
+     * Requests a connection to a discovered device if we aren't connected or connecting, and
+     * it's our turn: right away if our name is smaller, after [FALLBACK_REQUEST_MS] otherwise.
+     */
+    private fun maybeRequest(endpointId: String) {
+        val device = discovered[endpointId] ?: return
+        if (!running || endpointId in peers || endpointId in pendingNames || device.requesting) return
+        val waited = SystemClock.elapsedRealtime() - device.foundAtMs
+        if (localName >= device.name && waited < FALLBACK_REQUEST_MS) return
+
+        device.requesting = true
+        client.requestConnection(localName, endpointId, connectionCallback)
+            .addOnFailureListener { e ->
+                device.requesting = false
+                // Both sides requested at once and the other one won: nothing to retry.
+                if (e.statusCode() == ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT) return@addOnFailureListener
+                Log.d(TAG, "Request to ${device.name} failed, will retry: ${e.message}")
+            }
+    }
+
+    /** Keeps trying every discovered device we aren't connected to. */
+    private fun startConnectLoop() {
+        connectJob?.cancel()
+        connectJob = scope.launch {
+            while (running) {
+                delay(CONNECT_RETRY_MS)
+                discovered.keys.toList().forEach(::maybeRequest)
+            }
+        }
     }
 
     fun start() {
         if (running) return
         running = true
-        val strategy = Strategy.P2P_CLUSTER
+
+        val gms = GoogleApiAvailability.getInstance()
+        val gmsStatus = gms.isGooglePlayServicesAvailable(context)
+        if (gmsStatus != ConnectionResult.SUCCESS) {
+            // Nearby Connections lives in Google Play services; without an up to date copy
+            // every call fails with an opaque internal error.
+            error = "Google Play services unavailable: ${gms.getErrorString(gmsStatus)} ($gmsStatus)"
+            Log.w(TAG, error!!)
+            return
+        }
+
+        // A previous session of this app (e.g. before a reinstall or process restart) can
+        // still be registered with Play services and make new calls fail. Reset it first.
+        client.stopAdvertising()
+        client.stopDiscovery()
+        startAdvertising()
+        startDiscovery()
+        startConnectLoop()
+    }
+
+    private fun startAdvertising() {
         client.startAdvertising(
             localName,
             SERVICE_ID,
             connectionCallback,
-            AdvertisingOptions.Builder().setStrategy(strategy).build(),
-        ).addOnFailureListener { onStartFailed("Advertising", it) }
+            AdvertisingOptions.Builder().setStrategy(STRATEGY).build(),
+        )
+            .addOnSuccessListener { advertisingError = null; updateError() }
+            .addOnFailureListener { e ->
+                if (e.statusCode() == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) return@addOnFailureListener
+                advertisingError = describe("Advertising", e)
+                updateError()
+                scheduleRetry()
+            }
+    }
+
+    private fun startDiscovery() {
         client.startDiscovery(
             SERVICE_ID,
             discoveryCallback,
-            DiscoveryOptions.Builder().setStrategy(strategy).build(),
-        ).addOnFailureListener { onStartFailed("Discovery", it) }
+            DiscoveryOptions.Builder().setStrategy(STRATEGY).build(),
+        )
+            .addOnSuccessListener { discoveryError = null; updateError() }
+            .addOnFailureListener { e ->
+                if (e.statusCode() == ConnectionsStatusCodes.STATUS_ALREADY_DISCOVERING) return@addOnFailureListener
+                discoveryError = describe("Discovery", e)
+                updateError()
+                scheduleRetry()
+            }
     }
 
-    private fun onStartFailed(what: String, e: Exception) {
+    /** Retries whichever of advertising and discovery failed, until both run or we stop. */
+    private fun scheduleRetry() {
+        if (retryJob?.isActive == true) return
+        retryJob = scope.launch {
+            delay(START_RETRY_MS)
+            if (!running) return@launch
+            if (advertisingError != null) {
+                client.stopAdvertising()
+                startAdvertising()
+            }
+            if (discoveryError != null) {
+                client.stopDiscovery()
+                startDiscovery()
+            }
+        }
+    }
+
+    private fun updateError() {
+        error = listOfNotNull(advertisingError, discoveryError).joinToString("\n").ifEmpty { null }
+    }
+
+    private fun Exception.statusCode(): Int? = (this as? ApiException)?.statusCode
+
+    /** e.g. "Advertising failed: STATUS_BLUETOOTH_ERROR (8007), retrying…". */
+    private fun describe(what: String, e: Exception): String {
         Log.w(TAG, "$what failed", e)
-        val reason = (e as? ApiException)
-            ?.let { ConnectionsStatusCodes.getStatusCodeString(it.statusCode) }
-            ?: e.message
-            ?: e.javaClass.simpleName
-        error = "$what failed: $reason"
+        val reason = (e as? ApiException)?.let {
+            val name = ConnectionsStatusCodes.getStatusCodeString(it.statusCode)
+            val detail = it.status.statusMessage?.takeIf { msg -> msg.isNotBlank() && msg != name }
+            "$name (${it.statusCode})" + (detail?.let { d -> ": $d" } ?: "")
+        } ?: e.message ?: e.javaClass.simpleName
+        return "$what failed: $reason, retrying…"
     }
 
     fun stop() {
         if (!running) return
         running = false
+        retryJob?.cancel()
+        connectJob?.cancel()
+        advertisingError = null
+        discoveryError = null
         uwb.stop()
         client.stopAdvertising()
         client.stopDiscovery()
         client.stopAllEndpoints()
         peers.clear()
         pendingNames.clear()
+        discovered.clear()
         error = null
     }
 
@@ -238,6 +377,12 @@ class NearbyShare(private val context: Context, scope: CoroutineScope) {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 add(Manifest.permission.NEARBY_WIFI_DEVICES)
+            }
+            // Android 17 made local network access a runtime permission. Play services needs
+            // it for both advertising and discovery, but has no dedicated status code for it,
+            // so a missing grant surfaces as a bare INTERNAL_ERROR (8).
+            if (Build.VERSION.SDK_INT >= ANDROID_17) {
+                add(Manifest.permission.ACCESS_LOCAL_NETWORK)
             }
             // Discovery still requires location on every Android version: Play services
             // refuses it with MISSING_PERMISSION_ACCESS_COARSE_LOCATION (8034) otherwise,

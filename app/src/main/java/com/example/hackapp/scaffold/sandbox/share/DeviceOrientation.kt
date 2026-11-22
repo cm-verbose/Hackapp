@@ -8,6 +8,9 @@ import android.hardware.SensorManager
 import android.view.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -20,7 +23,17 @@ class DeviceOrientation {
     /** Row-major device→world rotation matrix, see [ThrowGeometry]. `null` until a reading arrives. */
     var rotationMatrix: FloatArray? = null
         internal set
+
+    /**
+     * `true` while the sensor reports its heading as unreliable, meaning throws may be aimed
+     * at the wrong device. Moving the phone in a figure 8 recalibrates the magnetometer.
+     */
+    var compassUnreliable by mutableStateOf(false)
+        internal set
 }
+
+/** Heading error (degrees) above which the compass is reported as unreliable. */
+private const val MAX_HEADING_ERROR_DEG = 30.0
 
 @Composable
 fun rememberDeviceOrientation(): DeviceOrientation {
@@ -47,6 +60,15 @@ fun rememberDeviceOrientation(): DeviceOrientation {
                 val remapped = FloatArray(9)
                 SensorManager.remapCoordinateSystem(raw, axisX, axisY, remapped)
                 orientation.rotationMatrix = remapped
+
+                // values[4], when present, is the estimated heading accuracy in radians
+                // (-1 if unknown); event.accuracy is the coarser status of the fusion.
+                val headingErrorDeg = event.values.getOrNull(4)
+                    ?.takeIf { it >= 0f }
+                    ?.let { Math.toDegrees(it.toDouble()) }
+                orientation.compassUnreliable =
+                    event.accuracy <= SensorManager.SENSOR_STATUS_ACCURACY_LOW ||
+                    (headingErrorDeg != null && headingErrorDeg > MAX_HEADING_ERROR_DEG)
             }
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
