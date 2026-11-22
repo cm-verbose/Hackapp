@@ -236,4 +236,36 @@ class StopPlanningTest {
         val preview = previewDraftEdit(itinerary, DraftEdit.ChangeDistricts(listOf(HERE, NEXT)), legs, Toronto)
         assertEquals(StopRemovalReason.NoLongerReachable, preview.removed.single().reason)
     }
+
+    @Test
+    fun `a Meal with no bracket adds no limit but keeps the others`() {
+        val blocks = listOf(
+            MealBlock("d", MealKind.Dinner, LocalTime.of(19, 0), BudgetBracket.Under50),
+            MealBlock("l", MealKind.LateBite, LocalTime.of(22, 0), budget = null),
+        )
+        val itinerary = night(blocks = blocks).copy(eventBudget = BudgetBracket.Under20)
+        val summary = budgetSummary(itinerary, context(), BudgetPrices())
+        assertEquals(50, summary.mealBudgetCad)
+        assertEquals(70, summary.totalBudgetCad)
+    }
+
+    @Test
+    fun `a Meal with no bracket still counts its price and the warning stays on`() {
+        val blocks = listOf(MealBlock("l", MealKind.LateBite, LocalTime.of(22, 0), budget = null))
+        val meal = stop("m", at(Nov28, 22), at(Nov28, 23), kind = StopKind.Meal, sourceId = "1")
+        val itinerary = night(blocks = blocks, stops = listOf(meal)).copy(eventBudget = BudgetBracket.Under20)
+        val summary = budgetSummary(itinerary, context(), BudgetPrices(mealPrices = mapOf(1L to PriceRange(30, 40, false))))
+        assertEquals(0, summary.mealBudgetCad)
+        assertEquals(20, summary.totalBudgetCad)
+        assertEquals(40.0, summary.mealsCad, 0.0)
+        assertTrue(summary.isOverBudget)
+    }
+
+    @Test
+    fun `the 100 plus bracket still has no limit`() {
+        val blocks = listOf(MealBlock("d", MealKind.Dinner, LocalTime.of(19, 0), BudgetBracket.From100))
+        val summary = budgetSummary(night(blocks = blocks).copy(eventBudget = BudgetBracket.Under20), context(), BudgetPrices())
+        assertNull(summary.mealBudgetCad)
+        assertNull(summary.totalBudgetCad)
+    }
 }

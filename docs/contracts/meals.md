@@ -60,6 +60,7 @@ Unselected options still carry `start` and `budget`; the page may show the time 
 - Blocks are valid when the whole block (start to start + length) is inside the window and half-open overlap with other selected blocks is empty (touching blocks are fine). Windows past midnight are handled: a time before the window start belongs to the next day.
 - Saved blocks keep the id of an existing block of the same kind, otherwise `meal-<kind>`, sorted in window order. If the draft already has Stops, they go through the `PlanningChangeReconciler`.
 - The Meal budget stored on a block is the chosen bracket or null. Null means search falls back to the Itinerary or Profile budget.
+- Budget summary: a selected Meal whose `effectiveBudget` is null (for example Late bite with its add-on off) adds its actual price to the running total but nothing to the budget limit, so it never makes the Meal or total limit unknown or disables the over-budget warning. The `$100+` bracket still means no upper limit.
 
 ## States the page must render
 
