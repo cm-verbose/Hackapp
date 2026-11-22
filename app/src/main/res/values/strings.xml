@@ -220,7 +220,7 @@
     <string name="meal_tab_in_district">Dans %1$s</string>
     <string name="meal_tab_next">Arrondissement suivant</string>
     <string name="meal_picker_walk">%1$d m · %2$d min à pied</string>
-    <string name="meal_picker_transit">%1$d m · %2$d min en commun</string>
+    <string name="meal_picker_transit">%1$d m · %2$d min en transport</string>
     <string name="meal_picker_price_unknown">Prix inconnu</string>
     <string name="venue_type_restaurant">Restaurant</string>
     <string name="venue_type_fast_food">Restauration rapide</string>
