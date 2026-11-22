@@ -5,7 +5,7 @@ Owner: Domain Engineer, team Selection. Consumer: Feature Engineer. File:
 
 ## Construction
 
-`PlanningStopSelectionViewModel.factory(itineraryId, auth, itineraries, profiles, events, places, tickets, estimator, zone)`.
+`PlanningStopSelectionViewModel.factory(itineraryId, auth, itineraries, profiles, events, places, tickets, estimator, zone, returnGap = null)`. `returnGap` (`SelectionGap(afterStopId, districtId)`, from `PlanningStopSelectionRoute`) opens the gap a Stop removed on Review left; `afterStopId = null` is the gap before the first Stop. The first change returns planning to the end of the Itinerary.
 `events` is `CityServices.events`, `places` is `CityServices.places`, `estimator` is `CityServices.legs`, `zone` is the City Pack time zone, `tickets` is the app's `TicketPriceRepository`. The ViewModel loads on creation. All rules live in the plain class `StopSelectionSession`, which has the same methods as suspend functions and no Android dependency.
 
 ## UiState (`state: StateFlow<PlanningStopSelectionUiState>`)

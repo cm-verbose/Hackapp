@@ -35,7 +35,7 @@ import com.example.hackapp.itinerary.districtAfter
 import com.example.hackapp.itinerary.districtBefore
 import com.example.hackapp.itinerary.eventStop
 import com.example.hackapp.itinerary.finishedSelection
-import com.example.hackapp.itinerary.gapStart
+import com.example.hackapp.itinerary.gapAfter
 import com.example.hackapp.itinerary.interval
 import com.example.hackapp.itinerary.movedToDistrict
 import com.example.hackapp.itinerary.mealBlockToAnswer
@@ -124,6 +124,9 @@ fun hideOtherEvents(groups: List<EventHourGroup>): List<EventHourGroup> = groups
     .map { hour -> hour.copy(types = hour.types.filterNot { it.type.equals(OTHER_EVENT_TYPE, ignoreCase = true) }) }
     .filter { it.types.isNotEmpty() }
 
+/** The gap Review sends Selection back to: after [afterStopId] (null = before the first Stop), in [districtId]. */
+data class SelectionGap(val afterStopId: String?, val districtId: String)
+
 /** A Meal moved planning to the next District, and Back can still undo it. */
 private data class MealMove(val stopId: String, val fromDistrictId: String)
 
@@ -142,7 +145,10 @@ class StopSelectionSession(
     private val estimator: LegEstimator,
     private val zone: ZoneId,
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    returnGap: SelectionGap? = null,
 ) {
+    /** Kept until the first change, which returns planning to the end of the Itinerary. */
+    private var targetGap: SelectionGap? = returnGap
     private val engine = PlanningEngine(estimator)
     private val lock = Mutex()
     private val _state = MutableStateFlow(PlanningStopSelectionUiState())
@@ -185,7 +191,7 @@ class StopSelectionSession(
             // Places only feed the Meal picker, so a failure leaves it empty instead of blocking Events.
             places = tolerant { placeRepository.allPlaces() } ?: emptyList()
             cuisines = tolerant { placeRepository.cuisineGroups() } ?: emptyList()
-            draft = saved.copy(planningDistrictId = saved.selectionDistrict())
+            draft = saved.copy(planningDistrictId = districtFor(saved))
             publish()
             _state.update { it.copy(loading = false) }
         } catch (e: CancellationException) {
@@ -213,7 +219,7 @@ class StopSelectionSession(
         val base = draft ?: return@withLock
         val saved = tolerant { uid()?.let { itineraries.getItinerary(it, itineraryId) } }
         if (saved != null && saved.districtIds.isNotEmpty()) {
-            val latest = saved.copy(planningDistrictId = saved.selectionDistrict())
+            val latest = saved.copy(planningDistrictId = districtFor(saved))
             if (latest != base) {
                 draft = latest
                 mealMove = null
@@ -346,6 +352,7 @@ class StopSelectionSession(
         finishAfterSave = !persist(finished)
         if (finishAfterSave) return false
         mealMove = null
+        targetGap = null
         draft = finished
         publish()
         _state.update { it.copy(reviewId = itineraryId) }
@@ -403,6 +410,7 @@ class StopSelectionSession(
             val base = draft ?: return
             if (clearMove) mealMove = null
             finishAfterSave = false
+            targetGap = null
             val next = transform(base).let {
                 it.copy(
                     step = maxOf(it.step, PlanningStep.Stops),
@@ -428,6 +436,9 @@ class StopSelectionSession(
         false
     }
 
+    private fun districtFor(itinerary: Itinerary): String? =
+        targetGap?.districtId?.takeIf { it in itinerary.districtIds } ?: itinerary.selectionDistrict()
+
     private suspend fun publish() {
         val itinerary = draft ?: return
         val district = itinerary.selectionDistrict() ?: return
@@ -436,12 +447,15 @@ class StopSelectionSession(
         val now = context.now
         val pending = itinerary.mealBlockToAnswer(now, zone)
         val pendingStart = pending?.interval(itinerary, zone)?.start
+        val gap = targetGap?.let { itinerary.gapAfter(it.afterStopId) } ?: itinerary.currentGap()
+        val gapFrom = gap.previous?.plannedDeparture?.toInstant() ?: maxOf(itinerary.windowStart(zone).toInstant(), now)
+        val gapUntil = listOfNotNull(pendingStart, gap.next?.start?.toInstant(), itinerary.windowEnd(zone).toInstant()).min()
         val search = EventSearch(
             itinerary = itinerary,
             events = events,
             context = context,
             districtId = district,
-            gap = itinerary.currentGap(),
+            gap = gap,
             medianPrices = medians.mapNotNull { (key, value) -> value?.let { key to it } }.toMap(),
             until = pendingStart,
         )
@@ -463,8 +477,8 @@ class StopSelectionSession(
                 districtNumber = index + 1,
                 hasNextDistrict = itinerary.districtAfter(district) != null,
                 canFinish = engine.canFinish(itinerary),
-                gapStart = itinerary.gapStart(now, zone).atZone(zone),
-                gapEnd = (pendingStart ?: itinerary.windowEnd(zone).toInstant()).atZone(zone),
+                gapStart = gapFrom.atZone(zone),
+                gapEnd = gapUntil.atZone(zone),
                 groups = groups,
                 mealPrompt = pending?.let { block ->
                     val span = block.interval(itinerary, zone)
@@ -548,12 +562,13 @@ class PlanningStopSelectionViewModel(private val session: StopSelectionSession) 
             tickets: TicketPriceRepository,
             estimator: LegEstimator,
             zone: ZoneId,
+            returnGap: SelectionGap? = null,
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 PlanningStopSelectionViewModel(
                     StopSelectionSession(
                         itineraryId, { auth.currentUser?.uid }, itineraries, profiles, events, places, tickets,
-                        estimator, zone,
+                        estimator, zone, returnGap = returnGap,
                     ),
                 )
             }

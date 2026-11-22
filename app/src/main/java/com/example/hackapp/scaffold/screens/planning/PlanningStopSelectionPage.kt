@@ -111,6 +111,7 @@ private val SessionTicketPrices: TicketPriceRepository = InMemoryTicketPriceRepo
 @Composable
 fun PlanningStopSelectionScreen(
     itineraryId: String,
+    returnGap: SelectionGap? = null,
     onLeave: (String) -> Unit,
     onReview: (String) -> Unit,
     onHome: () -> Unit,
@@ -127,6 +128,7 @@ fun PlanningStopSelectionScreen(
             tickets = SessionTicketPrices,
             estimator = services.legs,
             zone = LocalCityPack.current.timeZone,
+            returnGap = returnGap,
         ),
     )
     val state by viewModel.state.collectAsState()

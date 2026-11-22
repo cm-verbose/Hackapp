@@ -445,6 +445,28 @@ class StopSelectionSessionTest {
     }
 
     @Test
+    fun `returning from Review opens the gap the removed Stop left`() = runBlocking {
+        val before = com.example.hackapp.itinerary.stop("a", at(Nov28, 18, 30), at(Nov28, 19))
+        val after = com.example.hackapp.itinerary.stop("c", at(Nov28, 22), at(Nov28, 23), district = NEXT)
+        val middle = event("mid", start = at(Nov28, 20).toString(), end = at(Nov28, 21).toString())
+        val late = event("late", start = at(Nov28, 23, 30).toString(), end = at(Nov28, 23, 50).toString())
+        repo.saveItinerary(night(stops = listOf(before, after)).copy(planningDistrictId = NEXT))
+        val s = StopSelectionSession("it-1", { UID }, repo, NoProfile, FakeEvents(listOf(middle, late)), FakePlaces(emptyList()),
+            InMemoryTicketPriceRepository(), fixedLegs(), Toronto, { instant(Nov28, 8).toEpochMilli() },
+            returnGap = SelectionGap("a", HERE))
+        s.load()
+        s.refresh()
+        assertEquals(HERE, s.state.value.districtId)
+        assertEquals(listOf("mid"), ids(s.state.value))
+        assertEquals(at(Nov28, 19).toInstant(), s.state.value.gapStart!!.toInstant())
+        assertEquals(at(Nov28, 22).toInstant(), s.state.value.gapEnd!!.toInstant())
+        s.openEvent(s.state.value.groups.first().types.first().cards.first())
+        s.addToItinerary()
+        assertEquals(listOf("a", "event-mid", "c"), s.state.value.stops.map { it.id })
+        assertEquals(at(Nov28, 23).toInstant(), s.state.value.gapStart!!.toInstant())
+    }
+
+    @Test
     fun `other Events are hidden and empty hours dropped`() {
         val other = event("o", type = "other", start = at(Nov28, 19).toString())
         val music = event("m", type = "music", start = at(Nov28, 20).toString())

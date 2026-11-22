@@ -112,7 +112,7 @@ fun ItineraryReviewScreen(
     itineraryId: String,
     onBack: () -> Unit,
     onStarted: (String) -> Unit,
-    onBackToSelection: (String) -> Unit,
+    onBackToSelection: (ReviewNavigation.BackToSelection) -> Unit,
     onChangeDateTime: (String) -> Unit,
 ) {
     val services = LocalCityServices.current
@@ -168,7 +168,7 @@ fun ItineraryReviewScreen(
             }
             is ReviewNavigation.BackToSelection -> {
                 viewModel.onNavigated()
-                onBackToSelection(target.itineraryId)
+                onBackToSelection(target)
             }
         }
     }

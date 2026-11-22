@@ -73,6 +73,7 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
         val route = entry.toRoute<PlanningStopSelectionRoute>()
         PlanningStopSelectionScreen(
             itineraryId = route.itineraryId,
+            returnGap = route.districtId?.let { SelectionGap(route.afterStopId, it) },
             onLeave = { id -> controller.returnToMealChoice(id) },
             onReview = { id -> controller.navigate(ItineraryReviewRoute(id)) },
             onHome = { controller.backToHome() },
@@ -90,19 +91,21 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
                     launchSingleTop = true
                 }
             },
-            onBackToSelection = { id -> controller.returnToSelection(id) },
+            onBackToSelection = { target -> controller.returnToSelection(target) },
             onChangeDateTime = { id -> controller.returnToDateTimeFromReview(id) },
         )
     }
 }
 
-/** Back to the Selection entry, or Selection in place of Review when the draft was resumed here. */
-private fun NavHostController.returnToSelection(itineraryId: String) {
-    if (!popBackStack<PlanningStopSelectionRoute>(inclusive = false)) {
-        navigate(PlanningStopSelectionRoute(itineraryId)) {
-            popUpTo<ItineraryReviewRoute> { inclusive = true }
-        }
+/**
+ * Opens Selection on the gap a removed Stop left. The earlier Selection entry is replaced, because
+ * its route holds no gap. Without one, Selection takes Review's place in a resumed draft.
+ */
+private fun NavHostController.returnToSelection(target: ReviewNavigation.BackToSelection) {
+    if (!popBackStack<PlanningStopSelectionRoute>(inclusive = true)) {
+        popBackStack<ItineraryReviewRoute>(inclusive = true)
     }
+    navigate(PlanningStopSelectionRoute(target.itineraryId, target.afterStopId, target.districtId))
 }
 
 private fun NavHostController.returnToDateTimeFromReview(itineraryId: String) {
