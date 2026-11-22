@@ -1,6 +1,9 @@
 package com.example.hackapp.scaffold.screens.settings
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Interests
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -126,6 +129,7 @@ private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
             summary.districtName,
         ).joinToString("\u00a0· "),
         avatarText = profile.name.take(1).uppercase(),
+        subtitleMaxLines = Int.MAX_VALUE,
         trailing = null,
     )
     HorizontalInfoCard(
@@ -135,6 +139,8 @@ private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
                 profile.audience.map { audienceLabel(it) }
             )
             .joinToString("\u00a0· "),
+        leadingIcon = Icons.Filled.Payments,
+        subtitleMaxLines = Int.MAX_VALUE,
         trailing = null,
     )
     val preferences = profile.interests.map { stopTypeLabel(it.stopType) } +
@@ -142,6 +148,8 @@ private fun ProfileCards(summary: SettingsProfile, language: AppLanguage) {
     HorizontalInfoCard(
         title = stringResource(R.string.interests_title),
         subtitle = preferences.joinToString(", ").ifEmpty { stringResource(R.string.settings_no_preferences) },
+        leadingIcon = Icons.Filled.Interests,
+        subtitleMaxLines = Int.MAX_VALUE,
         trailing = null,
     )
 }
