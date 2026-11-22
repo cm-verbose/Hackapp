@@ -229,13 +229,21 @@ private fun MealCard(
                         color = scheme.onSurfaceVariant,
                     )
                     // The reserved range turns the error colour when the block leaves the window or
-                    // overlaps another Meal. The sentence for each error is still to come from copy.
+                    // overlaps another Meal, and the sentence below carries the error for TalkBack.
                     Text(
                         range,
                         style = MaterialTheme.typography.bodySmall,
                         color = if (option.error != null) scheme.error else scheme.onSurfaceVariant,
-                        modifier = if (option.error != null) Modifier.semantics { error(range) } else Modifier,
                     )
+                    option.error?.let { timeError ->
+                        val message = mealTimeErrorText(timeError)
+                        Text(
+                            message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = scheme.error,
+                            modifier = Modifier.semantics { error(message) },
+                        )
+                    }
                 }
                 HackappTimeField(
                     value = option.start,
@@ -280,6 +288,14 @@ private fun mealLabel(kind: MealKind): String = stringResource(
         MealKind.Lunch -> R.string.meal_lunch
         MealKind.Dinner -> R.string.meal_dinner
         MealKind.LateBite -> R.string.meal_late_bite
+    },
+)
+
+@Composable
+private fun mealTimeErrorText(error: MealTimeError): String = stringResource(
+    when (error) {
+        MealTimeError.OutsideWindow -> R.string.meal_error_outside_window
+        MealTimeError.Overlaps -> R.string.meal_error_overlaps
     },
 )
 
