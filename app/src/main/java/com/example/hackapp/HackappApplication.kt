@@ -19,6 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.passport.PlaceStampIdentityResolver
+import com.example.hackapp.passport.StampRepository
 import com.example.hackapp.passport.createStampRepository
 import com.example.hackapp.underway.SystemUnderwayClock
 import com.example.hackapp.underway.UnderwayClock
@@ -36,6 +37,8 @@ class HackappApplication : Application() {
 
     val itineraryRepository: ItineraryRepository by lazy { createItineraryRepository(this) }
 
+    val stampRepository: StampRepository by lazy { createStampRepository(this) }
+
     /** The one clock for Underway: coordinator, ViewModel and pages. Demo mode replaces it here. */
     val underwayClock: UnderwayClock by lazy { SystemUnderwayClock(ActiveCityPack.timeZone) }
 
@@ -47,7 +50,7 @@ class HackappApplication : Application() {
         UnderwayCoordinator(
             itineraries = itineraryRepository,
             states = createUnderwayRepository(this),
-            stamps = createStampRepository(this),
+            stamps = stampRepository,
             resolverFor = { itinerary ->
                 val places = itinerary.stops.filter { it.kind == StopKind.Meal }.mapNotNull { stop ->
                     stop.sourceId.toLongOrNull()?.let { cityServices.places.getPlace(it) }

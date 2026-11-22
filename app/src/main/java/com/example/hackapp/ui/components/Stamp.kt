@@ -53,27 +53,40 @@ fun Stamp(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Box(
-            Modifier
-                .size(72.dp)
-                .background(discColor, CircleShape)
-                .dashedCircleBorder(2.dp, inkColor),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                initials,
-                style = MaterialTheme.typography.titleMedium,
-                color = inkColor,
-                maxLines = 1,
-                modifier = Modifier.clearAndSetSemantics {},
-            )
-        }
+        StampDisc(initials, Modifier.size(StampDiscSize), discColor, inkColor)
         val center = Modifier.fillMaxWidth()
         Text(stampName, style = MaterialTheme.typography.labelLarge, color = scheme.onSurface, textAlign = TextAlign.Center,
             maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = center)
         Text(date, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = center)
         Text(district, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant, textAlign = TextAlign.Center,
             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = center)
+    }
+}
+
+/** Diameter of the Stamp disc. */
+val StampDiscSize = 72.dp
+
+/** The Stamp's lemon disc with its dashed ink border and initials. Fills [modifier]'s size. */
+@Composable
+fun StampDisc(
+    initials: String,
+    modifier: Modifier = Modifier,
+    discColor: Color = HackappPalette.AccentLemon,
+    inkColor: Color = HackappPalette.Ink,
+) {
+    Box(
+        modifier
+            .background(discColor, CircleShape)
+            .dashedCircleBorder(2.dp, inkColor),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            initials,
+            style = MaterialTheme.typography.titleMedium,
+            color = inkColor,
+            maxLines = 1,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
     }
 }
 

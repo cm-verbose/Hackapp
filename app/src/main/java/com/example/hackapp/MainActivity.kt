@@ -10,6 +10,7 @@ import androidx.credentials.CredentialManager
 import com.example.hackapp.citypack.LocalCityPack
 import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.language.AppLanguageStore
+import com.example.hackapp.passport.LocalStampRepository
 import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.AppScaffold
 import com.example.hackapp.services.LocalCityServices
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
                 LocalCityServices provides cityServices,
                 LocalProfileRepository provides app.profileRepository,
                 LocalItineraryRepository provides app.itineraryRepository,
+                LocalStampRepository provides app.stampRepository,
             ) {
                 HackappTheme {
                     AppScaffold()
