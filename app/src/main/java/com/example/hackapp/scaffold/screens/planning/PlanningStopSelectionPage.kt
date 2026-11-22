@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EventBusy
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -86,6 +83,7 @@ import com.example.hackapp.ui.components.MealBlockPrompt
 import com.example.hackapp.ui.components.MealPickerSheet
 import com.example.hackapp.ui.components.PlannedDepartureSheet
 import com.example.hackapp.ui.components.PriceLabel
+import com.example.hackapp.ui.components.RunningTotalCard
 import com.example.hackapp.ui.components.StopTypeTag
 import com.example.hackapp.ui.components.formatCad
 import com.example.hackapp.ui.components.formatSentenceTime
@@ -273,7 +271,7 @@ fun PlanningStopSelectionPage(
         bottomActions = if (ready) {
             {
                 if (state.saveFailed) SaveError(onRetrySave)
-                state.budget?.let { RunningTotal(it) }
+                state.budget?.let { RunningTotalCard(it) }
                 SelectionActions(state, onNextDistrict, onFinish)
             }
         } else {
@@ -501,90 +499,6 @@ private fun MealPromptRow(prompt: MealPrompt, onChooseMeal: () -> Unit, onSkipMe
             HackappSmallTextButton(stringResource(R.string.action_skip_meal), onSkipMeal)
         }
     }
-}
-
-/** Figma "RunningTotal" (141:4091). Over budget warns only, so the actions below stay available. */
-@Composable
-private fun RunningTotal(budget: BudgetSummary) {
-    val scheme = MaterialTheme.colorScheme
-    val over = budget.isOverBudget
-    val container = if (over) scheme.errorContainer else scheme.surfaceContainerHigh
-    val strong = if (over) scheme.onErrorContainer else scheme.onSurface
-    val quiet = if (over) scheme.onErrorContainer else scheme.onSurfaceVariant
-    val limit = budget.totalBudgetCad
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(container, RoundedCornerShape(HackappCorners.Medium))
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            if (over) Icons.Filled.Warning else Icons.Filled.Payments,
-            contentDescription = null,
-            tint = strong,
-            modifier = Modifier.size(24.dp),
-        )
-        Column(Modifier.weight(1f)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    if (over && limit != null) {
-                        stringResource(R.string.running_total_over, formatCad(budget.runningTotalCad - limit))
-                    } else {
-                        stringResource(R.string.running_total_label)
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = quiet,
-                    modifier = Modifier.weight(1f),
-                )
-                limit?.let {
-                    Text(
-                        stringResource(R.string.running_total_budget, formatCad(it)),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = quiet,
-                    )
-                }
-            }
-            Text(totalAmount(budget), style = MaterialTheme.typography.titleMedium, color = strong)
-            val detail = if (over) stringResource(R.string.running_total_over_hint) else totalBreakdown(budget)
-            if (detail.isNotEmpty()) Text(detail, style = MaterialTheme.typography.bodySmall, color = quiet)
-        }
-    }
-}
-
-@Composable
-private fun totalAmount(budget: BudgetSummary): String {
-    val known = budget.runningTotalCad
-    return when {
-        !budget.hasUnknownPrices -> formatCad(known)
-        known == 0.0 -> stringResource(R.string.running_total_unknown_only)
-        else -> stringResource(R.string.running_total_amount, formatCad(known))
-    }
-}
-
-/**
- * "Events 20 $ · Lunch 50 $ · Dinner 30 $". A Meal with an unknown price is left out, because the
- * total already says "+ unknown price". So are Events when none has a known price.
- */
-@Composable
-private fun totalBreakdown(budget: BudgetSummary): String {
-    val events = stringResource(R.string.running_total_events, formatCad(budget.eventsCad))
-        .takeUnless { budget.eventsCad == 0.0 && budget.hasUnknownPrices }
-    val meals = budget.meals.mapNotNull { meal ->
-        val kind = meal.kind ?: return@mapNotNull null
-        val price = meal.priceCad ?: return@mapNotNull null
-        stringResource(
-            when (kind) {
-                MealKind.Lunch -> R.string.running_total_lunch
-                MealKind.Dinner -> R.string.running_total_dinner
-                MealKind.LateBite -> R.string.running_total_late_bite
-            },
-            formatCad(price),
-        )
-    }
-    return (listOfNotNull(events) + meals).joinToString(DETAIL_SEPARATOR)
 }
 
 /** A failed autosave, announced politely, with the way to save again. */

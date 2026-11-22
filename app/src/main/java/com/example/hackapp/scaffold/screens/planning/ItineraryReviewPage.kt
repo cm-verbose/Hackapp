@@ -15,8 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -82,6 +80,7 @@ import com.example.hackapp.ui.components.HackappPage
 import com.example.hackapp.ui.components.HackappPrimaryButton
 import com.example.hackapp.ui.components.HackappTextActionButton
 import com.example.hackapp.ui.components.LoadingState
+import com.example.hackapp.ui.components.RunningTotalCard
 import com.example.hackapp.ui.components.StopRow
 import com.example.hackapp.ui.components.formatCad
 import com.example.hackapp.ui.components.map.ItineraryRouteMap
@@ -297,7 +296,7 @@ fun ItineraryReviewPage(
                 }
                 ReviewBudgetCard(budgetRows)
                 // Over budget moves to the bottom actions, so it stays visible above Start.
-                state.budget?.takeUnless { it.isOverBudget }?.let { ReviewRunningTotal(it) }
+                state.budget?.takeUnless { it.isOverBudget }?.let { ReviewTotal(it) }
             }
         }
     }
@@ -372,7 +371,7 @@ private fun ColumnScope.ReviewActions(
                 .semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
-    state.budget?.takeIf { it.isOverBudget }?.let { ReviewRunningTotal(it) }
+    state.budget?.takeIf { it.isOverBudget }?.let { ReviewTotal(it) }
     if (start is ReviewStartState.NotPlanning) return
     val blockedReason = when (start) {
         is ReviewStartState.NotToday -> stringResource(R.string.review_start_only_on, reviewDate(start.date, appLocale()))
@@ -442,62 +441,10 @@ private fun ReviewBudgetCard(rows: List<ReviewBudgetRow>) {
     }
 }
 
-/** The running total, in the card pattern of Selection. Over budget warns only. */
+/** Review's total is read once, so it has no breakdown and no live announcement. */
 @Composable
-private fun ReviewRunningTotal(budget: BudgetSummary) {
-    val scheme = MaterialTheme.colorScheme
-    val over = budget.isOverBudget
-    val strong = if (over) scheme.onErrorContainer else scheme.onSurface
-    val quiet = if (over) scheme.onErrorContainer else scheme.onSurfaceVariant
-    val limit = budget.totalBudgetCad
-    val known = budget.runningTotalCad
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(
-                if (over) scheme.errorContainer else scheme.surfaceContainerHigh,
-                RoundedCornerShape(HackappCorners.Medium),
-            )
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .semantics(mergeDescendants = true) {},
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            if (over) Icons.Filled.Warning else Icons.Filled.Payments,
-            contentDescription = null,
-            tint = strong,
-            modifier = Modifier.size(24.dp),
-        )
-        Column(Modifier.weight(1f)) {
-            Text(
-                if (over && limit != null) {
-                    stringResource(R.string.running_total_over, formatCad(known - limit))
-                } else {
-                    stringResource(R.string.running_total_label)
-                },
-                style = MaterialTheme.typography.labelMedium,
-                color = quiet,
-            )
-            Text(
-                when {
-                    !budget.hasUnknownPrices -> formatCad(known)
-                    known == 0.0 -> stringResource(R.string.running_total_unknown_only)
-                    else -> stringResource(R.string.running_total_amount, formatCad(known))
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = strong,
-            )
-        }
-        limit?.let {
-            Text(
-                stringResource(R.string.running_total_budget, formatCad(it)),
-                style = MaterialTheme.typography.labelMedium,
-                color = quiet,
-            )
-        }
-    }
-}
+private fun ReviewTotal(budget: BudgetSummary) =
+    RunningTotalCard(budget, showBreakdown = false, announceChanges = false)
 
 /** A failed save inside a dialog. The dialog's actions stay available to try again. */
 @Composable
@@ -924,9 +871,9 @@ private fun ReviewRunningTotalPreview() = HackappTheme {
         isOverBudget = false,
     )
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ReviewRunningTotal(within)
-        ReviewRunningTotal(within.copy(unknownPriceCount = 1))
-        ReviewRunningTotal(within.copy(eventsCad = 170.0, unknownPriceCount = 1, isOverBudget = true))
+        ReviewTotal(within)
+        ReviewTotal(within.copy(unknownPriceCount = 1))
+        ReviewTotal(within.copy(eventsCad = 170.0, unknownPriceCount = 1, isOverBudget = true))
     }
 }
 
