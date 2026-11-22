@@ -85,6 +85,7 @@ Same as above, plus:
 | Meal picker, `isEmpty` on the next District tab | `meal_picker_empty_next` | `%1$s` District name |
 | Meal picker, `hasNoOptions` | `meal_picker_no_options` | Names the next action. Make **Skip this Meal** (`action_skip_meal`) the main button |
 | Planned Departure, `OutsideWindow` or `NotAfterStart` | `planned_departure_error_range` | One message for both. `%1$s`, `%2$s` earliest and latest time, formatted in code |
+| Planned Departure, `hasValidTime` is false | `planned_departure_no_time` | No time left before the next stop. Show in place of the wheels |
 | Event price, `Published(min, max)` | `event_price_published` | Caption under the price, in place of `event_price_median`. Price formatted in code |
 | Ticket price, `NotANumber` | `event_ticket_price_error_format` | |
 | Ticket price, `OutOfRange` | `event_ticket_price_error_range` | `%1$s`, `%2$s` min and max, formatted in code |

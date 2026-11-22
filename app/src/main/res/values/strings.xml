@@ -204,6 +204,7 @@
     <string name="planned_departure_duration">Durée : %1$s</string>
     <string name="planned_departure_next_day">Le lendemain</string>
     <string name="planned_departure_error_range">Choisissez entre %1$s et %2$s.</string>
+    <string name="planned_departure_no_time">Plus de temps avant le prochain arrêt.</string>
     <!-- Event details sheet -->
     <string name="event_close">Fermer</string>
     <string name="event_end_unknown">Heure de fin non publiée</string>
