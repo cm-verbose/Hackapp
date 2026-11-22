@@ -23,6 +23,7 @@ navigationCompose = "2.10.2"
 navigationTesting = "2.10.2"
 retrofit = "3.0.0"
 googleidVersion = "1.2.1"
+foundationLayout = "1.13.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -85,6 +86,7 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
