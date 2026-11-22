@@ -108,8 +108,8 @@ fun DistrictPickMap(
                         .offset {
                             val vp = viewportState.viewport
                             IntOffset(
-                                (vp.screenX(badge.x) - half).roundToInt(),
-                                (vp.screenY(badge.y) - half).roundToInt(),
+                                (vp.screenX(badge.x, badge.y) - half).roundToInt(),
+                                (vp.screenY(badge.x, badge.y) - half).roundToInt(),
                             )
                         }
                         .clearAndSetSemantics {

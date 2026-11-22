@@ -1,7 +1,9 @@
 package com.example.hackapp.ui.components.map
 
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
 
 const val MIN_MAP_ZOOM = 1f
 const val MAX_MAP_ZOOM = 6f
@@ -10,52 +12,100 @@ const val MAX_MAP_ZOOM = 6f
 data class MapBounds(val left: Float, val top: Float, val right: Float, val bottom: Float)
 
 /**
- * Zoom and pan applied on top of the map's fitted position:
- * `screen = pan + fitted * zoom`. Plain floats keep this logic testable on the JVM.
+ * Zoom, rotation (degrees, clockwise) and pan applied on top of the map's fitted position:
+ * `screen = pan + zoom * R(rotation) * fitted`. Plain floats keep this logic testable on the JVM.
  */
-data class MapViewport(val zoom: Float = MIN_MAP_ZOOM, val panX: Float = 0f, val panY: Float = 0f) {
-    fun screenX(fittedX: Float) = panX + fittedX * zoom
-    fun screenY(fittedY: Float) = panY + fittedY * zoom
-    fun fittedX(screenX: Float) = (screenX - panX) / zoom
-    fun fittedY(screenY: Float) = (screenY - panY) / zoom
+data class MapViewport(
+    val zoom: Float = MIN_MAP_ZOOM,
+    val panX: Float = 0f,
+    val panY: Float = 0f,
+    val rotation: Float = 0f,
+) {
+    private val radians get() = Math.toRadians(rotation.toDouble())
+    private val cosine get() = cos(radians).toFloat()
+    private val sine get() = sin(radians).toFloat()
+
+    fun screenX(fittedX: Float, fittedY: Float) = panX + zoom * (fittedX * cosine - fittedY * sine)
+    fun screenY(fittedX: Float, fittedY: Float) = panY + zoom * (fittedX * sine + fittedY * cosine)
+
+    fun fittedX(screenX: Float, screenY: Float): Float {
+        val dx = (screenX - panX) / zoom
+        val dy = (screenY - panY) / zoom
+        return dx * cosine + dy * sine
+    }
+
+    fun fittedY(screenX: Float, screenY: Float): Float {
+        val dx = (screenX - panX) / zoom
+        val dy = (screenY - panY) / zoom
+        return -dx * sine + dy * cosine
+    }
 
     /** Changes the zoom while the point under ([focalX], [focalY]) stays where it is. */
     fun zoomedTo(target: Float, focalX: Float, focalY: Float): MapViewport {
         val next = target.coerceIn(MIN_MAP_ZOOM, MAX_MAP_ZOOM)
         val ratio = next / zoom
-        return MapViewport(next, focalX - (focalX - panX) * ratio, focalY - (focalY - panY) * ratio)
+        return copy(
+            zoom = next,
+            panX = focalX - (focalX - panX) * ratio,
+            panY = focalY - (focalY - panY) * ratio,
+        )
+    }
+
+    /** Turns the map by [degrees] while the point under ([focalX], [focalY]) stays where it is. */
+    fun rotatedBy(degrees: Float, focalX: Float, focalY: Float): MapViewport {
+        val turn = Math.toRadians(degrees.toDouble())
+        val c = cos(turn).toFloat()
+        val s = sin(turn).toFloat()
+        val dx = panX - focalX
+        val dy = panY - focalY
+        return copy(
+            panX = focalX + dx * c - dy * s,
+            panY = focalY + dx * s + dy * c,
+            rotation = normalizedDegrees(rotation + degrees),
+        )
     }
 
     fun pannedBy(dx: Float, dy: Float) = copy(panX = panX + dx, panY = panY + dy)
 
     /**
-     * Keeps [content] reachable inside [visible]. On an axis where the content fits it is centered;
-     * otherwise its edges cannot move inside the visible area, so the map can never be lost.
+     * Keeps [content] reachable inside [visible], using its rotated extents. On an axis where the
+     * content fits it is centered; otherwise its edges cannot move inside the visible area.
      */
     fun clamped(content: MapBounds, visible: MapBounds): MapViewport {
         val z = zoom.coerceIn(MIN_MAP_ZOOM, MAX_MAP_ZOOM)
-        return MapViewport(
+        val origin = copy(zoom = z, panX = 0f, panY = 0f)
+        val xs = content.corners().map { (x, y) -> origin.screenX(x, y) }
+        val ys = content.corners().map { (x, y) -> origin.screenY(x, y) }
+        return copy(
             zoom = z,
-            panX = clampAxis(panX, z, content.left, content.right, visible.left, visible.right),
-            panY = clampAxis(panY, z, content.top, content.bottom, visible.top, visible.bottom),
+            panX = clampAxis(panX, xs.min(), xs.max(), visible.left, visible.right),
+            panY = clampAxis(panY, ys.min(), ys.max(), visible.top, visible.bottom),
         )
     }
 
+    private fun MapBounds.corners() =
+        listOf(left to top, right to top, right to bottom, left to bottom)
+
     private fun clampAxis(
         pan: Float,
-        z: Float,
         contentStart: Float,
         contentEnd: Float,
         visibleStart: Float,
         visibleEnd: Float,
     ): Float {
-        if ((contentEnd - contentStart) * z <= visibleEnd - visibleStart) {
-            return (visibleStart + visibleEnd) / 2f - z * (contentStart + contentEnd) / 2f
+        if (contentEnd - contentStart <= visibleEnd - visibleStart) {
+            return (visibleStart + visibleEnd) / 2f - (contentStart + contentEnd) / 2f
         }
-        val lowest = visibleEnd - z * contentEnd
-        val highest = visibleStart - z * contentStart
+        val lowest = visibleEnd - contentEnd
+        val highest = visibleStart - contentStart
         return pan.coerceIn(min(lowest, highest), max(lowest, highest))
     }
+}
+
+/** The same angle in the range -180 to 180 degrees, which is also the shortest way back to 0. */
+fun normalizedDegrees(degrees: Float): Float {
+    val wrapped = ((degrees + 180f) % 360f + 360f) % 360f - 180f
+    return if (wrapped == -180f) 180f else wrapped
 }
 
 /** Double-tap steps through 1x, 2x, 4x and 6x, then returns to 1x. */
@@ -100,8 +150,8 @@ fun badgeAt(
     .asSequence()
     .filter { it.id in visibleIds }
     .map { badge ->
-        val dx = viewport.screenX(badge.x) - screenX
-        val dy = viewport.screenY(badge.y) - screenY
+        val dx = viewport.screenX(badge.x, badge.y) - screenX
+        val dy = viewport.screenY(badge.x, badge.y) - screenY
         badge to dx * dx + dy * dy
     }
     .filter { (_, distanceSquared) -> distanceSquared <= radius * radius }

@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 private const val ANIMATION_MILLIS = 220
 
 /**
- * Zoom and pan of an interactive [CityMap]. Read [viewport] only in draw or layout lambdas, so a
+ * Zoom, rotation and pan of an interactive [CityMap]. Read [viewport] only in draw or layout lambdas, so a
  * gesture frame redraws the map without recomposing the District list.
  */
 @Stable
@@ -59,11 +59,12 @@ class MapViewportState(initial: MapViewport = MapViewport()) {
         if (animation?.isActive != true) viewport = constrain(viewport)
     }
 
-    internal fun applyGesture(centroid: Offset, pan: Offset, zoomChange: Float) {
+    internal fun applyGesture(centroid: Offset, pan: Offset, zoomChange: Float, rotationChange: Float) {
         animation?.cancel()
         viewport = constrain(
             viewport
                 .zoomedTo(viewport.zoom * zoomChange, centroid.x, centroid.y)
+                .rotatedBy(rotationChange, centroid.x, centroid.y)
                 .pannedBy(pan.x, pan.y),
         )
     }
@@ -84,6 +85,7 @@ class MapViewportState(initial: MapViewport = MapViewport()) {
                 zoom = start.zoom + (target.zoom - start.zoom) * fraction,
                 panX = start.panX + (target.panX - start.panX) * fraction,
                 panY = start.panY + (target.panY - start.panY) * fraction,
+                rotation = start.rotation * (1f - fraction),
             )
         }
     }
@@ -104,8 +106,8 @@ class MapViewportState(initial: MapViewport = MapViewport()) {
 
     companion object {
         val Saver: Saver<MapViewportState, List<Float>> = Saver(
-            save = { listOf(it.viewport.zoom, it.viewport.panX, it.viewport.panY) },
-            restore = { MapViewportState(MapViewport(it[0], it[1], it[2])) },
+            save = { listOf(it.viewport.zoom, it.viewport.panX, it.viewport.panY, it.viewport.rotation) },
+            restore = { MapViewportState(MapViewport(it[0], it[1], it[2], it[3])) },
         )
     }
 }

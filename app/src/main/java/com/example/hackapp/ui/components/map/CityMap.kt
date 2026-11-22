@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.PathParser
@@ -65,7 +66,7 @@ fun rememberParsedDistricts(map: DistrictMapData): List<ParsedDistrict> = rememb
  * @param fillOf fill colour per district (states are decided by the caller)
  * @param overlay drawn in map units on top of the districts (routes, highlights)
  * @param content composables placed with [MapTransform.toScreen] (badges, markers)
- * @param viewportState enables pinch, drag and double-tap. [content] then receives the fitted
+ * @param viewportState enables pinch, two-finger rotation, drag and double-tap. [content] then receives the fitted
  *   (1x) transform and must apply [MapViewportState.viewport] in a layout or draw lambda
  * @param tapTarget resolves a tap at a screen point before the District shapes, such as a badge
  * @param onEmptyTap called for a tap outside every District
@@ -118,8 +119,8 @@ fun CityMap(
                 .then(
                     if (viewportState == null) Modifier
                     else Modifier.pointerInput(viewportState) {
-                        detectTransformGestures { centroid, pan, zoom, _ ->
-                            viewportState.applyGesture(centroid, pan, zoom)
+                        detectTransformGestures { centroid, pan, zoom, rotation ->
+                            viewportState.applyGesture(centroid, pan, zoom, rotation)
                         }
                     }
                 )
@@ -131,7 +132,7 @@ fun CityMap(
                             onTap = { tap ->
                                 val id = currentTapTarget?.invoke(tap) ?: run {
                                     val vp = viewportState?.viewport ?: MapViewport()
-                                    val p = t.toMap(Offset(vp.fittedX(tap.x), vp.fittedY(tap.y)))
+                                    val p = t.toMap(Offset(vp.fittedX(tap.x, tap.y), vp.fittedY(tap.x, tap.y)))
                                     districts.lastOrNull { it.hit.contains(p.x.roundToInt(), p.y.roundToInt()) }?.id
                                 }
                                 if (id != null) currentOnTap?.invoke(id) else currentOnEmptyTap?.invoke()
@@ -142,16 +143,18 @@ fun CityMap(
         ) {
             val vp = viewportState?.viewport ?: MapViewport()
             val drawn = MapTransform(
-                Offset(vp.screenX(t.origin.x), vp.screenY(t.origin.y)),
+                Offset(vp.screenX(t.origin.x, t.origin.y), vp.screenY(t.origin.x, t.origin.y)),
                 s * vp.zoom,
             )
             translate(drawn.origin.x, drawn.origin.y) {
-                scale(drawn.scale, drawn.scale, pivot = Offset.Zero) {
-                    districts.forEach { d ->
-                        drawPath(d.path, fillOf(d))
-                        drawPath(d.path, stroke, style = Stroke(width = 1.5f * density.density / drawn.scale))
+                rotate(vp.rotation, pivot = Offset.Zero) {
+                    scale(drawn.scale, drawn.scale, pivot = Offset.Zero) {
+                        districts.forEach { d ->
+                            drawPath(d.path, fillOf(d))
+                            drawPath(d.path, stroke, style = Stroke(width = 1.5f * density.density / drawn.scale))
+                        }
+                        overlay(drawn)
                     }
-                    overlay(drawn)
                 }
             }
         }
