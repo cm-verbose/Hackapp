@@ -29,6 +29,8 @@ interface TransitHandoff {
     /** Opens the Transit App, or transit directions if it is unavailable. */
     fun openTransitApp(destination: HandoffDestination): HandoffResult
     fun openDirections(destination: HandoffDestination): HandoffResult
+    /** Opens walking directions to the Stop. */
+    fun openWalkingDirections(destination: HandoffDestination): HandoffResult = HandoffResult.UNAVAILABLE
 }
 
 /** Sends a person to a ride-hailing app with the next Stop as the drop-off. */
@@ -48,6 +50,10 @@ internal object HandoffUrls {
     fun transitDirections(destination: LatLng): String =
         "https://www.google.com/maps/dir/?api=1" +
             "&destination=${destination.lat},${destination.lng}&travelmode=transit"
+
+    fun walkingDirections(destination: LatLng): String =
+        "https://www.google.com/maps/dir/?api=1" +
+            "&destination=${destination.lat},${destination.lng}&travelmode=walking"
 
     fun uberDropoff(destination: HandoffDestination): String =
         "https://m.uber.com/ul/?action=setPickup&pickup=my_location" +
@@ -76,6 +82,11 @@ class AndroidTransitHandoff(
 
     override fun openDirections(destination: HandoffDestination): HandoffResult {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(HandoffUrls.transitDirections(destination.location)))
+        return if (appContext.startSafely(intent)) HandoffResult.OPENED_APP else HandoffResult.UNAVAILABLE
+    }
+
+    override fun openWalkingDirections(destination: HandoffDestination): HandoffResult {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(HandoffUrls.walkingDirections(destination.location)))
         return if (appContext.startSafely(intent)) HandoffResult.OPENED_APP else HandoffResult.UNAVAILABLE
     }
 }

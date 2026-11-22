@@ -58,6 +58,7 @@ class UnderwayCoordinator(
         origin: LatLng?,
         demoMode: Boolean = false,
         confirmEndCurrent: Boolean = false,
+        originDistrictId: String? = null,
     ): UnderwayStartResult = lock.withLock {
         val now = clock.now()
         val draft = itineraries.getItinerary(uid, itineraryId) ?: return UnderwayStartResult.NotFound
@@ -71,7 +72,7 @@ class UnderwayCoordinator(
             is StartResult.NeedsConfirmation -> return UnderwayStartResult.NeedsConfirmation(r.current)
             StartResult.NotFound -> return UnderwayStartResult.NotFound
         }
-        val state = UnderwayEngine.begin(started, now, origin) ?: return UnderwayStartResult.NotFound
+        val state = UnderwayEngine.begin(started, now, origin, originDistrictId) ?: return UnderwayStartResult.NotFound
         states.save(state)
         reschedule(uid, started, state)
         val view = UnderwayEngine.view(ctx(started), state, now, notificationsAllowed = true)

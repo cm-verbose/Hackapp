@@ -37,6 +37,14 @@ class CityServicesLogicTest {
     }
 
     @Test
+    fun `walking directions url asks for walking`() {
+        assertEquals(
+            "https://www.google.com/maps/dir/?api=1&destination=45.523,-73.581&travelmode=walking",
+            HandoffUrls.walkingDirections(to),
+        )
+    }
+
+    @Test
     fun `uber url encodes the drop-off name`() {
         val url = HandoffUrls.uberDropoff(HandoffDestination("Bistro du coin & café", to))
         assertTrue(url.contains("dropoff%5Blatitude%5D=45.523"))

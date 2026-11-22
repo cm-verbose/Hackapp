@@ -21,8 +21,9 @@ fun currentUnderwayCoordinator(): UnderwayCoordinator =
 /** Review's Start, through the coordinator. [originFor] gives the first Leg's start, or null. */
 fun UnderwayCoordinator.reviewStarter(
     originFor: suspend (uid: String) -> LatLng?,
+    originDistrictFor: suspend (uid: String) -> String? = { null },
 ) = ReviewStarter { uid, itineraryId, demoMode, confirmEndCurrent ->
-    when (val result = start(uid, itineraryId, originFor(uid), demoMode, confirmEndCurrent)) {
+    when (val result = start(uid, itineraryId, originFor(uid), demoMode, confirmEndCurrent, originDistrictFor(uid))) {
         is UnderwayStartResult.Started -> ReviewStartOutcome.Started(itineraryId, result.askExactAlarm)
         is UnderwayStartResult.NeedsConfirmation -> ReviewStartOutcome.NeedsConfirmation(result.current)
         is UnderwayStartResult.Blocked -> ReviewStartOutcome.Blocked

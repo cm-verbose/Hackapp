@@ -81,6 +81,8 @@ fun UnderwayLegPage(
     onOpenDirections: () -> Unit,
     onSkip: () -> Unit,
     onArrived: () -> Unit,
+    walking: Boolean = false,
+    onOpenWalking: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val hero = ui.hero
@@ -101,12 +103,17 @@ fun UnderwayLegPage(
         bottomActions = {
             val appName = if (transport == TransportChoice.Transit) labels.transitAppName else labels.rideHailName
             handoffError?.let { HandoffError(it, hero != null) }
-            HackappPrimaryButton(stringResource(R.string.leg_open_transit_app, appName), onOpenTransport)
+            if (walking) {
+                // Inside a District the default is a walk: Google Maps opens walking directions.
+                HackappPrimaryButton(stringResource(R.string.leg_google_maps_directions), onOpenWalking)
+            } else {
+                HackappPrimaryButton(stringResource(R.string.leg_open_transit_app, appName), onOpenTransport)
+            }
             // With no travel app there is no Arrival page, and this is the only way to earn the Stamp.
             if (handoffError != null) {
                 HackappOutlineButton(stringResource(R.string.action_arrived), onArrived, contentColor = actionColor)
             }
-            if (transport == TransportChoice.Transit) {
+            if (!walking && transport == TransportChoice.Transit) {
                 HackappTextActionButton(
                     stringResource(R.string.leg_google_maps_directions),
                     onOpenDirections,
@@ -148,7 +155,7 @@ fun UnderwayLegPage(
             ui.leaveBy?.let { LegLeaveBy(it, ui.leaveNow) }
         }
         TransportChoiceCard(
-            selected = transport,
+            selected = transport.takeUnless { walking },
             onSelect = onTransportChange,
             rideHailName = labels.rideHailName,
             fareLabel = labels.fareLabel,

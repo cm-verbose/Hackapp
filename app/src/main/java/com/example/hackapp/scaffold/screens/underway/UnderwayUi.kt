@@ -106,7 +106,7 @@ private val Stop.point get() = LatLng(latitude, longitude)
 private fun UnderwayView.isPastLeaveBy(now: Instant) = leaveBy?.toInstant()?.isAfter(now) == false
 
 internal fun EngineTransport.toChoice() = when (this) {
-    EngineTransport.Transit -> TransportChoice.Transit
+    EngineTransport.Transit, EngineTransport.Walk -> TransportChoice.Transit
     EngineTransport.Uber -> TransportChoice.RideHail
 }
 
@@ -126,11 +126,12 @@ internal fun legUi(
     now: Instant,
     estimator: LegEstimator,
     transport: TransportChoice,
+    walking: Boolean = false,
 ): LegUi? {
     val stop = view.currentStop ?: return null
     val index = info.stops.indexOfFirst { it.id == stop.id }
     val hero = view.legFrom?.let { from ->
-        val minutes = estimator.estimate(from.point, stop.point, transport.legMode()).travelMinutes
+        val minutes = estimator.estimate(from.point, stop.point, if (walking) LegMode.WALK else transport.legMode()).travelMinutes
         val leaveAt = view.leaveBy?.toInstant()
         val waits = leaveAt != null && leaveAt.isAfter(now)
         val departs = if (waits) leaveAt else now

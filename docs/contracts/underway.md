@@ -22,7 +22,8 @@ Owner: Domain Engineer, team Underway. Package `com.example.hackapp.underway`. U
 Start -> Leg -> Arrival -> AtStop -> Leg (next Stop) ... -> AtStop (last) -> Ended
 ```
 
-- `transport` (`Transit` or `Uber`): first Leg `Transit`, later Legs keep the last choice. Leave By always uses the transit estimate.
+- **Default Leg mode (shared with Planning):** `defaultLegMode(fromDistrict, toDistrict, from, to, estimator)` in `itinerary/StopTiming.kt` returns WALK inside one District and TRANSIT across Districts, but TRANSIT when the walk exceeds `LegEstimatorConfig.maxWalkMinutes` (20, a City Pack value; `LegEstimator.maxWalkMinutes`). The Meal picker, Planning reachability and Draft edits, Leave By, the late warning, the Leg and Arrival times all call it, so a Leg shows the same minutes everywhere. Leave By never depends on the transport the person picks.
+- `transport` (`Transit`, `Uber` or `Walk`) is the last choice. `legTransportChosen` is true once the person opened a way to travel on this Leg (`OpenTransport`), and is cleared when the next Leg starts. Until then the Leg is walking when the default says so (`UnderwayView.walking`), else it carries the last Transit or Uber choice (transit at first). `UnderwayView.transport` is Transit or Uber; read `walking` for the walk. A chosen mode uses its own time for the expected arrival. `originDistrictId` (from `start(..., originDistrictId)`, the Profile's District of stay) gives the first Leg its default. Older saved state without the two fields decodes with the defaults.
 - `handoffAtMillis` is set by `OpenTransport` and cleared on return to the Leg, arrival, leaving and skip. Older saved state without it falls back to now.
 - Each Stop has a `StopRecord`: `arrivedAtMillis`, `leftAtMillis`, `skippedAtMillis`, `nextActionAtMillis`.
 - State is saved after every event. After process death, `coordinator.onAppOpen(uid)` resumes it, so Home shows the Underway card.
@@ -32,7 +33,7 @@ Start -> Leg -> Arrival -> AtStop -> Leg (next Stop) ... -> AtStop (last) -> End
 
 | Event | Allowed in | Result |
 |---|---|---|
-| `OpenTransport(choice, stopId?)` | Leg, Arrival | `Arrival`, records the choice. Does not assume they left. A `stopId` that is not the current Stop is rejected with `StaleStop` |
+| `OpenTransport(choice, stopId?)` | Leg, Arrival | `Arrival`, records the choice (`Walk` after opening walking directions). Does not assume they left. A `stopId` that is not the current Stop is rejected with `StaleStop` |
 | `ReturnToLeg` | Arrival | `Leg`, to change transport |
 | `ConfirmArrival(stopId?)` | Leg, Arrival | `AtStop`, records `arrivedAt` (late arrival is only recorded, never replans) |
 | `Leaving(stopId?)` | AtStop, not last Stop | Next `Leg`. Rejected on the last Stop |
@@ -71,7 +72,7 @@ Nothing else can change an Underway Itinerary (no add, move or edit). A Stop is 
   - `ArrivalReminder`: Stop start + 30 min, while on Leg or Arrival for it.
   - `LeaveBy` (high priority, id `LeaveBy:<stopId>:<nextStopId>`, so skipping the next Stop alerts again for the new one): Leave By - 30 min, at the Stop, never on the last remaining Stop.
   - `AutoEnd` is not an alert but a wake-up alarm at the automatic end (`alarmsToSchedule`), so a forgotten Itinerary ends and awards Stamps with the app closed.
-  - `LateWarning`: once per next Stop, when now + transit estimate passes its start, while at the previous Stop.
+  - `LateWarning`: once per next Stop, when now + the default Leg estimate (walking inside a District) passes its start, while at the previous Stop.
 - Alert actions (never open the app, except Ouvrir): arrival = `action_arrived` (`ConfirmArrival`) + `action_skip_stop` or `action_skip_meal` (Meal); leave = `action_leaving` (`Leaving`) + `notification_action_open` (opens the app); late = `action_go_anyway` (`GoAnyway`) + `action_skip_stop` or `action_skip_meal` (`SkipStop` of the next Stop). **On the last remaining Stop an alert whose Skip would end the day (the arrival reminder) offers `notification_action_open` instead** (`PlannedAlert.skipStopId` is null), so the app shows the end-early confirmation.
 
 ## Android
@@ -128,3 +129,7 @@ Screens call `UnderwayViewModel.create(uid, coordinator, app.underwayClock, noti
 ## Process death and failures
 
 `UnderwayViewModel` keeps the Itinerary id in a `SavedStateHandle`, so End of day still loads after the process was killed. It also loads End of day whenever `view.phase` is `Ended` and it is not `Ready`. If the Itinerary save fails after the state was saved, alerts are still scheduled and notifications cleared before the error is rethrown; the next app open re-syncs the Itinerary.
+
+## Walking Legs (page rules)
+
+When `view.walking` is true and the person has not picked another mode on this page, the primary action is **Ouvrir dans Google Maps** (`leg_google_maps_directions`), which opens walking directions through `TransitHandoff.openWalkingDirections` and dispatches `OpenTransport(Walk, stopId)`. The transit directions link is hidden, no mode is selected in `TransportChoiceCard`, and the hero minutes are the walking minutes. Selecting Transit or Uber makes the page use that mode (and its time) as before. No new strings. `coordinator.start(..., originDistrictId)` and `reviewStarter(originFor, originDistrictFor)` pass the District of stay.
