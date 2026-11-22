@@ -1,6 +1,5 @@
 package com.example.hackapp.scaffold.screens.planning
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -135,7 +134,6 @@ fun DistrictPickPage(
     viewportState: MapViewportState = rememberMapViewportState(),
 ) {
     val scheme = MaterialTheme.colorScheme
-    BackHandler(enabled = state.previewId != null, onBack = onDismissSheet)
     Column(Modifier.fillMaxSize().background(scheme.surface)) {
         HackappTopBar(stringResource(R.string.district_pick_title), onBack = onBack)
         StepProgress(3, PLANNING_STEPS)

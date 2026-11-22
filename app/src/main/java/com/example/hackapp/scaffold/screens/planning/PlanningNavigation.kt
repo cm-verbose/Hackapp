@@ -1,5 +1,6 @@
 package com.example.hackapp.scaffold.screens.planning
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
@@ -17,10 +18,14 @@ import com.example.hackapp.scaffold.navigation.PlanningStopSelectionRoute
 import com.example.hackapp.scaffold.navigation.UnderwayLegRoute
 import com.example.hackapp.scaffold.navigation.flowComposable
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
+import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 
 internal const val PLANNING_STEPS = 6
 
-/** The six Planning routes. Each page after Date and time receives its Itinerary id. */
+/**
+ * The Planning routes. The app bar arrow returns to the previous step, while the system Back
+ * action leaves Planning for Home. Drafts are saved, so they can be resumed from there.
+ */
 fun NavGraphBuilder.planningGraph(controller: NavHostController) {
     planningPage<PlanningDateTimeRoute>(controller) { entry ->
         val route = entry.toRoute<PlanningDateTimeRoute>()
@@ -91,6 +96,16 @@ private inline fun <reified T : Any> NavGraphBuilder.planningPage(
     noinline content: @Composable (NavBackStackEntry) -> Unit,
 ) {
     flowComposable<T> { entry ->
+        BackHandler { controller.backToHome() }
         content(entry)
+    }
+}
+
+private fun NavHostController.backToHome() {
+    if (!popBackStack(ScreenHomeDestination, inclusive = false)) {
+        navigate(ScreenHomeDestination) {
+            popUpTo(graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
     }
 }

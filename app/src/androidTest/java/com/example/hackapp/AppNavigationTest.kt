@@ -8,6 +8,7 @@ import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.espresso.Espresso
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
@@ -74,6 +75,17 @@ class AppNavigationTest {
         compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute("draft")) }
         compose.waitForIdle()
         repeat(PAGES_AFTER_DISTRICT_PICK) { click(R.string.action_continue) }
+        compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
+    }
+
+    @Test
+    fun systemBackLeavesPlanningForHome() {
+        click(R.string.home_plan_action)
+        awaitContinueEnabled()
+        click(R.string.action_continue)
+        keepBudgetAndAwaitDistrictPick()
+        Espresso.pressBack()
+        compose.waitForIdle()
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
