@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.google.googleid)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -91,6 +92,7 @@ dependencies {
 
     /* Retrofit */
     implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
 
     /* Kotlin serialization */
     implementation(libs.kotlinx.serialization.json)
@@ -102,4 +104,6 @@ dependencies {
     /* Firebase */
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.kotlinx.coroutines.play.services)
 }
