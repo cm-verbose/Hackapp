@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hackapp.R
+import com.example.hackapp.profile.SessionDestination
 import com.example.hackapp.scaffold.screens.RoutePlaceholder
 import com.example.hackapp.scaffold.screens.home.ScreenHome
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
@@ -21,6 +22,8 @@ import com.example.hackapp.scaffold.screens.login.ScreenLogin
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
 import com.example.hackapp.scaffold.screens.login.ScreenPasswordReset
 import com.example.hackapp.scaffold.screens.login.ScreenRegister
+import com.example.hackapp.scaffold.screens.onboarding.SessionGate
+import com.example.hackapp.scaffold.screens.onboarding.onboardingGraph
 import com.example.hackapp.scaffold.screens.passport.ScreenPassport
 import com.example.hackapp.scaffold.screens.passport.ScreenPassportDestination
 import com.example.hackapp.scaffold.screens.places.PlacesDestination
@@ -28,22 +31,25 @@ import com.example.hackapp.scaffold.screens.places.PlacesScreen
 import com.example.hackapp.scaffold.screens.planning.PlanningScreenDestination
 import com.example.hackapp.scaffold.screens.planning.ScreenPlanning
 
-private const val ONBOARDING_STEPS = 4
 private const val PLANNING_STEPS = 5
 
 /**
  * Handles the navigation between screens which allows for dividing content
  * across different screens.
  *
- * Flow: Login -> Home -> Planning -> Underway -> Home. Pages not built yet use a placeholder.
+ * Flow: Session gate -> Login or onboarding -> Home -> Planning -> Underway -> Home.
+ * Pages not built yet use a placeholder.
  * PlacesScreen (restaurant browse) stays registered as a route but is not the start destination.
  */
 @Composable
 fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
-    NavHost(navController = controller, startDestination = ScreenLoginDestination) {
+    NavHost(navController = controller, startDestination = SessionGateRoute) {
+        composable<SessionGateRoute> {
+            SessionGate(onResolved = controller::openSessionDestination)
+        }
         composable<ScreenLoginDestination> {
             ScreenLogin(
-                onSignedIn = controller::finishSignIn,
+                onSignedIn = { controller.finishSignIn() },
                 onRegister = { controller.navigate(RegisterRoute) },
                 onForgotPassword = { controller.navigate(PasswordResetRoute) },
             )
@@ -51,7 +57,7 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
         composable<RegisterRoute> {
             ScreenRegister(
                 onBack = { controller.popBackStack() },
-                onSignedIn = controller::finishSignIn,
+                onSignedIn = { controller.finishSignIn() },
             )
         }
         composable<PasswordResetRoute> {
@@ -88,10 +94,7 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
 
         placeholder<SettingsRoute>(controller, R.string.settings_title)
 
-        placeholder<OnboardingVisitorTypeRoute>(controller, R.string.onboarding_visitor_type_title, 1, ONBOARDING_STEPS, OnboardingProfileRoute)
-        placeholder<OnboardingProfileRoute>(controller, R.string.profile_title, 2, ONBOARDING_STEPS, OnboardingBudgetAudienceRoute)
-        placeholder<OnboardingBudgetAudienceRoute>(controller, R.string.budget_audience_title, 3, ONBOARDING_STEPS, OnboardingInterestsRoute)
-        placeholder<OnboardingInterestsRoute>(controller, R.string.interests_title, 4, ONBOARDING_STEPS, ScreenHomeDestination)
+        onboardingGraph(controller)
 
         placeholder<PlanningDateTimeRoute>(controller, R.string.planning_new_itinerary, 1, PLANNING_STEPS, PlanningDistrictPickRoute)
         placeholder<PlanningDistrictPickRoute>(controller, R.string.district_pick_title, 2, PLANNING_STEPS, PlanningMealChoiceRoute)
@@ -112,11 +115,22 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
     }
 }
 
-/** Leaves the auth screens for good: new accounts go through onboarding, others go Home. */
-private fun NavHostController.finishSignIn(isNewUser: Boolean) {
-    val next: Any = if (isNewUser) OnboardingVisitorTypeRoute else ScreenHomeDestination
+/** Leaves the auth screens for good. The gate then picks onboarding or Home from the Profile. */
+private fun NavHostController.finishSignIn() {
+    navigate(SessionGateRoute) {
+        popUpTo(graph.id) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
+private fun NavHostController.openSessionDestination(destination: SessionDestination) {
+    val next: Any = when (destination) {
+        SessionDestination.Welcome -> ScreenLoginDestination
+        SessionDestination.Onboarding -> OnboardingGraphRoute
+        SessionDestination.Home -> ScreenHomeDestination
+    }
     navigate(next) {
-        popUpTo(ScreenLoginDestination) { inclusive = true }
+        popUpTo(SessionGateRoute) { inclusive = true }
         launchSingleTop = true
     }
 }

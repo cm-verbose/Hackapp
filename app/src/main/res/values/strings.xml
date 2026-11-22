@@ -143,6 +143,12 @@
     <string name="budget_under_50">&lt; 50 $</string>
     <string name="budget_under_100">&lt; 100 $</string>
     <string name="budget_100_plus">100 $ +</string>
+    <string name="budget_lunch">Dîner (repas 1)</string>
+    <string name="budget_dinner">Souper (repas 2)</string>
+    <string name="budget_events">Événements (total)</string>
+    <string name="budget_late_night">Collation de fin de soirée</string>
+    <string name="budget_late_night_description">Facultatif. Ajoutez un budget pour une bouchée tardive.</string>
+    <string name="onboarding_save_error">Impossible d’enregistrer votre profil. Réessayez.</string>
     <string name="audience_title">Type de public</string>
     <string name="audience_adults_only">18+ seulement</string>
     <string name="audience_family_friendly">Familial</string>

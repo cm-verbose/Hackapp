@@ -1,6 +1,7 @@
 package com.example.hackapp
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -9,6 +10,9 @@ import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.hackapp.profile.LocalProfileRepository
+import com.example.hackapp.profile.Profile
+import com.example.hackapp.profile.ProfileRepository
 import com.example.hackapp.scaffold.navigation.AppNavigation
 import com.example.hackapp.scaffold.screens.home.ScreenHomeDestination
 import com.example.hackapp.ui.theme.HackappTheme
@@ -31,7 +35,9 @@ class AppNavigationTest {
             controller = TestNavHostController(context).apply {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
-            HackappTheme { AppNavigation(controller, PaddingValues()) }
+            CompositionLocalProvider(LocalProfileRepository provides NoProfiles) {
+                HackappTheme { AppNavigation(controller, PaddingValues()) }
+            }
         }
         compose.runOnIdle { controller.navigate(ScreenHomeDestination) }
         compose.waitForIdle()
@@ -56,5 +62,10 @@ class AppNavigationTest {
 
     private companion object {
         const val PLANNING_AND_UNDERWAY_PAGES = 9
+
+        val NoProfiles = object : ProfileRepository {
+            override suspend fun getProfile(uid: String): Profile? = null
+            override suspend fun saveProfile(uid: String, profile: Profile) = Unit
+        }
     }
 }
