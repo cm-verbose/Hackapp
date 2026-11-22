@@ -132,6 +132,8 @@ fun HackappPage(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     actions: @Composable RowScope.() -> Unit = {},
+    /** Pinned under the app bar, outside the scrolling content, so it pushes the content down. */
+    belowTopBar: (@Composable () -> Unit)? = null,
     bottomActions: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -143,6 +145,9 @@ fun HackappPage(
     ) {
         HackappTopBar(title, onBack = onBack, containerColor = containerColor, contentColor = contentColor, actions = actions)
         if (step != null && totalSteps != null) StepProgress(step, totalSteps, label = stepLabel)
+        if (belowTopBar != null) {
+            Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp)) { belowTopBar() }
+        }
         val scrollState = rememberScrollState()
         Column(
             Modifier
