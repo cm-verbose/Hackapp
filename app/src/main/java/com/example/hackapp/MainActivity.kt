@@ -12,6 +12,7 @@ import androidx.credentials.CredentialManager
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
 import com.example.hackapp.citypack.LocalCityPack
+import com.example.hackapp.profile.LocalProfileRepository
 import com.example.hackapp.scaffold.AppScaffold
 import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.theme.HackappTheme
@@ -24,11 +25,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
-        val cityServices = (application as HackappApplication).cityServices
+        val app = application as HackappApplication
+        val cityServices = app.cityServices
         setContent {
             CompositionLocalProvider(
                 LocalCityPack provides cityServices.cityPack,
                 LocalCityServices provides cityServices,
+                LocalProfileRepository provides app.profileRepository,
             ) {
                 HackappTheme {
                     AppScaffold()

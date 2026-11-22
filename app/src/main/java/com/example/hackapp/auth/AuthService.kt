@@ -27,8 +27,12 @@ sealed interface AuthResult {
     data class Failure(val error: AuthError) : AuthResult
 }
 
+/** The signed-in account. [name] and [email] are null when the provider does not supply them. */
+data class AuthUser(val uid: String, val name: String?, val email: String?)
+
 /** Email account operations. Screens depend on this interface, not on Firebase. */
 interface AuthService {
+    val currentUser: AuthUser?
     suspend fun signIn(email: String, password: String): AuthResult
     suspend fun register(email: String, password: String): AuthResult
     suspend fun sendPasswordReset(email: String): AuthResult
@@ -36,6 +40,9 @@ interface AuthService {
 
 class FirebaseAuthService : AuthService {
     private val auth: FirebaseAuth get() = FirebaseAuth.getInstance()
+
+    override val currentUser: AuthUser?
+        get() = auth.currentUser?.let { AuthUser(it.uid, it.displayName, it.email) }
 
     override suspend fun signIn(email: String, password: String) = run {
         auth.signInWithEmailAndPassword(email.trim(), password).await()
