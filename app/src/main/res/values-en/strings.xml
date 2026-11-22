@@ -13,13 +13,12 @@
     <string name="stop_type_family">Family</string>
     <string name="stop_type_meal">Meal</string>
     <string name="stop_type_bar">Bar</string>
-    <string name="home_underway_label">UNDERWAY</string>
-    <string name="home_next_stop">Next stop %1$s · %2$s</string>
-    <string name="home_resume_itinerary">Resume itinerary</string>
-    <string name="home_plan_title">Your outing, made to measure</string>
-    <string name="home_plan_body">A day or night out in %1$s, stop by stop.</string>
+    <string name="home_underway_label">Underway</string>
+    <string name="home_next_stop">Next stop: %1$s</string>
+    <string name="home_resume_itinerary">Resume</string>
+    <string name="home_plan_title">Day or night out in %1$s</string>
     <string name="home_plan_action">Plan an itinerary</string>
-    <string name="home_suggestions">SUGGESTIONS</string>
+    <string name="home_suggestions">Suggestions</string>
     <string name="selection_meal_block_title">Meal block %1$s – %2$s</string>
     <string name="selection_meal_block_body">Choose a restaurant or bar (from 17:00).</string>
     <string name="selection_choose_meal">Choose a meal</string>
@@ -194,7 +193,7 @@
     <string name="end_of_day_title">End of day</string>
     <string name="end_of_day_hero_night">What a night!</string>
     <string name="end_of_day_hero_day">What a day!</string>
-    <string name="end_of_day_no_stamp">no stamp</string>
+    <string name="end_of_day_no_stamp">None</string>
     <string name="end_of_day_new_stamps_section">New stamps</string>
     <string name="end_of_day_confirmed_only">Only confirmed stops earn a stamp.</string>
     <string name="end_of_day_finish">End the day</string>
@@ -225,19 +224,19 @@
 
     <!-- Main tabs -->
     <string name="home_greeting_anonymous">Hello</string>
-    <string name="itinerary_title_in">%1$s in %2$s</string>
+    <string name="itinerary_title_in">%1$s · %2$s</string>
     <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
     <string name="itineraries_past">Past</string>
-    <string name="itineraries_archived">Archived</string>
-    <string name="itineraries_archived_note">Archived because its date has passed.</string>
-    <string name="itineraries_empty_body">Your planned and past itineraries will appear here.</string>
+    <string name="itineraries_archived">Archived · never started</string>
+    <string name="itineraries_archived_note">Archived: date passed</string>
+    <string name="itineraries_empty_body">No itineraries</string>
     <string name="itinerary_menu">Itinerary options</string>
     <string name="itinerary_not_found">Itinerary not found</string>
     <string name="action_delete">Delete</string>
     <string name="itinerary_delete_title">Delete this itinerary?</string>
-    <string name="itinerary_delete_body">This draft will be permanently deleted.</string>
-    <string name="itinerary_delete_error">Could not delete this itinerary. Try again.</string>
-    <string name="past_stamps_earned">Stamps earned</string>
+    <string name="itinerary_delete_body">This can’t be undone.</string>
+    <string name="itinerary_delete_error">Couldn’t delete this itinerary. Try again.</string>
+    <string name="past_stamps_earned">Stamps</string>
     <string name="stop_status_confirmed">Confirmed</string>
     <string name="stop_status_skipped">Skipped</string>
     <string name="archived_choose_new_date">Choose a new date</string>

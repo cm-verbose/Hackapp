@@ -132,8 +132,8 @@ fun HomePage(
         (content as? LoadState.Ready)?.value?.underway?.let { underway ->
             UnderwayItineraryCard(
                 itineraryName = itineraryTitle(underway.date, underway.districtName),
-                nextStop = if (underway.nextStopTime != null && underway.nextStopName != null) {
-                    stringResource(R.string.home_next_stop, underway.nextStopTime, underway.nextStopName)
+                nextStop = if (underway.nextStopName != null) {
+                    stringResource(R.string.home_next_stop, underway.nextStopName)
                 } else {
                     ""
                 },
@@ -146,7 +146,6 @@ fun HomePage(
         if (state.suggestions.isNotEmpty()) {
             ItinerarySuggestionsCard(
                 suggestions = state.suggestions.map { ItinerarySuggestion(it.icon, it.title) },
-                onSuggestionClick = { onPlanItinerary() },
                 modifier = Modifier.fillMaxWidth(),
             )
             DataAttribution()

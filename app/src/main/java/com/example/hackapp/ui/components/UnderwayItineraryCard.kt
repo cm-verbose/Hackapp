@@ -46,7 +46,9 @@ fun UnderwayItineraryCard(
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onHeroCard)
         Text(itineraryName, style = MaterialTheme.typography.headlineMedium, color = colors.onHero)
-        Text(nextStop, style = MaterialTheme.typography.bodyLarge, color = colors.onHeroCard)
+        if (nextStop.isNotEmpty()) {
+            Text(nextStop, style = MaterialTheme.typography.bodyLarge, color = colors.onHeroCard)
+        }
         Box(
             Modifier
                 .fillMaxWidth()
@@ -63,7 +65,7 @@ fun UnderwayItineraryCard(
 private fun UnderwayItineraryCardPreview() = HackappTheme {
     UnderwayItineraryCard(
         itineraryName = "Soirée sur le Plateau",
-        nextStop = stringResource(R.string.home_next_stop, "19:30", "Bistro du coin"),
+        nextStop = stringResource(R.string.home_next_stop, "Bistro du coin"),
         onResume = {},
         itineraryStrip = { ItineraryStrip(PreviewStripStops) },
     )

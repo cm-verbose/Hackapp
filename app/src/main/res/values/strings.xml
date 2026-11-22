@@ -11,13 +11,12 @@
     <string name="stop_type_family">Famille</string>
     <string name="stop_type_meal">Repas</string>
     <string name="stop_type_bar">Bar</string>
-    <string name="home_underway_label">EN COURS</string>
-    <string name="home_next_stop">Prochain arrêt %1$s · %2$s</string>
-    <string name="home_resume_itinerary">Reprendre l’itinéraire</string>
-    <string name="home_plan_title">Votre sortie, sur mesure</string>
-    <string name="home_plan_body">Une journée ou une soirée à %1$s, arrêt par arrêt.</string>
+    <string name="home_underway_label">En cours</string>
+    <string name="home_next_stop">Prochain arrêt : %1$s</string>
+    <string name="home_resume_itinerary">Reprendre</string>
+    <string name="home_plan_title">Journée ou soirée à %1$s</string>
     <string name="home_plan_action">Planifier un itinéraire</string>
-    <string name="home_suggestions">SUGGESTIONS</string>
+    <string name="home_suggestions">Suggestions</string>
     <string name="selection_meal_block_title">Bloc repas %1$s – %2$s</string>
     <string name="selection_meal_block_body">Choisissez un restaurant ou un bar (dès 17:00).</string>
     <string name="selection_choose_meal">Choisir un repas</string>
@@ -200,7 +199,7 @@
     <string name="end_of_day_title">Fin de la journée</string>
     <string name="end_of_day_hero_night">Belle soirée!</string>
     <string name="end_of_day_hero_day">Belle journée!</string>
-    <string name="end_of_day_no_stamp">aucun timbre</string>
+    <string name="end_of_day_no_stamp">Aucun</string>
     <string name="end_of_day_new_stamps_section">Nouveaux timbres</string>
     <string name="end_of_day_confirmed_only">Seuls les arrêts confirmés donnent un timbre.</string>
     <string name="end_of_day_finish">Terminer la journée</string>
@@ -233,20 +232,20 @@
 
     <!-- Main tabs -->
     <string name="home_greeting_anonymous">Bonjour</string>
-    <string name="itinerary_title_in">%1$s à %2$s</string>
+    <string name="itinerary_title_in">%1$s · %2$s</string>
     <string name="itinerary_date_pattern" translatable="false">d MMM</string>
     <string name="itinerary_date_window">%1$s · %2$s – %3$s</string>
     <string name="itineraries_past">Passés</string>
-    <string name="itineraries_archived">Archivés</string>
-    <string name="itineraries_archived_note">Archivé, car sa date est passée.</string>
-    <string name="itineraries_empty_body">Vos itinéraires planifiés et passés apparaîtront ici.</string>
+    <string name="itineraries_archived">Archivés · jamais commencés</string>
+    <string name="itineraries_archived_note">Archivé : date passée</string>
+    <string name="itineraries_empty_body">Aucun itinéraire</string>
     <string name="itinerary_menu">Options de l’itinéraire</string>
     <string name="itinerary_not_found">Itinéraire introuvable</string>
     <string name="action_delete">Supprimer</string>
     <string name="itinerary_delete_title">Supprimer cet itinéraire?</string>
-    <string name="itinerary_delete_body">Ce brouillon sera supprimé définitivement.</string>
+    <string name="itinerary_delete_body">Cette action est irréversible.</string>
     <string name="itinerary_delete_error">Impossible de supprimer cet itinéraire. Réessayez.</string>
-    <string name="past_stamps_earned">Timbres obtenus</string>
+    <string name="past_stamps_earned">Timbres</string>
     <string name="stop_status_confirmed">Confirmé</string>
     <string name="stop_status_skipped">Sauté</string>
     <string name="archived_choose_new_date">Choisir une nouvelle date</string>

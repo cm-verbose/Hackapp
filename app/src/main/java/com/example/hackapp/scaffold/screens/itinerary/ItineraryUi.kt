@@ -38,7 +38,7 @@ fun itineraryShortDate(date: LocalDate): String =
 @Composable
 fun itineraryFullDate(date: LocalDate): String {
     val locale = appLocale()
-    return date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale)).capitalized(locale)
+    return date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale))
 }
 
 @Composable

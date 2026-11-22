@@ -154,11 +154,6 @@ private fun ItinerarySectionList(
     if (content.archived.isNotEmpty()) {
         SectionLabel(stringResource(R.string.itineraries_archived))
         content.archived.forEach { card -> ItineraryCard(card, onClick = { onOpen(card) }) }
-        Text(
-            stringResource(R.string.itineraries_archived_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
