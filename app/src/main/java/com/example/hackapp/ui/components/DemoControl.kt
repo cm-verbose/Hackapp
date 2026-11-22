@@ -19,6 +19,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.ui.theme.HackappCorners
 import com.example.hackapp.ui.theme.HackappTheme
+import kotlinx.coroutines.delay
 import kotlin.math.max
 
 /**
@@ -56,6 +63,15 @@ fun DemoControl(
 ) {
     val colors = HackappTheme.appColors
     val shape = RoundedCornerShape(HackappCorners.Medium)
+    // The clock also runs by itself: only a change right after a tap is read aloud.
+    var jumps by remember { mutableIntStateOf(0) }
+    var announceTime by remember { mutableStateOf(false) }
+    LaunchedEffect(jumps) {
+        if (jumps > 0) {
+            delay(JUMP_ANNOUNCE_MILLIS)
+            announceTime = false
+        }
+    }
     Column(
         modifier
             .fillMaxWidth()
@@ -66,10 +82,14 @@ fun DemoControl(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         InlineOrStacked(
-            first = { DemoTime(dateTime) },
+            first = { DemoTime(dateTime, announceTime) },
             second = {
                 Button(
-                    onClick = onNextMoment,
+                    onClick = {
+                        announceTime = true
+                        jumps++
+                        onNextMoment()
+                    },
                     enabled = canAdvance,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colors.warning,
@@ -107,17 +127,21 @@ fun DemoControl(
 }
 
 @Composable
-private fun DemoTime(dateTime: String) {
+private fun DemoTime(dateTime: String, announce: Boolean) {
     val color = HackappTheme.appColors.onWarningContainer
     Row(
-        Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(Icons.Filled.Schedule, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
         Column {
             Text(stringResource(R.string.demo_mode_title), style = MaterialTheme.typography.labelMedium, color = color)
-            Text(dateTime, style = MaterialTheme.typography.bodyMedium, color = color)
+            Text(
+                dateTime,
+                style = MaterialTheme.typography.bodyMedium,
+                color = color,
+                modifier = Modifier.semantics { if (announce) liveRegion = LiveRegionMode.Polite },
+            )
         }
     }
 }
@@ -167,6 +191,9 @@ private fun Modifier.dashedBorder(color: Color, corner: Dp): Modifier = drawBehi
         style = Stroke(width = stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash))),
     )
 }
+
+/** How long after a tap a time change still counts as that jump. */
+private const val JUMP_ANNOUNCE_MILLIS = 2_000L
 
 private const val PreviewTime = "sam. 28 nov. · 18:42"
 
