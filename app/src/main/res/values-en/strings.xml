@@ -59,8 +59,18 @@
     <string name="at_stop_next">Next stop: %1$s · %2$d min walk</string>
     <string name="late_warning">You may arrive late at %1$s.</string>
     <string name="late_no_replanning">No automatic replanning.</string>
-    <!-- Authentication (layout branch) -->
-    <string name="text_sign_in_with_google">Sign in with Google</string>
+    <!-- Authentication messages (not on the Figma strings page) -->
+    <string name="password_reset_body">Enter your email and we’ll send you a link to choose a new password.</string>
+    <string name="password_reset_sent">If an account exists for this email, the link has been sent.</string>
+    <string name="auth_error_invalid_credentials">Incorrect email or password.</string>
+    <string name="auth_error_invalid_email">This email isn’t valid.</string>
+    <string name="auth_error_email_in_use">An account already exists for this email. Sign in or continue with Google.</string>
+    <string name="auth_error_weak_password">Choose a password with at least 6 characters.</string>
+    <string name="auth_error_password_mismatch">Passwords don’t match.</string>
+    <string name="auth_error_network">Can’t connect. Check your network and try again.</string>
+    <string name="auth_error_provider_disabled">Email sign-in isn’t enabled yet.</string>
+    <string name="auth_error_google">Google sign-in failed. Try again.</string>
+    <string name="auth_error_unknown">Something went wrong. Try again.</string>
     <!-- First Eric Group components -->
     <string name="action_remove">Remove</string>
     <string name="action_arrived">I’ve arrived</string>

@@ -21,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.hackapp.R
@@ -103,7 +102,8 @@ fun MainBottomBar(controller: NavHostController, padding: PaddingValues) {
                     selected = selectedIndex == index,
                     onClick = {
                         controller.navigate(item.target) {
-                            popUpTo(controller.graph.findStartDestination().id) {
+                            // Login leaves the back stack after sign-in, so Home is the tab root.
+                            popUpTo(ScreenHomeDestination) {
                                 saveState = true
                             }
                             launchSingleTop = true

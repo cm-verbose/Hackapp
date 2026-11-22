@@ -19,6 +19,8 @@ import com.example.hackapp.scaffold.screens.itinerary.ScreenItinerary
 import com.example.hackapp.scaffold.screens.itinerary.ScreenItineraryDestination
 import com.example.hackapp.scaffold.screens.login.ScreenLogin
 import com.example.hackapp.scaffold.screens.login.ScreenLoginDestination
+import com.example.hackapp.scaffold.screens.login.ScreenPasswordReset
+import com.example.hackapp.scaffold.screens.login.ScreenRegister
 import com.example.hackapp.scaffold.screens.passport.ScreenPassport
 import com.example.hackapp.scaffold.screens.passport.ScreenPassportDestination
 import com.example.hackapp.scaffold.screens.places.PlacesDestination
@@ -40,9 +42,20 @@ private const val PLANNING_STEPS = 5
 fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
     NavHost(navController = controller, startDestination = ScreenLoginDestination) {
         composable<ScreenLoginDestination> {
-            Box(Modifier.padding(padding)) {
-                ScreenLogin(onNavigateNext = { controller.navigate(ScreenHomeDestination) })
-            }
+            ScreenLogin(
+                onSignedIn = controller::finishSignIn,
+                onRegister = { controller.navigate(RegisterRoute) },
+                onForgotPassword = { controller.navigate(PasswordResetRoute) },
+            )
+        }
+        composable<RegisterRoute> {
+            ScreenRegister(
+                onBack = { controller.popBackStack() },
+                onSignedIn = controller::finishSignIn,
+            )
+        }
+        composable<PasswordResetRoute> {
+            ScreenPasswordReset(onBack = { controller.popBackStack() })
         }
         composable<PlanningScreenDestination> {
             Box(Modifier.padding(padding)) {
@@ -67,8 +80,6 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
             ScreenPassport(controller, padding)
         }
 
-        placeholder<RegisterRoute>(controller, R.string.auth_create_account)
-        placeholder<PasswordResetRoute>(controller, R.string.password_reset_title)
         placeholder<SettingsRoute>(controller, R.string.settings_title)
 
         placeholder<OnboardingVisitorTypeRoute>(controller, R.string.onboarding_visitor_type_title, 1, ONBOARDING_STEPS, OnboardingProfileRoute)
@@ -92,6 +103,15 @@ fun AppNavigation(controller: NavHostController, padding: PaddingValues) {
                 onNext = { controller.popBackStack(ScreenHomeDestination, inclusive = false) },
             )
         }
+    }
+}
+
+/** Leaves the auth screens for good: new accounts go through onboarding, others go Home. */
+private fun NavHostController.finishSignIn(isNewUser: Boolean) {
+    val next: Any = if (isNewUser) OnboardingVisitorTypeRoute else ScreenHomeDestination
+    navigate(next) {
+        popUpTo(ScreenLoginDestination) { inclusive = true }
+        launchSingleTop = true
     }
 }
 

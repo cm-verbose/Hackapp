@@ -57,8 +57,18 @@
     <string name="at_stop_next">Prochain arrêt : %1$s · %2$d min à pied</string>
     <string name="late_warning">Vous risquez d’arriver en retard à %1$s.</string>
     <string name="late_no_replanning">Pas de replanification automatique.</string>
-    <!-- Authentication (layout branch) -->
-    <string name="text_sign_in_with_google">Se connecter avec Google</string>
+    <!-- Authentication messages (not on the Figma strings page) -->
+    <string name="password_reset_body">Entrez votre courriel et nous vous enverrons un lien pour choisir un nouveau mot de passe.</string>
+    <string name="password_reset_sent">Si un compte existe pour ce courriel, le lien vient d’être envoyé.</string>
+    <string name="auth_error_invalid_credentials">Courriel ou mot de passe incorrect.</string>
+    <string name="auth_error_invalid_email">Ce courriel n’est pas valide.</string>
+    <string name="auth_error_email_in_use">Un compte existe déjà pour ce courriel. Connectez-vous ou continuez avec Google.</string>
+    <string name="auth_error_weak_password">Choisissez un mot de passe d’au moins 6 caractères.</string>
+    <string name="auth_error_password_mismatch">Les mots de passe ne correspondent pas.</string>
+    <string name="auth_error_network">Connexion impossible. Vérifiez votre réseau et réessayez.</string>
+    <string name="auth_error_provider_disabled">La connexion par courriel n’est pas encore activée.</string>
+    <string name="auth_error_google">La connexion avec Google a échoué. Réessayez.</string>
+    <string name="auth_error_unknown">Une erreur est survenue. Réessayez.</string>
     <!-- First Eric Group components -->
     <string name="action_remove">Retirer</string>
     <string name="action_arrived">Je suis arrivé·e</string>
