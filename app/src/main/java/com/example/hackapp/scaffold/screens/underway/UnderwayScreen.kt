@@ -41,9 +41,6 @@ import com.example.hackapp.underway.UnderwayPhase
 import com.example.hackapp.underway.UnderwayView
 import kotlinx.coroutines.CancellationException
 
-/** Brand name for the error shown when directions cannot open. */
-private const val DIRECTIONS_APP_NAME = "Google Maps"
-
 private class UnderwayItineraryInfo(val itinerary: Itinerary, val stops: UnderwayStopsInfo) {
     val districtName: String? =
         (itinerary.districtIds.firstOrNull() ?: itinerary.stops.firstOrNull()?.districtId)
@@ -259,6 +256,7 @@ private fun LegContent(
         return
     }
     val language = LocalConfiguration.current.locales[0].language
+    val directionsAppName = stringResource(R.string.app_name_google_maps)
     val fare = services.fares.fareForLeg()
     val labels = TransportLabels(
         transitAppName = services.transit.appName,
@@ -301,7 +299,7 @@ private fun LegContent(
             }
         },
         onOpenDirections = {
-            finishHandoff(services.transit.openDirections(destination), DIRECTIONS_APP_NAME, TransportChoice.Transit)
+            finishHandoff(services.transit.openDirections(destination), directionsAppName, TransportChoice.Transit)
         },
         onSkip = { onAskSkip(stop.id) },
     )
