@@ -349,6 +349,7 @@
     <string name="passport_gravity_unlock">Unlock gravity</string>
     <string name="passport_empty_title">No stamps yet</string>
     <string name="passport_empty_body">Confirm a stop to earn a stamp.</string>
+    <string name="passport_all_stamps">All stamps</string>
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
     <string name="settings_profile">Profile</string>
