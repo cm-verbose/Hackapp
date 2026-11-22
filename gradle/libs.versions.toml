@@ -7,6 +7,9 @@ coreKtx = "1.19.1"
 credentials = "1.7.0-alpha03"
 datastorePreferences = "1.3.0"
 firebaseBom = "35.2.0"
+jbox2dLibrary = "2.2.1.1"
+playServicesNearby = "19.5.1"
+uwb = "1.0.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -64,6 +67,9 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # Firebase & Identity
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+jbox2d-library = { module = "org.jbox2d:jbox2d-library", version.ref = "jbox2dLibrary" }
+play-services-nearby = { module = "com.google.android.gms:play-services-nearby", version.ref = "playServicesNearby" }
+androidx-core-uwb = { module = "androidx.core.uwb:uwb", version.ref = "uwb" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 google-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleidVersion" }
@@ -90,6 +96,7 @@ retrofit-converter-kotlinx-serialization = { module = "com.squareup.retrofit2:co
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

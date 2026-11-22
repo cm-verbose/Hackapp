@@ -51,6 +51,7 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -110,4 +111,11 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    /* Physics */
+    implementation(libs.jbox2d.library)
+
+    /* Nearby device sharing */
+    implementation(libs.play.services.nearby)
+    implementation(libs.androidx.core.uwb)
 }
