@@ -20,7 +20,7 @@
     <string name="selection_meal_block_title">Bloc repas</string>
     <string name="selection_choose_meal">Choisir un repas</string>
     <string name="leg_next_stop_label">Prochain arrêt</string>
-    <string name="leg_fare_required">Titre requis : %1$s · tarif %2$s</string>
+    <string name="leg_fare_required">Titre requis : %1$s · tarif %2$s</string>
     <string name="leg_depart">Départ</string>
     <string name="leg_travel">Trajet</string>
     <string name="leg_arrive">Arrivée</string>
@@ -46,6 +46,7 @@
     <string name="arrival_en_route">En route</string>
     <string name="arrival_expected">Arrivée prévue %1$s</string>
     <string name="action_skip_stop">Sauter cet arrêt</string>
+    <string name="action_skip_meal">Sauter ce repas</string>
     <string name="action_go_anyway">Y aller quand même</string>
     <string name="at_stop_leave_by">Partez avant</string>
     <string name="at_stop_next">Prochain arrêt : %1$s · ≈ %2$d min</string>
@@ -89,7 +90,7 @@
     <string name="action_skip">Passer</string>
     <string name="label_or">ou</string>
     <string name="label_coming_soon">Bientôt disponible</string>
-    <string name="price_unknown">prix inconnu</string>
+    <string name="price_unknown">prix inconnu</string>
     <string name="price_free">gratuit</string>
     <string name="nav_home">Accueil</string>
     <string name="nav_itineraries">Itinéraires</string>
@@ -193,6 +194,8 @@
     <string name="end_of_day_already_in_passport">Déjà dans votre passeport</string>
     <string name="end_of_day_new_stamps_section">Nouveaux timbres</string>
     <string name="end_of_day_finish">Terminer l’itinéraire</string>
+    <string name="end_itinerary_warning">Terminer l’itinéraire? Les arrêts restants seront marqués comme sautés.</string>
+    <string name="handoff_unavailable">Impossible d’ouvrir %1$s. Essayez une autre option.</string>
     <string name="end_of_day_done">Retour à l’accueil</string>
 
     <!-- Passport and Settings -->

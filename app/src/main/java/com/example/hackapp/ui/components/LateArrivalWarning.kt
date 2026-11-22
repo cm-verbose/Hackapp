@@ -3,7 +3,8 @@ package com.example.hackapp.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +24,7 @@ import com.example.hackapp.ui.theme.HackappTheme
  * Figma "LateArrivalWarning" (53:1297): shown when the next Stop can no longer be reached on time.
  * The user goes anyway or skips the Stop.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LateArrivalWarning(
     stopName: String,
@@ -42,7 +44,10 @@ fun LateArrivalWarning(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(message, style = MaterialTheme.typography.titleSmall, color = color, modifier = Modifier.fillMaxWidth())
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             HackappSmallButton(text = goAnywayLabel, onClick = onGoAnyway)
             HackappSmallTextButton(text = skipStopLabel, onClick = onSkipStop)
         }

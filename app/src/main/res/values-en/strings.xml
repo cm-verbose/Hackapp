@@ -22,7 +22,7 @@
     <string name="selection_meal_block_title">Meal block</string>
     <string name="selection_choose_meal">Choose a meal</string>
     <string name="leg_next_stop_label">Next stop</string>
-    <string name="leg_fare_required">Ticket needed: %1$s · %2$s fare</string>
+    <string name="leg_fare_required">Ticket needed: %1$s · %2$s fare</string>
     <string name="leg_depart">Departure</string>
     <string name="leg_travel">Travel</string>
     <string name="leg_arrive">Arrival</string>
@@ -48,6 +48,7 @@
     <string name="arrival_en_route">On the way</string>
     <string name="arrival_expected">Expected arrival %1$s</string>
     <string name="action_skip_stop">Skip this stop</string>
+    <string name="action_skip_meal">Skip this meal</string>
     <string name="action_go_anyway">Go anyway</string>
     <string name="at_stop_leave_by">Leave by</string>
     <string name="at_stop_next">Next stop: %1$s · ≈ %2$d min</string>
@@ -188,6 +189,8 @@
     <string name="end_of_day_already_in_passport">Already in your passport</string>
     <string name="end_of_day_new_stamps_section">New stamps</string>
     <string name="end_of_day_finish">End itinerary</string>
+    <string name="end_itinerary_warning">End itinerary? Remaining stops will be marked as skipped.</string>
+    <string name="handoff_unavailable">Couldn’t open %1$s. Try another option.</string>
     <string name="end_of_day_done">Back to Home</string>
 
     <!-- Passport and Settings -->
