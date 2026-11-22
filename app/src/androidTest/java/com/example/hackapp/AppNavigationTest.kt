@@ -25,6 +25,8 @@ import com.example.hackapp.itinerary.Itinerary
 import com.example.hackapp.itinerary.LocalItineraryRepository
 import com.example.hackapp.itinerary.MealKind
 import com.example.hackapp.itinerary.PlanningStep
+import com.example.hackapp.itinerary.Stop
+import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.BudgetBracket
 import com.example.hackapp.profile.LocalProfileRepository
@@ -82,19 +84,25 @@ class AppNavigationTest {
         awaitContinueEnabled()
         click(R.string.action_continue)
         keepBudgetAndAwaitDistrictPick()
-        // District pick needs a tap on the map, so the walk resumes at the next page.
-        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute(savedDraftId())) }
+        // District pick needs a tap on the map, and Finish needs an Event Stop, so both are seeded.
+        val draftId = seedDistrictAndEventStop()
+        compose.runOnIdle { controller.navigate(PlanningMealChoiceRoute(draftId)) }
         awaitContinueEnabled()
         // A first open preselects every Meal that fits the default night window (18:00 to 02:00):
         // Dinner fits, Lunch does not, and Late bite stays off because the Profile has no add-on.
         compose.onNodeWithText(context.getString(R.string.meal_dinner_at, "18:30")).assertIsSelected()
         click(R.string.action_continue)
-        awaitText(R.string.planning_stops_title)
+        awaitProgressLine()
         val saved = savedDraft()
         assertEquals(true, saved.planMeals)
         assertEquals(listOf(MealKind.Dinner), saved.mealBlocks.map { it.kind })
         assertEquals(PlanningStep.Stops, saved.step)
-        repeat(PAGES_AFTER_MEAL_CHOICE) { click(R.string.action_continue) }
+        // One District, so the page offers only Finish, enabled by the seeded Event Stop.
+        awaitEnabled(R.string.action_finish)
+        click(R.string.action_finish)
+        awaitContinueEnabled()
+        assertEquals(PlanningStep.Review, savedDraft().step)
+        repeat(PAGES_AFTER_SELECTION) { click(R.string.action_continue) }
         compose.onNodeWithText(context.getString(R.string.home_plan_action)).assertIsDisplayed()
     }
 
@@ -103,7 +111,42 @@ class AppNavigationTest {
         itineraries.observeItineraries(TEST_UID).first().single()
     }
 
-    private fun savedDraftId(): String = savedDraft().id
+    /** Gives the draft one District and one Event Stop inside its window. Returns its id. */
+    private fun seedDistrictAndEventStop(): String = runBlocking {
+        val draft = savedDraft()
+        val start = draft.windowStart(ActiveCityPack.timeZone).toOffsetDateTime()
+        itineraries.saveItinerary(
+            draft.copy(
+                districtIds = listOf(TEST_DISTRICT),
+                stops = listOf(
+                    Stop(
+                        id = "test-stop",
+                        kind = StopKind.Event,
+                        sourceId = "test-event",
+                        name = "Test",
+                        districtId = TEST_DISTRICT,
+                        latitude = 45.5075,
+                        longitude = -73.5540,
+                        start = start,
+                        plannedDeparture = start.plusMinutes(30),
+                        hasPublishedEnd = true,
+                    ),
+                ),
+            ),
+        )
+        draft.id
+    }
+
+    private fun awaitProgressLine() {
+        val line = context.getString(R.string.selection_progress, 5, 6, 1, 1)
+        compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+            compose.onAllNodes(hasText(line)).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun awaitEnabled(resId: Int) = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
+        compose.onAllNodes(hasText(context.getString(resId)) and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+    }
 
     @Test
     fun systemBackLeavesPlanningForHome() {
@@ -134,10 +177,6 @@ class AppNavigationTest {
             .fetchSemanticsNodes().isNotEmpty()
     }
 
-    private fun awaitText(resId: Int) = compose.waitUntil(LOAD_TIMEOUT_MILLIS) {
-        compose.onAllNodes(hasText(context.getString(resId))).fetchSemanticsNodes().isNotEmpty()
-    }
-
     @Test
     fun bottomTabsSwitchPages() {
         click(R.string.nav_passport)
@@ -155,8 +194,9 @@ class AppNavigationTest {
     }
 
     private companion object {
-        /** Stop selection, Review and the four Underway pages. */
-        const val PAGES_AFTER_MEAL_CHOICE = 6
+        /** Review and the four Underway pages. */
+        const val PAGES_AFTER_SELECTION = 5
+        const val TEST_DISTRICT = "ville-marie"
         const val LOAD_TIMEOUT_MILLIS = 10_000L
         const val TEST_UID = "test-user"
 

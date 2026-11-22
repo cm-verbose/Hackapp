@@ -71,12 +71,10 @@ fun NavGraphBuilder.planningGraph(controller: NavHostController) {
     }
     planningPage<PlanningStopSelectionRoute>(controller) { entry ->
         val route = entry.toRoute<PlanningStopSelectionRoute>()
-        RoutePlaceholder(
-            title = stringResource(R.string.planning_stops_title),
-            onBack = { controller.popBackStack() },
-            step = 5,
-            totalSteps = PLANNING_STEPS,
-            onNext = { controller.navigate(ItineraryReviewRoute(route.itineraryId)) },
+        PlanningStopSelectionScreen(
+            itineraryId = route.itineraryId,
+            onLeave = { id -> controller.returnToMealChoice(id) },
+            onReview = { id -> controller.navigate(ItineraryReviewRoute(id)) },
         )
     }
     planningPage<ItineraryReviewRoute>(controller) {
@@ -109,6 +107,18 @@ private fun NavHostController.returnToDateTime(itineraryId: String) {
     if (!popBackStack<PlanningDateTimeRoute>(inclusive = false)) {
         navigate(PlanningDateTimeRoute(itineraryId)) {
             popUpTo<PlanningMealChoiceRoute> { inclusive = true }
+        }
+    }
+}
+
+/**
+ * Returns to the Meal choice step on the back stack. A draft resumed straight at selection has no
+ * such entry, so Meal choice opens in place of the selection page.
+ */
+private fun NavHostController.returnToMealChoice(itineraryId: String) {
+    if (!popBackStack<PlanningMealChoiceRoute>(inclusive = false)) {
+        navigate(PlanningMealChoiceRoute(itineraryId)) {
+            popUpTo<PlanningStopSelectionRoute> { inclusive = true }
         }
     }
 }
