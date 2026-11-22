@@ -221,13 +221,10 @@
         <item quantity="other">%1$s, %2$d événements</item>
     </plurals>
     <plurals name="map_district_selected">
-        <item quantity="one">%1$s, position %2$d, %3$d événement</item>
-        <item quantity="other">%1$s, position %2$d, %3$d événements</item>
+        <item quantity="one">%1$s, choix %2$d, %3$d événement</item>
+        <item quantity="other">%1$s, choix %2$d, %3$d événements</item>
     </plurals>
-    <plurals name="map_district_unavailable">
-        <item quantity="one">%1$s, indisponible, %2$d événement</item>
-        <item quantity="other">%1$s, indisponible, %2$d événements</item>
-    </plurals>
+    <string name="map_district_unavailable">%1$s, indisponible</string>
     <plurals name="map_route_description">
         <item quantity="one">Carte de l’itinéraire, %d arrêt</item>
         <item quantity="other">Carte de l’itinéraire, %d arrêts</item>
