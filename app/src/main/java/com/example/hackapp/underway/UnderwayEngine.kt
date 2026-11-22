@@ -26,6 +26,7 @@ object UnderwayEngine {
     const val ARRIVAL_REMINDER_MINUTES = 30L
     const val LEAVE_ALERT_MINUTES = 30L
     const val AUTO_END_HOURS = 2L
+    private const val MOMENT_MERGE_SECONDS = 1L
 
     /** The first Leg opens right away. Null when the Itinerary has no active Stop. */
     fun begin(itinerary: Itinerary, now: Instant, origin: LatLng?, originDistrictId: String? = null): UnderwayState? {
@@ -321,7 +322,10 @@ object UnderwayEngine {
         // On the Leg the arrival follows the clock once Leave By has passed: it is not a fixed moment.
         val arrivalIsFixed = state.phase == UnderwayPhase.Arrival || (leave != null && !time.isAfter(leave))
         if (arrivalIsFixed) shown.expectedArrival?.let { moments += it.toInstant() }
-        return moments.filter { it.isAfter(time) }.minOrNull()
+        // A late warning falls 1 second after its Leave By: one press covers both, never a 1-second step.
+        val ahead = moments.filter { it.isAfter(time) }.sorted()
+        val target = ahead.firstOrNull { it.isAfter(time.plusSeconds(MOMENT_MERGE_SECONDS)) } ?: ahead.firstOrNull() ?: return null
+        return ahead.last { !it.isAfter(target.plusSeconds(MOMENT_MERGE_SECONDS)) }
     }
 
     // ---- views and results ----
