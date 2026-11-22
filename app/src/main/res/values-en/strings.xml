@@ -130,7 +130,7 @@
     <string name="budget_100_plus">$100+</string>
     <string name="budget_lunch">Lunch</string>
     <string name="budget_dinner">Dinner</string>
-    <string name="budget_events">Events (total)</string>
+    <string name="budget_events">All events</string>
     <string name="budget_late_night">Late bite</string>
     <string name="onboarding_save_error">Couldn’t save your profile. Try again.</string>
     <string name="audience_title">Audience</string>
@@ -251,7 +251,7 @@
     <string name="stop_status_skipped">Skipped</string>
     <string name="archived_choose_new_date">Choose a new date</string>
     <string name="settings_no_preferences">No preferences</string>
-    <string name="settings_events_budget">Events: %1$s</string>
+    <string name="settings_events_budget">All events: %1$s</string>
 
     <!-- Planning: date and District map -->
     <string name="planning_error_min_duration">Allow at least 2 hours.</string>
