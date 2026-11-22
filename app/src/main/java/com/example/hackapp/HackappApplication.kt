@@ -11,6 +11,15 @@ import com.example.hackapp.services.CityServicesFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import com.example.hackapp.itinerary.StopKind
+import com.example.hackapp.passport.PlaceStampIdentityResolver
+import com.example.hackapp.passport.createStampRepository
+import com.example.hackapp.underway.SystemUnderwayClock
+import com.example.hackapp.underway.UnderwayCoordinator
+import com.example.hackapp.underway.android.AndroidUnderwayAlertScheduler
+import com.example.hackapp.underway.android.AndroidUnderwayNotifier
+import com.example.hackapp.underway.createUnderwayRepository
 
 /** Owns the single [CityServices] container for this build's City Pack. */
 class HackappApplication : Application() {
@@ -20,6 +29,34 @@ class HackappApplication : Application() {
     val profileRepository: ProfileRepository by lazy { createProfileRepository(this) }
 
     val itineraryRepository: ItineraryRepository by lazy { createItineraryRepository(this) }
+
+    /**
+     * Underway: state machine, alarms, notifications and Stamp awarding. Meal Places are looked up by id,
+     * which includes Places that are no longer ACTIVE.
+     */
+    val underwayCoordinator: UnderwayCoordinator by lazy {
+        UnderwayCoordinator(
+            itineraries = itineraryRepository,
+            states = createUnderwayRepository(this),
+            stamps = createStampRepository(this),
+            resolverFor = { itinerary ->
+                val places = itinerary.stops.filter { it.kind == StopKind.Meal }.mapNotNull { stop ->
+                    stop.sourceId.toLongOrNull()?.let { cityServices.places.getPlace(it) }
+                }.associateBy { it.id.toString() }
+                PlaceStampIdentityResolver(placeById = { places[it] })
+            },
+            estimator = cityServices.legs,
+            clock = SystemUnderwayClock(),
+            scheduler = AndroidUnderwayAlertScheduler(this),
+            notifier = AndroidUnderwayNotifier(this),
+        )
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        // Process start counts as an app open: reschedule alerts and retry unfinished Stamp awards.
+        applicationScope.launch(Dispatchers.Default) { underwayCoordinator.onBoot() }
+    }
 
     /** For short background work that must finish even if the current screen closes. */
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
