@@ -103,14 +103,15 @@ Living checklist for the current implementation step. Update it in the same chan
 
 ### 2. Onboarding
 
-- [ ] Shared onboarding state and step navigation
-- [ ] Resident or Visitor
-- [ ] Profile
+- [x] Shared onboarding state and step navigation
+- [x] Resident or Visitor
+- [x] Profile
 - [ ] Update the Budget maquette for Lunch, Dinner, Events and Late-night snack
-- [ ] Budget and Audience Preference
-- [ ] Interests and cuisines
-- [ ] Save the Profile behind a `ProfileRepository`
-- [ ] Route accounts with no Profile to onboarding
+- [x] Budget and Audience Preference
+- [x] Interests and cuisines
+- [x] Save the Profile behind a `ProfileRepository`
+- [x] Route accounts with no Profile to onboarding
+- [ ] Confirm the onboarding flow on the phone
 
 ### 3. Design decisions (grilling)
 

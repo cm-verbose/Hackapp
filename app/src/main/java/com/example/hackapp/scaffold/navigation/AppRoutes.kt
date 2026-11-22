@@ -11,7 +11,11 @@ import kotlinx.serialization.Serializable
 @Serializable data object RegisterRoute
 @Serializable data object PasswordResetRoute
 
+/** Start destination: decides between Welcome, onboarding and Home. */
+@Serializable data object SessionGateRoute
+
 // Onboarding
+@Serializable data object OnboardingGraphRoute
 @Serializable data object OnboardingVisitorTypeRoute
 @Serializable data object OnboardingProfileRoute
 @Serializable data object OnboardingBudgetAudienceRoute
