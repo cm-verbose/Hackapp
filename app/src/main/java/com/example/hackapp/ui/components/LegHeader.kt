@@ -66,7 +66,7 @@ private fun LegHeaderPreview() = HackappTheme {
     LegHeader(
         stopName = "Bistro du coin",
         stopDetails = "${stringResource(R.string.stop_type_meal)} 19:30 · Le Plateau-Mont-Royal",
-        stopTypeTag = { PreviewStopTypeTag(StopType.Meal, HackappIcon.Restaurant) },
+        stopTypeTag = { StopTypeTag(StopType.Meal) },
         legTimes = {
             LegTimes(
                 departValue = stringResource(R.string.leg_now),

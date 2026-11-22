@@ -21,7 +21,7 @@ import com.example.hackapp.ui.theme.HackappTheme
 
 /**
  * Figma "UnderwayItineraryCard" (53:1147), HomeScreen: the itinerary in progress, its stops
- * strip and the resume action. [itineraryStrip] is a slot for ItineraryStrip (Eric's component).
+ * strip and the resume action. [itineraryStrip] is a slot, usually ItineraryStrip.
  *
  * Note: in Figma the white strip container is clipped to 10 dp, which cuts the time labels;
  * here it wraps its content so the labels stay readable.
@@ -65,6 +65,6 @@ private fun UnderwayItineraryCardPreview() = HackappTheme {
         itineraryName = "Soirée sur le Plateau",
         nextStop = stringResource(R.string.home_next_stop, "19:30", "Bistro du coin"),
         onResume = {},
-        itineraryStrip = { PreviewItineraryStrip(PreviewStrip) },
+        itineraryStrip = { ItineraryStrip(PreviewStripStops) },
     )
 }
