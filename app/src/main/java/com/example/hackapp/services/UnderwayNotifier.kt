@@ -97,11 +97,13 @@ class UnderwayNotifier(context: Context, private val zone: ZoneId) {
         const val LEAVE_LEAD_MINUTES = 30L
         val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
+        /** Creates the channel, or renames it to the in-app language when it already exists. */
         fun ensureChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= 26) {
                 val manager = context.getSystemService(NotificationManager::class.java)
+                val name = AppLocale.localized(context).getString(R.string.notification_channel_underway)
                 manager.createNotificationChannel(
-                    NotificationChannel(CHANNEL, context.getString(R.string.notification_channel_underway), NotificationManager.IMPORTANCE_HIGH),
+                    NotificationChannel(CHANNEL, name, NotificationManager.IMPORTANCE_HIGH),
                 )
             }
         }
@@ -111,21 +113,23 @@ class UnderwayNotifier(context: Context, private val zone: ZoneId) {
 /** Posts the reminders and handles their Arrived / Skip buttons. */
 class UnderwayReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // Text follows the language chosen in Settings, not the system language.
+        val text = AppLocale.localized(context)
         val index = intent.getIntExtra(UnderwayNotifier.EXTRA_INDEX, -1)
         val stop = intent.getStringExtra(UnderwayNotifier.EXTRA_STOP).orEmpty()
         val time = intent.getStringExtra(UnderwayNotifier.EXTRA_TIME).orEmpty()
         when (intent.action) {
             UnderwayNotifier.ACTION_ARRIVAL_CHECK -> post(
                 context, index * 10 + 1,
-                context.getString(R.string.notification_arrival_title),
-                context.getString(R.string.notification_arrival_body, stop, time),
-                withActions = true, index = index,
+                text.getString(R.string.notification_arrival_title),
+                text.getString(R.string.notification_arrival_body, stop, time),
+                withActions = true, index = index, text = text,
             )
             UnderwayNotifier.ACTION_LEAVE_REMINDER -> post(
                 context, index * 10 + 2,
-                context.getString(R.string.notification_leave_title),
-                context.getString(R.string.notification_leave_body, stop, time),
-                withActions = false, index = index,
+                text.getString(R.string.notification_leave_title),
+                text.getString(R.string.notification_leave_body, stop, time),
+                withActions = false, index = index, text = text,
             )
             UnderwayNotifier.ACTION_ARRIVED, UnderwayNotifier.ACTION_SKIP -> {
                 NotificationManagerCompat.from(context).cancel(index * 10 + 1)
@@ -142,7 +146,7 @@ class UnderwayReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun post(context: Context, id: Int, title: String, body: String, withActions: Boolean, index: Int) {
+    private fun post(context: Context, id: Int, title: String, body: String, withActions: Boolean, index: Int, text: Context) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) return
@@ -160,8 +164,8 @@ class UnderwayReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setContentIntent(open)
         if (withActions) {
-            builder.addAction(0, context.getString(R.string.action_arrived), button(context, UnderwayNotifier.ACTION_ARRIVED, index))
-            builder.addAction(0, context.getString(R.string.action_skip_stop), button(context, UnderwayNotifier.ACTION_SKIP, index))
+            builder.addAction(0, text.getString(R.string.action_arrived), button(context, UnderwayNotifier.ACTION_ARRIVED, index))
+            builder.addAction(0, text.getString(R.string.action_skip_stop), button(context, UnderwayNotifier.ACTION_SKIP, index))
         }
         NotificationManagerCompat.from(context).notify(id, builder.build())
     }

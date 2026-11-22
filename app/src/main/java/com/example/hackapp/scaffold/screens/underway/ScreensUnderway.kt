@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -97,7 +98,7 @@ fun ScreenUnderwayLeg(vm: FlowViewModel, onBack: () -> Unit, onArrive: () -> Uni
     val estimate = remember(from, stop.id, mode) { from?.let { f -> stop.location?.let { services.legs.estimate(f, it, mode) } } }
     val depart = if (p.index == 0) LocalTime.now(services.cityPack.timeZone) else p.itinerary.stops[p.index - 1].departure.toLocalTime()
     val destination = stop.location?.let { HandoffDestination(stop.title, it) }
-    val language = context.resources.configuration.locales[0].language
+    val language = LocalConfiguration.current.locales[0].language
 
     HackappPage(
         title = stringResource(R.string.leg_next_stop_label),
@@ -208,7 +209,6 @@ fun ScreenUnderwayAtStop(vm: FlowViewModel, onBack: () -> Unit, onLeft: (finishe
 fun ScreenUnderwayEndOfDay(vm: FlowViewModel, onDone: () -> Unit) {
     val progress by vm.underway.collectAsState()
     val p = progress
-    val language = LocalContext.current.resources.configuration.locales[0].language
     HackappPage(
         title = stringResource(R.string.end_of_day_title),
         bottomActions = {

@@ -19,9 +19,17 @@ object AppLocale {
     /** Wraps [base] so resources use the saved language. Call from `attachBaseContext`. */
     fun wrap(base: Context): Context {
         val tag = saved(base) ?: return base
-        val locale = Locale.forLanguageTag(tag)
-        Locale.setDefault(locale)
-        val config = Configuration(base.resources.configuration).apply { setLocale(locale) }
+        Locale.setDefault(Locale.forLanguageTag(tag))
+        return localized(base)
+    }
+
+    /**
+     * A context whose resources use the saved language, for code that runs without the activity
+     * (notifications, receivers). Unlike [wrap] it does not change the process default locale.
+     */
+    fun localized(base: Context): Context {
+        val tag = saved(base) ?: return base
+        val config = Configuration(base.resources.configuration).apply { setLocale(Locale.forLanguageTag(tag)) }
         return base.createConfigurationContext(config)
     }
 

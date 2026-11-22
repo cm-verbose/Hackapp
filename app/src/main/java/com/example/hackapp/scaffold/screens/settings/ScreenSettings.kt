@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.example.hackapp.R
@@ -23,7 +24,7 @@ import com.example.hackapp.ui.motion.entrance
 fun ScreenSettings(onBack: () -> Unit, onProfile: () -> Unit, onLogOff: () -> Unit) {
     val activity = LocalActivity.current
     val context = LocalContext.current
-    val current = AppLocale.saved(context) ?: context.resources.configuration.locales[0].language
+    val current = AppLocale.saved(context) ?: LocalConfiguration.current.locales[0].language
     val selected = if (current.startsWith("en")) "en" else "fr"
 
     HackappPage(title = stringResource(R.string.settings_title), onBack = onBack) {
