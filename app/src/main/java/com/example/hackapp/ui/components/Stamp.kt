@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -79,6 +80,7 @@ fun StampDisc(
     inkColor: Color = HackappPalette.Ink,
     shape: Shape = CircleShape,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
+    initialsScale: () -> Float = { 1f },
 ) {
     Box(
         modifier
@@ -91,7 +93,13 @@ fun StampDisc(
             style = textStyle,
             color = inkColor,
             maxLines = 1,
-            modifier = Modifier.clearAndSetSemantics {},
+            modifier = Modifier
+                .clearAndSetSemantics {}
+                .graphicsLayer {
+                    val scale = initialsScale()
+                    scaleX = scale
+                    scaleY = scale
+                },
         )
     }
 }

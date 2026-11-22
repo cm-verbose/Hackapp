@@ -66,6 +66,12 @@ internal fun stampStopType(kind: StampKind, category: String?): StopType = when 
 }
 
 /**
+ * How much to enlarge initials inside a Stamp drawn at [itemScale], so they never look smaller
+ * than label large (14 sp, against title medium's 16 sp) and still follow the system text size.
+ */
+internal fun readableInitialsScale(itemScale: Float): Float = maxOf(1f, 0.875f / itemScale)
+
+/**
  * The playground's six Material shapes, with their sizes in dp. Constant names are not stored: a
  * Stamp's shape is always worked out from its key.
  */

@@ -63,7 +63,9 @@ import androidx.compose.ui.unit.dp
 import com.example.hackapp.R
 import com.example.hackapp.scaffold.sandbox.PhysicsScreen
 import com.example.hackapp.scaffold.sandbox.SandboxItem
-import com.example.hackapp.scaffold.sandbox.sandboxFitCount
+import com.example.hackapp.scaffold.sandbox.LocalSandboxItemScale
+import com.example.hackapp.scaffold.sandbox.SandboxLayout
+import com.example.hackapp.scaffold.sandbox.sandboxLayout
 import com.example.hackapp.ui.components.ChoiceOption
 import com.example.hackapp.ui.components.ErrorState
 import com.example.hackapp.ui.components.HackappSegmentedButton
@@ -176,7 +178,7 @@ private fun StampField(
 ) {
     BoxWithConstraints(modifier) {
         // Measured without the link's row, so showing the link cannot flip this decision.
-        val overflows = stamps.size > fieldCapacity(stamps, maxWidth, maxHeight)
+        val overflows = fieldLayout(stamps, maxWidth, maxHeight).count < stamps.size
         Column(Modifier.fillMaxSize()) {
             if (overflows) {
                 Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterEnd) {
@@ -190,8 +192,11 @@ private fun StampField(
                     .clip(RoundedCornerShape(HackappCorners.Large))
                     .background(MaterialTheme.colorScheme.surfaceContainerLow),
             ) {
-                val capacity = fieldCapacity(stamps, maxWidth, maxHeight)
-                val shown = remember(stamps, capacity) { stamps.take(capacity) }
+                val layout = fieldLayout(stamps, maxWidth, maxHeight)
+                // Newest Stamps are kept. Largest first is the order the layout was measured in.
+                val shown = remember(stamps, layout.count) {
+                    stamps.take(layout.count).sortedByDescending { it.shape.widthDp * it.shape.heightDp }
+                }
                 val colors = HackappTheme.stopTypeColors
                 val outlines = StampShape.entries.associateWith { it.outline() }
                 val items = remember(shown, colors) {
@@ -205,11 +210,13 @@ private fun StampField(
                             width = stamp.shape.widthDp.dp,
                             height = stamp.shape.heightDp.dp,
                         ) {
+                            val itemScale = LocalSandboxItemScale.current
                             StampDisc(
                                 initials = stamp.initials,
                                 discColor = disc,
                                 inkColor = colors.onStopType,
                                 shape = outline,
+                                initialsScale = { readableInitialsScale(itemScale()) },
                                 modifier = Modifier.fillMaxSize().clearAndSetSemantics {
                                     contentDescription = stamp.description
                                     role = Role.Button
@@ -226,6 +233,7 @@ private fun StampField(
                     items = items,
                     gravityLocked = gravityLocked,
                     keepOutBottomEnd = GravityKeepOut,
+                    itemScale = layout.scale,
                     onItemClick = { onOpen(it.key as String) },
                 )
                 GravityLockButton(
@@ -239,11 +247,11 @@ private fun StampField(
 }
 
 @Composable
-private fun fieldCapacity(stamps: List<PassportStampUi>, width: Dp, height: Dp): Int {
+private fun fieldLayout(stamps: List<PassportStampUi>, width: Dp, height: Dp): SandboxLayout {
     val density = LocalDensity.current
     return remember(stamps, width, height, density) {
         with(density) {
-            sandboxFitCount(
+            sandboxLayout(
                 stamps.map { it.shape.widthDp.dp.toPx() to it.shape.heightDp.dp.toPx() },
                 width.toPx(),
                 height.toPx(),

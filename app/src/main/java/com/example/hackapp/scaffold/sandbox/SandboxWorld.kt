@@ -2,6 +2,7 @@ package com.example.hackapp.scaffold.sandbox
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,11 +19,14 @@ import com.example.hackapp.scaffold.sandbox.shape.toPixels
 import com.example.hackapp.scaffold.sandbox.simulatedworld.createBoundaryWalls
 import com.example.hackapp.scaffold.sandbox.simulatedworld.createPhysicalShape
 import org.jbox2d.collision.AABB
+import org.jbox2d.collision.shapes.CircleShape
 import org.jbox2d.collision.shapes.PolygonShape
+import org.jbox2d.collision.shapes.Shape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.BodyDef
 import org.jbox2d.dynamics.BodyType
+import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.World
 import kotlin.math.abs
 import kotlin.math.cos
@@ -79,16 +83,54 @@ internal fun firstFreeSpot(
     while (y >= halfH + gap) {
         var x = halfW + gap
         while (x <= widthPx - halfW - gap) {
-            val inKeepOut = keepOutPx > 0f && x + halfW + gap > widthPx - keepOutPx && y + halfH + gap > heightPx - keepOutPx
-            val clear = !inKeepOut && placed.none {
-                abs(it.x - x) < it.halfWidth + halfW + gap && abs(it.y - y) < it.halfHeight + halfH + gap
-            }
-            if (clear) return PlacedBox(x, y, halfW, halfH)
-            x += step
+            if (keepOutPx > 0f && x + halfW + gap > widthPx - keepOutPx && y + halfH + gap > heightPx - keepOutPx) break
+            val blocker = placed
+                .filter { abs(it.x - x) < it.halfWidth + halfW + gap && abs(it.y - y) < it.halfHeight + halfH + gap }
+                .maxByOrNull { it.x + it.halfWidth }
+                ?: return PlacedBox(x, y, halfW, halfH)
+            // Jump past the blocker, which keeps packing tight and the search fast.
+            x = blocker.x + blocker.halfWidth + halfW + gap + 0.5f
         }
         y -= step
     }
     return null
+}
+
+/** The spot overlapping [placed] the least, for when no free spot is left. */
+internal fun leastCrowdedSpot(
+    itemWidth: Float,
+    itemHeight: Float,
+    placed: List<PlacedBox>,
+    widthPx: Float,
+    heightPx: Float,
+    density: Float,
+    keepOutPx: Float = 0f,
+): PlacedBox {
+    val step = PLACEMENT_STEP_DP * density
+    val halfW = itemWidth / 2f
+    val halfH = itemHeight / 2f
+    var best = PlacedBox(widthPx / 2f, halfH, halfW, halfH)
+    var bestOverlap = Float.MAX_VALUE
+    var y = halfH
+    while (y <= heightPx - halfH) {
+        var x = halfW
+        while (x <= widthPx - halfW) {
+            if (keepOutPx <= 0f || x + halfW <= widthPx - keepOutPx || y + halfH <= heightPx - keepOutPx) {
+                val overlap = placed.sumOf { box ->
+                    val dx = box.halfWidth + halfW - abs(box.x - x)
+                    val dy = box.halfHeight + halfH - abs(box.y - y)
+                    if (dx > 0f && dy > 0f) (dx * dy).toDouble() else 0.0
+                }.toFloat()
+                if (overlap < bestOverlap) {
+                    bestOverlap = overlap
+                    best = PlacedBox(x, y, halfW, halfH)
+                }
+            }
+            x += step
+        }
+        y += step
+    }
+    return best
 }
 
 /** How many of [sizesPx], in order, fit the area without touching. Stops at the first that does not. */
@@ -104,6 +146,66 @@ fun sandboxFitCount(
         placed += firstFreeSpot(itemWidth, itemHeight, placed, widthPx, heightPx, density, keepOutPx) ?: break
     }
     return placed.size
+}
+
+/** The smallest size items shrink to as a collection grows. */
+const val MIN_ITEM_SCALE = 0.5f
+
+/** Scales are tried in steps of 1/[SCALE_DIVISIONS], so a small change in the list cannot jitter. */
+private const val SCALE_DIVISIONS = 20
+
+/** How much the item scale may change in one physics step. About 0.4 s from full size to half. */
+private const val SCALE_PER_STEP = 0.02f
+
+/** One scale for every item, and how many of the list, from its start, are shown at that scale. */
+data class SandboxLayout(val scale: Float, val count: Int)
+
+private fun fitsAll(
+    sizesPx: List<Pair<Float, Float>>,
+    scale: Float,
+    widthPx: Float,
+    heightPx: Float,
+    density: Float,
+    keepOutPx: Float,
+): Boolean {
+    val area = sizesPx.sumOf { (w, h) -> (w * scale * h * scale).toDouble() }
+    if (area > widthPx * heightPx) return false
+    // Largest first packs best, and makes the result independent of the list order.
+    val scaled = sizesPx.map { (w, h) -> w * scale to h * scale }
+        .sortedWith(compareByDescending<Pair<Float, Float>> { it.first * it.second }.thenByDescending { it.first })
+    return sandboxFitCount(scaled, widthPx, heightPx, density, keepOutPx) == scaled.size
+}
+
+/**
+ * The largest scale, from 1 down to [MIN_ITEM_SCALE], at which every item fits. [sizesPx] is
+ * newest first. When even the smallest scale cannot hold them all, it keeps that scale and as many
+ * of the newest items as fit.
+ */
+fun sandboxLayout(
+    sizesPx: List<Pair<Float, Float>>,
+    widthPx: Float,
+    heightPx: Float,
+    density: Float,
+    keepOutPx: Float = 0f,
+): SandboxLayout {
+    if (sizesPx.isEmpty()) return SandboxLayout(1f, 0)
+    val lastStep = ((1f - MIN_ITEM_SCALE) * SCALE_DIVISIONS).toInt()
+    for (step in 0..lastStep) {
+        val scale = (SCALE_DIVISIONS - step) / SCALE_DIVISIONS.toFloat()
+        // Every older part of the list must fit too, so earning an item can never enlarge the others.
+        val fits = (sizesPx.size downTo 1).all { fitsAll(sizesPx.takeLast(it), scale, widthPx, heightPx, density, keepOutPx) }
+        if (fits) return SandboxLayout(scale, sizesPx.size)
+    }
+    if (fitsAll(sizesPx, MIN_ITEM_SCALE, widthPx, heightPx, density, keepOutPx)) {
+        return SandboxLayout(MIN_ITEM_SCALE, sizesPx.size)
+    }
+    var fits = 0
+    var tooMany = sizesPx.size
+    while (tooMany - fits > 1) {
+        val middle = (fits + tooMany) / 2
+        if (fitsAll(sizesPx.take(middle), MIN_ITEM_SCALE, widthPx, heightPx, density, keepOutPx)) fits = middle else tooMany = middle
+    }
+    return SandboxLayout(MIN_ITEM_SCALE, fits)
 }
 
 /** What happened when a fast shape was released. */
@@ -143,6 +245,9 @@ class CreatedPhysicsItem(
         internal set
 
     val isLeaving: Boolean get() = leavingSinceNanos != null
+
+    /** The full-size collision shape, so resizing never re-reads the outline. */
+    internal val baseShape: Shape? = physicalShape.body.fixtureList?.shape?.clone()
 }
 
 /**
@@ -167,6 +272,12 @@ class SandboxWorld(
     val items = mutableStateListOf<CreatedPhysicsItem>()
 
     private var specs: List<SandboxItem> = emptyList()
+    private val itemScaleState = mutableFloatStateOf(1f)
+    private var targetScale = 1f
+
+    /** The size of every item right now, as a fraction of its full size. */
+    val itemScale: Float get() = itemScaleState.floatValue
+
     private var nextId = 0L
     private var linearDamping = 0f
     private var angularDamping = 0f
@@ -177,7 +288,9 @@ class SandboxWorld(
     /** The most recently released shape, which may be thrown while it's fresh. */
     private var throwCandidate: CreatedPhysicsItem? = null
 
-    fun populate(initial: List<SandboxItem>, linearDamping: Float, angularDamping: Float) {
+    fun populate(initial: List<SandboxItem>, linearDamping: Float, angularDamping: Float, scale: Float = 1f) {
+        itemScaleState.floatValue = scale
+        targetScale = scale
         this.linearDamping = linearDamping
         this.angularDamping = angularDamping
         applySpecs(initial, popIn = false)
@@ -186,9 +299,90 @@ class SandboxWorld(
     /**
      * Matches the world to [newSpecs] by key: existing items keep their body and position, new
      * ones pop in at a free spot, and items no longer listed are removed. Release a held shape
-     * first if it is going away ([isListed]).
+     * first if it is going away ([isListed]). A new [scale] is reached gradually by [stepScale],
+     * and new items wait for it, so they land in space that is really free.
      */
-    fun sync(newSpecs: List<SandboxItem>) = applySpecs(newSpecs, popIn = true)
+    fun sync(newSpecs: List<SandboxItem>, scale: Float = targetScale) {
+        targetScale = scale
+        applySpecs(newSpecs, popIn = true)
+    }
+
+    /** Call before each world step: moves every body one small step toward the target scale. */
+    fun stepScale() {
+        val current = itemScale
+        if (current == targetScale) return
+        val growing = targetScale > current
+        val next = if (abs(targetScale - current) <= SCALE_PER_STEP) {
+            targetScale
+        } else {
+            current + if (growing) SCALE_PER_STEP else -SCALE_PER_STEP
+        }
+        itemScaleState.floatValue = next
+        items.forEach { item ->
+            applyScale(item, next)
+            if (growing && !item.isLeaving) keepInside(item)
+            item.physicalShape.body.isAwake = true
+        }
+        if (next == targetScale) spawnMissing(popIn = true)
+    }
+
+    /** Swaps the body's collision shape for a scaled copy, keeping position and velocity. */
+    private fun applyScale(item: CreatedPhysicsItem, scale: Float) {
+        val base = item.baseShape ?: return
+        val body = item.physicalShape.body
+        val old = body.fixtureList ?: return
+        val def = FixtureDef().apply {
+            shape = scaledShape(base, scale)
+            density = old.density
+            friction = old.friction
+            restitution = old.restitution
+            filter.set(old.filterData)
+        }
+        body.destroyFixture(old)
+        body.createFixture(def)
+    }
+
+    private fun scaledShape(base: Shape, scale: Float): Shape = when (base) {
+        is CircleShape -> CircleShape().apply {
+            m_radius = base.m_radius * scale
+            m_p.set(base.m_p).mulLocal(scale)
+        }
+        is PolygonShape -> PolygonShape().apply {
+            val count = base.vertexCount
+            set(Array(count) { base.getVertex(it).mul(scale) }, count)
+        }
+        else -> base
+    }
+
+    private fun boxOf(item: CreatedPhysicsItem): PlacedBox {
+        val shape = item.physicalShape
+        val c = abs(cos(shape.body.angle))
+        val s = abs(sin(shape.body.angle))
+        return PlacedBox(
+            x = shape.body.position.x.toPixels(),
+            y = shape.body.position.y.toPixels(),
+            halfWidth = (c * shape.widthPx + s * shape.heightPx) * itemScale / 2f,
+            halfHeight = (s * shape.widthPx + c * shape.heightPx) * itemScale / 2f,
+        )
+    }
+
+    /** A growing item must not push through a wall or into the corner control. */
+    private fun keepInside(item: CreatedPhysicsItem) {
+        val box = boxOf(item)
+        var x = maxOf(box.halfWidth, minOf(box.x, widthPx - box.halfWidth))
+        var y = maxOf(box.halfHeight, minOf(box.y, heightPx - box.halfHeight))
+        if (keepOutPx > 0f) {
+            val intoX = x + box.halfWidth - (widthPx - keepOutPx)
+            val intoY = y + box.halfHeight - (heightPx - keepOutPx)
+            if (intoX > 0f && intoY > 0f) {
+                if (intoX < intoY) x -= intoX else y -= intoY
+            }
+        }
+        if (x != box.x || y != box.y) {
+            val body = item.physicalShape.body
+            body.setTransform(Vec2(x.toMeters(), y.toMeters()), body.angle)
+        }
+    }
 
     /** Whether [shape] is an own item still in [newSpecs], or not an own item at all. */
     fun isListed(shape: PhysicalShape, newSpecs: List<SandboxItem>): Boolean {
@@ -201,12 +395,14 @@ class SandboxWorld(
         items.filter { it.isOwn && it.spec.key !in byKey }.forEach(::remove)
         pendingRespawns.keys.retainAll(byKey.keys)
         specs = newSpecs
+        items.filter { it.isOwn }.forEach { item -> byKey[item.spec.key]?.let { item.spec = it } }
+        if (itemScale == targetScale) spawnMissing(popIn)
+    }
+
+    private fun spawnMissing(popIn: Boolean) {
         val present = HashSet<Any>(pendingRespawns.keys)
-        items.filter { it.isOwn }.forEach { item ->
-            byKey[item.spec.key]?.let { item.spec = it }
-            present += item.spec.key
-        }
-        newSpecs.filter { it.key !in present }.forEach { spec ->
+        items.filter { it.isOwn }.forEach { present += it.spec.key }
+        specs.filter { it.key !in present }.forEach { spec ->
             spawn(spec, freeSlot(spec), isOwn = true, popIn = popIn)
         }
     }
@@ -222,22 +418,13 @@ class SandboxWorld(
         body.createFixture(PolygonShape().apply { setAsBox(half, half) }, 0f)
     }
 
-    /** The first free spot, or the center when full, where the physics pushes shapes apart. */
+    /** The first free spot or, when the pile leaves none, the least crowded one. */
     private fun freeSlot(spec: SandboxItem): Pair<Float, Float> {
-        val placed = items.map { item ->
-            val shape = item.physicalShape
-            val c = abs(cos(shape.body.angle))
-            val s = abs(sin(shape.body.angle))
-            PlacedBox(
-                x = shape.body.position.x.toPixels(),
-                y = shape.body.position.y.toPixels(),
-                halfWidth = (c * shape.widthPx + s * shape.heightPx) / 2f,
-                halfHeight = (s * shape.widthPx + c * shape.heightPx) / 2f,
-            )
-        }
-        val (itemWidth, itemHeight) = with(density) { spec.width.toPx() to spec.height.toPx() }
+        val placed = items.map(::boxOf)
+        val (itemWidth, itemHeight) = with(density) { spec.width.toPx() * itemScale to spec.height.toPx() * itemScale }
         val spot = firstFreeSpot(itemWidth, itemHeight, placed, widthPx, heightPx, density.density, keepOutPx)
-        return if (spot != null) spot.x to spot.y else widthPx / 2f to heightPx / 2f
+            ?: leastCrowdedSpot(itemWidth, itemHeight, placed, widthPx, heightPx, density.density, keepOutPx)
+        return spot.x to spot.y
     }
 
     fun setDamping(linear: Float, angular: Float) {
@@ -252,7 +439,7 @@ class SandboxWorld(
     fun wakeAll() = items.forEach { it.physicalShape.body.isAwake = true }
 
     /** True when nothing is moving and no shape is due back, so frames can be skipped. */
-    fun isAtRest(): Boolean = pendingRespawns.isEmpty() && throwCandidate == null &&
+    fun isAtRest(): Boolean = itemScale == targetScale && pendingRespawns.isEmpty() && throwCandidate == null &&
         items.none { it.physicalShape.body.isAwake }
 
     /** Shapes the user may pick up. */
@@ -387,7 +574,7 @@ class SandboxWorld(
         val (dx, dy) = message.bearing
             ?.let { bearing -> rotation?.let { ThrowGeometry.bearingToScreen(it, bearing) } }
             ?: (0f to 1f)
-        val inset = with(density) { maxOf(spec.width, spec.height).toPx() } / 2f + 4f
+        val inset = with(density) { maxOf(spec.width, spec.height).toPx() } * itemScale / 2f + 4f
         val position = ThrowGeometry.entryPoint(dx, dy, widthPx, heightPx, inset)
         val speed = message.speed.coerceIn(MIN_RECEIVED_SPEED, MAX_RECEIVED_SPEED)
 
@@ -425,7 +612,9 @@ class SandboxWorld(
         )
         velocity?.let { shape.body.linearVelocity = it }
         shape.body.angularVelocity = angularVelocity
-        items += CreatedPhysicsItem(nextId++, spec, shape, isOwn, popIn)
+        val item = CreatedPhysicsItem(nextId++, spec, shape, isOwn, popIn)
+        if (itemScale != 1f) applyScale(item, itemScale)
+        items += item
     }
 
     private fun remove(item: CreatedPhysicsItem) {

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -64,6 +66,9 @@ private const val IDLE_POLL_MS = 100L
  * speed before it can play again, so hovering around the threshold doesn't buzz repeatedly.
  */
 private const val READY_REARM_FRACTION = 0.6f
+
+/** Reads the current object scale, for content that must stay legible as objects shrink. */
+val LocalSandboxItemScale = compositionLocalOf<() -> Float> { { 1f } }
 
 /** Normalized screen tilt vector (gx: left/right, gy: up/down). */
 data class TiltState(
@@ -147,6 +152,7 @@ class SandboxSharing(
  *
  * @param items What to show, matched by [SandboxItem.key] so updates keep positions.
  * @param keepOutBottomEnd Side of a solid corner square, so no object can rest under a control.
+ * @param itemScale Size of every object as a fraction of its full size. Changes are animated.
  * @param sharing Null keeps every object on this device: a fast flick simply bounces.
  * @param onItemClick Called when an object is tapped.
  */
@@ -156,6 +162,7 @@ fun PhysicsScreen(
     modifier: Modifier = Modifier,
     gravityLocked: Boolean = false,
     keepOutBottomEnd: Dp = 0.dp,
+    itemScale: Float = 1f,
     sharing: SandboxSharing? = null,
     onItemClick: (SandboxItem) -> Unit = {},
 ) {
@@ -178,15 +185,16 @@ fun PhysicsScreen(
         val keepOutPx = with(density) { keepOutBottomEnd.toPx() }
         val sandbox = remember(widthPx, heightPx, density, keepOutPx) {
             SandboxWorld(widthPx, heightPx, density, keepOutPx).apply {
-                populate(items, FREE_LINEAR_DAMPING, FREE_ANGULAR_DAMPING)
+                populate(items, FREE_LINEAR_DAMPING, FREE_ANGULAR_DAMPING, itemScale)
             }
         }
         val world = sandbox.world
         val grabber = remember(world) { ShapeGrabber(world) }
+        val itemScaleReader = remember(sandbox) { { sandbox.itemScale } }
 
-        LaunchedEffect(sandbox, items) {
+        LaunchedEffect(sandbox, items, itemScale) {
             grabber.grabbed?.let { if (!sandbox.isListed(it, items)) grabber.release() }
-            sandbox.sync(items)
+            sandbox.sync(items, itemScale)
         }
 
         // 2. Step the simulation every frame based on device tilt, only while the page is started.
@@ -244,6 +252,7 @@ fun PhysicsScreen(
                     accumulator += frameDt
                     var steps = 0
                     while (accumulator >= fixedDt && steps < maxStepsPerFrame) {
+                        sandbox.stepScale()
                         grabber.update(fixedDt)
                         val share = currentSharing
                         val outcome = sandbox.checkThrow(nowNanos, share?.channel, orientation.rotationMatrix)
@@ -363,9 +372,11 @@ fun PhysicsScreen(
                         physicalShape = item.physicalShape,
                         color = item.spec.color,
                         shadowElevation = if (isGrabbed) 16.dp else 4.dp,
-                        scale = { appear.value * lift },
+                        scale = { appear.value * lift * sandbox.itemScale },
                     ) {
-                        item.spec.content(this)
+                        CompositionLocalProvider(LocalSandboxItemScale provides itemScaleReader) {
+                            item.spec.content(this)
+                        }
                     }
                 }
             }

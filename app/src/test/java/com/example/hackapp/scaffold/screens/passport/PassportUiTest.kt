@@ -61,6 +61,13 @@ class PassportUiTest {
     }
 
     @Test
+    fun `initials never look smaller than label large`() {
+        assertEquals(1f, readableInitialsScale(1f), 0f)
+        assertEquals(1.75f, readableInitialsScale(0.5f), 0.001f)
+        listOf(0.5f, 0.6f, 0.75f, 0.9f, 1f).forEach { assertTrue(16f * it * readableInitialsScale(it) >= 13.99f) }
+    }
+
+    @Test
     fun `similar keys cover all six shapes in a good mix`() {
         val counts = (1..600).map { stampShapeFor("mtl:place:$it") }.groupingBy { it }.eachCount()
         assertEquals(StampShape.entries.toSet(), counts.keys)
