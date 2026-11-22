@@ -2,7 +2,6 @@ package com.example.hackapp.scaffold.screens.planning
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -39,13 +37,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -88,7 +84,6 @@ import com.example.hackapp.ui.components.HackappTextActionButton
 import com.example.hackapp.ui.components.LoadingState
 import com.example.hackapp.ui.components.StopRow
 import com.example.hackapp.ui.components.formatCad
-import com.example.hackapp.ui.components.formatSentenceTime
 import com.example.hackapp.ui.components.map.ItineraryRouteMap
 import com.example.hackapp.ui.components.map.PreviewDistrictMap
 import com.example.hackapp.ui.components.map.RouteStop
@@ -318,7 +313,7 @@ fun ItineraryReviewPage(
             onCancel = onDismissDialog,
         )
         is ReviewDialog.RemoveAffects -> UnreachableStopsDialog(
-            slotTime = dialog.removed.start.toLocalTime(),
+            removedName = dialog.removed.name,
             affected = dialog.affected,
             kept = state.stops.map { it.stop }.filter { stop ->
                 stop.id != dialog.removed.id && dialog.affected.none { it.id == stop.id }
@@ -348,14 +343,13 @@ private fun Stop.fallbackType() = if (kind == StopKind.Meal) StopType.Meal else 
 @Composable
 private fun stopDetails(row: ReviewStop, districtName: String?): String {
     val stop = row.stop
-    val kind = stringResource(if (stop.kind == StopKind.Meal) R.string.stop_kind_meal else R.string.stop_kind_event)
     // A Meal keeps its block's end, so it only shows a time when the next Stop needs an earlier one.
     val departure = if (stop.kind == StopKind.Event || row.leaveBy.isBefore(stop.plannedDeparture)) {
         stringResource(R.string.review_planned_departure, row.leaveBy.format(StopTimeFormat))
     } else {
         null
     }
-    return listOfNotNull(kind, districtName, departure).joinToString(" · ")
+    return listOfNotNull(districtName, departure).joinToString(" · ")
 }
 
 @Composable
@@ -387,8 +381,6 @@ private fun ColumnScope.ReviewActions(
         text = stringResource(R.string.review_start),
         onClick = onStart,
         enabled = start is ReviewStartState.Ready && !state.busy,
-        // TalkBack gives the reason together with the disabled state.
-        modifier = if (blockedReason != null) Modifier.semantics { stateDescription = blockedReason } else Modifier,
     )
     Text(
         blockedReason ?: stringResource(R.string.review_notification_note),
@@ -679,7 +671,7 @@ internal fun StopChangeWarningDialog(
 /** Figma "RemoveStopWarningDialog" (141:3031). Stops only leave through one of its actions. */
 @Composable
 internal fun UnreachableStopsDialog(
-    slotTime: LocalTime,
+    removedName: String,
     affected: List<Stop>,
     kept: List<Stop>,
     canReschedule: Boolean,
@@ -689,7 +681,6 @@ internal fun UnreachableStopsDialog(
     onReorganize: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val locale = appLocale()
     StopWarningDialog(
         title = stringResource(R.string.review_unreachable_title),
         busy = busy,
@@ -709,9 +700,10 @@ internal fun UnreachableStopsDialog(
             )
         },
     ) {
-        WarningBody(stringResource(R.string.review_unreachable_body, formatSentenceTime(slotTime, locale)))
+        WarningBody(stringResource(R.string.review_unreachable_body, removedName))
         WarningStopList(stringResource(R.string.review_unreachable_affected), affected, emphasized = true)
         WarningStopList(stringResource(R.string.stop_edit_kept), kept, emphasized = false)
+        if (!canReschedule) WarningBody(stringResource(R.string.review_reschedule_unavailable))
         if (saveFailed) DialogSaveError()
     }
 }
@@ -762,10 +754,10 @@ private fun ReschedulePickerDialog(
         if (step.options.isEmpty()) {
             WarningBody(stringResource(R.string.review_reschedule_empty))
         } else {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 step.options.forEach { option ->
-                    Text(
-                        listOfNotNull(
+                    HackappOutlineButton(
+                        text = listOfNotNull(
                             option.start.format(StopTimeFormat),
                             if (option.hasPublishedEnd) {
                                 null
@@ -773,13 +765,9 @@ private fun ReschedulePickerDialog(
                                 stringResource(R.string.review_planned_departure, option.plannedDeparture.format(StopTimeFormat))
                             },
                         ).joinToString(" · "),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .clickable(enabled = !busy, role = Role.Button) { onPick(option.eventId) }
-                            .padding(horizontal = 12.dp, vertical = 14.dp),
+                        onClick = { onPick(option.eventId) },
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -950,7 +938,7 @@ private fun StopEditWarningPreview() = HackappTheme {
 @Composable
 private fun UnreachablePreview() = HackappTheme {
     UnreachableStopsDialog(
-        slotTime = LocalTime.of(19, 30),
+        removedName = "Bistro du coin",
         affected = listOf(PreviewStops[2]),
         kept = listOf(PreviewStops[0], PreviewStops[3]),
         canReschedule = true,
@@ -965,7 +953,7 @@ private fun UnreachablePreview() = HackappTheme {
 @Composable
 private fun UnreachableLargeTextPreview() = HackappTheme {
     UnreachableStopsDialog(
-        slotTime = LocalTime.of(19, 30),
+        removedName = "Bistro du coin",
         affected = listOf(PreviewStops[2]),
         kept = listOf(PreviewStops[0], PreviewStops[3]),
         canReschedule = false,
