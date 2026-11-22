@@ -35,7 +35,8 @@ data class UnderwayScreenData(val view: UnderwayView, val now: Instant)
 /**
  * State of the Itinerary that is Underway, for every Underway page.
  *
- * [state] is `Loading` until the first read, `Failed` when nothing is Underway or storage failed.
+ * [state] is `Loading` until the first read, and `Failed` only when storage failed (offer Retry via [onResume]).
+ * When nothing is Underway, [nothingUnderway] becomes true and [state] stays `Loading`.
  * Once the day ends, [state] keeps the last value and [endOfDay] loads: navigate to End of day when
  * it is `Ready`. A minute ticker reads [clock], so a demo clock drives it too.
  */
@@ -54,6 +55,10 @@ class UnderwayViewModel(
     private val _rejections = MutableSharedFlow<Rejection>(extraBufferCapacity = 4)
     /** Why an action changed nothing, such as `NeedsConfirmation` for End Itinerary. */
     val rejections: SharedFlow<Rejection> = _rejections.asSharedFlow()
+
+    private val _nothingUnderway = MutableStateFlow(false)
+    /** True when no Itinerary is Underway and no day just ended: the page goes straight Home. */
+    val nothingUnderway: StateFlow<Boolean> = _nothingUnderway.asStateFlow()
 
     private var lastItineraryId: String? = null
 
@@ -127,13 +132,14 @@ class UnderwayViewModel(
     private fun apply(view: UnderwayView?, ended: Boolean = false) {
         if (view != null) {
             lastItineraryId = view.itineraryId
+            _nothingUnderway.value = false
             _view.value = LoadState.Ready(UnderwayScreenData(view, clock.now()))
             if (ended) retry()
         } else if (lastItineraryId != null) {
             // It was Underway and is not any more: the day ended.
             if (_endOfDay.value !is LoadState.Ready) retry()
         } else {
-            _view.value = LoadState.Failed
+            _nothingUnderway.value = true
         }
     }
 

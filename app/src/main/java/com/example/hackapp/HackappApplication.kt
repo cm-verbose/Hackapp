@@ -16,6 +16,7 @@ import com.example.hackapp.itinerary.StopKind
 import com.example.hackapp.passport.PlaceStampIdentityResolver
 import com.example.hackapp.passport.createStampRepository
 import com.example.hackapp.underway.SystemUnderwayClock
+import com.example.hackapp.underway.UnderwayClock
 import com.example.hackapp.underway.UnderwayCoordinator
 import com.example.hackapp.underway.android.AndroidUnderwayAlertScheduler
 import com.example.hackapp.underway.android.AndroidUnderwayNotifier
@@ -34,6 +35,9 @@ class HackappApplication : Application() {
      * Underway: state machine, alarms, notifications and Stamp awarding. Meal Places are looked up by id,
      * which includes Places that are no longer ACTIVE.
      */
+    /** The one clock for Underway: coordinator, ViewModel and pages. Demo mode replaces it here. */
+    val underwayClock: UnderwayClock by lazy { SystemUnderwayClock(ActiveCityPack.timeZone) }
+
     val underwayCoordinator: UnderwayCoordinator by lazy {
         UnderwayCoordinator(
             itineraries = itineraryRepository,
@@ -46,7 +50,7 @@ class HackappApplication : Application() {
                 PlaceStampIdentityResolver(placeById = { places[it] })
             },
             estimator = cityServices.legs,
-            clock = SystemUnderwayClock(),
+            clock = underwayClock,
             scheduler = AndroidUnderwayAlertScheduler(this),
             notifier = AndroidUnderwayNotifier(this),
         )

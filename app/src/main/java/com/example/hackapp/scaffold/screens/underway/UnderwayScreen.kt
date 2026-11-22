@@ -36,7 +36,6 @@ import com.example.hackapp.services.LocalCityServices
 import com.example.hackapp.ui.components.TransportChoice
 import com.example.hackapp.underway.EndOfDay
 import com.example.hackapp.underway.Rejection
-import com.example.hackapp.underway.SystemUnderwayClock
 import com.example.hackapp.underway.UnderwayEvent
 import com.example.hackapp.underway.UnderwayPhase
 import com.example.hackapp.underway.UnderwayView
@@ -66,7 +65,7 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val cityPack = LocalCityPack.current
-    val clock = remember(cityPack) { SystemUnderwayClock(cityPack.timeZone) }
+    val clock = (appContext as HackappApplication).underwayClock
     val viewModel = UnderwayViewModel.create(
         uid = uid,
         coordinator = (appContext as HackappApplication).underwayCoordinator,
@@ -74,6 +73,8 @@ fun UnderwayScreen(onExitToHome: () -> Unit) {
         notificationsAllowed = { NotificationManagerCompat.from(appContext).areNotificationsEnabled() },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val nothingUnderway by viewModel.nothingUnderway.collectAsStateWithLifecycle()
+    LaunchedEffect(nothingUnderway) { if (nothingUnderway) onExitToHome() }
     val endOfDay by viewModel.endOfDay.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.onResume()
