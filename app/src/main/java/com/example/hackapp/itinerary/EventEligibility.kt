@@ -5,6 +5,7 @@ import com.example.hackapp.data.EventStatus
 import com.example.hackapp.profile.AgeRange
 import com.example.hackapp.profile.AudiencePreference
 import com.example.hackapp.profile.ProfileRepository
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 
@@ -68,12 +69,23 @@ suspend fun eventEligibility(
 }
 
 /**
- * Predicate for District counts: fits the audience and starts in [window], at any price. An Event
- * already in progress is not counted, because it can no longer be added as a Stop.
+ * Predicate for District counts: fits the audience and starts in [window], at any price. A fixed
+ * Event already in progress is not counted, but a drop-in still running with time left is.
  */
 fun districtCountPredicate(window: PlanningWindow, context: PlanningContext): (Event) -> Boolean = { event ->
     isEligible(event, context) &&
-        event.startTime()?.toInstant()?.let { it in window && !it.isBefore(context.now) } == true
+        (event.startTime()?.toInstant()?.let { it in window && !it.isBefore(context.now) } == true ||
+            event.runsIn(window, context.now))
+}
+
+/** A drop-in already running that still leaves a meaningful stay inside [window]. */
+private fun Event.runsIn(window: PlanningWindow, now: java.time.Instant): Boolean {
+    if (!isDropIn()) return false
+    val start = startTime()?.toInstant() ?: return false
+    val end = publishedEnd()?.toInstant() ?: return false
+    val from = maxOf(start, window.start, now)
+    val until = minOf(end, window.end)
+    return from.isBefore(window.end) && Duration.between(from, until).toMinutes() >= MIN_DROP_IN_STAY_MINUTES
 }
 
 /** Number of matching Events per District id. Districts with no match are absent. */

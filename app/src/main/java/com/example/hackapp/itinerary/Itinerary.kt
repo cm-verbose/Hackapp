@@ -99,6 +99,8 @@ data class Itinerary(
     @Serializable(LocalTimeIsoSerializer::class) val endTime: LocalTime,
     /** Chosen Districts in visit order. */
     val districtIds: List<String> = emptyList(),
+    /** The District Event and Meal selection is planning in. Null until selection starts. */
+    val planningDistrictId: String? = null,
     /** Null until the Meal choice step is answered. */
     val planMeals: Boolean? = null,
     val mealBlocks: List<MealBlock> = emptyList(),

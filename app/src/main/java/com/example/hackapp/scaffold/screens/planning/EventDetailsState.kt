@@ -273,7 +273,7 @@ class EventDetailsHolder(
         val event = selected.event
         val ticketPrice = field.ownReportCad.takeIf { isApplicable() }
         if (event.publishedEnd() == null) return AddToItineraryAction.ChooseDeparture(event, ticketPrice)
-        val stop = eventStop(event, selected.suggestedDeparture.plannedDeparture, ticketPrice) ?: return null
+        val stop = eventStop(event, selected.suggestedDeparture.plannedDeparture, ticketPrice, selected.arrivalAt) ?: return null
         return AddToItineraryAction.Add(stop)
     }
 
@@ -311,7 +311,7 @@ class EventDetailsHolder(
     private fun fieldNow() = field.copy(applicable = isApplicable())
 
     private fun canAdd() =
-        !field.isBusy && eventStop(selected.event, selected.suggestedDeparture.plannedDeparture) != null
+        !field.isBusy && eventStop(selected.event, selected.suggestedDeparture.plannedDeparture, arrival = selected.arrivalAt) != null
 
     private fun priceOf(event: Event): EventPrice {
         val cost = event.cost
